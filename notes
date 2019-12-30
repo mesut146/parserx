@@ -1,0 +1,24 @@
+1+5/2 = div(add(1,5),2)
+
+exp: add | sub | mul | div | pow | par | un | NUMBER ;
+add: exp '+' exp ;
+sub: exp '-' exp ;
+mul: exp '*' exp ;
+div: exp '/' exp ;
+pow: exp '^' exp ;
+par: '(' exp ')' ;
+un: '-' exp ;
+
+
+
+
+
+
+exp: exp '+' exp ;
+exp: exp '-' exp ;
+exp: exp '*' exp ;
+exp: exp '/' exp ;
+exp: exp '^' exp ;
+exp: '(' exp ')' ;
+exp: '-' exp ;
+exp: NUMBER ;
