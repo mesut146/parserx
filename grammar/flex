@@ -1,0 +1,10 @@
+#!/bin/sh
+
+dir=$(dirname $0)
+jflex="/home/mesut/Desktop/lib/jflex-1.7.0/bin/jflex"
+
+pkg="com/mesut/psi/java/flex"
+
+out="../src/main/java/${pkg}"
+
+$jflex -d $out $dir/_JavaLexer.flex

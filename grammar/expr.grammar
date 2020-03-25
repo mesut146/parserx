@@ -1,0 +1,42 @@
+%package "grammar";
+%import "nodes.*";
+%class "GParser";
+
+%terminals IDENT;
+%terminals QUES, STAR, PLUS, OR, DOT, SEMI, COMMA, COLON;
+%terminals LPAREN, RPAREN, LBRACE,RBRACE, LBRACKET, RBRACKET;
+%terminals TOKEN ;
+
+//%left  RPAREN;
+//%right UNARY_MINUS;
+//%left  MULT, DIV;
+//%left  PLUS, MINUS;
+
+//%typeof NUMBER = "Number";
+//%typeof expr, pexpr = "Expr";
+
+%goal tree;
+
+tree = tokenDecl+ ruleDecl+;
+
+tokenDecl
+	= TOKEN tokenNames SEMI ;
+tokenNames = IDENT tokenNames2* ;
+tokenNames2 = COMMA IDENT ;
+
+ruleDecl = IDENT COLON rule* SEMI;
+rule
+    = starRule | plusRule | optionalRule ;
+groupRule
+    = LPAREN rule+ RPAREN         {:  :} ;
+starRule
+    = groupRule STAR
+    | refRule STAR         {:  :}  ;
+plusRule
+    = groupRule PLUS
+    | refRule PLUS         {:  :}  ;
+optionalRule
+    = groupRule.g QUES   {: return new OptionalNode(g); :}
+    | refRule.r QUES         {: return new OptionalNode(r); :}  ;
+refRule
+    = IDENT ;
