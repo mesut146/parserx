@@ -21,8 +21,8 @@ public enum TokenType
     
     String value;
     
-    public TokenType(String value){
+    TokenType(String value){
         this.value=value;
     }
-    public TokenType(){}
+    TokenType(){}
 }

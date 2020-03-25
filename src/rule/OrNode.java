@@ -1,33 +1,31 @@
 package rule;
-import java.util.*;
-import nodes.*;
+
+import nodes.NodeList;
 
 // rule1 | rule2
-public class OrNode extends NodeList
-{
+public class OrNode extends NodeList {
 
-    
-    String array(){
-        StringBuilder sb=new StringBuilder();
+
+    String array() {
+        StringBuilder sb = new StringBuilder();
         sb.append("[");
         sb.append(join(""));
         sb.append("]");
         return sb.toString();
     }
-    
-    String normal(){
-        StringBuilder sb=new StringBuilder();
+
+    String normal() {
+        StringBuilder sb = new StringBuilder();
         sb.append("(");
         sb.append(join("|"));
         sb.append(")");
         return sb.toString();
     }
-    
+
     @Override
-    public String toString()
-    {
+    public String toString() {
         return normal();
     }
-    
-    
+
+
 }

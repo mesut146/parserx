@@ -1,9 +1,9 @@
 package rule;
-import nodes.*;
+
+import nodes.Node;
 
 //base class for parser rules
 //optional,star,plus,group
-public class Rule extends Node
-{
-    
+public class Rule extends Node {
+
 }

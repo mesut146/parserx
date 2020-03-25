@@ -1,5 +1,4 @@
 package rule;
 
-public class EmptyRule extends Rule
-{
+public class EmptyRule extends Rule {
 }
