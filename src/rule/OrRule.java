@@ -3,7 +3,7 @@ package rule;
 import nodes.NodeList;
 
 // rule1 | rule2
-public class OrNode extends NodeList {
+public class OrRule extends NodeList {
 
 
     String array() {

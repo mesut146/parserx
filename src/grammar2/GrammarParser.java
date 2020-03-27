@@ -35,7 +35,7 @@ public class GrammarParser {
         }
     }
 
-    void nextUntil(TokenType tt) throws IOException {
+    int nextUntil(TokenType tt) throws IOException {
         GrammarToken t;
         int i = 0;
         do {
@@ -43,6 +43,7 @@ public class GrammarParser {
             //cache.add(t);
 
         } while (!t.is(tt));
+        return i;
     }
 
 
@@ -55,6 +56,7 @@ public class GrammarParser {
         return cache.get(i);
     }
 
+    //get last token
     GrammarToken peek() {
         return cache.get(cache.size() - 1);
     }
@@ -192,12 +194,13 @@ public class GrammarParser {
     //*
     boolean isStar() throws Exception {
         //group,name
-        if (isGroup()) {
-            return get(0).is(STAR);
+        info i=new info();
+        if (isGroup(i)) {
+            return get(i.index+1).is(STAR);
         }
         else if (isName()) {
             next(2);
-            return peek().is(STAR);
+            return get(1).is(STAR);
         }
         return false;
     }
@@ -224,7 +227,7 @@ public class GrammarParser {
         }
         else if (isName()) {
             next(2);
-            return peek().is(PLUS);
+            return get(1).is(PLUS);
         }
         return false;
     }
@@ -244,11 +247,12 @@ public class GrammarParser {
     }
 
     //()
-    boolean isGroup() throws Exception {
+    boolean isGroup(info...i) throws Exception {
         next(1);
         if (get(0).is(LPAREN)) {
             //fix use cache
-            nextUntil(RPAREN);
+            if(i.length>0)
+                i[0].index=nextUntil(RPAREN);
             return true;
         }
         return false;
@@ -281,9 +285,14 @@ public class GrammarParser {
     }
 
     // a|b|c
-    OrNode orNode() throws IOException {
-        OrNode node = new OrNode();
+    OrRule orNode() throws IOException {
+        OrRule node = new OrRule();
         GrammarToken token = next();
         return node;
+    }
+    
+    static class info{
+        int index;
+        boolean res;
     }
 }

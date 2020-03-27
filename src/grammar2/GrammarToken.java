@@ -2,8 +2,10 @@ package grammar2;
 
 public class GrammarToken
 {
-    String value;
-    TokenType type;
+    public String value;
+    public TokenType type;
+    int pos;
+    int line;
 
     public GrammarToken(String value, TokenType type)
     {
@@ -18,7 +20,7 @@ public class GrammarToken
     @Override
     public String toString()
     {
-        return type+" : "+value;
+        return type+" : "+value+" line="+line;
     }
     
     

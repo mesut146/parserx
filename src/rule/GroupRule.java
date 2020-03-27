@@ -13,6 +13,10 @@ public class GroupRule extends Rule {
     public void add(Rule rule) {
         list.add(rule);
     }
+    
+    public void addAll(List<Rule> other){
+        list.addAll(other);
+    }
 
 
     public Rule getAs(int index) {

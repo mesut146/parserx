@@ -7,7 +7,7 @@ token class interface enum ;
 token dot semi ;
 
 
-//match longest rule
+asd = (rule*) ;
 
 compilationUnit= packageDecl? imports? typeDecl* ;
 
@@ -18,10 +18,10 @@ importStmt= import qname (dot star)? semi ;
 
 qname= ident (dot ident)* ;
 typeName= qname generic? ;
-generic= lt ident | generic (semi ident)* gt ;
+generic= lt (ident | generic) (semi ident)* gt ;
 
 typeDecl= classDecl | enumDecl ;
-classDecl= modifiers? class|interface ident (extends qname)? (implements ifaceList)?
+classDecl= modifiers? (class|interface) ident (extends qname)? (implements ifaceList)?
 ifaceList= qname (comma qname)* ;
 
 modifiers: (public | static | abstract | final | private)+ ;

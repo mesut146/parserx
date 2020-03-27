@@ -1,0 +1,168 @@
+options
+{
+    JAVA_UNICODE_ESCAPE = true;
+    LOOKAHEAD=3;
+    STATIC=false;
+}
+
+PARSER_BEGIN(GParser)
+
+package grammar;
+
+import nodes.*;
+import rule.*;
+import java.util.*;
+
+public class GParser
+{
+ 
+}
+PARSER_END(GParser)
+
+SKIP :
+{
+    " "  |   "\r"  |  "\n"  |  "\t"
+}
+
+SKIP:
+{
+  <LINE_COMMENT: "//" ~["\n"]>
+}
+
+TOKEN :
+{
+  < LPAREN: "(" >
+| < RPAREN: ")" >
+| < LBRACE: "{" >
+| < RBRACE: "}" >
+| < LBRACKET: "[" >
+| < RBRACKET: "]" >
+| < SEMI: ";" >
+| < COLON: ":" >
+| < COMMA: "," >
+| < QUOTE: "'" >
+| < EQ: "=">
+| < STAR: "*">
+| < PLUS: "+">
+| < QUES: "?">
+
+}
+
+TOKEN:
+{
+  <TOKEN_: "token">
+}
+
+TOKEN:
+{
+  <IDENT: <CHAR> ( <CHAR> | ["0"-"9"] | "_" )*>
+| <#CHAR: ["a"-"z","A"-"Z"]>
+}
+
+Tree tree():
+{
+  Tree tree=new Tree();
+}
+{
+  (tokenDecl(tree))*  (ruleDecl(tree))+
+  {return tree;}
+}
+
+void tokenDecl(Tree tree):
+{
+  String name;
+}
+{
+  "token" (name=name(){tree.add(new TokenDecl(name));})+ ";"
+}
+
+void ruleDecl(Tree tree):
+{
+  RuleDecl decl=new RuleDecl();
+  String name;
+  Rule r;
+}
+{
+  name=name() ("="|":") (r=single(){decl.add(r);})*  ";"
+  {tree.add(decl);}
+}
+
+Rule single():
+{
+  Rule rule;
+}
+{
+  (LOOKAHEAD(starRule()) rule=starRule()
+ | LOOKAHEAD(plusRule()) rule=plusRule()
+ | LOOKAHEAD(optionalRule()) rule=optionalRule()
+ | rule=groupRule()
+ | rule=nameRule())
+  {return rule;}
+}
+
+Rule starRule():
+{
+  StarRule star=new StarRule();
+  Rule rule;
+}
+{
+  (rule=groupRule() | rule=nameRule()) "*"
+  {
+    star.rule=rule;
+    return star;
+  }
+}
+
+Rule plusRule():
+{
+  PlusRule plus=new PlusRule();
+  Rule rule;
+}
+{
+  (rule=groupRule() | rule=nameRule()) "+"
+  {
+    plus.rule=rule;
+    return plus;
+  }
+}
+
+Rule optionalRule():
+{
+  OptionalRule optional=new OptionalRule();
+  Rule rule;
+}
+{
+  (rule=groupRule() | rule=nameRule()) "?"
+  {
+    optional.rule=rule;
+    return optional;
+  }
+}
+
+Rule groupRule():
+{
+  GroupRule group=new GroupRule();
+  Rule rule;
+}
+{
+  "(" (rule=single(){group.add(rule);})+ ")"
+  {
+    return group;
+  }
+}
+
+Rule nameRule():
+{
+  String name;
+}
+{
+  name=name(){return new RuleRef(name);}
+}
+
+String name():
+{
+  Token token;
+}
+{
+  token=<IDENT>{return token.image;}
+}

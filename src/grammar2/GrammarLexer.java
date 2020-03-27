@@ -8,6 +8,8 @@ public class GrammarLexer
     Reader reader;
     boolean backup=false;
     char old;
+    int pos=0;
+    int line=1;
     static Map<Character,TokenType> map=new HashMap<>();
     
     
@@ -21,11 +23,18 @@ public class GrammarLexer
             backup=false;
             return old;
         }
-        return old=(char)reader.read();
+        pos++;
+        old=(char)reader.read();
+        if(old=='\n'){
+            line++;
+        }
+        return old;
     }
     
     public GrammarToken nextToken() throws IOException{
         GrammarToken token=null;
+        int pos=this.pos;
+        int line=this.line;
         char cur=read();
         
         if(isLetter(cur)){
@@ -46,7 +55,6 @@ public class GrammarLexer
             token=new GrammarToken(""+cur,map.get(cur));
         }else if(cur=='"'){
             StringBuilder sb=new StringBuilder();
-            
             cur=read();
             while(cur!='"'){
                 sb.append(cur);
@@ -54,7 +62,7 @@ public class GrammarLexer
             }
             token=new GrammarToken(sb.toString(),TokenType.STRING);
         }else if(isWs(cur)){
-            token=nextToken();
+            return nextToken();
         }else if(cur=='/'){
             char next=read();
             if(next=='/'){
@@ -62,6 +70,8 @@ public class GrammarLexer
                 return nextToken();
             }
         }
+        token.pos=pos;
+        token.line=line;
         return token;
     }
     
