@@ -1,4 +1,7 @@
 
+/* blk
+
+*/
 token ident ;
 token number ;
 token public static abstract final private protected ;
@@ -7,7 +10,11 @@ token class interface enum ;
 token dot semi ;
 
 
-asd = (rule*) ;
+asd = rule? ass;
+
+/*bb = a b c
+    |d e f
+    |x y z*;*/
 
 compilationUnit= packageDecl? imports? typeDecl* ;
 

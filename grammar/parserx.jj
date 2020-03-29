@@ -1,7 +1,7 @@
 options
 {
     JAVA_UNICODE_ESCAPE = true;
-    LOOKAHEAD=3;
+    //LOOKAHEAD=3;
     STATIC=false;
 }
 
@@ -24,9 +24,37 @@ SKIP :
     " "  |   "\r"  |  "\n"  |  "\t"
 }
 
-SKIP:
+MORE :
 {
-  <LINE_COMMENT: "//" ~["\n"]>
+  "//" : IN_SINGLE_LINE_COMMENT
+|
+  <"/**" ~["/"]> { input_stream.backup(1); } : IN_FORMAL_COMMENT
+|
+  "/*" : IN_MULTI_LINE_COMMENT
+}
+
+<IN_SINGLE_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+  <SINGLE_LINE_COMMENT: "\n" | "\r" | "\r\n" > : DEFAULT
+}
+
+<IN_FORMAL_COMMENT>
+SPECIAL_TOKEN :
+{
+  <FORMAL_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_MULTI_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+  <MULTI_LINE_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_SINGLE_LINE_COMMENT,IN_FORMAL_COMMENT,IN_MULTI_LINE_COMMENT>
+MORE :
+{
+  < ~[] >
 }
 
 TOKEN :
@@ -80,63 +108,61 @@ void ruleDecl(Tree tree):
 {
   RuleDecl decl=new RuleDecl();
   String name;
+  Rule rhs;
+}
+{
+  name=name() ("="|":") rhs=rhs()  ";"
+  {
+  tree.add(decl);
+  decl.rhs=rhs;
+  }
+}
+
+//or series
+Rule rhs():
+{
+  Rule rule;
+  OrRule or=new OrRule();
+  boolean more=false;
+}
+{
+  (rule=rhs_list(){or.add(rule);}
+   ("|" rule=rhs_list(){
+   or.add(rule);
+   more=true;
+   })*)
+   {return more?or:rule;}
+}
+
+//sequence no or
+Rule rhs_list():
+{
+  Sequence s=new Sequence();
   Rule r;
 }
 {
-  name=name() ("="|":") (r=single(){decl.add(r);})*  ";"
-  {tree.add(decl);}
+  (r=regex(){s.add(r);})+
+  {return s.normal();}
 }
 
-Rule single():
+Rule regex():
 {
   Rule rule;
 }
 {
-  (LOOKAHEAD(starRule()) rule=starRule()
- | LOOKAHEAD(plusRule()) rule=plusRule()
- | LOOKAHEAD(optionalRule()) rule=optionalRule()
- | rule=groupRule()
- | rule=nameRule())
-  {return rule;}
+  (rule=simple()
+   ("*"{return new StarRule(rule);}
+  | "+"{return new PlusRule(rule);}
+  | "?"{return new OptionalRule(rule);})?)
+     {return rule;}
 }
 
-Rule starRule():
+Rule simple():
 {
-  StarRule star=new StarRule();
   Rule rule;
 }
 {
-  (rule=groupRule() | rule=nameRule()) "*"
-  {
-    star.rule=rule;
-    return star;
-  }
-}
-
-Rule plusRule():
-{
-  PlusRule plus=new PlusRule();
-  Rule rule;
-}
-{
-  (rule=groupRule() | rule=nameRule()) "+"
-  {
-    plus.rule=rule;
-    return plus;
-  }
-}
-
-Rule optionalRule():
-{
-  OptionalRule optional=new OptionalRule();
-  Rule rule;
-}
-{
-  (rule=groupRule() | rule=nameRule()) "?"
-  {
-    optional.rule=rule;
-    return optional;
-  }
+  (rule=groupRule() | rule=nameRule()){return rule;}
 }
 
 Rule groupRule():
@@ -145,8 +171,9 @@ Rule groupRule():
   Rule rule;
 }
 {
-  "(" (rule=single(){group.add(rule);})+ ")"
+  "(" rule=rhs() ")"
   {
+    group.rhs=rule;
     return group;
   }
 }

@@ -56,8 +56,8 @@ non terminal PlusRule plusRule;
 non terminal OptionalRule optionalRule;
 non terminal GroupRule groupRule;
 non terminal OrRule orRule;
-non terminal orSingle,orList;
-non terminal Rule single, nameRule;
+non terminal orSingle, orList;
+non terminal Rule single, singleNoOr, nameRule;
 
 /*precedence left PLUS, MINUS;
 precedence left TIMES;
@@ -82,7 +82,7 @@ nameList ::= IDENT+:arr
   :} ;
             
 
-ruleDecl ::= IDENT:n eqOrColon single*:a SEMI
+ruleDecl ::= IDENT:n eqOrColon rhs_list:a SEMI
      {:
      RESULT=new RuleDecl(n);
      RESULT.addAll((List)Arrays.asList(a));
@@ -90,12 +90,10 @@ ruleDecl ::= IDENT:n eqOrColon single*:a SEMI
      :};
 eqOrColon ::= EQ | COLON;
 
+rhs_list :: rhs_list OR singleNoOr | singleNoOr;
+
 single ::= orRule:or{:RESULT=or;:}
-         | starRule:s{:RESULT=s;:}
-         | plusRule:p{:RESULT=p;:}
-         | optionalRule:o{:RESULT=o;:}
-         | groupRule:g{:RESULT=g;:}
-         | nameRule:n{:RESULT=n;:};
+         | singleNoOr:s{:RESULT=s:};
 
 starRule ::= groupRule:g STAR{:RESULT=new StarRule(g);:}
            | nameRule:n STAR{:RESULT=new StarRule(n);:};
@@ -106,7 +104,7 @@ plusRule ::= groupRule:g PLUS{:RESULT=new PlusRule(g);:}
 optionalRule ::= groupRule:g QUES{:RESULT=new OptionalRule(g);:}
            | nameRule:n QUES{:RESULT=new OptionalRule(n);:};
            
-groupRule ::= LPAREN single*:a RPAREN
+groupRule ::= LPAREN single+:a RPAREN
    {:
      RESULT=new GroupRule();
      RESULT.addAll(Arrays.asList(a));
@@ -119,6 +117,14 @@ orRule ::= orList
    RESULT=lastOr;
    :};
           
-orList ::= orList OR single:r{:RESULT=s;:}
-          |single:s;
+orList ::= orList OR singleNoOr:r{:RESULT=s;:}
+         | singleNoOr:s;
+         
+singleNoOr ::= 
+           starRule:s{:RESULT=s;:}
+         | plusRule:p{:RESULT=p;:}
+         | optionalRule:o{:RESULT=o;:}
+         | groupRule:g{:RESULT=g;:}
+         | nameRule:n{:RESULT=n;:};
+         
 //orSingle ::= single:s {::};

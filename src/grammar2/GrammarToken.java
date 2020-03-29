@@ -1,6 +1,7 @@
 package grammar2;
+import nodes.*;
 
-public class GrammarToken
+public class GrammarToken extends Node
 {
     public String value;
     public TokenType type;

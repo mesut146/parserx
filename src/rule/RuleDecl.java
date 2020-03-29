@@ -9,7 +9,7 @@ import java.util.*;
 public class RuleDecl extends Node {
     
     public String name;
-    public NodeList list = new NodeList();
+    public Rule rhs;//sequence,or rule
 
     public RuleDecl() {
     }
@@ -18,21 +18,9 @@ public class RuleDecl extends Node {
         this.name = name;
     }
 
-    public void add(Node node) {
-        list.add(node);
-    }
-    
-    public void addAll(List<Node> other){
-        list.addAll(other);
-    }
-    
-    /*public void addAll(List<Rule> other){
-        list.addAll((List)other);
-    }*/
-
     @Override
     public String toString() {
-        return name + " = " + list.join(" ") + ";";
+        return name + " = " + rhs + ";";
     }
 
 

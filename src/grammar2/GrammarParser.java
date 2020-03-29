@@ -134,7 +134,7 @@ public class GrammarParser {
         while (true) {
             Rule tmp = isRule();
             if (tmp != null) {
-                rule.add(tmp);
+                //rule.add(tmp);
             }
 
             else {
@@ -266,7 +266,7 @@ public class GrammarParser {
         //any rule*
         Rule tmp;
         while ((tmp = isRule()) != null) {
-            rule.add(tmp);
+            //rule.add(tmp);
         }
         match(RPAREN);
         return rule;

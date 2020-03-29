@@ -1,15 +1,19 @@
 package nodes;
 import java.util.*;
 
-public class NodeList extends Node
+public class NodeList<T> extends Node
 {
-    public List<Node> list=new ArrayList<>();
+    public List<T> list=new ArrayList<>();
     
-    public void add(Node node){
+    public void add(T node){
         list.add(node);
     }
     
-    public void addAll(List<Node> other){
+    public <E extends T> void add(E node){
+        list.add(node);
+    }
+    
+    public void addAll(List<T> other){
         list.addAll(other);
     }
     
@@ -17,7 +21,7 @@ public class NodeList extends Node
         list.addAll(other.list);
     }
     
-    public Node get(int index){
+    public T get(int index){
         return list.get(index);
     }
 

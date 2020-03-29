@@ -8,8 +8,10 @@ import java.io.IOException;
 import grammar.*;
 import java.io.*;
 import nodes.*;
+import grammar2.*;
 
 public class Main {
+    
     public static void main(String[] args) throws Exception {
         //String dir = "/home/mesut/IdeaProjects/parserx/";
         String dir = "/storage/emulated/0/AppProjects/parserx/";
@@ -17,26 +19,26 @@ public class Main {
         String test = dir + "test.txt";
         
         //cc(gr);
-        cup(gr);
+        //cup(gr);
         //grTest(gr);
     }
     
     static void cup(String path) throws Exception{
         lexer lexer=new lexer(path);
-        parser p=new parser(lexer);
-        System.out.println(p.parse());
+        /*parser p=new parser(lexer);
+        System.out.println(p.parse());*/
         /*for(int i=0;i<100;i++){
             System.out.println(lexer.next_token());
         }*/
     }
 
     
-    /*static void cc(String path) throws Exception{
+    static void cc(String path) throws Exception{
          GParser parser=new GParser(new FileReader(path));
          Tree tree=parser.tree();
 
          System.out.println(tree);
-    }*/
+    }
 
     static void tokens(GrammarLexer lexer) throws IOException {
         for (GrammarToken token = lexer.nextToken(); token != null; token = lexer.nextToken()) {
@@ -47,7 +49,8 @@ public class Main {
     static void grTest(String path) throws Exception {
         GrammarLexer lexer = new GrammarLexer(new FileReader(path));
         //tokens(lexer);
-        GrammarParser parser = new GrammarParser(lexer);
-        System.out.println(parser.parse());
+        GrammarParser2 parser = new GrammarParser2(lexer);
+        parser.parse();
+        System.out.println(parser);
     }
 }
