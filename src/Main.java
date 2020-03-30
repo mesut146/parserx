@@ -1,31 +1,29 @@
 
+import grammar.GParser;
+import grammar.lexer;
 import grammar2.GrammarLexer;
-import grammar2.GrammarParser;
+import grammar2.GrammarParser2;
 import grammar2.GrammarToken;
+import nodes.Tree;
 
 import java.io.FileReader;
 import java.io.IOException;
-import grammar.*;
-import java.io.*;
-import nodes.*;
-import grammar2.*;
 
 public class Main {
-    
+
     public static void main(String[] args) throws Exception {
-        System.out.println("wtf");
-        //String dir = "/home/mesut/IdeaProjects/parserx/";
-        String dir = "/storage/emulated/0/AppProjects/parserx/";
+        String dir = "/home/mesut/IdeaProjects/parserx/";
+        //String dir = "/storage/emulated/0/AppProjects/parserx/";
         String gr = dir + "test.p";
         String test = dir + "test.txt";
-        
+
         cc(gr);
         //cup(gr);
         //grTest(gr);
     }
-    
-    static void cup(String path) throws Exception{
-        lexer lexer=new lexer(path);
+
+    static void cup(String path) throws Exception {
+        lexer lexer = new lexer(path);
         /*parser p=new parser(lexer);
         System.out.println(p.parse());*/
         /*for(int i=0;i<100;i++){
@@ -33,12 +31,12 @@ public class Main {
         }*/
     }
 
-    
-    static void cc(String path) throws Exception{
-         GParser parser=new GParser(new FileReader(path));
-         Tree tree=parser.tree();
 
-         System.out.println(tree);
+    static void cc(String path) throws Exception {
+        GParser parser = new GParser(new FileReader(path));
+        Tree tree = parser.tree();
+
+        System.out.println(tree);
     }
 
     static void tokens(GrammarLexer lexer) throws IOException {

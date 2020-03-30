@@ -92,7 +92,7 @@ Tree tree():
   Tree tree=new Tree();
 }
 {
-  (tokenDecl(tree))*  (ruleDecl(tree))+
+  (tokenDecl(tree))*  (ruleDecl(tree))*
   {return tree;}
 }
 
@@ -101,7 +101,7 @@ void tokenDecl(Tree tree):
   String name;
 }
 {
-  "token" (name=name(){tree.add(new TokenDecl(name));})+ ";"
+  "token" (name=name(){tree.addToken(new TokenDecl(name));})+ ";"
 }
 
 void ruleDecl(Tree tree):
@@ -113,8 +113,9 @@ void ruleDecl(Tree tree):
 {
   name=name() ("="|":") rhs=rhs()  ";"
   {
-  tree.add(decl);
-  decl.rhs=rhs;
+    decl.name=name;
+    decl.rhs=rhs;
+    tree.addRule(decl);
   }
 }
 
@@ -126,12 +127,13 @@ Rule rhs():
   boolean more=false;
 }
 {
-  (rule=rhs_list(){or.add(rule);}
-   ("|" rule=rhs_list(){
-   or.add(rule);
-   more=true;
-   })*)
-   {return more?or:rule;}
+  rule=rhs_list(){or.add(rule);}
+   ("|" rule=rhs_list()
+    {
+      or.add(rule);
+      more=true;
+    })*
+   { return more?or:rule; }
 }
 
 //sequence no or
@@ -150,10 +152,10 @@ Rule regex():
   Rule rule;
 }
 {
-  (rule=simple()
+  rule=simple()
    ("*"{return new StarRule(rule);}
   | "+"{return new PlusRule(rule);}
-  | "?"{return new OptionalRule(rule);})?)
+  | "?"{return new OptionalRule(rule);})?
      {return rule;}
 }
 

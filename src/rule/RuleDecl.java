@@ -1,13 +1,11 @@
 package rule;
 
 import nodes.Node;
-import nodes.NodeList;
-import java.util.*;
 
 //rule decl in grammar
 //name=rules;
 public class RuleDecl extends Node {
-    
+
     public String name;
     public Rule rhs;//sequence,or rule
 

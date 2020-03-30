@@ -10,12 +10,6 @@ token class interface enum ;
 token dot semi ;
 
 
-asd = rule? ass;
-
-/*bb = a b c
-    |d e f
-    |x y z*;*/
-
 compilationUnit= packageDecl? imports? typeDecl* ;
 
 packageDecl= package qname semi ;
@@ -28,7 +22,7 @@ typeName= qname generic? ;
 generic= lt (ident | generic) (semi ident)* gt ;
 
 typeDecl= classDecl | enumDecl ;
-classDecl= modifiers? (class|interface) ident (extends qname)? (implements ifaceList)?
+classDecl= modifiers? (class|interface) ident (extends qname)? (implements ifaceList)?;
 ifaceList= qname (comma qname)* ;
 
 modifiers: (public | static | abstract | final | private)+ ;

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="841b4849-f1eb-4a92-a8e7-df087834f4f1" name="Default Changelist" comment="format">
+      <change afterPath="$PROJECT_DIR$/src/rule/RegexRule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grammar/cmd" beforeDir="false" afterPath="$PROJECT_DIR$/grammar/cmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grammar/parserx.jj" beforeDir="false" afterPath="$PROJECT_DIR$/grammar/parserx.jj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/grammar/GParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/grammar/GParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/nodes/Node.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/nodes/Node.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/nodes/NodeList.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/nodes/NodeList.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/nodes/RangeNode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/nodes/RangeNode.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/nodes/StringNode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/nodes/StringNode.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/nodes/TokenDecl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/nodes/TokenDecl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/nodes/TokenNode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/nodes/TokenNode.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/nodes/Tree.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/nodes/Tree.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rule/GroupRule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/rule/GroupRule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rule/OptionalRule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/rule/OptionalRule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rule/OrRule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/rule/OrRule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rule/Rule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/rule/Rule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rule/RuleDecl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/rule/RuleDecl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rule/RuleRef.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/rule/RuleRef.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rule/Sequence.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/rule/Sequence.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.p" beforeDir="false" afterPath="$PROJECT_DIR$/test.p" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="MERGE" />
+  </component>
+  <component name="IgnoredFileRootStore">
+    <option name="generatedRoots">
+      <set>
+        <option value="$PROJECT_DIR$/.idea" />
+      </set>
+    </option>
+  </component>
+  <component name="ProjectId" id="1ZcKKSrFRlU96dFLw7YPkHAdxd2" />
+  <component name="ProjectViewState">
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="sortByType" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="restartRequiresConfirmation" value="false" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.gutterIcons" />
+  </component>
+  <component name="RunManager">
+    <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="Main" />
+      <module name="parserx" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.Main" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="841b4849-f1eb-4a92-a8e7-df087834f4f1" name="Default Changelist" comment="" />
+      <created>1585132877541</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1585132877541</updated>
+    </task>
+    <task id="LOCAL-00001" summary="format">
+      <created>1585138662895</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1585138662895</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="format" />
+    <option name="LAST_COMMIT_MESSAGE" value="format" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="275" y="27" width="800" height="672" key="#Project_Structure" timestamp="1585133123209">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state x="275" y="27" width="800" height="672" key="#Project_Structure/0.0.1360.734@0.0.1360.734" timestamp="1585133123209" />
+    <state x="138" y="24" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1585133085266">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state x="138" y="24" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1360.734@0.0.1360.734" timestamp="1585133085266" />
+    <state x="488" y="85" width="519" height="557" key="#com.intellij.ide.util.MemberChooser" timestamp="1585584427309">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state x="488" y="85" width="519" height="557" key="#com.intellij.ide.util.MemberChooser/0.0.1360.734@0.0.1360.734" timestamp="1585584427309" />
+    <state x="528" y="258" width="293" height="211" key="#com.intellij.ide.util.projectWizard.JdkChooserPanel.MyDialog" timestamp="1585133025842">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state x="528" y="258" width="293" height="211" key="#com.intellij.ide.util.projectWizard.JdkChooserPanel.MyDialog/0.0.1360.734@0.0.1360.734" timestamp="1585133025842" />
+    <state x="319" y="0" width="712" height="729" key="CommitChangelistDialog2" timestamp="1585146871631">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state x="319" y="0" width="712" height="729" key="CommitChangelistDialog2/0.0.1360.734@0.0.1360.734" timestamp="1585146871631" />
+    <state x="319" y="77" width="702" height="570" key="FileChooserDialogImpl" timestamp="1585133204076">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state x="319" y="77" width="702" height="570" key="FileChooserDialogImpl/0.0.1360.734@0.0.1360.734" timestamp="1585133204076" />
+    <state width="659" height="168" key="GridCell.Tab.0.bottom" timestamp="1585587729419">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state width="659" height="168" key="GridCell.Tab.0.bottom/0.0.1360.734@0.0.1360.734" timestamp="1585587729419" />
+    <state width="659" height="168" key="GridCell.Tab.0.center" timestamp="1585587729419">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state width="659" height="168" key="GridCell.Tab.0.center/0.0.1360.734@0.0.1360.734" timestamp="1585587729419" />
+    <state width="659" height="168" key="GridCell.Tab.0.left" timestamp="1585587729419">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state width="659" height="168" key="GridCell.Tab.0.left/0.0.1360.734@0.0.1360.734" timestamp="1585587729419" />
+    <state width="659" height="168" key="GridCell.Tab.0.right" timestamp="1585587729419">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state width="659" height="168" key="GridCell.Tab.0.right/0.0.1360.734@0.0.1360.734" timestamp="1585587729419" />
+    <state width="1318" height="210" key="GridCell.Tab.1.bottom" timestamp="1585146873734">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state width="1318" height="210" key="GridCell.Tab.1.bottom/0.0.1360.734@0.0.1360.734" timestamp="1585146873734" />
+    <state width="1318" height="210" key="GridCell.Tab.1.center" timestamp="1585146873734">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state width="1318" height="210" key="GridCell.Tab.1.center/0.0.1360.734@0.0.1360.734" timestamp="1585146873734" />
+    <state width="1318" height="210" key="GridCell.Tab.1.left" timestamp="1585146873734">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state width="1318" height="210" key="GridCell.Tab.1.left/0.0.1360.734@0.0.1360.734" timestamp="1585146873734" />
+    <state width="1318" height="210" key="GridCell.Tab.1.right" timestamp="1585146873734">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state width="1318" height="210" key="GridCell.Tab.1.right/0.0.1360.734@0.0.1360.734" timestamp="1585146873734" />
+    <state x="336" y="0" width="1024" height="729" key="SettingsEditor" timestamp="1585133280536">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state x="336" y="0" width="1024" height="729" key="SettingsEditor/0.0.1360.734@0.0.1360.734" timestamp="1585133280536" />
+    <state x="275" y="102" width="800" height="523" key="Vcs.Push.Dialog.v2" timestamp="1585138665832">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state x="275" y="102" width="800" height="523" key="Vcs.Push.Dialog.v2/0.0.1360.734@0.0.1360.734" timestamp="1585138665832" />
+    <state x="468" y="286" width="414" height="155" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1585582693625">
+      <screen x="0" y="0" width="1360" height="734" />
+    </state>
+    <state x="468" y="286" width="414" height="155" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1360.734@0.0.1360.734" timestamp="1585582693625" />
+  </component>
+</project>

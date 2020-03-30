@@ -8,6 +8,16 @@ public class OptionalRule extends Rule {
     public OptionalRule() {
     }
 
+    public void transform() {
+        if (rule.isName()) {
+            RuleDecl r = new RuleDecl(rule.toString() + "?");
+            OrRule or = new OrRule();
+            or.add(rule);
+            or.add(new EmptyRule());
+            r.rhs = or;
+        }
+    }
+
     public OptionalRule(Rule node) {
         this.rule = node;
     }

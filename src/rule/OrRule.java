@@ -23,9 +23,9 @@ public class OrRule extends Rule{
 
     String normal() {
         StringBuilder sb = new StringBuilder();
-        sb.append("(");
-        sb.append(list.join("|"));
-        sb.append(")");
+        //sb.append("(");
+        sb.append(list.join(" | "));
+        //sb.append(")");
         return sb.toString();
     }
 

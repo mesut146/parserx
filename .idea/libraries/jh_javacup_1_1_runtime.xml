@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="jh-javacup-1.1-runtime">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/jh-javacup-1.1-runtime.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
