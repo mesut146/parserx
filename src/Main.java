@@ -13,12 +13,13 @@ import grammar2.*;
 public class Main {
     
     public static void main(String[] args) throws Exception {
+        System.out.println("wtf");
         //String dir = "/home/mesut/IdeaProjects/parserx/";
         String dir = "/storage/emulated/0/AppProjects/parserx/";
         String gr = dir + "test.p";
         String test = dir + "test.txt";
         
-        //cc(gr);
+        cc(gr);
         //cup(gr);
         //grTest(gr);
     }
