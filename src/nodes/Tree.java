@@ -22,14 +22,28 @@ public class Tree extends NodeList<Node> {
     }
 
     //ebnf to bnf
-    public void transform() {
+    public Tree transform() {
         Tree tree = new Tree();//result tree
+
         for (RuleDecl decl : rules.list) {
+            RuleDecl d = new RuleDecl(decl.name);
             Rule rhs = decl.rhs;
             if (rhs.isGroup()) {
-                rhs.asGroup().transform(decl, tree);
+                //remove unnecessary parenthesis
+                //r = (s1 s2);
+                d.rhs = rhs.asGroup().rhs;
+                tree.addRule(d);
+            }
+            else if (rhs.isName()) {
+                tree.addRule(decl);
+            }
+            else if (rhs.isSequence()) {
+                //todo
+                tree.addRule(decl);
             }
         }
+
+        return tree;
     }
 
     @Override

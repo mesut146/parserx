@@ -16,13 +16,37 @@ public class Rule extends Node {
         return (RuleRef) this;
     }
 
-    public boolean isRegex() {
+    public boolean isStar() {
+        return this instanceof StarRule;
+    }
+
+    public StarRule asStar() {
+        return (StarRule) this;
+    }
+
+    public boolean isPlus() {
+        return this instanceof PlusRule;
+    }
+
+    public PlusRule asPlus() {
+        return (PlusRule) this;
+    }
+
+    public boolean isOptional() {
+        return this instanceof OptionalRule;
+    }
+
+    public OptionalRule asOptional() {
+        return (OptionalRule) this;
+    }
+
+    /*public boolean isRegex() {
         return this instanceof RegexRule;
     }
 
     public RegexRule asRegex() {
         return (RegexRule) this;
-    }
+    }*/
 
     public boolean isGroup() {
         return this instanceof GroupRule;

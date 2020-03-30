@@ -7,13 +7,15 @@ public class GroupRule extends Rule {
 
     public Rule rhs;//sequence,or
 
-    public void transform(RuleDecl decl, Tree tree) {
+    public Rule transform(RuleDecl decl, Tree tree) {
         //r = pre (e1 e2) end;
         //r = pre rg end;
-        //rg = e1 e2;
-        RuleDecl d = new RuleDecl();
-
-        decl.rhs = rhs;
+        //r_g = e1 e2;
+        String nname = decl.name + "_g";
+        RuleDecl d = new RuleDecl(nname);
+        d.rhs = rhs;
+        tree.addRule(d);
+        return new RuleRef(nname);
     }
 
     public String toString() {

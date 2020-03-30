@@ -36,7 +36,7 @@ public class Main {
         GParser parser = new GParser(new FileReader(path));
         Tree tree = parser.tree();
 
-        System.out.println(tree);
+        System.out.println(tree.transform());
     }
 
     static void tokens(GrammarLexer lexer) throws IOException {
