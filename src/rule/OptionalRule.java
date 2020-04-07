@@ -1,4 +1,5 @@
 package rule;
+import nodes.*;
 
 //rule?
 public class OptionalRule extends Rule {
@@ -8,14 +9,23 @@ public class OptionalRule extends Rule {
     public OptionalRule() {
     }
 
-    public void transform() {
-        if (rule.isName()) {
-            RuleDecl r = new RuleDecl(rule.toString() + "?");
-            OrRule or = new OrRule();
-            or.add(rule);
-            or.add(new EmptyRule());
-            r.rhs = or;
-        }
+    
+    //r=a (s1 s2)? b
+    //r=a r_g? b
+    //r_g?=r_g;
+    //r_g?=;
+    //r_g=s1 s2;
+    public Rule transform(RuleDecl decl,Tree tree) {
+        RuleRef rl=rule.transform(decl,tree).asName();
+        String nm=rl.name+"?";
+        RuleDecl r1=new RuleDecl(nm);
+        RuleDecl r2=new RuleDecl(nm);
+        r1.rhs=rl;
+        r2.rhs=new EmptyRule();
+        tree.addRule(r1);
+        tree.addRule(r2);
+        
+        return new RuleRef(nm);
     }
 
     public OptionalRule(Rule node) {

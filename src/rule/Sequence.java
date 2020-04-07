@@ -9,14 +9,22 @@ public class Sequence extends Rule {
 
     NodeList<Rule> list = new NodeList<>();
 
+    public Sequence(Rule...arr){
+        for(Rule r:arr){
+            list.add(r);
+        }
+    }
+    
     public void add(Rule rule) {
         list.add(rule);
     }
 
-    public void transform(RuleDecl decl, Tree tree) {
+    public Rule transform(RuleDecl decl, Tree tree) {
+        Sequence s=new Sequence();
         for (Rule rule : list.list) {
-
+            s.add(rule.transform(decl,tree));
         }
+        return s;
     }
 
     public Rule normal() {

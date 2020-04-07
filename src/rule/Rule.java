@@ -1,6 +1,7 @@
 package rule;
 
 import nodes.Node;
+import nodes.*;
 
 //base class for parser rules
 //optional,star,plus,group
@@ -39,6 +40,14 @@ public class Rule extends Node {
     public OptionalRule asOptional() {
         return (OptionalRule) this;
     }
+    
+    public boolean isOr() {
+        return this instanceof OrRule;
+    }
+
+    public OrRule asOr() {
+        return (OrRule) this;
+    }
 
     /*public boolean isRegex() {
         return this instanceof RegexRule;
@@ -62,5 +71,10 @@ public class Rule extends Node {
 
     public Sequence asSequence() {
         return (Sequence) this;
+    }
+    
+    
+    public Rule transform(RuleDecl decl,Tree tree){
+        return this;
     }
 }

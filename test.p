@@ -16,6 +16,7 @@ packageDecl= package qname semi ;
 
 imports= importStmt+ ;
 importStmt= import qname (dot star)? semi ;
+//ig=
 
 qname= ident (dot ident)* ;
 typeName= qname generic? ;

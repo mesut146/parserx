@@ -39,7 +39,8 @@ public class Tree extends NodeList<Node> {
             }
             else if (rhs.isSequence()) {
                 //todo
-                tree.addRule(decl);
+                d.rhs=rhs.asSequence().transform(decl,tree);
+                tree.addRule(d);
             }
         }
 
