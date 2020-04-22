@@ -2,21 +2,21 @@ package rule;
 import nodes.*;
 
 //rule+
-public class PlusRule extends Rule {
+public class PlusNode extends Node {
 
-    public Rule rule;
+    public Node node;
 
-    public PlusRule() {
+    public PlusNode() {
     }
 
-    public PlusRule(Rule node) {
-        this.rule = node;
+    public PlusNode(Rule node) {
+        this.node = node;
     }
     
     //r=a e+ b;
     //e+=e;
     //e+=e+ e;
-    public Rule transform(RuleDecl decl,Tree tree) {
+    /*public Rule transform(RuleDecl decl,Tree tree) {
         RuleRef rl=rule.transform(decl,tree).asName();
         String nm=rl.name+"+";
         RuleRef ref=new RuleRef(nm);
@@ -28,11 +28,11 @@ public class PlusRule extends Rule {
         tree.addRule(r1);
         tree.addRule(r2);
         return ref;
-    }
+    }*/
 
     @Override
     public String toString() {
-        return rule + "+";
+        return node + "+";
     }
 
 

@@ -16,7 +16,7 @@ public class StarRule extends Rule {
     //r=a e* b;
     //e*=;
     //e*=e* e;
-    public Rule transform(RuleDecl decl,Tree tree) {
+    /*public Rule transform(RuleDecl decl,Tree tree) {
         RuleRef rl=rule.transform(decl,tree).asName();
         String nm=rl.name+"*";
         RuleRef ref=new RuleRef(nm);
@@ -29,7 +29,7 @@ public class StarRule extends Rule {
         tree.addRule(r2);
 
         return ref;
-    }
+    }*/
 
     @Override
     public String toString() {

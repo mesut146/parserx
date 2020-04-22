@@ -1,6 +1,7 @@
 package nodes;
 
-public class StringNode extends TokenNode {
+//lexer rule without regex
+public class StringNode extends Node {
     public String value;
 
     public StringNode() {

@@ -10,12 +10,12 @@ import java.util.List;
 
 import static grammar2.TokenType.*;
 
-public class GrammarParser {
+public class GrammarParser.java {
     GrammarLexer lexer;
     //GrammarToken t1,t2,t3;
     List<GrammarToken> cache = new ArrayList<>();
 
-    public GrammarParser(GrammarLexer lexer) {
+    public GrammarParser.java(GrammarLexer lexer) {
         this.lexer = lexer;
     }
 
@@ -233,9 +233,9 @@ public class GrammarParser {
     }
 
     //+
-    PlusRule plus() throws Exception {
+    PlusNode plus() throws Exception {
         //group or name
-        PlusRule rule = new PlusRule();
+        PlusNode rule = new PlusNode();
         if (isGroup()) {
             rule.rule = group();
         }
@@ -259,10 +259,10 @@ public class GrammarParser {
     }
 
     //()
-    GroupRule group() throws Exception {
+    GroupNode group() throws Exception {
         next(1);
         match(LPAREN);
-        GroupRule rule = new GroupRule();
+        GroupNode rule = new GroupNode();
         //any rule*
         Rule tmp;
         while ((tmp = isRule()) != null) {

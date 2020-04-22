@@ -7,7 +7,7 @@ import nodes.Node;
 public class RuleDecl extends Node {
 
     public String name;
-    public Rule rhs;//sequence,or rule
+    public Node rhs;//sequence,or rule
 
     public RuleDecl() {
     }

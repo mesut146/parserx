@@ -8,13 +8,13 @@ import static grammar2.TokenType.*;
 
 public class GrammarParser2
 {
-    List<TokenDecl> tokens=new ArrayList<>();
-    List<RuleDecl> rules=new ArrayList<>();
-    Stack<Node> stack=new Stack<>();
+    public Tree tree;
+    List<GrammarToken> stack=new ArrayList<>();
     GrammarLexer lexer;
     
     public GrammarParser2(GrammarLexer lexer){
         this.lexer=lexer;
+        tree=new Tree();
     }
     
     GrammarToken next() throws IOException {
@@ -23,7 +23,7 @@ public class GrammarParser2
     
     
     void shift() throws Exception{
-        stack.push(new TokenNode(next()));
+        stack.add(next());
     }
     
     void shift(int n) throws Exception{
@@ -40,55 +40,93 @@ public class GrammarParser2
         return false;
     }
     
-    void match(TokenType tt) throws Exception{
-        Node n=stack.pop();
-        if(!is(n,tt)){
+    boolean is(TokenType...arr){
+        int i=0;
+        for(TokenType tt:arr){
+            if(!getToken(i++).is(tt)){
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    GrammarToken first(){
+        return stack.remove(0);
+    }
+    
+    GrammarToken match(TokenType tt) throws Exception{
+        //java.util.
+        
+        GrammarToken n=first();
+        if(!n.is(tt)){
             throw new Exception("unexpected token "+n);
         }
+        return n;
         //shift();
     }
     
     GrammarToken getToken(int i){
-        return ((TokenNode)stack.get(i)).token;
+        return stack.get(i);
     }
     
     public void parse() throws Exception{
-        while(isTokenDecl()){
-            tokens.addAll(tokenDecl());
+        if(isTokenBlock()){
+            tokenBlock();
         }
-        while(isRuleDecl()){
-            rules.add(ruleDecl());
-        }
+        
         System.out.println(stack);
     }
     
-    boolean isTokenDecl() throws Exception {
-        shift();
-        return is(stack.peek(),TOKEN);
+    boolean isTokenBlock() throws Exception{
+        shift(2);
+        return is(TOKENS,LBRACE);
     }
-
-    List<TokenDecl> tokenDecl() throws Exception {
-        match(TOKEN);
-        List<TokenDecl> list = new ArrayList<>();
-        for (; ; ) {
-            //next(1);
-            GrammarToken t1 = next();
-            if (t1.is(IDENT)) {
-                TokenDecl decl = new TokenDecl(t1.value);
-                list.add(decl);
-                //match(IDENT);
-            }
-            else if(t1.is(SEMI)){
-                break;
-            }else{
-                throw new Exception("semi expected, got "+t1);
-            }
-
+    
+    void tokenBlock() throws Exception{
+        match(TOKENS);
+        match(LBRACE);
+        
+        while(isTokenDecl()){
+            tree.addToken(tokenDecl());
         }
-        return list;
+        
+        match(RBRACE);
     }
     
+    boolean isTokenDecl() throws Exception {
+        shift(2);
+        return is(IDENT,EQ);
+    }
+
+    TokenDecl tokenDecl() throws Exception {
+        shift();
+        
+        GrammarToken t1 = match(IDENT);
+        match(EQ);
+        TokenDecl decl = new TokenDecl(t1.value);
+        rhs(decl);
+       
+        return decl;
+    }
     
+    void rhs(TokenDecl decl) throws Exception{
+        if(isBracket()){
+            bracket();
+        }
+    }
+    
+    boolean isBracket() throws Exception{
+        shift();
+        return getToken(0).is(LBRACKET);
+    }
+    
+    void bracket() throws Exception{
+        match(LBRACKET);
+        //char or char range
+       // GrammarToken t=match();
+        
+        match(RBRACKET);
+    }
     
     boolean isRuleDecl() throws Exception{
         shift(2);
@@ -115,12 +153,6 @@ public class GrammarParser2
     @Override
     public String toString()
     {
-        for(TokenDecl t:tokens){
-            System.out.println(t);
-        }
-        for(RuleDecl r:rules){
-            System.out.println(r);
-        }
         return "";
     }
     

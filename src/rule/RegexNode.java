@@ -1,17 +1,18 @@
 package rule;
+import nodes.*;
 
-/*public class RegexRule extends Rule {
+public class RegexNode extends Node {
 
-    public Rule rule;
+    public Node node;//lexer node or parser rule
     public boolean star = false;
     public boolean plus = false;
     public boolean optional = false;
 
-    public RegexRule() {
+    public RegexNode() {
     }
 
-    public RegexRule(Rule rule) {
-        this.rule = rule;
+    public RegexNode(Node rule) {
+        this.node = rule;
     }
 
     //convert ebnf to bnf
@@ -33,7 +34,7 @@ package rule;
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(rule);
+        sb.append(node);
         if (star) {
             sb.append("*");
         }
@@ -46,4 +47,4 @@ package rule;
         return sb.toString();
     }
 }
-*/
+

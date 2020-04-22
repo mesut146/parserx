@@ -1,9 +1,10 @@
 package nodes;
 
-//token name1,name2 ;
+//token name ;
 public class TokenDecl extends Node {
 
     String tokenName;
+    public Node regex;
 
     public TokenDecl(String tokenName) {
         this.tokenName = tokenName;

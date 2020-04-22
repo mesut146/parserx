@@ -33,23 +33,35 @@ public interface GParserConstants {
   /** RegularExpression Id. */
   int COLON = 19;
   /** RegularExpression Id. */
-  int COMMA = 20;
+  int DOT = 20;
   /** RegularExpression Id. */
-  int QUOTE = 21;
+  int COMMA = 21;
   /** RegularExpression Id. */
-  int EQ = 22;
+  int QUOTE = 22;
   /** RegularExpression Id. */
-  int STAR = 23;
+  int EQ = 23;
   /** RegularExpression Id. */
-  int PLUS = 24;
+  int STAR = 24;
   /** RegularExpression Id. */
-  int QUES = 25;
+  int PLUS = 25;
   /** RegularExpression Id. */
-  int TOKEN_ = 26;
+  int QUES = 26;
   /** RegularExpression Id. */
-  int IDENT = 27;
+  int XOR = 27;
   /** RegularExpression Id. */
-  int CHAR = 28;
+  int TOKEN_ = 28;
+  /** RegularExpression Id. */
+  int TOKENS = 29;
+  /** RegularExpression Id. */
+  int SKIP_ = 30;
+  /** RegularExpression Id. */
+  int STRING_LITERAL = 31;
+  /** RegularExpression Id. */
+  int IDENT = 32;
+  /** RegularExpression Id. */
+  int CHAR = 33;
+  /** RegularExpression Id. */
+  int LEX_CHAR = 34;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -82,16 +94,23 @@ public interface GParserConstants {
     "\"]\"",
     "\";\"",
     "\":\"",
+    "\".\"",
     "\",\"",
     "\"\\\'\"",
     "\"=\"",
     "\"*\"",
     "\"+\"",
     "\"?\"",
+    "\"^\"",
     "\"token\"",
+    "\"tokens\"",
+    "\"skip\"",
+    "<STRING_LITERAL>",
     "<IDENT>",
     "<CHAR>",
+    "<LEX_CHAR>",
     "\"|\"",
+    "\"-\"",
   };
 
 }

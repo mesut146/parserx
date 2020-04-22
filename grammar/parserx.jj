@@ -67,24 +67,29 @@ TOKEN :
 | < RBRACKET: "]" >
 | < SEMI: ";" >
 | < COLON: ":" >
+| < DOT: ".">
 | < COMMA: "," >
 | < QUOTE: "'" >
 | < EQ: "=">
 | < STAR: "*">
 | < PLUS: "+">
 | < QUES: "?">
-
+| < XOR: "^">
 }
 
 TOKEN:
 {
   <TOKEN_: "token">
+ |<TOKENS: "tokens">
+ |<SKIP_: "skip">
+ |<STRING_LITERAL: "\"" ((~["\r","\n"]))* "\"">
 }
 
 TOKEN:
 {
   <IDENT: <CHAR> ( <CHAR> | ["0"-"9"] | "_" )*>
 | <#CHAR: ["a"-"z","A"-"Z"]>
+| < LEX_CHAR: ("\\" ["r","n","t","s"]) | <IDENT>>
 }
 
 Tree tree():
@@ -92,23 +97,51 @@ Tree tree():
   Tree tree=new Tree();
 }
 {
-  (tokenDecl(tree))*  (ruleDecl(tree))*
+  (tokenBlock(tree))?  (ruleDecl(tree))*
   {return tree;}
 }
 
-void tokenDecl(Tree tree):
+void tokenBlock(Tree tree):
 {
-  String name;
 }
 {
-  "token" (name=name(){tree.addToken(new TokenDecl(name));})+ ";"
+ "tokens" "{" tokenList(tree,false) "}"
+}
+
+void tokenList(Tree tree,boolean skip):
+{}
+{
+ (tokenDecl(tree,skip))*
+}
+
+void tokenDecl(Tree tree,boolean skip):
+{
+  String name;
+  TokenDecl decl;
+  Node rhs;
+}
+{
+  name=name() "=" rhs=rhs()
+  {
+    decl=new TokenDecl(name);
+    decl.regex=rhs;
+    if(skip){tree.addSkip(decl);}
+    else{tree.addToken(decl);}
+  }
+}
+
+void skipBlock(Tree tree):
+{
+}
+{
+ "skip" "{" tokenList(tree,true) "}"
 }
 
 void ruleDecl(Tree tree):
 {
   RuleDecl decl=new RuleDecl();
   String name;
-  Rule rhs;
+  Node rhs;
 }
 {
   name=name() ("="|":") rhs=rhs()  ";"
@@ -120,10 +153,10 @@ void ruleDecl(Tree tree):
 }
 
 //or series
-Rule rhs():
+Node rhs():
 {
-  Rule rule;
-  OrRule or=new OrRule();
+  Node rule;
+  OrNode or=new OrNode();
   boolean more=false;
 }
 {
@@ -137,40 +170,76 @@ Rule rhs():
 }
 
 //sequence no or
-Rule rhs_list():
+Node rhs_list():
 {
   Sequence s=new Sequence();
-  Rule r;
+  Node r;
 }
 {
   (r=regex(){s.add(r);})+
   {return s.normal();}
 }
 
-Rule regex():
+Node regex():
 {
-  Rule rule;
+  Node rule;
+  RegexNode regex;
 }
 {
-  rule=simple()
-   ("*"{return new StarRule(rule);}
-  | "+"{return new PlusRule(rule);}
-  | "?"{return new OptionalRule(rule);})?
+  rule=simple(){regex=new RegexNode(rule);}
+   ("*"{regex.star=true;}
+  | "+"{regex.plus=true;}
+  | "?"{regex.optional=true;})?{return regex;}
      {return rule;}
 }
 
-Rule simple():
+Node simple():
 {
-  Rule rule;
+  Node rule;
 }
 {
-  (rule=groupRule() | rule=nameRule()){return rule;}
+  (rule=groupRule()
+   | rule=nameRule()
+   | rule=stringNode()
+   | rule=bracketNode()){return rule;}
 }
 
-Rule groupRule():
+Node bracketNode():
 {
-  GroupRule group=new GroupRule();
-  Rule rule;
+  Bracket b=new Bracket();
+  Node n;
+  String s;
+  Token chr;
+}
+{
+  "[" ("^"{b.negate=true;})?
+   (LOOKAHEAD(range()) n=range(){b.add(n);}
+  |chr=<LEX_CHAR>{b.add(chr.image.charAt(0));})*
+   "]"
+  {return b;}
+}
+
+Node range():
+{
+  Token s1,s2;
+}
+{
+  s1=<LEX_CHAR> "-" s2=<LEX_CHAR>
+  {return new RangeNode(s1.image,s2.image);}
+}
+
+Node stringNode():
+{
+  Token str;
+}
+{
+  str=<STRING_LITERAL>{return new StringNode(str.image);}
+}
+
+Node groupRule():
+{
+  GroupNode group=new GroupNode();
+  Node rule;
 }
 {
   "(" rule=rhs() ")"
@@ -180,7 +249,7 @@ Rule groupRule():
   }
 }
 
-Rule nameRule():
+Node nameRule():
 {
   String name;
 }

@@ -2,9 +2,9 @@ package rule;
 import nodes.*;
 
 //rule?
-public class OptionalRule extends Rule {
+public class OptionalRule extends Node {
     //group or simple name
-    public Rule rule;
+    public Node node;
 
     public OptionalRule() {
     }
@@ -15,7 +15,7 @@ public class OptionalRule extends Rule {
     //r_g?=r_g;
     //r_g?=;
     //r_g=s1 s2;
-    public Rule transform(RuleDecl decl,Tree tree) {
+    /*public Rule transform(RuleDecl decl,Tree tree) {
         RuleRef rl=rule.transform(decl,tree).asName();
         String nm=rl.name+"?";
         RuleDecl r1=new RuleDecl(nm);
@@ -26,15 +26,15 @@ public class OptionalRule extends Rule {
         tree.addRule(r2);
         
         return new RuleRef(nm);
-    }
+    }*/
 
-    public OptionalRule(Rule node) {
-        this.rule = node;
+    public OptionalRule(Node node) {
+        this.node = node;
     }
 
     @Override
     public String toString() {
-        return rule + "?";
+        return node + "?";
     }
 
 

@@ -17,9 +17,9 @@ public class Main {
         String gr = dir + "test.p";
         String test = dir + "test.txt";
 
-        cc(gr);
+        //cc(gr);
         //cup(gr);
-        //grTest(gr);
+        grTest(gr);
     }
 
     static void cup(String path) throws Exception {
@@ -36,7 +36,7 @@ public class Main {
         GParser parser = new GParser(new FileReader(path));
         Tree tree = parser.tree();
 
-        System.out.println(tree.transform());
+        System.out.println(tree);
     }
 
     static void tokens(GrammarLexer lexer) throws IOException {
@@ -50,6 +50,6 @@ public class Main {
         //tokens(lexer);
         GrammarParser2 parser = new GrammarParser2(lexer);
         parser.parse();
-        System.out.println(parser);
+        System.out.println(parser.tree);
     }
 }

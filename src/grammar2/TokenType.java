@@ -3,7 +3,10 @@ package grammar2;
 public enum TokenType
 {
     IDENT,
+    ESCAPED,
     TOKEN("token"),
+    TOKENS("tokens"),
+    SKIP("skip"),
     COLON(":"),
     EQ("="),
     SEMI(";"),
@@ -13,7 +16,11 @@ public enum TokenType
     STAR("*"),
     OR("|"),
     QUES("?"),
+    TILDE("~"),//until
+    XOR("^"),//not
+    MINUS("-"),//range
     LPAREN("("),RPAREN(")"),
+    LBRACE("{"),RBRACE("}"),
     LBRACKET("["),RBRACKET("]"),
     LT("<"),GT(">"),
     STRING,

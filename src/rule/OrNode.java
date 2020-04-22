@@ -5,16 +5,16 @@ import java.util.*;
 import nodes.*;
 
 // rule1 | rule2
-public class OrRule extends Rule{
+public class OrNode extends Node{
     
     //seq,single
-    public NodeList<Rule> list=new NodeList<>();
+    public NodeList<Node> list=new NodeList<>();
     
-    public void add(Rule rule){
+    public void add(Node rule){
         list.add(rule);
     }
 
-    @Override
+    /*
     public Rule transform(RuleDecl decl, Tree tree)
     {
         //*r=a (e1|e2) b;
@@ -28,9 +28,7 @@ public class OrRule extends Rule{
             tree.addRule(rd);
         }
         return null;
-    }
-    
-    
+    }*/
 
     /*String array() {
         StringBuilder sb = new StringBuilder();

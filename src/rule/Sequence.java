@@ -2,32 +2,33 @@ package rule;
 
 import nodes.NodeList;
 import nodes.Tree;
+import nodes.*;
 
 //list of rules
 //rhs
-public class Sequence extends Rule {
+public class Sequence extends Node {
 
-    NodeList<Rule> list = new NodeList<>();
+    NodeList<Node> list = new NodeList<>();
 
-    public Sequence(Rule...arr){
-        for(Rule r:arr){
+    public Sequence(Node...arr){
+        for(Node r:arr){
             list.add(r);
         }
     }
     
-    public void add(Rule rule) {
+    public void add(Node rule) {
         list.add(rule);
     }
 
-    public Rule transform(RuleDecl decl, Tree tree) {
+    /*public Rule transform(RuleDecl decl, Tree tree) {
         Sequence s=new Sequence();
         for (Rule rule : list.list) {
             s.add(rule.transform(decl,tree));
         }
         return s;
-    }
+    }*/
 
-    public Rule normal() {
+    public Node normal() {
         if (list.list.size() == 1) {
             return list.get(0);
         }

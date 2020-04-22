@@ -4,8 +4,8 @@ dir=$(dirname $0)
 
 beaver="/storage/emulated/0/AppProjects/cup/beaver-cc-0.9.11.jar"
 flex="/storage/extSdCard/lib/jflex-full-1.8.1.jar"
-#cc="/storage/extSdCard/lib/javacc-7.0.5.jar"
-cc="/home/mesut/Desktop/lib/javacc-7.0.5.jar"
+cc="/storage/extSdCard/lib/javacc-7.0.5.jar"
+#cc="/home/mesut/Desktop/lib/javacc-7.0.5.jar"
 #cup="/storage/emulated/0/AppProjects/parserx/lib/java-cup-11b.jar"
 cup="/storage/extSdCard/lib/parsing/jh-javacup-1.1.jar"
 

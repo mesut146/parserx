@@ -4,7 +4,7 @@ import nodes.Node;
 import nodes.*;
 
 //base class for parser rules
-//optional,star,plus,group
+//optional,star,plus,group,or
 public class Rule extends Node {
 
     public RuleDecl decl;
@@ -25,12 +25,12 @@ public class Rule extends Node {
         return (StarRule) this;
     }
 
-    public boolean isPlus() {
-        return this instanceof PlusRule;
+    /*public boolean isPlus() {
+        return this instanceof PlusNode;
     }
 
-    public PlusRule asPlus() {
-        return (PlusRule) this;
+    public PlusNode asPlus() {
+        return (PlusNode) this;
     }
 
     public boolean isOptional() {
@@ -47,22 +47,22 @@ public class Rule extends Node {
 
     public OrRule asOr() {
         return (OrRule) this;
-    }
-
-    /*public boolean isRegex() {
-        return this instanceof RegexRule;
-    }
-
-    public RegexRule asRegex() {
-        return (RegexRule) this;
     }*/
 
-    public boolean isGroup() {
-        return this instanceof GroupRule;
+    /*public boolean isRegex() {
+        return this instanceof RegexNode;
     }
 
-    public GroupRule asGroup() {
-        return (GroupRule) this;
+    public RegexNode asRegex() {
+        return (RegexNode) this;
+    }
+
+    public boolean isGroup() {
+        return this instanceof GroupNode;
+    }
+
+    public GroupNode asGroup() {
+        return (GroupNode) this;
     }
 
     public boolean isSequence() {
@@ -71,7 +71,7 @@ public class Rule extends Node {
 
     public Sequence asSequence() {
         return (Sequence) this;
-    }
+    }*/
     
     
     public Rule transform(RuleDecl decl,Tree tree){
