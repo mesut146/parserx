@@ -17,9 +17,9 @@ public class TokenDecl extends Node {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("token ");
         sb.append(tokenName);
-        sb.append(";");
+        sb.append(" = ");
+        sb.append(regex);
         return sb.toString();
     }
 

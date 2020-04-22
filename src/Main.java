@@ -1,6 +1,7 @@
 
 import grammar.GParser;
-import grammar.lexer;
+import grammar.GParserConstants;
+import grammar.Token;
 import grammar2.GrammarLexer;
 import grammar2.GrammarParser2;
 import grammar2.GrammarToken;
@@ -12,18 +13,19 @@ import java.io.IOException;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        //String dir = "/home/mesut/IdeaProjects/parserx/";
-        String dir = "/storage/emulated/0/AppProjects/parserx/";
-        String gr = dir + "test.p";
+        String dir = "/home/mesut/IdeaProjects/parserx";
+        //String dir = "/storage/emulated/0/AppProjects/parserx";
+        dir += "/test/";
+        String gr = dir + "test.g";
         String test = dir + "test.txt";
 
-        //cc(gr);
+        cc(gr);
         //cup(gr);
-        grTest(gr);
+        //grTest(gr);
     }
 
     static void cup(String path) throws Exception {
-        lexer lexer = new lexer(path);
+        //lexer lexer = new lexer(path);
         /*parser p=new parser(lexer);
         System.out.println(p.parse());*/
         /*for(int i=0;i<100;i++){
@@ -34,9 +36,16 @@ public class Main {
 
     static void cc(String path) throws Exception {
         GParser parser = new GParser(new FileReader(path));
+        //tokens(parser);
         Tree tree = parser.tree();
-
         System.out.println(tree);
+    }
+
+    static void tokens(GParser parser) {
+        Token t;
+        while ((t = parser.getNextToken()) != null && t.kind != GParserConstants.EOF) {
+            System.out.println(t.kind+" "+t.image);
+        }
     }
 
     static void tokens(GrammarLexer lexer) throws IOException {

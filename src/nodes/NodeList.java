@@ -18,7 +18,7 @@ public class NodeList<T> extends Node {
         list.addAll(other);
     }
 
-    public void addAll(NodeList other) {
+    public void addAll(NodeList<T> other) {
         list.addAll(other.list);
     }
 

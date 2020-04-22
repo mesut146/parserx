@@ -5,7 +5,7 @@ package rule;
 public class RuleRef extends Rule {
 
     String name;
-    boolean isToken;
+    public boolean isToken;//if we reference to a token
 
     public RuleRef(String name) {
         this.name = name;

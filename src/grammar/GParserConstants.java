@@ -25,43 +25,39 @@ public interface GParserConstants {
   /** RegularExpression Id. */
   int RBRACE = 15;
   /** RegularExpression Id. */
-  int LBRACKET = 16;
+  int SEMI = 16;
   /** RegularExpression Id. */
-  int RBRACKET = 17;
+  int COLON = 17;
   /** RegularExpression Id. */
-  int SEMI = 18;
+  int DOT = 18;
   /** RegularExpression Id. */
-  int COLON = 19;
+  int COMMA = 19;
   /** RegularExpression Id. */
-  int DOT = 20;
+  int QUOTE = 20;
   /** RegularExpression Id. */
-  int COMMA = 21;
+  int EQ = 21;
   /** RegularExpression Id. */
-  int QUOTE = 22;
+  int STAR = 22;
   /** RegularExpression Id. */
-  int EQ = 23;
+  int PLUS = 23;
   /** RegularExpression Id. */
-  int STAR = 24;
+  int QUES = 24;
   /** RegularExpression Id. */
-  int PLUS = 25;
+  int XOR = 25;
   /** RegularExpression Id. */
-  int QUES = 26;
+  int TOKEN_ = 26;
   /** RegularExpression Id. */
-  int XOR = 27;
+  int TOKENS = 27;
   /** RegularExpression Id. */
-  int TOKEN_ = 28;
+  int SKIP_ = 28;
   /** RegularExpression Id. */
-  int TOKENS = 29;
+  int STRING_LITERAL = 29;
   /** RegularExpression Id. */
-  int SKIP_ = 30;
+  int IDENT = 30;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 31;
+  int CHAR = 31;
   /** RegularExpression Id. */
-  int IDENT = 32;
-  /** RegularExpression Id. */
-  int CHAR = 33;
-  /** RegularExpression Id. */
-  int LEX_CHAR = 34;
+  int BRACKET_LIST = 32;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -90,8 +86,6 @@ public interface GParserConstants {
     "\")\"",
     "\"{\"",
     "\"}\"",
-    "\"[\"",
-    "\"]\"",
     "\";\"",
     "\":\"",
     "\".\"",
@@ -108,9 +102,8 @@ public interface GParserConstants {
     "<STRING_LITERAL>",
     "<IDENT>",
     "<CHAR>",
-    "<LEX_CHAR>",
+    "<BRACKET_LIST>",
     "\"|\"",
-    "\"-\"",
   };
 
 }
