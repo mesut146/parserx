@@ -10,13 +10,16 @@ public class RuleRef extends Rule {
     public RuleRef(String name) {
         this.name = name;
     }
-    
-    public RuleDecl declare(){
+
+    public RuleDecl declare() {
         return new RuleDecl(name);
     }
 
     @Override
     public String toString() {
+        if (isToken) {
+            return "{" + name + "}";
+        }
         return name;
     }
 

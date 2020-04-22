@@ -23,7 +23,7 @@ public class Bracket extends Node {
         if (str.charAt(pos++) != '[') {
             err();
         }
-        if (str.charAt(pos) == '^') {
+        if (str.charAt(pos) == '^' || str.charAt(pos) == '!') {
             negate = true;
             pos++;
         }

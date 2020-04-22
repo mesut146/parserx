@@ -42,31 +42,59 @@ public interface GParserConstants {
   int PLUS = 23;
   /** RegularExpression Id. */
   int QUES = 24;
-  /** RegularExpression Id. */
+  /**
+   * RegularExpression Id.
+   */
   int XOR = 25;
-  /** RegularExpression Id. */
-  int TOKEN_ = 26;
-  /** RegularExpression Id. */
-  int TOKENS = 27;
-  /** RegularExpression Id. */
-  int SKIP_ = 28;
-  /** RegularExpression Id. */
-  int STRING_LITERAL = 29;
-  /** RegularExpression Id. */
-  int IDENT = 30;
-  /** RegularExpression Id. */
-  int CHAR = 31;
-  /** RegularExpression Id. */
-  int BRACKET_LIST = 32;
+    /**
+     * RegularExpression Id.
+     */
+    int TILDE = 26;
+    /**
+     * RegularExpression Id.
+     */
+    int TOKEN_ = 27;
+    /**
+     * RegularExpression Id.
+     */
+    int TOKENS = 28;
+    /**
+     * RegularExpression Id.
+     */
+    int SKIP_ = 29;
+    /**
+     * RegularExpression Id.
+     */
+    int STRING_LITERAL = 30;
+    /**
+     * RegularExpression Id.
+     */
+    int IDENT = 31;
+    /**
+     * RegularExpression Id.
+     */
+    int CHAR = 32;
+    /**
+     * RegularExpression Id.
+     */
+    int BRACKET_LIST = 33;
 
-  /** Lexical state. */
-  int DEFAULT = 0;
-  /** Lexical state. */
-  int IN_SINGLE_LINE_COMMENT = 1;
-  /** Lexical state. */
-  int IN_FORMAL_COMMENT = 2;
-  /** Lexical state. */
-  int IN_MULTI_LINE_COMMENT = 3;
+    /**
+     * Lexical state.
+     */
+    int DEFAULT = 0;
+    /**
+     * Lexical state.
+     */
+    int IN_SINGLE_LINE_COMMENT = 1;
+    /**
+     * Lexical state.
+     */
+    int IN_FORMAL_COMMENT = 2;
+    /**
+     * Lexical state.
+     */
+    int IN_MULTI_LINE_COMMENT = 3;
 
   /** Literal token values. */
   String[] tokenImage = {
@@ -77,25 +105,26 @@ public interface GParserConstants {
     "\"\\t\"",
     "\"//\"",
     "<token of kind 6>",
-    "\"/*\"",
-    "<SINGLE_LINE_COMMENT>",
-    "\"*/\"",
-    "\"*/\"",
-    "<token of kind 11>",
-    "\"(\"",
-    "\")\"",
-    "\"{\"",
-    "\"}\"",
-    "\";\"",
-    "\":\"",
-    "\".\"",
-    "\",\"",
-    "\"\\\'\"",
-    "\"=\"",
-    "\"*\"",
-    "\"+\"",
-    "\"?\"",
-    "\"^\"",
+          "\"/*\"",
+          "<SINGLE_LINE_COMMENT>",
+          "\"*/\"",
+          "\"*/\"",
+          "<token of kind 11>",
+          "\"(\"",
+          "\")\"",
+          "\"{\"",
+          "\"}\"",
+          "\";\"",
+          "\":\"",
+          "\".\"",
+          "\",\"",
+          "\"\\\'\"",
+          "\"=\"",
+          "\"*\"",
+          "\"+\"",
+          "\"?\"",
+          "\"^\"",
+    "\"~\"",
     "\"token\"",
     "\"tokens\"",
     "\"skip\"",

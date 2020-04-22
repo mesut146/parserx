@@ -74,7 +74,8 @@ TOKEN :
 | < STAR: "*">
 | < PLUS: "+">
 | < QUES: "?">
-| < XOR: "^">
+| < XOR: "^">//negation
+| <TILDE: "~">//read until
 }
 
 TOKEN:
@@ -102,6 +103,8 @@ Tree tree():
   (tokenBlock(tree) | skipBlock(tree))*  (ruleDecl(tree))*
   {return tree;}
 }
+
+//lexer rules
 
 void tokenBlock(Tree tree):
 {
@@ -139,38 +142,6 @@ void skipBlock(Tree tree):
  "skip" "{" tokenList(tree,true) "}"
 }
 
-void ruleDecl(Tree tree):
-{
-  RuleDecl decl=new RuleDecl();
-  String name;
-  Node rhs;
-}
-{
-  name=name() ("=" | ":") rhs=rhs()  ";"
-  {
-    decl.name=name;
-    decl.rhs=rhs;
-    tree.addRule(decl);
-  }
-}
-
-//or series
-Node rhs():
-{
-  Node rule;
-  OrNode or=new OrNode();
-  boolean more=false;
-}
-{
-  rule=rhs_list(){or.add(rule);}
-   ("|" rule=rhs_list()
-    {
-      or.add(rule);
-      more=true;
-    })*
-   { return more?or:rule; }
-}
-
 Node lexer_rhs():
 {
   Node rule;
@@ -187,17 +158,6 @@ Node lexer_rhs():
    { return more?or:rule; }
 }
 
-//sequence no or
-Node rhs_list():
-{
-  Sequence s=new Sequence();
-  Node r;
-}
-{
-  (r=regex(){s.add(r);})+
-  {return s.normal();}
-}
-
 Node lexer_rhs_list():
 {
   Sequence s=new Sequence();
@@ -206,19 +166,6 @@ Node lexer_rhs_list():
 {
   (r=lexer_regex(){s.add(r);})+
   {return s.normal();}
-}
-
-Node regex():
-{
-  Node rule;
-  RegexNode regex;
-}
-{
-  rule=simple(){regex=new RegexNode(rule);}
-   (("*"{regex.star=true;}
-  | "+"{regex.plus=true;}
-  | "?"{regex.optional=true;}){return regex;})?
-     {return rule;}
 }
 
 Node lexer_regex():
@@ -232,18 +179,6 @@ Node lexer_regex():
   | "+"{regex.plus=true;}
   | "?"{regex.optional=true;}){return regex;})?
      {return rule;}
-}
-
-Node simple():
-{
-  Node rule;
-}
-{
-  (rule=groupRule()
-   | rule=lexerRef()//before nameRule
-   | rule=nameRule()
-   | rule=stringNode()
-   | rule=bracketNode()){return rule;}
 }
 
 //todo add dot
@@ -286,6 +221,89 @@ Node lexerRef():
  }
 }
 
+Node lexer_group():
+{
+  GroupNode group=new GroupNode();
+  Node rule;
+}
+{
+  "(" rule=lexer_rhs() ")"
+  {
+    group.rhs=rule;
+    return group;
+  }
+}
+
+//--------------------------------
+//parser rules
+
+void ruleDecl(Tree tree):
+{
+  RuleDecl decl=new RuleDecl();
+  String name;
+  Node rhs;
+}
+{
+  name=name() ("=" | ":") rhs=rhs()  ";"
+  {
+    decl.name=name;
+    decl.rhs=rhs;
+    tree.addRule(decl);
+  }
+}
+
+//or series
+Node rhs():
+{
+  Node rule;
+  OrNode or=new OrNode();
+  boolean more=false;
+}
+{
+  rule=rhs_list(){or.add(rule);}
+   ("|" rule=rhs_list()
+    {
+      or.add(rule);
+      more=true;
+    })*
+   { return more?or:rule; }
+}
+
+//sequence no or
+Node rhs_list():
+{
+  Sequence s=new Sequence();
+  Node r;
+}
+{
+  (r=regex(){s.add(r);})+
+  {return s.normal();}
+}
+
+Node regex():
+{
+  Node rule;
+  RegexNode regex;
+}
+{
+  rule=simple(){regex=new RegexNode(rule);}
+   (("*"{regex.star=true;}
+  | "+"{regex.plus=true;}
+  | "?"{regex.optional=true;}){return regex;})?
+     {return rule;}
+}
+
+Node simple():
+{
+  Node rule;
+}
+{
+  (rule=groupRule()
+   | rule=nameRule()
+   | rule=stringNode())
+   {return rule;}
+}
+
 Node stringNode():
 {
   Token str;
@@ -307,19 +325,6 @@ Node groupRule():
   }
 }
 
-
-Node lexer_group():
-{
-  GroupNode group=new GroupNode();
-  Node rule;
-}
-{
-  "(" rule=lexer_rhs() ")"
-  {
-    group.rhs=rule;
-    return group;
-  }
-}
 
 Node nameRule():
 {
