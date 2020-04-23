@@ -19,11 +19,7 @@ public class GeneratedLexer extends Lexer
     {
         char chr=read();
         System.out.println(chr);
-        for(Node node:tree.list){
-            /*if(node.canMatch(chr)){
-                return new Token(node.getType(),""+chr);
-            }*/
-        }
+        
         return super.nextToken();
     }
     

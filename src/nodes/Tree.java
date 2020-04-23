@@ -2,7 +2,7 @@ package nodes;
 
 import rule.RuleDecl;
 
-public class Tree extends NodeList<Node> {
+public class Tree {
 
     //List<Node> tokenDef;//token block
     NodeList<TokenDecl> skip;
@@ -25,6 +25,21 @@ public class Tree extends NodeList<Node> {
 
     public void addRule(RuleDecl rule) {
         rules.add(rule);
+    }
+    
+    public TokenDecl getToken(String name){
+        for(TokenDecl td:tokens.list){
+            if(td.tokenName.equals(name)){
+                return td;
+            }
+        }
+        for(TokenDecl td:skip.list){
+            if(td.tokenName.equals(name)){
+                return td;
+            }
+        }
+        
+        return null;
     }
 
     //ebnf to bnf

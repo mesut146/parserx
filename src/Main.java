@@ -9,12 +9,13 @@ import nodes.Tree;
 
 import java.io.FileReader;
 import java.io.IOException;
+import nodes.*;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        String dir = "/home/mesut/IdeaProjects/parserx";
-        //String dir = "/storage/emulated/0/AppProjects/parserx";
+        //String dir = "/home/mesut/IdeaProjects/parserx";
+        String dir = "/storage/emulated/0/AppProjects/parserx";
         dir += "/test/";
         String gr = dir + "test.g";
         String test = dir + "test.txt";
@@ -38,7 +39,8 @@ public class Main {
         GParser parser = new GParser(new FileReader(path));
         //tokens(parser);
         Tree tree = parser.tree();
-        System.out.println(tree);
+        TokenDecl td=tree.getToken("CHAR_LITERAL");
+        System.out.println(td.regex);
     }
 
     static void tokens(GParser parser) {
