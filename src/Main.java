@@ -10,6 +10,8 @@ import nodes.Tree;
 import java.io.FileReader;
 import java.io.IOException;
 import nodes.*;
+import dfa.*;
+import java.util.*;
 
 public class Main {
 
@@ -20,9 +22,77 @@ public class Main {
         String gr = dir + "test.g";
         String test = dir + "test.txt";
 
-        cc(gr);
+        //cc(gr);
+        dfa();
         //cup(gr);
         //grTest(gr);
+    }
+    static void dfa(){
+        
+        String p="abc?";
+        NFA nfa=new NFA(100);
+        //int init=0,last=1;
+        StateSet set=new StateSet();
+        set.addState(1);
+        int count=1;
+        for(int i=0;i<p.length();i++){
+            char c=p.charAt(i);
+            if(i<p.length()-1){
+                char next=p.charAt(i+1);
+                if(next=='*'){
+                    i++;
+                    nfa.addTransition(set,c,++count);
+                    nfa.addTransition(count,c,count);
+                    set.addState(count);
+                }else if(next=='+'){
+                    i++;
+                    nfa.addTransition(set,c,++count);
+                    set.clear();
+                    set.addState(count);
+                    nfa.addTransition(count,c,count);
+                }else if(next=='?'){
+                    i++;
+                    nfa.addTransition(set,c,++count);
+                    set.addState(count);
+                }
+                else{
+                    nfa.addTransition(set,c,++count);
+                    set.clear();
+                    set.addState(count);
+                }
+            }else{
+                nfa.addTransition(set,c,++count);
+                set.clear();
+                set.addState(count);
+            }
+        }
+        nfa.setAccepting(set,true);
+        //System.out.println(Arrays.toString(dfa.accepting));
+        //System.out.println(Arrays.deepToString(dfa.table));
+        match("abb",nfa.dfa());
+    }
+    
+    static void tr(DFA dfa){
+        
+    }
+    
+    static void match(String str,DFA dfa){
+        int cur=1;
+        for(int i=0;i<str.length();i++){
+            char c=str.charAt(i);
+            int st=dfa.getTransition(cur,c);
+            if(st==0){
+                System.out.println("no match at input "+c);
+                return;
+            }else{
+                cur=st;
+            }
+        }
+        if(dfa.isAccepting(cur)){
+            System.out.println("match success");
+        }else{
+            System.out.println("no match");
+        }
     }
 
     static void cup(String path) throws Exception {

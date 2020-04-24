@@ -9,11 +9,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DFA {
-    DFAState q0;//initial state
-    List<DFAState> all = new ArrayList<>();
+    //[curState][inputChar]=nextState
+    public int[][] table;
+    public boolean[] accepting;
 
     public DFA() {
-        q0 = new DFAState(0);
+        this(10,255);
+    }
+    
+    public DFA(int numStates,int numInput) {
+        table = new int[numStates][numInput];
+        accepting = new boolean[numStates];
+    }
+    
+    public void addTransition(int state, int input, int target){
+        table[state][input] = target;
+    }
+
+    public int getTransition(int state, int input){
+        return table[state][input];
+    }
+
+    public void setAccepting(int state, boolean val){
+        accepting[state] = val;
+    }
+
+    public boolean isAccepting(int state){
+        return accepting[state];
     }
 
     public void insert(Node node) {
