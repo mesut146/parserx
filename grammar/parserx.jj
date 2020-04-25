@@ -83,7 +83,7 @@ TOKEN:
   <TOKEN_: "token">
  |<TOKENS: "tokens">
  |<SKIP_: "skip">
- |<STRING_LITERAL: "\"" ((~["\r","\n"]))* "\"">
+ |<STRING_LITERAL: "\"" (~["\r","\n"])* "\"">
 }
 
 TOKEN:

@@ -5,36 +5,49 @@ import nodes.Node;
 import nodes.StringNode;
 import rule.Sequence;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class DFA {
     //[curState][inputChar]=nextState
     public int[][] table;
     public boolean[] accepting;
+    int numStates;
+    int numInput;
 
     public DFA() {
-        this(10,255);
+        this(500, 255);
     }
-    
-    public DFA(int numStates,int numInput) {
-        table = new int[numStates][numInput];
-        accepting = new boolean[numStates];
+
+    public DFA(int maxStates, int numInput) {
+        this.numInput = numInput;
+        this.numStates = 0;
+        table = new int[maxStates][numInput];
+        accepting = new boolean[maxStates];
     }
-    
-    public void addTransition(int state, int input, int target){
+
+    public void expand(int max) {
+        if (numStates >= max) {
+            return;
+        }
+        int[][] newTable = new int[max][numInput];
+        boolean[] newAccepting = new boolean[max];
+        System.arraycopy(table, 0, newTable, 0, numStates);
+        System.arraycopy(accepting, 0, newAccepting, 0, numStates);
+        table = newTable;
+        accepting = newAccepting;
+    }
+
+    public void addTransition(int state, int input, int target) {
         table[state][input] = target;
     }
 
-    public int getTransition(int state, int input){
+    public int getTransition(int state, int input) {
         return table[state][input];
     }
 
-    public void setAccepting(int state, boolean val){
+    public void setAccepting(int state, boolean val) {
         accepting[state] = val;
     }
 
-    public boolean isAccepting(int state){
+    public boolean isAccepting(int state) {
         return accepting[state];
     }
 

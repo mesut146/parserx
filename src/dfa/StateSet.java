@@ -1,3 +1,4 @@
+package dfa;
 
 import java.util.*;
 public class StateSet
