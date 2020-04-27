@@ -1,4 +1,5 @@
 package nodes;
+import java.util.*;
 
 public class RangeNode extends Node {
 
@@ -19,6 +20,29 @@ public class RangeNode extends Node {
     public String toString() {
         return start + "-" + end;
     }
+    
+    public Iterator<Character> iterator(){
+        return new Iterator<Character>(){
+            int pos=start;
+            @Override
+            public boolean hasNext()
+            {
+                return pos<=end;
+            }
 
+            @Override
+            public Character next()
+            {
+                return (char)pos;
+            }
+
+            @Override
+            public void remove()
+            {
+            }
+            
+            
+        };
+    }
 
 }

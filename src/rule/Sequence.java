@@ -8,7 +8,7 @@ import nodes.*;
 //rhs
 public class Sequence extends Node {
 
-    NodeList<Node> list = new NodeList<>();
+    public NodeList<Node> list = new NodeList<>();
 
     public Sequence(Node...arr){
         for(Node r:arr){

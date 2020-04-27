@@ -13,6 +13,10 @@ public class StateSet
         states.add(state);
     }
     
+    public void addAll(StateSet other){
+        states.addAll(other.states);
+    }
+    
     public int get(int index){
         return states.get(index);
     }

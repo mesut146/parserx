@@ -7,7 +7,7 @@ import grammar.ParseException;
 //consist of char,char range
 public class Bracket extends Node {
 
-    NodeList<Node> list = new NodeList<>();
+    public NodeList<Node> list = new NodeList<>();
     public boolean negate;//[^abc]
 
     public void add(Node node) {
@@ -66,8 +66,8 @@ public class Bracket extends Node {
     }
 
 
-    static class CharNode extends Node {
-        char chr;
+    public static class CharNode extends Node {
+        public char chr;
 
         public CharNode(char chr) {
             this.chr = chr;

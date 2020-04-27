@@ -41,5 +41,7 @@ public class NodeList<T> extends Node {
         return join(list, del);
     }
 
-
+    public int size(){
+        return list.size();
+    }
 }

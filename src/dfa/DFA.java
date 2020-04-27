@@ -51,15 +51,5 @@ public class DFA {
         return accepting[state];
     }
 
-    public void insert(Node node) {
-        if (node instanceof Sequence) {
-
-        }
-        else if (node instanceof Bracket) {
-
-        }
-        else if (node instanceof StringNode) {
-
-        }
-    }
+    
 }
