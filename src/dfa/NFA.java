@@ -2,7 +2,7 @@ package dfa;
 
 import nodes.*;
 
-import java.util.*;
+import java.util.Iterator;
 
 public class NFA {
     //[curState][input]=nextStateSet
@@ -15,7 +15,7 @@ public class NFA {
     int stateCount = 1;
     int numStates;
     int numInput;//alphabet
-    int initial=0;
+    int initial = 0;
 
     public NFA(int numStates) {
         table = new StateSet[numStates][255];
@@ -30,7 +30,7 @@ public class NFA {
         }
         StateSet[][] newTable = new StateSet[max][numInput];
         boolean[] newAccepting = new boolean[max];
-        StateSet[] newEpsilon=new StateSet[max];
+        StateSet[] newEpsilon = new StateSet[max];
         System.arraycopy(table, 0, newTable, 0, numStates);
         System.arraycopy(accepting, 0, newAccepting, 0, numStates);
         System.arraycopy(epsilon, 0, newEpsilon, 0, numStates);
@@ -85,8 +85,8 @@ public class NFA {
 
     public void addEpsilon(int state, int target) {
         //epsilon[state][target] = true;
-        StateSet set=epsilon[state];
-        if (set == null){
+        StateSet set = epsilon[state];
+        if (set == null) {
             set = epsilon[state] = new StateSet();
         }
         set.addState(target);
@@ -102,32 +102,34 @@ public class NFA {
     //return start,end state
     //todo fix accepting
     public Pair insert(Node node, int start) {
-        Pair p=new Pair(start + 1, start + 1);
+        Pair p = new Pair(start + 1, start + 1);
         if (node instanceof Sequence) {
-            Sequence seq=(Sequence)node;
+            Sequence seq = (Sequence) node;
 
-            for (Node child:seq.list){
+            for (Node child : seq.list) {
                 p = insert(child, p.end);
             }
         }
         else if (node instanceof Bracket) {
-            Bracket b=(Bracket)node;
-            if (b.negate){
+            Bracket b = (Bracket) node;
+            if (b.negate) {
                 //todo complement
-            }else{
-                int st=start;
+            }
+            else {
+                int st = start;
                 //todo or these not concat
-                for (int i=0;i < b.list.size();i++){
-                    Node n=b.list.get(i);
-                    if (n instanceof Bracket.CharNode){
-                        char c=((Bracket.CharNode)n).chr;
+                for (int i = 0; i < b.list.size(); i++) {
+                    Node n = b.list.get(i);
+                    if (n instanceof Bracket.CharNode) {
+                        char c = ((Bracket.CharNode) n).chr;
                         numStates++;
                         addTransition(st, c, numStates);
-                    }else{//range
-                        RangeNode rn=(RangeNode)n;
-                        Iterator<Character> it=rn.iterator();
-                        while (it.hasNext()){
-                            char c=it.next();
+                    }
+                    else {//range
+                        RangeNode rn = (RangeNode) n;
+                        Iterator<Character> it = rn.iterator();
+                        while (it.hasNext()) {
+                            char c = it.next();
                             numStates++;
                             addTransition(st, c, numStates);
                             st = numStates;
@@ -137,61 +139,61 @@ public class NFA {
             }
         }
         else if (node instanceof StringNode) {
-            StringNode sn=(StringNode)node;
-            String str=sn.value;
-            int st=start;
+            StringNode sn = (StringNode) node;
+            String str = sn.value;
+            int st = start;
             p.start = numStates + 1;
-            for (char c:str.toCharArray()){
+            for (char c : str.toCharArray()) {
                 numStates++;
                 addTransition(st, c, numStates);
                 st = numStates;
             }
             p.end = st;
         }
-        else if (node instanceof RegexNode){
-            RegexNode rn=(RegexNode)node;
-            if (rn.star){
-                int ns=++numStates;
+        else if (node instanceof RegexNode) {
+            RegexNode rn = (RegexNode) node;
+            if (rn.star) {
+                int ns = ++numStates;
                 addEpsilon(start, ns);//empty
-                Pair st=insert(rn.node, ns);
+                Pair st = insert(rn.node, ns);
                 addEpsilon(st.end, ns);//repeat
-                p.end=ns;
+                p.end = ns;
             }
-            else if (rn.plus){
-                Pair st=insert(rn.node, start);
+            else if (rn.plus) {
+                Pair st = insert(rn.node, start);
                 addEpsilon(st.end, st.start);//repeat
-                p.end=st.end;
+                p.end = st.end;
             }
-            else if(rn.optional){
-                int ns=++numStates;
+            else if (rn.optional) {
+                int ns = ++numStates;
                 addEpsilon(start, ns);//empty
-                Pair st=insert(rn.node, ns);
-                addEpsilon(st.end,++numStates);
-                addEpsilon(ns,numStates);
-                p.end=numStates;
+                Pair st = insert(rn.node, ns);
+                addEpsilon(st.end, ++numStates);
+                addEpsilon(ns, numStates);
+                p.end = numStates;
             }
 
         }
         return p;
     }
 
-    StateSet closure(int state){
-        StateSet res=new StateSet();
+    StateSet closure(int state) {
+        StateSet res = new StateSet();
         res.addState(state);
-        StateSet s=epsilon[state];
-        if (s == null || s.states.size() == 0){
+        StateSet s = epsilon[state];
+        if (s == null || s.states.size() == 0) {
             return res;
         }
         //res.addAll(s);
-        for (int i:s.states){
+        for (int i : s.states) {
             res.addAll(closure(i));
         }
         return res;
     }
 
-    public void addRegex(Node node){
+    public void addRegex(Node node) {
         //more than one final states?
-        Pair p=insert(node, initial);
+        Pair p = insert(node, initial);
         setAccepting(p.end, true);
     }
 }

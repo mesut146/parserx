@@ -10,11 +10,11 @@ public class Rule extends Node {
     public RuleDecl decl;
 
     public boolean isName() {
-        return this instanceof RuleRef;
+        return this instanceof NameNode;
     }
 
-    public RuleRef asName() {
-        return (RuleRef) this;
+    public NameNode asName() {
+        return (NameNode) this;
     }
 
     /*public boolean isStar() {

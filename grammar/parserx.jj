@@ -101,7 +101,9 @@ Tree tree():
 }
 {
   (tokenBlock(tree) | skipBlock(tree))*  (ruleDecl(tree))*
-  {return tree;}
+  {
+    return tree;
+  }
 }
 
 //lexer rules
@@ -220,12 +222,12 @@ Node bracketNode():
 Node lexerRef():
 {
   String s;
-  RuleRef ref;
+  NameNode ref;
 }
 {
  "{" s=name() "}"
  {
-   ref=new RuleRef(s);
+   ref=new NameNode(s);
    ref.isToken=true;
    return ref;
  }
@@ -341,7 +343,9 @@ Node nameRule():
   String name;
 }
 {
-  name=name(){return new RuleRef(name);}
+  name = name(){
+    return new NameNode(name);
+  }
 }
 
 String name():

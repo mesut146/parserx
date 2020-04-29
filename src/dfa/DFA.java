@@ -46,5 +46,5 @@ public class DFA {
         return accepting[state];
     }
 
-    
+
 }

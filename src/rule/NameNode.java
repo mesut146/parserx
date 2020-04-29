@@ -2,12 +2,12 @@ package rule;
 
 //right side
 //can refer to rule or token
-public class RuleRef extends Rule {
+public class NameNode extends Rule {
 
-    String name;
+    public String name;
     public boolean isToken;//if we reference to a token
 
-    public RuleRef(String name) {
+    public NameNode(String name) {
         this.name = name;
     }
 

@@ -4,6 +4,7 @@ package grammar;
 
 import nodes.*;
 import rule.*;
+import java.util.*;
 
 public class GParser implements GParserConstants {
 
@@ -235,11 +236,11 @@ b.parse(t.image);
 }
 
   final public Node lexerRef() throws ParseException {String s;
-  RuleRef ref;
+  NameNode ref;
     jj_consume_token(LBRACE);
     s = name();
     jj_consume_token(RBRACE);
-ref=new RuleRef(s);
+ref=new NameNode(s);
    ref.isToken=true;
    {if ("" != null) return ref;}
     throw new Error("Missing return statement in function");
@@ -413,7 +414,7 @@ group.rhs=rule;
 
   final public Node nameRule() throws ParseException {String name;
     name = name();
-{if ("" != null) return new RuleRef(name);}
+{if ("" != null) return new NameNode(name);}
     throw new Error("Missing return statement in function");
 }
 
