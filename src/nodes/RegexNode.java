@@ -1,4 +1,4 @@
-package rule;
+package nodes;
 import nodes.*;
 
 public class RegexNode extends Node {

@@ -81,9 +81,9 @@ TOKEN :
 TOKEN:
 {
   <TOKEN_: "token">
- |<TOKENS: "tokens">
- |<SKIP_: "skip">
- |<STRING_LITERAL: "\"" (~["\r","\n"])* "\"">
+| <TOKENS: "tokens">
+| <SKIP_: "skip">
+| <STRING_LITERAL: "\"" (~["\r","\n","\""] | "\\\"")* "\"">
 }
 
 TOKEN:
@@ -190,9 +190,19 @@ Node lexer_simple():
   (rule=lexer_group()
    | rule=lexerRef()//before nameRule
    | rule=stringNode()
-   | rule=bracketNode()){return rule;}
+   | rule=bracketNode()
+   | rule=dotNode()){return rule;}
 }
 
+Node dotNode():
+{}
+{
+  <DOT>{
+    StringNode str=new StringNode();
+    str.isDot=true;
+    return str;
+  }
+}
 //[a-z]
 Node bracketNode():
 {

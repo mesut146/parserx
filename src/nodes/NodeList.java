@@ -4,11 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NodeList<T> extends Node {
+
     public List<T> list = new ArrayList<>();
-    
-    /*public void add(T node){
-        list.add(node);
-    }*/
 
     public <E extends T> void add(E node) {
         list.add(node);
@@ -41,7 +38,7 @@ public class NodeList<T> extends Node {
         return join(list, del);
     }
 
-    public int size(){
+    public int size() {
         return list.size();
     }
 }

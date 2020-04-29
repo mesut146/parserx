@@ -17,13 +17,13 @@ public class Rule extends Node {
         return (RuleRef) this;
     }
 
-    public boolean isStar() {
+    /*public boolean isStar() {
         return this instanceof StarRule;
     }
 
     public StarRule asStar() {
         return (StarRule) this;
-    }
+    }*/
 
     /*public boolean isPlus() {
         return this instanceof PlusNode;

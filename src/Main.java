@@ -23,8 +23,8 @@ public class Main {
         String gr = dir + "test.g";
         String test = dir + "test.txt";
 
-        //cc(gr);
-        dfa();
+        cc(gr);
+        //dfa();
         //cup(gr);
         //grTest(gr);
     }
@@ -116,8 +116,7 @@ public class Main {
         GParser parser = new GParser(new FileReader(path));
         //tokens(parser);
         Tree tree = parser.tree();
-        TokenDecl td = tree.getToken("CHAR_LITERAL");
-        System.out.println(td.regex);
+        System.out.println(tree);
     }
 
     static void tokens(GParser parser) {

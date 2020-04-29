@@ -1,8 +1,7 @@
 package dfa;
 
-import dfa.*;
 import nodes.*;
-import rule.*;
+
 import java.util.*;
 
 public class NFA {
@@ -107,7 +106,7 @@ public class NFA {
         if (node instanceof Sequence) {
             Sequence seq=(Sequence)node;
 
-            for (Node child:seq.list.list){
+            for (Node child:seq.list){
                 p = insert(child, p.end);
             }
         }

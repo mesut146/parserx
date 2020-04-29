@@ -1,10 +1,5 @@
 package dfa;
 
-import nodes.Bracket;
-import nodes.Node;
-import nodes.StringNode;
-import rule.Sequence;
-
 public class DFA {
     //[curState][inputChar]=nextState
     public int[][] table;
