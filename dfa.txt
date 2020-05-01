@@ -1,0 +1,8 @@
+indexMap[state]=index
+lenMap[state]=num of trans from state
+these two can be merged to one by bitwise
+trans[index,len]=blocks of trans'
+
+syms[index,len]=blocks of trans symbols
+
+then iterate and test against curInput(yyChar)

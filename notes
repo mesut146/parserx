@@ -10,10 +10,6 @@ par: '(' exp ')' ;
 un: '-' exp ;
 
 
-
-
-
-
 exp: exp '+' exp ;
 exp: exp '-' exp ;
 exp: exp '*' exp ;
@@ -22,3 +18,5 @@ exp: exp '^' exp ;
 exp: '(' exp ')' ;
 exp: '-' exp ;
 exp: NUMBER ;
+
+
