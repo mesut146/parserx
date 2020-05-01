@@ -15,6 +15,11 @@ public class RangeNode extends Node {
         this.start = start;
         this.end = end;
     }
+    
+    //encode into single int
+    public int pack(){
+        return (start<<2*8)|end;
+    }
 
     @Override
     public String toString() {

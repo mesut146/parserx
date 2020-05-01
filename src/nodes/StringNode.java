@@ -13,6 +13,16 @@ public class StringNode extends Node {
     public StringNode(String value) {
         this.value = value;
     }
+    
+    public Bracket toBracket(){
+        if(!isDot){
+            return null;
+        }
+        Bracket b=new Bracket();
+        b.add('\n');
+        b.negate=true;
+        return b;
+    }
 
     @Override
     public String toString() {

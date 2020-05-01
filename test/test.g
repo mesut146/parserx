@@ -7,7 +7,7 @@ tokens{
     LETTER = [a-zA-z] //maybe [^\r\n] is better
     DIGIT = [0-9]
 
-    STRING_LITERAL = "\"" [^\r\n"]* "\""
+    STRING_LITERAL = "\"" ("\"" | [^\r\n"])* "\""
     CHAR_LITERAL = "'" .* "'"
     INTEGER_LITERAL = [1-9] {DIGIT}*
     HEX_LITERAL = "0" [xX] ({DIGIT} | [a-f])+

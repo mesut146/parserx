@@ -23,7 +23,8 @@ public class Main {
         String gr = dir + "test.g";
         String test = dir + "test.txt";
 
-        cc(gr);
+        //cc(gr);
+        System.out.println(Character.charCount(98));
         //dfa();
         //cup(gr);
         //grTest(gr);

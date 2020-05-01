@@ -52,6 +52,15 @@ public class Bracket extends Node {
     void err() throws ParseException {
         throw new ParseException("Invalid character list");
     }
+    public boolean hasRange(){
+        for(Node n:list.list){
+            if(n.isRange()){
+                return true;
+            }
+            
+        }
+        return false;
+    }
 
     @Override
     public String toString() {
