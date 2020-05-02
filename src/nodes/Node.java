@@ -26,7 +26,12 @@ public class Node {
     public StringNode asString() {
         return (StringNode) this;
     }
-    
+
+
+    public boolean isBracket() {
+        return this instanceof Bracket;
+    }
+
     public boolean isRange() {
         return this instanceof RangeNode;
     }
@@ -34,12 +39,12 @@ public class Node {
     public RangeNode asRange() {
         return (RangeNode) this;
     }
-    
-    public <T> boolean is(Class<T> c){
-        return getClass()==c;
+
+    public <T> boolean is(Class<T> c) {
+        return getClass() == c;
     }
-    
-    public <T> T as(Class<T> c){
-        return (T)this;
+
+    public <T> T as(Class<T> c) {
+        return (T) this;
     }
 }

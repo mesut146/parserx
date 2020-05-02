@@ -92,6 +92,7 @@ public class NFA {
         set.addState(target);
     }
 
+    //todo
     public DFA dfa() {
         DFA dfa = new DFA(table.length * 2, 255);
 
@@ -103,17 +104,18 @@ public class NFA {
     //todo fix accepting
     public Pair insert(Node node, int start) {
         Pair p = new Pair(start + 1, start + 1);
-        if (node instanceof Sequence) {
-            Sequence seq = (Sequence) node;
+        if (node.isSequence()) {
+            Sequence seq = node.asSequence();
 
             for (Node child : seq.list) {
-                p = insert(child, p.end);
+                p.end = insert(child, p.end).end;
             }
         }
-        else if (node instanceof Bracket) {
-            Bracket b = (Bracket) node;
+        else if (node.is(Bracket.class)) {
+            Bracket b = node.as(Bracket.class);
             if (b.negate) {
                 //todo complement
+
             }
             else {
                 int st = start;
@@ -138,7 +140,7 @@ public class NFA {
                 }
             }
         }
-        else if (node instanceof StringNode) {
+        else if (node.is(StringNode.class)) {
             StringNode sn = (StringNode) node;
             String str = sn.value;
             int st = start;
@@ -153,28 +155,33 @@ public class NFA {
         else if (node instanceof RegexNode) {
             RegexNode rn = (RegexNode) node;
             if (rn.star) {
-                int ns = ++numStates;
-                addEpsilon(start, ns);//empty
+                int ns = newState();
+                addEpsilon(start, ns);//zero
+                Pair st = insert(rn.node, start);
+                addEpsilon(st.end, start);//repeat
+                p.end = ns;
+            }
+            else if (rn.plus) {//todo
+                int ns = newState();
+                addEpsilon(start, ns);
                 Pair st = insert(rn.node, ns);
                 addEpsilon(st.end, ns);//repeat
                 p.end = ns;
             }
-            else if (rn.plus) {
-                Pair st = insert(rn.node, start);
-                addEpsilon(st.end, st.start);//repeat
-                p.end = st.end;
-            }
             else if (rn.optional) {
-                int ns = ++numStates;
-                addEpsilon(start, ns);//empty
-                Pair st = insert(rn.node, ns);
-                addEpsilon(st.end, ++numStates);
-                addEpsilon(ns, numStates);
-                p.end = numStates;
+                int ns = newState();
+                addEpsilon(start, ns);//zero times
+                Pair st = insert(rn.node, start);
+                addEpsilon(st.end, ns);
+                p.end = ns;
             }
 
         }
         return p;
+    }
+
+    int newState() {
+        return ++numStates;
     }
 
     StateSet closure(int state) {
@@ -191,6 +198,7 @@ public class NFA {
         return res;
     }
 
+    //insert regex token to initial state
     public void addRegex(Node node) {
         //more than one final states?
         Pair p = insert(node, initial);
