@@ -161,7 +161,7 @@ public class NFA {
                 addEpsilon(st.end, start);//repeat
                 p.end = ns;
             }
-            else if (rn.plus) {//todo
+            else if (rn.plus) {//todo read line of fil
                 int ns = newState();
                 addEpsilon(start, ns);
                 Pair st = insert(rn.node, ns);
