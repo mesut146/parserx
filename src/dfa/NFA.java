@@ -106,51 +106,68 @@ public class NFA {
         Pair p = new Pair(start + 1, start + 1);
         if (node.isSequence()) {
             Sequence seq = node.asSequence();
-
+            int st=start;
             for (Node child : seq.list) {
-                p.end = insert(child, p.end).end;
+                st = insert(child, st).end;
             }
+            p.end=st;
         }
         else if (node.is(Bracket.class)) {
             Bracket b = node.as(Bracket.class);
             if (b.negate) {
                 //todo complement
-
-            }
-            else {
-                int st = start;
+                int end=newState();//order not matter?
                 //todo or these not concat
                 for (int i = 0; i < b.list.size(); i++) {
                     Node n = b.list.get(i);
+                    int mid=newState();
                     if (n instanceof Bracket.CharNode) {
-                        char c = ((Bracket.CharNode) n).chr;
-                        numStates++;
-                        addTransition(st, c, numStates);
+                        char ch = ((Bracket.CharNode) n).chr;
+                        int[] arr=negate(ch,ch);
+                        addTransition(start, arr[0], mid);
+                        addTransition(start, arr[1], mid);
                     }
                     else {//range
                         RangeNode rn = (RangeNode) n;
-                        Iterator<Character> it = rn.iterator();
-                        while (it.hasNext()) {
-                            char c = it.next();
-                            numStates++;
-                            addTransition(st, c, numStates);
-                            st = numStates;
-                        }
+                        int[] arr=negate(rn.start,rn.end);
+                        addTransition(start,arr[0],mid);
+                        addTransition(start,arr[1],mid);
                     }
+                    addEpsilon(mid,end);
                 }
+                p.end=end;
+            }
+            else {
+                
+                int end=newState();//order not matter?
+                //todo or these not concat
+                for (int i = 0; i < b.list.size(); i++) {
+                    Node n = b.list.get(i);
+                    int mid=newState();
+                    if (n instanceof Bracket.CharNode) {
+                        char ch = ((Bracket.CharNode) n).chr;
+                        addTransition(start, segment(ch), mid);
+                    }
+                    else {//range
+                        RangeNode rn = (RangeNode) n;
+                        addTransition(start,segment(rn.start,rn.end),mid);
+                    }
+                    addEpsilon(mid,end);
+                }
+                p.end=end;
             }
         }
         else if (node.is(StringNode.class)) {
             StringNode sn = (StringNode) node;
             String str = sn.value;
             int st = start;
-            p.start = numStates + 1;
-            for (char c : str.toCharArray()) {
-                numStates++;
-                addTransition(st, c, numStates);
-                st = numStates;
+            int ns=start;
+            for (char ch : str.toCharArray()) {
+                ns=newState();
+                addTransition(st, segment(ch), ns);
+                st = ns;
             }
-            p.end = st;
+            p.end = ns;
         }
         else if (node instanceof RegexNode) {
             RegexNode rn = (RegexNode) node;
@@ -176,6 +193,19 @@ public class NFA {
                 p.end = ns;
             }
 
+        }else if(node.is(OrNode.class)){
+            OrNode or=(OrNode)node;
+            int end=newState();
+            for(Node n:or.list.list){
+                int e=insert(n,start).end;
+                addEpsilon(e,end);
+            }
+            p.end=end;
+        }else if(node.is(GroupNode.class)){
+            GroupNode group=(GroupNode)node;
+            Node rhs=group.rhs;
+            int end=insert(rhs,start).end;
+            p.end=end;
         }
         return p;
     }
@@ -183,7 +213,29 @@ public class NFA {
     int newState() {
         return ++numStates;
     }
+    
+    int segment(int start,int end){
+        return (start<<16)|end;
+    }
+    
+    int segment(int ch){
+        return segment(ch,ch);
+    }
+    
+    int[] decode(int seg){
+        int end=seg&(1<<16);
+        int start=seg>>16;
+        return new int[]{start,end};
+    }
+    
+    //negate char range
+    int[] negate(int start,int end){
+        int l=segment(CharClass.min,start-1);
+        int r=segment(end+1,CharClass.max);
+        return new int[]{l,r};
+    }
 
+    //epsilon closure for dfa conversion
     StateSet closure(int state) {
         StateSet res = new StateSet();
         res.addState(state);
