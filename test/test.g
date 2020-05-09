@@ -4,8 +4,8 @@
 */
 
 tokens{
-    LETTER = [a-zA-z] //maybe [^\r\n] is better
-    DIGIT = [0-9]
+    #LETTER = [a-zA-z] //maybe [^\r\n] is better
+    #DIGIT = [0-9]
 
     STRING_LITERAL = "\"" ("\"" | [^\r\n"])* "\""
     CHAR_LITERAL = "'" .* "'"
@@ -22,8 +22,8 @@ tokens{
 }
 
 skip{
-    LINE_COMMENT = "//" [^\r\n]*
-    BLOCK_COMMENT = "/*" .* "*/"
+    #LINE_COMMENT = "//" [^\r\n]*
+    #BLOCK_COMMENT = "/*" .* "*/"
     COMMENT = {LINE_COMMENT} | {BLOCK_COMMENT}
     WS = [\s\r\n\t]
 }

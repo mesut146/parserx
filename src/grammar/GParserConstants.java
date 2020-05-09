@@ -47,19 +47,21 @@ public interface GParserConstants {
   /** RegularExpression Id. */
   int TILDE = 26;
   /** RegularExpression Id. */
-  int TOKEN_ = 27;
+  int HASH = 27;
   /** RegularExpression Id. */
-  int TOKENS = 28;
+  int TOKEN_ = 28;
   /** RegularExpression Id. */
-  int SKIP_ = 29;
+  int TOKENS = 29;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 30;
+  int SKIP_ = 30;
   /** RegularExpression Id. */
-  int IDENT = 31;
+  int STRING_LITERAL = 31;
   /** RegularExpression Id. */
-  int CHAR = 32;
+  int IDENT = 32;
   /** RegularExpression Id. */
-  int BRACKET_LIST = 33;
+  int CHAR = 33;
+  /** RegularExpression Id. */
+  int BRACKET_LIST = 34;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -99,6 +101,7 @@ public interface GParserConstants {
     "\"?\"",
     "\"^\"",
     "\"~\"",
+    "\"#\"",
     "\"token\"",
     "\"tokens\"",
     "\"skip\"",

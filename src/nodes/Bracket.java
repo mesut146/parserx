@@ -18,6 +18,7 @@ public class Bracket extends Node {
         list.add(new CharNode(chr));
     }
 
+    //todo escaped
     public void parse(String str) throws ParseException {
         int pos = 0;
         if (str.charAt(pos++) != '[') {

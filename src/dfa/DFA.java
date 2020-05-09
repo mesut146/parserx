@@ -6,6 +6,7 @@ public class DFA {
     public boolean[] accepting;
     int numStates;
     int numInput;
+    int initial = 0;
 
     public DFA() {
         this(500, 255);
@@ -16,6 +17,7 @@ public class DFA {
         this.numStates = 0;
         table = new int[maxStates][numInput];
         accepting = new boolean[maxStates];
+        this.numStates = 0;
     }
 
     public void expand(int max) {
@@ -46,5 +48,12 @@ public class DFA {
         return accepting[state];
     }
 
+    public int newState() {
+        return ++numStates;
+    }
 
+    @Override
+    public String toString() {
+        return "states=" + numStates + " inputs=" + numInput;
+    }
 }

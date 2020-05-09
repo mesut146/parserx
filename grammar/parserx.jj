@@ -75,7 +75,8 @@ TOKEN :
 | < PLUS: "+">
 | < QUES: "?">
 | < XOR: "^">//negation
-| <TILDE: "~">//read until
+| < TILDE: "~">//read until
+| < HASH: "#">
 }
 
 TOKEN:
@@ -124,13 +125,15 @@ void tokenList(Tree tree,boolean skip):
 void tokenDecl(Tree tree,boolean skip):
 {
   String name;
+  boolean frag=false;
   TokenDecl decl;
   Node rhs;
 }
 {
-  name=name() "=" rhs=lexer_rhs()
+  ("#"{frag=true;})? name=name() "=" rhs=lexer_rhs()
   {
     decl=new TokenDecl(name);
+    decl.fragment=frag;
     decl.regex=rhs;
     if(skip){tree.addSkip(decl);}
     else{tree.addToken(decl);}

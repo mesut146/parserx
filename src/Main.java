@@ -12,6 +12,7 @@ import nodes.Tree;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Collections;
 
 public class Main {
 
@@ -22,8 +23,7 @@ public class Main {
         String gr = dir + "test.g";
         String test = dir + "test.txt";
 
-        //cc(gr);
-        System.out.println(Character.charCount(98));
+        cc(gr);
         //dfa();
         //cup(gr);
         //grTest(gr);
@@ -116,7 +116,11 @@ public class Main {
         GParser parser = new GParser(new FileReader(path));
         //tokens(parser);
         Tree tree = parser.tree();
-        System.out.println(tree);
+        NFA nfa = tree.makeNFA();
+        System.out.println(nfa.numStates);
+        System.out.println(nfa.numInput);
+        //System.out.println(nfa.alphabet);
+        System.out.println(nfa.dfa());
     }
 
     static void tokens(GParser parser) {

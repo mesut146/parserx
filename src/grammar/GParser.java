@@ -66,6 +66,7 @@ void tokenBlock(Tree tree) throws ParseException {
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+      case HASH:
       case IDENT:{
         ;
         break;
@@ -79,12 +80,24 @@ void tokenBlock(Tree tree) throws ParseException {
 }
 
   final public void tokenDecl(Tree tree,boolean skip) throws ParseException {String name;
+  boolean frag=false;
   TokenDecl decl;
   Node rhs;
+    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+    case HASH:{
+      jj_consume_token(HASH);
+frag=true;
+      break;
+      }
+    default:
+      jj_la1[4] = jj_gen;
+      ;
+    }
     name = name();
     jj_consume_token(EQ);
     rhs = lexer_rhs();
 decl=new TokenDecl(name);
+    decl.fragment=frag;
     decl.regex=rhs;
     if(skip){tree.addSkip(decl);}
     else{tree.addToken(decl);}
@@ -105,15 +118,15 @@ or.add(rule);
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case 34:{
+      case 35:{
         ;
         break;
         }
       default:
-        jj_la1[4] = jj_gen;
+        jj_la1[5] = jj_gen;
         break label_4;
       }
-      jj_consume_token(34);
+      jj_consume_token(35);
       rule = lexer_rhs_list();
 or.add(rule);
       more=true;
@@ -138,7 +151,7 @@ s.add(r);
         break;
         }
       default:
-        jj_la1[5] = jj_gen;
+        jj_la1[6] = jj_gen;
         break label_5;
       }
     }
@@ -171,7 +184,7 @@ regex.optional=true;
         break;
         }
       default:
-        jj_la1[6] = jj_gen;
+        jj_la1[7] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -179,7 +192,7 @@ regex.optional=true;
       break;
       }
     default:
-      jj_la1[7] = jj_gen;
+      jj_la1[8] = jj_gen;
       ;
     }
 {if ("" != null) return rule;}
@@ -210,7 +223,7 @@ regex.optional=true;
       break;
       }
     default:
-      jj_la1[8] = jj_gen;
+      jj_la1[9] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -273,7 +286,7 @@ void ruleDecl(Tree tree) throws ParseException {RuleDecl decl=new RuleDecl();
       break;
       }
     default:
-      jj_la1[9] = jj_gen;
+      jj_la1[10] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -293,15 +306,15 @@ or.add(rule);
     label_6:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case 34:{
+      case 35:{
         ;
         break;
         }
       default:
-        jj_la1[10] = jj_gen;
+        jj_la1[11] = jj_gen;
         break label_6;
       }
-      jj_consume_token(34);
+      jj_consume_token(35);
       rule = rhs_list();
 or.add(rule);
       more=true;
@@ -325,7 +338,7 @@ s.add(r);
         break;
         }
       default:
-        jj_la1[11] = jj_gen;
+        jj_la1[12] = jj_gen;
         break label_7;
       }
     }
@@ -358,7 +371,7 @@ regex.optional=true;
         break;
         }
       default:
-        jj_la1[12] = jj_gen;
+        jj_la1[13] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -366,7 +379,7 @@ regex.optional=true;
       break;
       }
     default:
-      jj_la1[13] = jj_gen;
+      jj_la1[14] = jj_gen;
       ;
     }
 {if ("" != null) return rule;}
@@ -388,7 +401,7 @@ regex.optional=true;
       break;
       }
     default:
-      jj_la1[14] = jj_gen;
+      jj_la1[15] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -433,7 +446,7 @@ group.rhs=rule;
   public Token jj_nt;
   private int jj_ntk;
   private int jj_gen;
-  final private int[] jj_la1 = new int[15];
+  final private int[] jj_la1 = new int[16];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -441,10 +454,10 @@ group.rhs=rule;
 	   jj_la1_init_1();
 	}
 	private static void jj_la1_init_0() {
-	   jj_la1_0 = new int[] {0x30000000,0x30000000,0x80000000,0x80000000,0x0,0x40045000,0x1c00000,0x1c00000,0x40045000,0x220000,0x0,0xc0001000,0x1c00000,0x1c00000,0xc0001000,};
+	   jj_la1_0 = new int[] {0x60000000,0x60000000,0x0,0x8000000,0x8000000,0x0,0x80045000,0x1c00000,0x1c00000,0x80045000,0x220000,0x0,0x80001000,0x1c00000,0x1c00000,0x80001000,};
 	}
 	private static void jj_la1_init_1() {
-	   jj_la1_1 = new int[] {0x0,0x0,0x0,0x0,0x4,0x2,0x0,0x0,0x2,0x0,0x4,0x0,0x0,0x0,0x0,};
+	   jj_la1_1 = new int[] {0x0,0x0,0x1,0x1,0x0,0x8,0x4,0x0,0x0,0x4,0x0,0x8,0x1,0x0,0x0,0x1,};
 	}
 
   /** Constructor with InputStream. */
@@ -458,7 +471,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 16; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -472,7 +485,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 16; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -482,7 +495,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 16; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -500,7 +513,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 16; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -509,7 +522,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 16; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -518,7 +531,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 16; i++) jj_la1[i] = -1;
   }
 
   private Token jj_consume_token(int kind) throws ParseException {
@@ -569,12 +582,12 @@ group.rhs=rule;
   /** Generate ParseException. */
   public ParseException generateParseException() {
 	 jj_expentries.clear();
-	 boolean[] la1tokens = new boolean[35];
+	 boolean[] la1tokens = new boolean[36];
 	 if (jj_kind >= 0) {
 	   la1tokens[jj_kind] = true;
 	   jj_kind = -1;
 	 }
-	 for (int i = 0; i < 15; i++) {
+	 for (int i = 0; i < 16; i++) {
 	   if (jj_la1[i] == jj_gen) {
 		 for (int j = 0; j < 32; j++) {
 		   if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -586,7 +599,7 @@ group.rhs=rule;
 		 }
 	   }
 	 }
-	 for (int i = 0; i < 35; i++) {
+	 for (int i = 0; i < 36; i++) {
 	   if (la1tokens[i]) {
 		 jj_expentry = new int[1];
 		 jj_expentry[0] = i;
