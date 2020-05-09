@@ -3,6 +3,8 @@ package dfa;
 import nodes.*;
 
 import java.util.Iterator;
+import java.io.*;
+import java.util.*;
 
 public class NFA {
     //[curState][input]=nextStateSet
@@ -16,12 +18,15 @@ public class NFA {
     int numStates;
     int numInput;//alphabet
     int initial = 0;
+    State initialState;
+    HashMap<Integer,Integer> alphabet;//code point,index
 
     public NFA(int numStates) {
         table = new StateSet[numStates][255];
         accepting = new boolean[numStates];
         //epsilon = new boolean[numStates][numStates];
         epsilon = new StateSet[numStates];
+        //initialState=new State();
     }
 
     public void expand(int max) {
@@ -38,8 +43,20 @@ public class NFA {
         accepting = newAccepting;
         epsilon = newEpsilon;
     }
+    
+    //convert code point to index
+    int checkInput(int input){
+        Integer index=alphabet.get(input);
+        if(index==null){
+            numInput++;
+            index=numInput;
+            alphabet.put(input,index);
+        }
+        return index;
+    }
 
     public void addTransition(int state, int input, int target) {
+        input=checkInput(input);
         StateSet set = table[state][input];
         if (set == null) {
             set = new StateSet();
@@ -255,6 +272,14 @@ public class NFA {
         //more than one final states?
         Pair p = insert(node, initial);
         setAccepting(p.end, true);
+    }
+    
+    public void dump(String path) throws IOException{
+        PrintWriter w=new PrintWriter(new FileWriter(path));
+        w.println("#states");
+        for(int i=0;i<numStates;i++){
+            
+        }
     }
 }
 
