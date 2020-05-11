@@ -1,7 +1,6 @@
 
 import dfa.DFA;
 import dfa.NFA;
-import dfa.StateSet;
 import grammar.GParser;
 import grammar.GParserConstants;
 import grammar.Token;
@@ -28,57 +27,6 @@ public class Main {
         //grTest(gr);
     }
 
-    static void dfa() {
-
-        String p = "abc?";
-        NFA nfa = new NFA(100);
-        //int init=0,last=1;
-        StateSet set = new StateSet();
-        set.addState(1);
-        int count = 1;
-        for (int i = 0; i < p.length(); i++) {
-            char c = p.charAt(i);
-            if (i < p.length() - 1) {
-                char next = p.charAt(i + 1);
-                if (next == '*') {
-                    i++;
-                    nfa.addTransition(set, c, ++count);
-                    nfa.addTransition(count, c, count);
-                    set.addState(count);
-                }
-                else if (next == '+') {
-                    i++;
-                    nfa.addTransition(set, c, ++count);
-                    set.clear();
-                    set.addState(count);
-                    nfa.addTransition(count, c, count);
-                }
-                else if (next == '?') {
-                    i++;
-                    nfa.addTransition(set, c, ++count);
-                    set.addState(count);
-                }
-                else {
-                    nfa.addTransition(set, c, ++count);
-                    set.clear();
-                    set.addState(count);
-                }
-            }
-            else {
-                nfa.addTransition(set, c, ++count);
-                set.clear();
-                set.addState(count);
-            }
-        }
-        nfa.setAccepting(set, true);
-        //System.out.println(Arrays.toString(dfa.accepting));
-        //System.out.println(Arrays.deepToString(dfa.table));
-        match("abb", nfa.dfa());
-    }
-
-    static void tr(DFA dfa) {
-
-    }
 
     static void match(String str, DFA dfa) {
         int cur = 1;
@@ -118,8 +66,11 @@ public class Main {
         NFA nfa = tree.makeNFA();
         System.out.println(nfa.numStates);
         System.out.println(nfa.numInput);
-        //System.out.println(nfa.alphabet);
-        System.out.println(nfa.dfa());
+        System.out.println(nfa.alphabet);
+        System.out.println(nfa.inputMap);
+        System.out.println(nfa.transMap);
+        //nfa.dumpAlphabet();
+        //System.out.println(nfa.dfa());
     }
 
     static void tokens(GParser parser) {

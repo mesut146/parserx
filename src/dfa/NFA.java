@@ -21,6 +21,7 @@ public class NFA {
     int initial = 0;
     public HashMap<Integer, Integer> alphabet;//code point(segment) to index
     public HashMap<Integer, Set<Integer>> inputMap;//state to input set
+    public HashMap<Integer, Set<Integer>> transMap;//state to target state set
 
     public NFA(int numStates) {
         table = new StateSet[numStates][255];
@@ -30,6 +31,7 @@ public class NFA {
         this.numInput = 0;
         alphabet = new HashMap<>();
         inputMap = new HashMap<>();
+        transMap = new HashMap<>();
     }
 
     public void expand(int max) {
@@ -62,18 +64,29 @@ public class NFA {
         return index;
     }
 
-    void addInputMap(int input) {
-        Set<Integer> s = inputMap.get(input);
+    void addInputMap(int state, int input) {
+        Set<Integer> s = inputMap.get(state);
         if (s == null) {
             s = new HashSet<>();
-            inputMap.put(input, s);
+            inputMap.put(state, s);
         }
         s.add(input);
     }
 
+    void addTransMap(int state, int target) {
+        Set<Integer> s = transMap.get(state);
+        if (s == null) {
+            s = new HashSet<>();
+            transMap.put(state, s);
+        }
+        s.add(target);
+    }
+
+    //state index,input index,target state index
     public void addTransition(int state, int input, int target) {
         input = checkInput(input);
-        addInputMap(input);
+        addInputMap(state, input);
+        addTransMap(state, target);
         StateSet set = table[state][input];
         if (set == null) {
             set = new StateSet();
@@ -93,11 +106,11 @@ public class NFA {
         }
     }*/
 
-    public void addTransition(StateSet states, int input, int target) {
+    /*public void addTransition(StateSet states, int input, int target) {
         for (int state : states.states) {
             addTransition(state, input, target);
         }
-    }
+    }*/
 
     public StateSet getTransition(int state, int input) {
         return table[state][input];
@@ -325,6 +338,23 @@ public class NFA {
         for (int i = 0; i < numStates; i++) {
 
         }
+    }
+
+    public void dumpAlphabet() {
+        /*for (int state = initial; state < numStates; state++) {
+            Set<Integer> set = inputMap.get(state);
+            for (int input : set) {
+                System.out.println(decodeSegment(input));
+            }
+        }*/
+        for (int x : alphabet.keySet()) {
+            System.out.println(decodeSegment(x));
+        }
+    }
+
+    String decodeSegment(int seg) {
+        int[] arr = decode(seg);
+        return (char) arr[0] + "-" + (char) arr[1];
     }
 }
 
