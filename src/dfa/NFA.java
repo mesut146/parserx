@@ -7,8 +7,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.*;
+import java.util.Set;
 
 public class NFA {
     public Tree tree;
@@ -19,7 +20,7 @@ public class NFA {
     public int numInput;//alphabet
     int initial = 0;
     public HashMap<Integer, Integer> alphabet;//code point(segment) to index
-    HashMap<Integer,Set<Integer>> inputMap;//state to input set
+    public HashMap<Integer, Set<Integer>> inputMap;//state to input set
 
     public NFA(int numStates) {
         table = new StateSet[numStates][255];
@@ -28,7 +29,7 @@ public class NFA {
         this.numStates = 0;
         this.numInput = 0;
         alphabet = new HashMap<>();
-        inputMap=new HashMap<>();
+        inputMap = new HashMap<>();
     }
 
     public void expand(int max) {
@@ -57,15 +58,15 @@ public class NFA {
             index = numInput;
             alphabet.put(input, index);
         }
-        
+
         return index;
     }
-    
-    void addInputMap(int input){
-        Set<Integer> s=inputMap.get(input);
-        if(s==null){
-            s=new HashSet<>();
-            inputMap.put(input,s);
+
+    void addInputMap(int input) {
+        Set<Integer> s = inputMap.get(input);
+        if (s == null) {
+            s = new HashSet<>();
+            inputMap.put(input, s);
         }
         s.add(input);
     }
@@ -132,7 +133,7 @@ public class NFA {
         for (int state = initial; state < numStates; state++) {
             StateSet set = closure(state);
             System.out.println(set.states);
-            for (int input:inputMap.get(state)) {
+            for (int input : inputMap.get(state)) {
                 StateSet in = table[state][input];
                 if (in != null) {
                     int ns;

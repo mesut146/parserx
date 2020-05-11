@@ -2,6 +2,9 @@ package nodes;
 
 import grammar.ParseException;
 
+import java.util.HashMap;
+import java.util.Map;
+
 //lexer or node aka character list
 //[a-zA-Z_0-9]
 //consist of char,char range
@@ -9,6 +12,20 @@ public class Bracket extends Node {
 
     public NodeList<Node> list = new NodeList<>();
     public boolean negate;//[^abc]
+
+    static Map<Character, Character> escapeMap = new HashMap<>();
+
+    static {
+        escapeMap.put('t', '\t');
+        escapeMap.put('b', '\b');
+        escapeMap.put('n', '\n');
+        escapeMap.put('r', '\r');
+        escapeMap.put('f', '\f');
+        escapeMap.put('\'', '\'');
+        escapeMap.put('"', '\"');
+        escapeMap.put('\\', '\\');
+        escapeMap.put('s', ' ');//space
+    }
 
     public void add(Node node) {
         list.add(node);
@@ -29,19 +46,24 @@ public class Bracket extends Node {
             pos++;
         }
         while (pos < str.length()) {
-            char c = str.charAt(pos);
-            if (c == ']') {
+            char c = str.charAt(pos++);
+            if (c == ']') {//end
                 return;
             }
             if (c != '-') {
-                if ((pos + 1) < str.length() && str.charAt(pos + 1) == '-') {
-                    char end = str.charAt(pos + 2);
+                if (c == '\\') {//escape
+                    c = escapeMap.get(str.charAt(pos++));
+                }
+                if (pos < str.length() && str.charAt(pos) == '-') {
+                    pos++;
+                    char end = str.charAt(pos++);
+                    if (end == '\\') {
+                        end = escapeMap.get(str.charAt(pos++));
+                    }
                     list.add(new RangeNode(c, end));
-                    pos += 3;
                 }
                 else {
                     list.add(new CharNode(c));
-                    pos++;
                 }
             }
             else {
@@ -50,15 +72,17 @@ public class Bracket extends Node {
         }
     }
 
+
     void err() throws ParseException {
         throw new ParseException("Invalid character list");
     }
-    public boolean hasRange(){
-        for(Node n:list.list){
-            if(n.isRange()){
+
+    public boolean hasRange() {
+        for (Node n : list.list) {
+            if (n.isRange()) {
                 return true;
             }
-            
+
         }
         return false;
     }

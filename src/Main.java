@@ -12,7 +12,6 @@ import nodes.Tree;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Collections;
 
 public class Main {
 
