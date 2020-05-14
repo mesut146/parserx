@@ -40,6 +40,14 @@ public class Node {
         return (RangeNode) this;
     }
 
+    public boolean isChar() {
+        return this instanceof RangeNode;
+    }
+
+    public Bracket.CharNode asChar() {
+        return (Bracket.CharNode) this;
+    }
+
     public <T> boolean is(Class<T> c) {
         return getClass() == c;
     }

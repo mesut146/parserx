@@ -1,9 +1,9 @@
 package nodes;
 
+import dfa.CharClass;
 import grammar.ParseException;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 //lexer or node aka character list
 //[a-zA-Z_0-9]
@@ -72,6 +72,110 @@ public class Bracket extends Node {
         }
     }
 
+    public void sort(List<RangeNode> ranges) {
+        Collections.sort(ranges, new Comparator<RangeNode>() {
+            @Override
+            public int compare(RangeNode r1, RangeNode r2) {
+                if (r1.start < r2.start) {
+                    return -1;
+                }
+                if (r1.start == r2.start) {
+                    return Integer.compare(r1.end, r2.end);
+                }
+                return 1;
+            }
+        });
+    }
+
+    public List<RangeNode> negateAll() {
+        List<RangeNode> res = new ArrayList<>();
+        List<RangeNode> ranges = new ArrayList<>();
+        //negate all ranges
+        for (Node node : list) {
+            RangeNode range;
+            if (node instanceof CharNode) {
+                range = new RangeNode(node.asChar().chr, node.asChar().chr);
+            }
+            else {
+                range = node.asRange();
+            }
+            ranges.add(new RangeNode(CharClass.min, range.start - 1));
+        }
+        //sort(ranges);
+        //merge the ranges
+        for (int i = 0; i < ranges.size(); i++) {
+            RangeNode range = ranges.get(i);
+            if (conflict(range, i, ranges)) {
+
+            }
+        }
+        return res;
+    }
+
+    boolean conflict(RangeNode range, int idx, List<RangeNode> ranges) {
+        for (int i = 0; i < ranges.size(); i++) {
+            if (i == idx) continue;
+            RangeNode r = ranges.get(i);
+            if (includes(range, r) || includes(r, range)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //r1.start <= r2.start
+    void merge(RangeNode r1, RangeNode r2) {
+        //sort
+        if (r1.start > r2.start) {
+            RangeNode tmp = r1;
+            r1 = r2;
+            r2 = tmp;
+        }
+        if (r1.end == r2.start) {
+            new RangeNode(r1.start, r2.end);
+        }
+        if (covers(r1, r2)) {
+            //r1;
+        }
+        if (covers(r2, r1)) {
+            //r2
+        }
+        //intersect
+        RangeNode inter = intersect(r1, r1);
+        if (inter != null) {
+            if (r1.end <= r2.end) {
+
+            }
+            else {
+
+            }
+        }
+
+    }
+
+    //r1 covers r2
+    //e.g 5-100, 7,50
+    boolean covers(RangeNode r1, RangeNode r2) {
+        if (r1.start <= r2.start && r1.end >= r2.end) {
+            return true;
+        }
+        return false;
+    }
+
+    RangeNode intersect(RangeNode r1, RangeNode r2) {
+        int l = Math.max(r1.start, r2.start);
+        int r = Math.min(r1.end, r2.end);
+        if (l > r) {
+            return null;
+        }
+        return new RangeNode(l, r);
+    }
+
+    /*List<RangeNode> merge(RangeNode r1, RangeNode r2) {
+
+        return null;
+    }*/
+
 
     void err() throws ParseException {
         throw new ParseException("Invalid character list");
@@ -82,7 +186,6 @@ public class Bracket extends Node {
             if (n.isRange()) {
                 return true;
             }
-
         }
         return false;
     }
@@ -100,6 +203,7 @@ public class Bracket extends Node {
     }
 
 
+    //single char
     public static class CharNode extends Node {
         public char chr;
 

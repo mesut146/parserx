@@ -1,9 +1,10 @@
 package nodes;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-public class NodeList<T> extends Node {
+public class NodeList<T> extends Node implements Iterable<T> {
 
     public List<T> list = new ArrayList<>();
 
@@ -40,5 +41,10 @@ public class NodeList<T> extends Node {
 
     public int size() {
         return list.size();
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return list.iterator();
     }
 }

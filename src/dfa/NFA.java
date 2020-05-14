@@ -3,13 +3,8 @@ package dfa;
 import nodes.*;
 import rule.NameNode;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import java.util.*;
 
 public class NFA {
@@ -27,7 +22,7 @@ public class NFA {
 
     public NFA(int numStates) {
         //table = new StateSet[numStates][255];
-        trans=new ArrayList<>();
+        trans = new ArrayList<>();
         accepting = new boolean[numStates];
         epsilon = new StateSet[numStates];
         this.numStates = 0;
@@ -52,7 +47,7 @@ public class NFA {
         epsilon = newEpsilon;
     }
 
-    //convert code point to index
+    //convert code point(segment) to index
     int checkInput(int input) {
         if (input == -1) {
             //System.out.println("aaa");
@@ -63,7 +58,6 @@ public class NFA {
             index = numInput;
             alphabet.put(input, index);
         }
-
         return index;
     }
 
@@ -87,22 +81,28 @@ public class NFA {
 
     //state index,input index,target state index
     public void addTransition(int state, int input, int target) {
-        input = checkInput(input);
         addInputMap(state, input);
         addTransMap(state, target);
         Transition tr;
-        if(trans.size()<state){
-            tr=new Transition();
-        }else{
-            tr=trans.get(state);
-            if(tr.state!=state){
-                tr=new Transition();
+        if (trans.size() < state) {
+            tr = new Transition();
+        }
+        else {
+            tr = trans.get(state);
+            if (tr.state != state) {
+                tr = new Transition();
             }
         }
-        tr.state=state;
-        tr.symbol=input;
+        tr.state = state;
+        tr.symbol = input;
         tr.states.add(target);
-        trans.set(state,tr);
+        trans.set(state, tr);
+    }
+
+    public void addTransitionRange(int state, int target, int left, int right) {
+        int seg = segment(left, right);
+        int idx = checkInput(seg);
+        addTransition(state, idx, target);
     }
 
     /*public void addTransition(int state, int input, StateSet targets) {
@@ -122,9 +122,9 @@ public class NFA {
         }
     }*/
 
-    public StateSet getTransition(int state, int input) {
+    /*public StateSet getTransition(int state, int input) {
         return table[state][input];
-    }
+    }*/
 
     public void setAccepting(int state, boolean val) {
         accepting[state] = val;
@@ -191,7 +191,6 @@ public class NFA {
 
     //add regex to @start
     //return start,end state
-    //todo fix accepting
     public Pair insert(Node node, int start) {
         Pair p = new Pair(start + 1, start + 1);
         if (node.isSequence()) {
@@ -205,6 +204,7 @@ public class NFA {
         else if (node.is(Bracket.class)) {
             Bracket b = node.as(Bracket.class);
             if (b.negate) {
+                //todo all at once
                 int end = newState();//order not matter?
                 for (int i = 0; i < b.list.size(); i++) {
                     Node n = b.list.get(i);
@@ -212,32 +212,31 @@ public class NFA {
                     if (n instanceof Bracket.CharNode) {
                         char ch = ((Bracket.CharNode) n).chr;
                         int[] arr = negate(ch, ch);
-                        addTransition(start, segment(arr[0]), mid);
-                        addTransition(start, segment(arr[1]), mid);
+                        addTransitionRange(start, mid, arr[0], arr[0]);
+                        addTransitionRange(start, mid, arr[1], arr[1]);
                     }
                     else {//range
                         RangeNode rn = (RangeNode) n;
                         int[] arr = negate(rn.start, rn.end);
-                        addTransition(start, segment(arr[0]), mid);
-                        addTransition(start, segment(arr[1]), mid);
+                        addTransitionRange(start, mid, arr[0], arr[0]);
+                        addTransitionRange(start, mid, arr[1], arr[1]);
                     }
                     addEpsilon(mid, end);
                 }
                 p.end = end;
             }
             else {
-
                 int end = newState();//order not matter?
                 for (int i = 0; i < b.list.size(); i++) {
                     Node n = b.list.get(i);
                     int mid = newState();
                     if (n instanceof Bracket.CharNode) {
                         char ch = ((Bracket.CharNode) n).chr;
-                        addTransition(start, segment(ch), mid);
+                        addTransitionRange(start, mid, ch, ch);
                     }
                     else {//range
                         RangeNode rn = (RangeNode) n;
-                        addTransition(start, segment(rn.start, rn.end), mid);
+                        addTransitionRange(start, mid, rn.start, rn.end);
                     }
                     addEpsilon(mid, end);
                 }
@@ -255,7 +254,7 @@ public class NFA {
                 int ns = start;
                 for (char ch : str.toCharArray()) {
                     ns = newState();
-                    addTransition(st, segment(ch), ns);
+                    addTransitionRange(st, ns, ch, ch);
                     st = ns;
                 }
                 p.end = ns;
@@ -312,7 +311,7 @@ public class NFA {
         return ++numStates;
     }
 
-    int segment(int start, int end) {
+    static int segment(int start, int end) {
         return (start << 16) | end;
     }
 
@@ -321,19 +320,11 @@ public class NFA {
     }
 
     //segment to code points range
-    int[] decode(int seg) {
+    int[] desegment(int seg) {
         int end = seg & (1 << 16);
         int start = seg >> 16;
         return new int[]{start, end};
     }
-
-    //negate char range
-    int[] negate(int start, int end) {
-        int l = segment(CharClass.min, start - 1);
-        int r = segment(end + 1, CharClass.max);
-        return new int[]{l, r};
-    }
-
 
     //insert regex token to initial state
     public void addRegex(Node node) {
@@ -344,16 +335,16 @@ public class NFA {
 
     public void dump(String path) throws IOException {
         PrintWriter w = new PrintWriter(System.out);
-        
+
         for (int i = initial; i < numStates; i++) {
             w.println(i);
-            Set<Integer> syms=inputMap.get(i);
-            for(int s:syms){
-                StateSet targets=table[i][s];
+            Set<Integer> syms = inputMap.get(i);
+            for (int s : syms) {
+                StateSet targets = table[i][s];
                 w.print("  ");
                 w.print(decodeSegment(s));
                 w.print(" -> ");
-                for(int st:targets.states){
+                for (int st : targets.states) {
                     w.print(st);
                     w.print(" ");
                 }
@@ -375,7 +366,7 @@ public class NFA {
     }
 
     String decodeSegment(int seg) {
-        int[] arr = decode(seg);
+        int[] arr = desegment(seg);
         return (char) arr[0] + "-" + (char) arr[1];
     }
 }
