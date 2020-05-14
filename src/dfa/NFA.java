@@ -10,21 +10,24 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.*;
 
 public class NFA {
     public Tree tree;
-    StateSet[][] table;//[curState][input]=nextStateSet
+    //StateSet[][] table;//[curState][input]=nextStateSet
     boolean[] accepting;//[state]=isAccepting
     StateSet[] epsilon;//[state]=set of next states with epsilon moves
     public int numStates;
     public int numInput;//alphabet
     int initial = 0;
+    public List<Transition> trans;//state,input,targets
     public HashMap<Integer, Integer> alphabet;//code point(segment) to index
     public HashMap<Integer, Set<Integer>> inputMap;//state to input set
     public HashMap<Integer, Set<Integer>> transMap;//state to target state set
 
     public NFA(int numStates) {
-        table = new StateSet[numStates][255];
+        //table = new StateSet[numStates][255];
+        trans=new ArrayList<>();
         accepting = new boolean[numStates];
         epsilon = new StateSet[numStates];
         this.numStates = 0;
@@ -41,10 +44,10 @@ public class NFA {
         StateSet[][] newTable = new StateSet[max][numInput];
         boolean[] newAccepting = new boolean[max];
         StateSet[] newEpsilon = new StateSet[max];
-        System.arraycopy(table, 0, newTable, 0, numStates);
+        //System.arraycopy(table, 0, newTable, 0, numStates);
         System.arraycopy(accepting, 0, newAccepting, 0, numStates);
         System.arraycopy(epsilon, 0, newEpsilon, 0, numStates);
-        table = newTable;
+        //table = newTable;
         accepting = newAccepting;
         epsilon = newEpsilon;
     }
@@ -87,12 +90,19 @@ public class NFA {
         input = checkInput(input);
         addInputMap(state, input);
         addTransMap(state, target);
-        StateSet set = table[state][input];
-        if (set == null) {
-            set = new StateSet();
-            table[state][input] = set;
+        Transition tr;
+        if(trans.size()<state){
+            tr=new Transition();
+        }else{
+            tr=trans.get(state);
+            if(tr.state!=state){
+                tr=new Transition();
+            }
         }
-        set.addState(target);
+        tr.state=state;
+        tr.symbol=input;
+        tr.states.add(target);
+        trans.set(state,tr);
     }
 
     /*public void addTransition(int state, int input, StateSet targets) {
@@ -333,10 +343,22 @@ public class NFA {
     }
 
     public void dump(String path) throws IOException {
-        PrintWriter w = new PrintWriter(new FileWriter(path));
-        w.println("#states");
-        for (int i = 0; i < numStates; i++) {
-
+        PrintWriter w = new PrintWriter(System.out);
+        
+        for (int i = initial; i < numStates; i++) {
+            w.println(i);
+            Set<Integer> syms=inputMap.get(i);
+            for(int s:syms){
+                StateSet targets=table[i][s];
+                w.print("  ");
+                w.print(decodeSegment(s));
+                w.print(" -> ");
+                for(int st:targets.states){
+                    w.print(st);
+                    w.print(" ");
+                }
+                w.println();
+            }
         }
     }
 

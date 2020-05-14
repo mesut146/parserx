@@ -8,6 +8,7 @@ syms[index,len]=blocks of trans symbols
 
 then iterate and test against curInput(yyChar)
 
+
 syms[index[state]]
 
 scale segments to 0..numInput range

@@ -15,8 +15,8 @@ import java.io.IOException;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        String dir = "/home/mesut/IdeaProjects/parserx";
-        //String dir = "/storage/emulated/0/AppProjects/parserx";
+        //String dir = "/home/mesut/IdeaProjects/parserx";
+        String dir = "/storage/emulated/0/AppProjects/parserx";
         dir += "/test/";
         String gr = dir + "test.g";
         String test = dir + "test.txt";
@@ -69,6 +69,7 @@ public class Main {
         System.out.println(nfa.alphabet);
         System.out.println(nfa.inputMap);
         System.out.println(nfa.transMap);
+        nfa.dump("");
         //nfa.dumpAlphabet();
         //System.out.println(nfa.dfa());
     }
