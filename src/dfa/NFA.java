@@ -5,7 +5,10 @@ import rule.NameNode;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class NFA {
     public Tree tree;
@@ -17,8 +20,8 @@ public class NFA {
     int initial = 0;
     public List<Transition> trans;//state,input,targets
     public HashMap<Integer, Integer> alphabet;//code point(segment) to index
-    public HashMap<Integer, Set<Integer>> inputMap;//state to input set
-    public HashMap<Integer, Set<Integer>> transMap;//state to target state set
+    public List<List<Integer>> inputMap;//state to input set
+    public List<List<Integer>> transMap;//state to target state set
 
     public NFA(int numStates) {
         //table = new StateSet[numStates][255];
@@ -28,8 +31,8 @@ public class NFA {
         this.numStates = 0;
         this.numInput = 0;
         alphabet = new HashMap<>();
-        inputMap = new HashMap<>();
-        transMap = new HashMap<>();
+        inputMap = new ArrayList<>();
+        transMap = new ArrayList<>();
     }
 
     public void expand(int max) {
@@ -47,34 +50,50 @@ public class NFA {
         epsilon = newEpsilon;
     }
 
+    int getSegment(int index) {
+        for (Map.Entry<Integer, Integer> e : alphabet.entrySet()) {
+            if (e.getValue() == index) {
+                return e.getKey();
+            }
+        }
+        return -2;//no segment,not possible
+    }
+
     //convert code point(segment) to index
-    int checkInput(int input) {
-        if (input == -1) {
+    int checkInput(int segment) {
+        if (segment == -1) {
             //System.out.println("aaa");
         }
-        Integer index = alphabet.get(input);
+        Integer index = alphabet.get(segment);
         if (index == null) {
+            //starts from 1
             numInput++;
             index = numInput;
-            alphabet.put(input, index);
+            alphabet.put(segment, index);
         }
         return index;
     }
 
     void addInputMap(int state, int input) {
-        Set<Integer> s = inputMap.get(state);
-        if (s == null) {
-            s = new HashSet<>();
-            inputMap.put(state, s);
+        List<Integer> s;
+        if (inputMap.size() < state) {
+            s = new ArrayList<>();
+            inputMap.add(state, s);
+        }
+        else {
+            s = inputMap.get(state);
         }
         s.add(input);
     }
 
     void addTransMap(int state, int target) {
-        Set<Integer> s = transMap.get(state);
-        if (s == null) {
-            s = new HashSet<>();
-            transMap.put(state, s);
+        List<Integer> s;
+        if (transMap.size() < state) {
+            s = new ArrayList<>();
+            transMap.add(state, s);
+        }
+        else {
+            s = transMap.get(state);
         }
         s.add(target);
     }
@@ -83,7 +102,7 @@ public class NFA {
     public void addTransition(int state, int input, int target) {
         addInputMap(state, input);
         addTransMap(state, target);
-        Transition tr;
+        /*Transition tr;
         if (trans.size() < state) {
             tr = new Transition();
         }
@@ -96,7 +115,7 @@ public class NFA {
         tr.state = state;
         tr.symbol = input;
         tr.states.add(target);
-        trans.set(state, tr);
+        trans.set(state, tr);*/
     }
 
     public void addTransitionRange(int state, int target, int left, int right) {
@@ -150,7 +169,7 @@ public class NFA {
     }
 
     //todo
-    public DFA dfa() {
+    /*public DFA dfa() {
         DFA dfa = new DFA(table.length * 2, numInput);
         Map<StateSet, Integer> map = new HashMap<>();
         for (int state = initial; state < numStates; state++) {
@@ -172,7 +191,7 @@ public class NFA {
             }
         }
         return dfa;
-    }
+    }*/
 
     //epsilon closure for dfa conversion
     public StateSet closure(int state) {
@@ -193,24 +212,34 @@ public class NFA {
     //return start,end state
     public Pair insert(Node node, int start) {
         Pair p = new Pair(start + 1, start + 1);
-        if (node.isSequence()) {
-            Sequence seq = node.asSequence();
-            int st = start;
-            for (Node child : seq.list) {
-                st = insert(child, st).end;
+        if (node.is(StringNode.class)) {
+            StringNode sn = (StringNode) node;
+            if (sn.isDot) {
+                p.end = insert(sn.toBracket(), start).end;
             }
-            p.end = st;
+            else {
+                String str = sn.value;
+                int st = start;
+                int ns = start;
+                for (char ch : str.toCharArray()) {
+                    ns = newState();
+                    addTransitionRange(st, ns, ch, ch);
+                    st = ns;
+                }
+                p.end = ns;
+            }
+
         }
         else if (node.is(Bracket.class)) {
             Bracket b = node.as(Bracket.class);
             if (b.negate) {
                 //todo all at once
                 int end = newState();//order not matter?
-                List<RangeNode> ranges=b.negateAll();
+                List<RangeNode> ranges = b.negateAll();
                 for (int i = 0; i < ranges.size(); i++) {
                     RangeNode n = ranges.get(i);
                     int mid = newState();
-                    addTransitionRange(start,end,n.start,n.end);
+                    addTransitionRange(start, end, n.start, n.end);
                     addEpsilon(mid, end);
                 }
                 p.end = end;
@@ -234,23 +263,13 @@ public class NFA {
                 p.end = end;
             }
         }
-        else if (node.is(StringNode.class)) {
-            StringNode sn = (StringNode) node;
-            if (sn.isDot) {
-                p.end = insert(sn.toBracket(), start).end;
+        else if (node.isSequence()) {
+            Sequence seq = node.asSequence();
+            int st = start;
+            for (Node child : seq.list) {
+                st = insert(child, st).end;
             }
-            else {
-                String str = sn.value;
-                int st = start;
-                int ns = start;
-                for (char ch : str.toCharArray()) {
-                    ns = newState();
-                    addTransitionRange(st, ns, ch, ch);
-                    st = ns;
-                }
-                p.end = ns;
-            }
-
+            p.end = st;
         }
         else if (node instanceof RegexNode) {
             RegexNode rn = (RegexNode) node;
@@ -317,6 +336,13 @@ public class NFA {
         return new int[]{start, end};
     }
 
+
+    //segment to printable range
+    String seg2str(int seg) {
+        int[] arr = desegment(seg);
+        return (char) arr[0] + "-" + (char) arr[1];
+    }
+
     //insert regex token to initial state
     public void addRegex(Node node) {
         //more than one final states?
@@ -329,11 +355,12 @@ public class NFA {
 
         for (int i = initial; i < numStates; i++) {
             w.println(i);
-            Set<Integer> syms = inputMap.get(i);
-            for (int s : syms) {
-                StateSet targets = table[i][s];
+
+            List<Integer> syms = inputMap.get(i);
+            List<Integer> trans = transMap.get(i);
+            for (int inputIdx = 0; i < syms.size(); inputIdx++) {
                 w.print("  ");
-                w.print(decodeSegment(s));
+                w.print(seg2str(syms));
                 w.print(" -> ");
                 for (int st : targets.states) {
                     w.print(st);
@@ -356,9 +383,5 @@ public class NFA {
         }
     }
 
-    String decodeSegment(int seg) {
-        int[] arr = desegment(seg);
-        return (char) arr[0] + "-" + (char) arr[1];
-    }
 }
 

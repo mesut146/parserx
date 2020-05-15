@@ -6,5 +6,5 @@ import java.util.List;
 public class Transition {
     int state;//from
     List<Integer> states = new ArrayList<>();//to
-    int symbol;//input index
+    List<Integer> symbols = new ArrayList<>();//inputs
 }
