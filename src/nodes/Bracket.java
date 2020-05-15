@@ -101,18 +101,32 @@ public class Bracket extends Node {
             }
             ranges.add(new RangeNode(CharClass.min, range.start - 1));
         }
-        //sort(ranges);
-        //merge the ranges
-        for (int i = 0; i < ranges.size(); i++) {
+        sort(ranges);
+        //merge the intersections
+        for (int i = 0; i < ranges.size() - 1; i++) {
             RangeNode range = ranges.get(i);
-            if (conflict(range, i, ranges)) {
-
+            RangeNode next=ranges.get(i+1);
+            if (intersect(range,next)==null) {
+                res.add(new RangeNode(range.start,next.end));
+            }else{
+                res.add(range);
             }
         }
+        ranges=new ArrayList<>(res);
+        res.clear();
+        //negate distinc ranges
+        int end=CharClass.min;
+        for(int i=0;i<ranges.size();i++){
+            RangeNode range = ranges.get(i);
+            //RangeNode next=ranges.get(i+1);
+            res.add(new RangeNode(end,range.start-1));
+            end=range.end+1;
+        }
+        res.add(new RangeNode(end,CharClass.max));
         return res;
     }
 
-    boolean conflict(RangeNode range, int idx, List<RangeNode> ranges) {
+    /*boolean conflict(RangeNode range, int idx, List<RangeNode> ranges) {
         for (int i = 0; i < ranges.size(); i++) {
             if (i == idx) continue;
             RangeNode r = ranges.get(i);
@@ -121,7 +135,7 @@ public class Bracket extends Node {
             }
         }
         return false;
-    }
+    }*/
 
     //r1.start <= r2.start
     void merge(RangeNode r1, RangeNode r2) {

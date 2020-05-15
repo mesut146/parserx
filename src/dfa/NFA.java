@@ -206,26 +206,17 @@ public class NFA {
             if (b.negate) {
                 //todo all at once
                 int end = newState();//order not matter?
-                for (int i = 0; i < b.list.size(); i++) {
-                    Node n = b.list.get(i);
+                List<RangeNode> ranges=b.negateAll();
+                for (int i = 0; i < ranges.size(); i++) {
+                    RangeNode n = ranges.get(i);
                     int mid = newState();
-                    if (n instanceof Bracket.CharNode) {
-                        char ch = ((Bracket.CharNode) n).chr;
-                        int[] arr = negate(ch, ch);
-                        addTransitionRange(start, mid, arr[0], arr[0]);
-                        addTransitionRange(start, mid, arr[1], arr[1]);
-                    }
-                    else {//range
-                        RangeNode rn = (RangeNode) n;
-                        int[] arr = negate(rn.start, rn.end);
-                        addTransitionRange(start, mid, arr[0], arr[0]);
-                        addTransitionRange(start, mid, arr[1], arr[1]);
-                    }
+                    addTransitionRange(start,end,n.start,n.end);
                     addEpsilon(mid, end);
                 }
                 p.end = end;
             }
             else {
+                //to have one end state we add epsilons
                 int end = newState();//order not matter?
                 for (int i = 0; i < b.list.size(); i++) {
                     Node n = b.list.get(i);
