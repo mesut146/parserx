@@ -1,10 +1,9 @@
 package dfa;
 
-import java.util.ArrayList;
-import java.util.List;
-
+//arrow
 public class Transition {
     int state;//from
-    List<Integer> states = new ArrayList<>();//to
-    List<Integer> symbols = new ArrayList<>();//inputs
+    int target;
+    int symbol;
+    int segment;
 }

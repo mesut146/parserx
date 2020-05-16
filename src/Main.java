@@ -67,8 +67,8 @@ public class Main {
         System.out.println(nfa.numStates);
         System.out.println(nfa.numInput);
         System.out.println(nfa.alphabet);
-        System.out.println(nfa.inputMap);
-        System.out.println(nfa.transMap);
+        //System.out.println(nfa.inputMap);
+        //System.out.println(nfa.transMap);
         nfa.dump("");
         //nfa.dumpAlphabet();
         //System.out.println(nfa.dfa());

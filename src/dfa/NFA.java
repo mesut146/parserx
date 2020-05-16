@@ -18,38 +18,43 @@ public class NFA {
     public int numStates;
     public int numInput;//alphabet
     int initial = 0;
-    public List<Transition> trans;//state,input,targets
+    //public List<List<Transition>> trans;//state,input,targets
+    public List<Transition>[] trans;
     public HashMap<Integer, Integer> alphabet;//code point(segment) to index
-    public List<List<Integer>> inputMap;//state to input set
-    public List<List<Integer>> transMap;//state to target state set
+    public int[] inputIndex;//index to segment
+    //public List<List<Integer>> inputMap;//state to input set
+    //public List<List<Integer>> transMap;//state to target state set
 
     public NFA(int numStates) {
         //table = new StateSet[numStates][255];
-        trans = new ArrayList<>();
+        trans = new List[100];
         accepting = new boolean[numStates];
         epsilon = new StateSet[numStates];
-        this.numStates = 0;
+        this.numStates = 0;//just initial
         this.numInput = 0;
         alphabet = new HashMap<>();
-        inputMap = new ArrayList<>();
-        transMap = new ArrayList<>();
+        inputIndex = new int[255];
+        //inputMap = new ArrayList<>();
+        //transMap = new ArrayList<>();
     }
 
-    public void expand(int max) {
-        if (numStates >= max) {
+    public void expand(int state) {
+        if (numStates >= state) {
             return;
         }
-        StateSet[][] newTable = new StateSet[max][numInput];
+        int max = state * 2;
         boolean[] newAccepting = new boolean[max];
         StateSet[] newEpsilon = new StateSet[max];
-        //System.arraycopy(table, 0, newTable, 0, numStates);
         System.arraycopy(accepting, 0, newAccepting, 0, numStates);
         System.arraycopy(epsilon, 0, newEpsilon, 0, numStates);
-        //table = newTable;
         accepting = newAccepting;
         epsilon = newEpsilon;
+        List<Transition>[] newTrans = new List[max];
+        System.arraycopy(trans, 0, newTrans, 0, state);
+        trans = newTrans;
     }
 
+    //too slow
     int getSegment(int index) {
         for (Map.Entry<Integer, Integer> e : alphabet.entrySet()) {
             if (e.getValue() == index) {
@@ -74,7 +79,7 @@ public class NFA {
         return index;
     }
 
-    void addInputMap(int state, int input) {
+    /*void addInputMap(int state, int input) {
         List<Integer> s;
         if (inputMap.size() < state) {
             s = new ArrayList<>();
@@ -84,9 +89,9 @@ public class NFA {
             s = inputMap.get(state);
         }
         s.add(input);
-    }
+    }*/
 
-    void addTransMap(int state, int target) {
+    /*void addTransMap(int state, int target) {
         List<Integer> s;
         if (transMap.size() < state) {
             s = new ArrayList<>();
@@ -96,32 +101,33 @@ public class NFA {
             s = transMap.get(state);
         }
         s.add(target);
-    }
+    }*/
+
 
     //state index,input index,target state index
     public void addTransition(int state, int input, int target) {
-        addInputMap(state, input);
-        addTransMap(state, target);
-        /*Transition tr;
-        if (trans.size() < state) {
-            tr = new Transition();
+        //addInputMap(state, input);
+        //addTransMap(state, target);
+        expand(state);
+        //System.out.printf("state: %d input: %d target: %d\n", state, input, target);
+        List<Transition> arr;
+        arr = trans[state];
+        if (arr == null || arr.get(0).state != state) {
+            arr = new ArrayList<>();
         }
-        else {
-            tr = trans.get(state);
-            if (tr.state != state) {
-                tr = new Transition();
-            }
-        }
+        trans[state] = arr;
+        Transition tr = new Transition();
         tr.state = state;
         tr.symbol = input;
-        tr.states.add(target);
-        trans.set(state, tr);*/
+        tr.target = target;
+        arr.add(tr);
     }
 
     public void addTransitionRange(int state, int target, int left, int right) {
         int seg = segment(left, right);
-        int idx = checkInput(seg);
-        addTransition(state, idx, target);
+        //int inputIndex = checkInput(seg);
+        addTransition(state,seg,target);
+        //addTransition(state, inputIndex, target);
     }
 
     /*public void addTransition(int state, int input, StateSet targets) {
@@ -353,35 +359,40 @@ public class NFA {
     public void dump(String path) throws IOException {
         PrintWriter w = new PrintWriter(System.out);
 
-        for (int i = initial; i < numStates; i++) {
-            w.println(i);
-
-            List<Integer> syms = inputMap.get(i);
-            List<Integer> trans = transMap.get(i);
-            for (int inputIdx = 0; i < syms.size(); inputIdx++) {
+        for (int state = initial; state < numStates; state++) {
+            w.print("S");
+            w.println(state);
+            List<Transition> arr = trans[state];
+            if (arr == null) {
+                break;
+            }
+            for (Transition tr : arr) {
                 w.print("  ");
-                w.print(seg2str(syms));
+                //int seg = getSegment(tr.symbol);
+                w.print(seg2str(tr.symbol));
+
                 w.print(" -> ");
-                for (int st : targets.states) {
-                    w.print(st);
-                    w.print(" ");
-                }
+                w.print("S");
+                w.print(tr.target);
                 w.println();
             }
+            w.println();
         }
+        w.flush();
     }
 
-    public void dumpAlphabet() {
-        /*for (int state = initial; state < numStates; state++) {
+    /*public void dumpAlphabet() {
+        for (int state = initial; state < numStates; state++) {
             Set<Integer> set = inputMap.get(state);
             for (int input : set) {
                 System.out.println(decodeSegment(input));
             }
-        }*/
-        for (int x : alphabet.keySet()) {
+        }
+        for (
+                int x : alphabet.keySet()) {
             System.out.println(decodeSegment(x));
         }
-    }
+    }*/
 
 }
 
