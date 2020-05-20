@@ -49,9 +49,9 @@ public class NFA {
         System.arraycopy(epsilon, 0, newEpsilon, 0, numStates);
         accepting = newAccepting;
         epsilon = newEpsilon;
-        List<Transition>[] newTrans = new List[max];
+        /*List<Transition>[] newTrans = new List[max];
         System.arraycopy(trans, 0, newTrans, 0, state);
-        trans = newTrans;
+        trans = newTrans;*/
     }
 
     //too slow
@@ -108,7 +108,7 @@ public class NFA {
     public void addTransition(int state, int input, int target) {
         //addInputMap(state, input);
         //addTransMap(state, target);
-        expand(state);
+        //expand(state);
         //System.out.printf("state: %d input: %d target: %d\n", state, input, target);
         List<Transition> arr;
         arr = trans[state];
@@ -124,6 +124,7 @@ public class NFA {
     }
 
     public void addTransitionRange(int state, int target, int left, int right) {
+        System.out.printf("%d %c-%c to %d\n",state,left,right,target);
         int seg = segment(left, right);
         //int inputIndex = checkInput(seg);
         addTransition(state,seg,target);
@@ -244,6 +245,7 @@ public class NFA {
                 List<RangeNode> ranges = b.negateAll();
                 for (int i = 0; i < ranges.size(); i++) {
                     RangeNode n = ranges.get(i);
+                    //System.out.println(n);
                     int mid = newState();
                     addTransitionRange(start, end, n.start, n.end);
                     addEpsilon(mid, end);
@@ -251,7 +253,7 @@ public class NFA {
                 p.end = end;
             }
             else {
-                //to have one end state we add epsilons
+                //in order to have only one end state we add epsilons
                 int end = newState();//order not matter?
                 for (int i = 0; i < b.list.size(); i++) {
                     Node n = b.list.get(i);

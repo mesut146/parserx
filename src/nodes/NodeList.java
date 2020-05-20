@@ -47,4 +47,12 @@ public class NodeList<T> extends Node implements Iterable<T> {
     public Iterator<T> iterator() {
         return list.iterator();
     }
+
+    @Override
+    public String toString()
+    {
+        return list.toString();
+    }
+    
+    
 }

@@ -4,7 +4,7 @@ import nodes.NodeList;
 import java.util.*;
 import nodes.*;
 
-// rule1 | rule2
+// rule1 | rule2 | rule3...
 public class OrNode extends Node{
     
     //seq,single

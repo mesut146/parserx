@@ -15,13 +15,16 @@ import java.io.IOException;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        String dir = "/home/mesut/IdeaProjects/parserx";
-        //String dir = "/storage/emulated/0/AppProjects/parserx";
+        //String dir = "/home/mesut/IdeaProjects/parserx";
+        String dir = "/storage/emulated/0/AppProjects/parserx";
         dir += "/test/";
         String gr = dir + "test.g";
         String test = dir + "test.txt";
 
         cc(gr);
+        /*System.out.println(Integer.toHexString((int)Character.MAX_VALUE));
+        System.out.println(Integer.toHexString((int)Character.MAX_CODE_POINT));
+        System.out.println((char)Character.MAX_CODE_POINT);*/
         //dfa();
         //cup(gr);
         //grTest(gr);
@@ -63,6 +66,7 @@ public class Main {
         GParser parser = new GParser(new FileReader(path));
         //tokens(parser);
         Tree tree = parser.tree();
+        //System.out.println(tree);
         NFA nfa = tree.makeNFA();
         System.out.println(nfa.numStates);
         System.out.println(nfa.numInput);
