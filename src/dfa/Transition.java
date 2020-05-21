@@ -1,6 +1,6 @@
 package dfa;
 
-//arrow
+//a single arrow
 public class Transition {
     int state;//from
     int target;

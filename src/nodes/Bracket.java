@@ -78,33 +78,33 @@ public class Bracket extends Node {
             }
         }
     }
-    
-    public static String escape(int val){
-        for(Map.Entry<Character,Character> e:escapeMap.entrySet()){
-            if(e.getValue()==val){
-                return "\\"+(char)e.getKey();
+
+    public static String escape(int val) {
+        for (Map.Entry<Character, Character> e : escapeMap.entrySet()) {
+            if (e.getValue() == val) {
+                return "\\" + (char) e.getKey();
             }
         }
-        return Character.toString((char)val);
+        return Character.toString((char) val);
     }
 
     public void sort(List<RangeNode> ranges) {
         Collections.sort(ranges, new Comparator<RangeNode>() {
-                @Override
-                public int compare(RangeNode r1, RangeNode r2) {
-                    if (r1.start < r2.start) {
-                        return -1;
-                    }
-                    if (r1.start == r2.start) {
-                        return Integer.compare(r1.end, r2.end);
-                    }
-                    return 1;
+            @Override
+            public int compare(RangeNode r1, RangeNode r2) {
+                if (r1.start < r2.start) {
+                    return -1;
                 }
-            });
+                if (r1.start == r2.start) {
+                    return Integer.compare(r1.end, r2.end);
+                }
+                return 1;
+            }
+        });
     }
 
     public List<RangeNode> negateAll() {
-        System.out.println("negating "+list);
+        System.out.println("negating " + list);
         List<RangeNode> res = new ArrayList<>();
         List<RangeNode> ranges = new ArrayList<>();
         //negate all ranges
@@ -117,50 +117,27 @@ public class Bracket extends Node {
                 range = node.asRange();
             }
             ranges.add(range);
-            //ranges.add(new RangeNode(CharClass.min, range.start - 1));
-            //ranges.add(new RangeNode(range.end + 1, CharClass.max));
         }
         sort(ranges);
-        System.out.println(ranges);
-        //merge the intersections
-        for (int i = 0; i < ranges.size(); i++) {
-            RangeNode range = ranges.get(i);
-            if(i<ranges.size()){
-                
-            }
-            RangeNode next=ranges.get(i + 1);
-            if (intersect(range, next) != null) {
-                res.add(new RangeNode(range.start, next.end));
-            }else{
-                res.add(range);
-            }
-        }
-        System.out.println(res);
+        System.out.println("sorted=" + ranges);
+        res = mergeRanges(ranges);
+        System.out.println("merged=" + res);
         ranges.clear();
         ranges.addAll(res);
         res.clear();
         //negate distinc ranges
-        int last=CharClass.min;
-        for (int i=0;i < ranges.size();i++){
+        int last = CharClass.min;
+        for (int i = 0; i < ranges.size(); i++) {
             RangeNode range = ranges.get(i);
-            if(range.start<last){
+            if (range.start < last) {
                 //intersect
-                last=range.end+1;
+                last = range.end + 1;
             }
             res.add(new RangeNode(last, range.start - 1));
             last = range.end + 1;
         }
         res.add(new RangeNode(last, CharClass.max));
         return res;
-    }
-
-    //r1 covers r2
-    //e.g 5-100, 7,50
-    boolean covers(RangeNode r1, RangeNode r2) {
-        if (r1.start <= r2.start && r1.end >= r2.end) {
-            return true;
-        }
-        return false;
     }
 
     RangeNode intersect(RangeNode r1, RangeNode r2) {
@@ -172,10 +149,41 @@ public class Bracket extends Node {
         return new RangeNode(l, r);
     }
 
-    /*List<RangeNode> merge(RangeNode r1, RangeNode r2) {
-
-     return null;
-     }*/
+    List<RangeNode> mergeRanges(List<RangeNode> ranges) {
+        List<RangeNode> res = new ArrayList<>();
+        RangeNode cur = null;
+        RangeNode next;
+        for (int i = 0; i < ranges.size(); i++) {
+            if (cur == null) {
+                cur = ranges.get(i);
+            }
+            System.out.println("cur=" + cur);
+            if (i < ranges.size() - 1) {
+                next = ranges.get(i + 1);
+                System.out.println("next=" + next);
+                if (intersect(cur, next) != null) {
+                    RangeNode tmp = new RangeNode(cur.start, Math.max(cur.end, next.end));
+                    System.out.println("tmp=" + tmp);
+                    //res.add(tmp);
+                    cur = tmp;
+                    i++;
+                    //curAdded = true;
+                }
+                else {
+                    res.add(cur);
+                    cur = null;
+                }
+                /*else if (i == ranges.size() - 2) {
+                    res.add(next);
+                }*/
+            }
+            else {
+                res.add(cur);
+                cur = null;
+            }
+        }
+        return res;
+    }
 
 
     void err() throws ParseException {

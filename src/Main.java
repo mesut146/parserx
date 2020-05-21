@@ -7,17 +7,18 @@ import grammar.Token;
 import grammar2.GrammarLexer;
 import grammar2.GrammarParser2;
 import grammar2.GrammarToken;
+import nodes.Bracket;
+import nodes.RangeNode;
 import nodes.Tree;
 
 import java.io.FileReader;
 import java.io.IOException;
-import nodes.*;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        //String dir = "/home/mesut/IdeaProjects/parserx";
-        String dir = "/storage/emulated/0/AppProjects/parserx";
+        String dir = "/home/mesut/IdeaProjects/parserx";
+        //String dir = "/storage/emulated/0/AppProjects/parserx";
         dir += "/test/";
         String gr = dir + "test.g";
         String test = dir + "test.txt";
@@ -31,12 +32,15 @@ public class Main {
         //cup(gr);
         //grTest(gr);
     }
-    
-    static void bracketTest(){
-        Bracket b=new Bracket();
-        b.add(new RangeNode(10,15));
-        b.add(new RangeNode(20,30));
-        System.out.println(b.negateAll());
+
+    static void bracketTest() {
+        Bracket b = new Bracket();
+        b.add(new RangeNode(10, 15));
+        b.add(new RangeNode(20, 30));
+        b.add(new RangeNode(25, 28));
+        b.add(new RangeNode(25, 50));
+        b.add(new RangeNode(35, 50));
+        System.out.println("negated=" + b.negateAll());
     }
 
     static void match(String str, DFA dfa) {
