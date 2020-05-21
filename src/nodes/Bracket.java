@@ -5,7 +5,7 @@ import grammar.ParseException;
 
 import java.util.*;
 
-//lexer or node aka character list
+//for lexer or node, aka character list
 //[a-zA-Z_0-9]
 //consist of char,char range
 public class Bracket extends Node {
@@ -116,74 +116,42 @@ public class Bracket extends Node {
             else {
                 range = node.asRange();
             }
-            ranges.add(new RangeNode(CharClass.min, range.start - 1));
-            ranges.add(new RangeNode(range.end + 1, CharClass.max));
+            ranges.add(range);
+            //ranges.add(new RangeNode(CharClass.min, range.start - 1));
+            //ranges.add(new RangeNode(range.end + 1, CharClass.max));
         }
         sort(ranges);
         System.out.println(ranges);
         //merge the intersections
-        for (int i = 0; i < ranges.size() - 1; i++) {
+        for (int i = 0; i < ranges.size(); i++) {
             RangeNode range = ranges.get(i);
+            if(i<ranges.size()){
+                
+            }
             RangeNode next=ranges.get(i + 1);
-            if (intersect(range, next) == null) {
+            if (intersect(range, next) != null) {
                 res.add(new RangeNode(range.start, next.end));
             }else{
                 res.add(range);
             }
         }
-        ranges = new ArrayList<>(res);
+        System.out.println(res);
+        ranges.clear();
+        ranges.addAll(res);
         res.clear();
         //negate distinc ranges
-        int end=CharClass.min;
+        int last=CharClass.min;
         for (int i=0;i < ranges.size();i++){
             RangeNode range = ranges.get(i);
-            //RangeNode next=ranges.get(i+1);
-            res.add(new RangeNode(end, range.start - 1));
-            end = range.end + 1;
+            if(range.start<last){
+                //intersect
+                last=range.end+1;
+            }
+            res.add(new RangeNode(last, range.start - 1));
+            last = range.end + 1;
         }
-        res.add(new RangeNode(end, CharClass.max));
+        res.add(new RangeNode(last, CharClass.max));
         return res;
-    }
-
-    /*boolean conflict(RangeNode range, int idx, List<RangeNode> ranges) {
-     for (int i = 0; i < ranges.size(); i++) {
-     if (i == idx) continue;
-     RangeNode r = ranges.get(i);
-     if (includes(range, r) || includes(r, range)) {
-     return true;
-     }
-     }
-     return false;
-     }*/
-
-    //r1.start <= r2.start
-    void merge(RangeNode r1, RangeNode r2) {
-        //sort
-        if (r1.start > r2.start) {
-            RangeNode tmp = r1;
-            r1 = r2;
-            r2 = tmp;
-        }
-        if (r1.end == r2.start) {
-            new RangeNode(r1.start, r2.end);
-        }
-        if (covers(r1, r2)) {
-            //r1;
-        }
-        if (covers(r2, r1)) {
-            //r2
-        }
-        //intersect
-        RangeNode inter = intersect(r1, r1);
-        if (inter != null) {
-            if (r1.end <= r2.end) {
-
-            }
-            else {
-
-            }
-        }
-
     }
 
     //r1 covers r2

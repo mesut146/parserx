@@ -11,6 +11,7 @@ import nodes.Tree;
 
 import java.io.FileReader;
 import java.io.IOException;
+import nodes.*;
 
 public class Main {
 
@@ -21,7 +22,8 @@ public class Main {
         String gr = dir + "test.g";
         String test = dir + "test.txt";
 
-        cc(gr);
+        //cc(gr);
+        bracketTest();
         /*System.out.println(Integer.toHexString((int)Character.MAX_VALUE));
         System.out.println(Integer.toHexString((int)Character.MAX_CODE_POINT));
         System.out.println((char)Character.MAX_CODE_POINT);*/
@@ -29,7 +31,13 @@ public class Main {
         //cup(gr);
         //grTest(gr);
     }
-
+    
+    static void bracketTest(){
+        Bracket b=new Bracket();
+        b.add(new RangeNode(10,15));
+        b.add(new RangeNode(20,30));
+        System.out.println(b.negateAll());
+    }
 
     static void match(String str, DFA dfa) {
         int cur = 1;

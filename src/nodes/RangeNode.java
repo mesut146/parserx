@@ -29,7 +29,8 @@ public class RangeNode extends Node {
 
     @Override
     public String toString() {
-        return Bracket.escape(start)+"-"+Bracket.escape(end);
+        return start+"-"+end;
+        //return Bracket.escape(start)+"-"+Bracket.escape(end);
     }
 
     public Iterator<Character> iterator() {
