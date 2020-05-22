@@ -137,6 +137,7 @@ public class Bracket extends Node {
             last = range.end + 1;
         }
         res.add(new RangeNode(last, CharClass.max));
+        System.out.println("negated="+res);
         return res;
     }
 
@@ -157,7 +158,7 @@ public class Bracket extends Node {
             if (cur == null) {
                 cur = ranges.get(i);
             }
-            System.out.println("cur=" + cur);
+            System.out.println("cur=" + cur+" i="+i);
             if (i < ranges.size() - 1) {
                 next = ranges.get(i + 1);
                 System.out.println("next=" + next);
@@ -166,7 +167,7 @@ public class Bracket extends Node {
                     System.out.println("tmp=" + tmp);
                     //res.add(tmp);
                     cur = tmp;
-                    i++;
+                    //i++;
                     //curAdded = true;
                 }
                 else {

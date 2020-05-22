@@ -4,7 +4,7 @@
 */
 
 tokens{
-    #LETTER = [a-zA-z] //maybe [^\r\n] is better
+    #LETTER = [a-zA-z]
     #DIGIT = [0-9]
 
     STRING_LITERAL = "\"" ("\"" | [^\r\n\"])* "\""

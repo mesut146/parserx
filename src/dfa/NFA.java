@@ -24,7 +24,9 @@ public class NFA {
     public int[] inputIndex;//index to segment
     //public List<List<Integer>> inputMap;//state to input set
     //public List<List<Integer>> transMap;//state to target state set
-
+    public String[] names;
+    
+    
     public NFA(int numStates) {
         //table = new StateSet[numStates][255];
         trans = new List[100];
@@ -36,6 +38,7 @@ public class NFA {
         inputIndex = new int[255];
         //inputMap = new ArrayList<>();
         //transMap = new ArrayList<>();
+        names=new String[100];
     }
 
     public void expand(int state) {
@@ -124,7 +127,7 @@ public class NFA {
     }
 
     public void addTransitionRange(int state, int target, int left, int right) {
-        System.out.printf("%d %c-%c to %d\n",state,left,right,target);
+        System.out.printf("st:%d (%c-%c) to st:%d nm:%s nm2:%s\n",state,left,right,target,names[state],names[target]);
         int seg = segment(left, right);
         //int inputIndex = checkInput(seg);
         addTransition(state,seg,target);
@@ -222,12 +225,13 @@ public class NFA {
         if (node.is(StringNode.class)) {
             StringNode sn = (StringNode) node;
             if (sn.isDot) {
-                p.end = insert(sn.toBracket(), start).end;
+                p= insert(sn.toBracket(), start);
             }
             else {
                 String str = sn.value;
                 int st = start;
                 int ns = start;
+                p.start=numStates+1;
                 for (char ch : str.toCharArray()) {
                     ns = newState();
                     addTransitionRange(st, ns, ch, ch);
@@ -352,9 +356,10 @@ public class NFA {
     }
 
     //insert regex token to initial state
-    public void addRegex(Node node) {
+    public void addRegex(TokenDecl decl) {
         //more than one final states?
-        Pair p = insert(node, initial);
+        Pair p = insert(decl.regex, initial);
+        names[p.end]=decl.tokenName;
         setAccepting(p.end, true);
     }
 

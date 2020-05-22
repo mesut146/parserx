@@ -13,18 +13,19 @@ import nodes.Tree;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.*;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        String dir = "/home/mesut/IdeaProjects/parserx";
-        //String dir = "/storage/emulated/0/AppProjects/parserx";
+        //String dir = "/home/mesut/IdeaProjects/parserx";
+        String dir = "/storage/emulated/0/AppProjects/parserx";
         dir += "/test/";
         String gr = dir + "test.g";
         String test = dir + "test.txt";
 
-        //cc(gr);
-        bracketTest();
+        cc(gr);
+        //bracketTest();
         /*System.out.println(Integer.toHexString((int)Character.MAX_VALUE));
         System.out.println(Integer.toHexString((int)Character.MAX_CODE_POINT));
         System.out.println((char)Character.MAX_CODE_POINT);*/
@@ -38,7 +39,7 @@ public class Main {
         b.add(new RangeNode(10, 15));
         b.add(new RangeNode(20, 30));
         b.add(new RangeNode(25, 28));
-        b.add(new RangeNode(25, 50));
+        //b.add(new RangeNode(25, 50));
         b.add(new RangeNode(35, 50));
         System.out.println("negated=" + b.negateAll());
     }
@@ -86,6 +87,7 @@ public class Main {
         //System.out.println(nfa.inputMap);
         //System.out.println(nfa.transMap);
         nfa.dump("");
+        System.out.println(Arrays.toString(nfa.names));
         //nfa.dumpAlphabet();
         //System.out.println(nfa.dfa());
     }

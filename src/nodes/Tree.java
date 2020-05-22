@@ -51,7 +51,7 @@ public class Tree {
         nfa.tree = this;
         for (TokenDecl decl : tokens) {
             if (!decl.fragment) {
-                nfa.addRegex(decl.regex);
+                nfa.addRegex(decl);
             }
         }
         return nfa;
