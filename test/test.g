@@ -7,7 +7,7 @@ tokens{
     #LETTER = [a-zA-z]
     #DIGIT = [0-9]
 
-    STRING_LITERAL = "\"" ("\"" | [^\r\n\"])* "\""
+    STRING_LITERAL = "\"" ("\\\"" | [^\r\n\"])* "\""
     CHAR_LITERAL = "'" .* "'"
     INTEGER_LITERAL = [1-9] {DIGIT}*
     HEX_LITERAL = "0" [xX] ({DIGIT} | [a-f])+
@@ -16,7 +16,7 @@ tokens{
     //DOUBLE_LITERAL = {FLOAT_LITERAL} [dD]
 
     NULL_LITERAL = "null"
-
+    PUBLIC_KEYWORD = "public"
 
     IDENT = {LETTER} ({LETTER} | {DIGIT} | "_")*
 }

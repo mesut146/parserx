@@ -324,7 +324,7 @@ Node stringNode():
   Token str;
 }
 {
-  str=<STRING_LITERAL>{return new StringNode(str.image);}
+  str=<STRING_LITERAL>{return new StringNode(StringNode.trim(str.image));}
 }
 
 Node groupRule():

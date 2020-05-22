@@ -12,6 +12,7 @@ public class Bracket extends Node {
 
     public NodeList<Node> list = new NodeList<>();
     public boolean negate;//[^abc]
+    public boolean debug = false;
 
     static Map<Character, Character> escapeMap = new HashMap<>();
 
@@ -104,7 +105,7 @@ public class Bracket extends Node {
     }
 
     public List<RangeNode> negateAll() {
-        System.out.println("negating " + list);
+        if (debug) System.out.println("negating " + list);
         List<RangeNode> res = new ArrayList<>();
         List<RangeNode> ranges = new ArrayList<>();
         //negate all ranges
@@ -119,9 +120,9 @@ public class Bracket extends Node {
             ranges.add(range);
         }
         sort(ranges);
-        System.out.println("sorted=" + ranges);
+        if (debug) System.out.println("sorted=" + ranges);
         res = mergeRanges(ranges);
-        System.out.println("merged=" + res);
+        if (debug) System.out.println("merged=" + res);
         ranges.clear();
         ranges.addAll(res);
         res.clear();
@@ -137,7 +138,7 @@ public class Bracket extends Node {
             last = range.end + 1;
         }
         res.add(new RangeNode(last, CharClass.max));
-        System.out.println("negated="+res);
+        if (debug) System.out.println("negated=" + res);
         return res;
     }
 
@@ -158,13 +159,13 @@ public class Bracket extends Node {
             if (cur == null) {
                 cur = ranges.get(i);
             }
-            System.out.println("cur=" + cur+" i="+i);
+            //System.out.println("cur=" + cur+" i="+i);
             if (i < ranges.size() - 1) {
                 next = ranges.get(i + 1);
-                System.out.println("next=" + next);
+                //System.out.println("next=" + next);
                 if (intersect(cur, next) != null) {
                     RangeNode tmp = new RangeNode(cur.start, Math.max(cur.end, next.end));
-                    System.out.println("tmp=" + tmp);
+                    //System.out.println("tmp=" + tmp);
                     //res.add(tmp);
                     cur = tmp;
                     //i++;

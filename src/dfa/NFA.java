@@ -25,8 +25,8 @@ public class NFA {
     //public List<List<Integer>> inputMap;//state to input set
     //public List<List<Integer>> transMap;//state to target state set
     public String[] names;
-    
-    
+
+
     public NFA(int numStates) {
         //table = new StateSet[numStates][255];
         trans = new List[100];
@@ -38,7 +38,7 @@ public class NFA {
         inputIndex = new int[255];
         //inputMap = new ArrayList<>();
         //transMap = new ArrayList<>();
-        names=new String[100];
+        names = new String[100];
     }
 
     public void expand(int state) {
@@ -127,42 +127,16 @@ public class NFA {
     }
 
     public void addTransitionRange(int state, int target, int left, int right) {
-        System.out.printf("st:%d (%c-%c) to st:%d nm:%s nm2:%s\n",state,left,right,target,names[state],names[target]);
-        int seg = segment(left, right);
+        //System.out.printf("st:%d (%c-%c) to st:%d nm:%s nm2:%s\n",state,left,right,target,names[state],names[target]);
+        int seg = CharClass.segment(left, right);
+        System.out.printf("st:%d (%c-%c) to st:%d seg:%d\n", state, left, right, target, seg);
         //int inputIndex = checkInput(seg);
-        addTransition(state,seg,target);
+        addTransition(state, seg, target);
         //addTransition(state, inputIndex, target);
     }
 
-    /*public void addTransition(int state, int input, StateSet targets) {
-        StateSet set = table[state][input];
-        if (set == null) {
-            set = new StateSet();
-            table[state][input] = set;
-        }
-        for (int target : targets.states) {
-            set.addState(target);
-        }
-    }*/
-
-    /*public void addTransition(StateSet states, int input, int target) {
-        for (int state : states.states) {
-            addTransition(state, input, target);
-        }
-    }*/
-
-    /*public StateSet getTransition(int state, int input) {
-        return table[state][input];
-    }*/
-
     public void setAccepting(int state, boolean val) {
         accepting[state] = val;
-    }
-
-    public void setAccepting(StateSet states, boolean val) {
-        for (int state : states.states) {
-            accepting[state] = val;
-        }
     }
 
     public boolean isAccepting(int state) {
@@ -225,13 +199,13 @@ public class NFA {
         if (node.is(StringNode.class)) {
             StringNode sn = (StringNode) node;
             if (sn.isDot) {
-                p= insert(sn.toBracket(), start);
+                p = insert(sn.toBracket(), start);
             }
             else {
                 String str = sn.value;
                 int st = start;
                 int ns = start;
-                p.start=numStates+1;
+                p.start = numStates + 1;
                 for (char ch : str.toCharArray()) {
                     ns = newState();
                     addTransitionRange(st, ns, ch, ch);
@@ -317,12 +291,13 @@ public class NFA {
             }
             p.end = end;
         }
-        else if (node.is(GroupNode.class)) {
-            GroupNode<Node> group = (GroupNode<Node>) node;
+        else if (node.isGroup()) {
+            GroupNode<Node> group = node.asGroup();
             Node rhs = group.rhs;
             p.end = insert(rhs, start).end;
         }
         else if (node.is(NameNode.class)) {//?
+            //we have lexer ref just replace others regex
             NameNode name = (NameNode) node;
             p.end = insert(tree.getToken(name.name).regex, start).end;
         }
@@ -333,33 +308,12 @@ public class NFA {
         return ++numStates;
     }
 
-    static int segment(int start, int end) {
-        return (start << 16) | end;
-    }
-
-    int segment(int ch) {
-        return segment(ch, ch);
-    }
-
-    //segment to code points range
-    int[] desegment(int seg) {
-        int end = seg & (1 << 16);
-        int start = seg >> 16;
-        return new int[]{start, end};
-    }
-
-
-    //segment to printable range
-    String seg2str(int seg) {
-        int[] arr = desegment(seg);
-        return (char) arr[0] + "-" + (char) arr[1];
-    }
 
     //insert regex token to initial state
     public void addRegex(TokenDecl decl) {
         //more than one final states?
         Pair p = insert(decl.regex, initial);
-        names[p.end]=decl.tokenName;
+        names[p.end] = decl.tokenName;
         setAccepting(p.end, true);
     }
 
@@ -370,13 +324,14 @@ public class NFA {
             w.print("S");
             w.println(state);
             List<Transition> arr = trans[state];
-            if (arr == null) {
+            if (arr == null) {//must be accepting
+
                 break;
             }
             for (Transition tr : arr) {
                 w.print("  ");
                 //int seg = getSegment(tr.symbol);
-                w.print(seg2str(tr.symbol));
+                w.print(CharClass.seg2str(tr.symbol));
 
                 w.print(" -> ");
                 w.print("S");

@@ -13,14 +13,21 @@ public class StringNode extends Node {
     public StringNode(String value) {
         this.value = value;
     }
-    
-    public Bracket toBracket(){
-        if(!isDot){
+
+    public static String trim(String str) {
+        if (str.startsWith("\"") && str.endsWith("\"")) {
+            return str.substring(1, str.length() - 1);
+        }
+        return str;
+    }
+
+    public Bracket toBracket() {
+        if (!isDot) {
             return null;
         }
-        Bracket b=new Bracket();
+        Bracket b = new Bracket();
         b.add('\n');
-        b.negate=true;
+        b.negate = true;
         return b;
     }
 

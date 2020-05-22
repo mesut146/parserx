@@ -19,6 +19,14 @@ public class Node {
         return (RegexNode) this;
     }
 
+    public boolean isGroup() {
+        return this instanceof GroupNode;
+    }
+
+    public GroupNode<Node> asGroup() {
+        return (GroupNode<Node>) this;
+    }
+
     public boolean isString() {
         return this instanceof StringNode;
     }

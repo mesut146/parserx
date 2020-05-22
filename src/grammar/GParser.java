@@ -411,7 +411,7 @@ regex.optional=true;
 
   final public Node stringNode() throws ParseException {Token str;
     str = jj_consume_token(STRING_LITERAL);
-{if ("" != null) return new StringNode(str.image);}
+{if ("" != null) return new StringNode(StringNode.trim(str.image));}
     throw new Error("Missing return statement in function");
 }
 

@@ -1,4 +1,5 @@
 
+import dfa.CharClass;
 import dfa.DFA;
 import dfa.NFA;
 import grammar.GParser;
@@ -13,19 +14,20 @@ import nodes.Tree;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        //String dir = "/home/mesut/IdeaProjects/parserx";
-        String dir = "/storage/emulated/0/AppProjects/parserx";
+        String dir = "/home/mesut/IdeaProjects/parserx";
+        //String dir = "/storage/emulated/0/AppProjects/parserx";
         dir += "/test/";
         String gr = dir + "test.g";
         String test = dir + "test.txt";
 
         cc(gr);
         //bracketTest();
+        //segmentTest();
         /*System.out.println(Integer.toHexString((int)Character.MAX_VALUE));
         System.out.println(Integer.toHexString((int)Character.MAX_CODE_POINT));
         System.out.println((char)Character.MAX_CODE_POINT);*/
@@ -42,6 +44,13 @@ public class Main {
         //b.add(new RangeNode(25, 50));
         b.add(new RangeNode(35, 50));
         System.out.println("negated=" + b.negateAll());
+    }
+
+    static void segmentTest() {
+        int l = 'a';
+        int r = 'z';
+        int seg = CharClass.segment(l, r);
+        System.out.println(Arrays.toString(CharClass.desegment(seg)));
     }
 
     static void match(String str, DFA dfa) {
