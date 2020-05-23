@@ -4,19 +4,35 @@
 */
 
 tokens{
-    #LETTER = [a-zA-Z]
+    #LETTER = [a-zA-Z] //need unicode
     #DIGIT = [0-9]
-    #DIGIT_OR_UNDERSCORE = {DIGIT} | "_"
-    STRING_LITERAL = "\"" ("\\\"" | [^\r\n\"])* "\""
+    #DIGIT_OR_UNDERSCORE = [0-9_]
+    #DIGITS = {DIGIT} | {DIGIT} {DIGIT_OR_UNDERSCORE}*
+    #HEX_DIGIT_OR_UNDERSCORE = [_0-9A-Fa-f]
+
+
+    #string_content = [^\r\n\"]
+    STRING_LITERAL = "\"" {string_content}* "\""
     CHAR_LITERAL = "'" [^\']* "'"
-    INTEGER_LITERAL = [1-9] {DIGIT_OR_UNDERSCORE}*
-    HEX_LITERAL = "0" [xX] ({DIGIT} | [a-f])+
-    LONG_LITERAL = {INTEGER_LITERAL} [lL]
-    //FLOAT_LITERAL = {INTEGER_LITERAL} "." {INTEGER_LITERAL}
-    //DOUBLE_LITERAL = {FLOAT_LITERAL} [dD]
+
+    INTEGER_LITERAL = {DIGITS} | {HEX_INTEGER_LITERAL} | {BIN_INTEGER_LITERAL}
+    LONG_LITERAL = {INTEGER_LITERAL} [Ll]
+    HEX_INTEGER_LITERAL = "0" [Xx] {HEX_DIGIT_OR_UNDERSCORE}*
+    BIN_INTEGER_LITERAL = "0" [Bb] {DIGIT_OR_UNDERSCORE}*
 
     NULL_LITERAL = "null"
+    /*TRUE_KEYWORD = "true"
+    FALSE_KEYWORD = "false"
+
+    ABSTRACT_KEYWORD = "abstract"
     PUBLIC_KEYWORD = "public"
+    PRIVATE_KEYWORD = "private"
+    PROTECTED_KEYWORD = "protected"
+    STATIC_KEYWORD = "static"
+    TRANSIENT_KEYWORD = "transient"
+    VOLATILE_KEYWORD = "volatile"
+    VOID_KEYWORD = "void"*/
+
 
     IDENT = {LETTER} ({LETTER} | {DIGIT} | "_")*
 }

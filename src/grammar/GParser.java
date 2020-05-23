@@ -4,6 +4,7 @@ package grammar;
 
 import nodes.*;
 import rule.*;
+import utils.*;
 import java.util.*;
 
 public class GParser implements GParserConstants {
@@ -409,9 +410,10 @@ regex.optional=true;
     throw new Error("Missing return statement in function");
 }
 
-  final public Node stringNode() throws ParseException {Token str;
-    str = jj_consume_token(STRING_LITERAL);
-{if ("" != null) return new StringNode(StringNode.trim(str.image));}
+  final public Node stringNode() throws ParseException {Token tok;
+    tok = jj_consume_token(STRING_LITERAL);
+String str = Util.fromEscaped(Util.trim(tok.image));
+    {if ("" != null) return new StringNode(str);}
     throw new Error("Missing return statement in function");
 }
 

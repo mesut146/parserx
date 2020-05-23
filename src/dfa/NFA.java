@@ -29,7 +29,7 @@ public class NFA {
 
     public NFA(int numStates) {
         //table = new StateSet[numStates][255];
-        trans = new List[100];
+        trans = new List[numStates];
         accepting = new boolean[numStates];
         epsilon = new StateSet[numStates];
         this.numStates = 0;//just initial
@@ -42,19 +42,21 @@ public class NFA {
     }
 
     public void expand(int state) {
-        if (numStates >= state) {
+        if (state < trans.length) {
             return;
         }
         int max = state * 2;
+        int len = trans.length;
+
         boolean[] newAccepting = new boolean[max];
         StateSet[] newEpsilon = new StateSet[max];
-        System.arraycopy(accepting, 0, newAccepting, 0, numStates);
-        System.arraycopy(epsilon, 0, newEpsilon, 0, numStates);
+        List<Transition>[] newTrans = new List[max];
+        System.arraycopy(accepting, 0, newAccepting, 0, len);
+        System.arraycopy(epsilon, 0, newEpsilon, 0, len);
+        System.arraycopy(trans, 0, newTrans, 0, len);
         accepting = newAccepting;
         epsilon = newEpsilon;
-        /*List<Transition>[] newTrans = new List[max];
-        System.arraycopy(trans, 0, newTrans, 0, state);
-        trans = newTrans;*/
+        trans = newTrans;
     }
 
     //too slow
@@ -111,7 +113,7 @@ public class NFA {
     public void addTransition(int state, int input, int target) {
         //addInputMap(state, input);
         //addTransMap(state, target);
-        //expand(state);
+        expand(state);
         //System.out.printf("state: %d input: %d target: %d\n", state, input, target);
         List<Transition> arr;
         arr = trans[state];
@@ -129,7 +131,7 @@ public class NFA {
     public void addTransitionRange(int state, int target, int left, int right) {
         //System.out.printf("st:%d (%c-%c) to st:%d nm:%s nm2:%s\n",state,left,right,target,names[state],names[target]);
         int seg = CharClass.segment(left, right);
-        System.out.printf("st:%d (%c-%c) to st:%d seg:%d\n", state, left, right, target, seg);
+        System.out.printf("st:%d (%s-%s) to st:%d seg:%d\n", state, CharClass.printChar(left), CharClass.printChar(right), target, seg);
         //int inputIndex = checkInput(seg);
         addTransition(state, seg, target);
         //addTransition(state, inputIndex, target);
@@ -144,7 +146,7 @@ public class NFA {
     }
 
     public void addEpsilon(int state, int target) {
-        //epsilon[state][target] = true;
+        expand(state);
         StateSet set = epsilon[state];
         if (set == null) {
             set = epsilon[state] = new StateSet();
@@ -297,7 +299,7 @@ public class NFA {
             p.end = insert(rhs, start).end;
         }
         else if (node.is(NameNode.class)) {//?
-            //we have lexer ref just replace others regex
+            //we have lexer ref just replace target's regex
             NameNode name = (NameNode) node;
             p.end = insert(tree.getToken(name.name).regex, start).end;
         }
@@ -311,49 +313,50 @@ public class NFA {
 
     //insert regex token to initial state
     public void addRegex(TokenDecl decl) {
-        //more than one final states?
+        //more than one final state?
         Pair p = insert(decl.regex, initial);
-        names[p.end] = decl.tokenName;
+        //names[p.end] = decl.tokenName;
         setAccepting(p.end, true);
     }
 
     public void dump(String path) throws IOException {
         PrintWriter w = new PrintWriter(System.out);
 
-        for (int state = initial; state < numStates; state++) {
+        for (int state = initial; state <= numStates + 1; state++) {
             w.println(printState(state));
-            
+
             List<Transition> arr = trans[state];
             if (arr == null) {//must be accepting
-                StateSet eps=epsilon[state];
-                if(eps!=null){
+                StateSet eps = epsilon[state];
+                if (eps != null) {
                     w.print("  ");
-                    for(int e:eps.states){
+                    for (int e : eps.states) {
                         w.print(printState(e));
                         w.print(" ");
                     }
                 }
-                
-            }else
-            for (Transition tr : arr) {
-                w.print("  ");
-                //int seg = getSegment(tr.symbol);
-                w.print(CharClass.seg2str(tr.symbol));
 
-                w.print(" -> ");
-                w.print(printState(tr.target));
-                w.println();
             }
+            else
+                for (Transition tr : arr) {
+                    w.print("  ");
+                    //int seg = getSegment(tr.symbol);
+                    w.print(CharClass.seg2str(tr.symbol));
+
+                    w.print(" -> ");
+                    w.print(printState(tr.target));
+                    w.println();
+                }
             w.println();
         }
         w.flush();
     }
-    
-    String printState(int st){
-        if(isAccepting(st)){
-            return "(S"+st+")";
+
+    String printState(int st) {
+        if (isAccepting(st)) {
+            return "(S" + st + ")";
         }
-        return "S"+st;
+        return "S" + st;
     }
 
     /*public void dumpAlphabet() {

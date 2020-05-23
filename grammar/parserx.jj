@@ -11,6 +11,7 @@ package grammar;
 
 import nodes.*;
 import rule.*;
+import utils.*;
 import java.util.*;
 
 public class GParser
@@ -321,10 +322,13 @@ Node simple():
 
 Node stringNode():
 {
-  Token str;
+  Token tok;
 }
 {
-  str=<STRING_LITERAL>{return new StringNode(StringNode.trim(str.image));}
+  tok=<STRING_LITERAL>{
+    String str = Util.fromEscaped(Util.trim(tok.image));
+    return new StringNode(str);
+  }
 }
 
 Node groupRule():

@@ -2,8 +2,12 @@ package nodes;
 
 import dfa.CharClass;
 import grammar.ParseException;
+import utils.Util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 //for lexer or node, aka character list
 //[a-zA-Z_0-9]
@@ -14,19 +18,6 @@ public class Bracket extends Node {
     public boolean negate;//[^abc]
     public boolean debug = false;
 
-    static Map<Character, Character> escapeMap = new HashMap<>();
-
-    static {
-        escapeMap.put('t', '\t');
-        escapeMap.put('b', '\b');
-        escapeMap.put('n', '\n');
-        escapeMap.put('r', '\r');
-        escapeMap.put('f', '\f');
-        escapeMap.put('\'', '\'');
-        escapeMap.put('"', '\"');
-        escapeMap.put('\\', '\\');
-        escapeMap.put('s', ' ');//space
-    }
 
     public void add(Node node) {
         list.add(node);
@@ -36,7 +27,6 @@ public class Bracket extends Node {
         list.add(new CharNode(chr));
     }
 
-    //todo escaped
     public void parse(String str) throws ParseException {
         //System.out.println(str);
         int pos = 0;
@@ -56,17 +46,14 @@ public class Bracket extends Node {
             }
             if (c != '-') {
                 if (c == '\\') {//escape
-                    //System.out.println("old="+str.charAt(pos));
-                    c = escapeMap.get(str.charAt(pos));
-                    //System.out.println("new="+Integer.toHexString(c));
-                    //System.out.println("n="+escape(c));
+                    c = Util.get(str.charAt(pos));
                     ++pos;
                 }
                 if (pos < str.length() && str.charAt(pos) == '-') {
                     pos++;
                     char end = str.charAt(pos++);
                     if (end == '\\') {
-                        end = escapeMap.get(str.charAt(pos++));
+                        end = Util.get(str.charAt(pos++));
                     }
                     list.add(new RangeNode(c, end));
                 }
@@ -80,14 +67,6 @@ public class Bracket extends Node {
         }
     }
 
-    public static String escape(int val) {
-        for (Map.Entry<Character, Character> e : escapeMap.entrySet()) {
-            if (e.getValue() == val) {
-                return "\\" + (char) e.getKey();
-            }
-        }
-        return Character.toString((char) val);
-    }
 
     public void sort(List<RangeNode> ranges) {
         Collections.sort(ranges, new Comparator<RangeNode>() {
@@ -192,15 +171,6 @@ public class Bracket extends Node {
         throw new ParseException("Invalid character list");
     }
 
-    public boolean hasRange() {
-        for (Node n : list.list) {
-            if (n.isRange()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -224,7 +194,7 @@ public class Bracket extends Node {
 
         @Override
         public String toString() {
-            return escape(chr);
+            return Util.escape(chr);
         }
     }
 }
