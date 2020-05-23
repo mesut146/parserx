@@ -4,12 +4,12 @@
 */
 
 tokens{
-    #LETTER = [a-zA-z]
+    #LETTER = [a-zA-Z]
     #DIGIT = [0-9]
-
+    #DIGIT_OR_UNDERSCORE = {DIGIT} | "_"
     STRING_LITERAL = "\"" ("\\\"" | [^\r\n\"])* "\""
-    CHAR_LITERAL = "'" .* "'"
-    INTEGER_LITERAL = [1-9] {DIGIT}*
+    CHAR_LITERAL = "'" [^\']* "'"
+    INTEGER_LITERAL = [1-9] {DIGIT_OR_UNDERSCORE}*
     HEX_LITERAL = "0" [xX] ({DIGIT} | [a-f])+
     LONG_LITERAL = {INTEGER_LITERAL} [lL]
     //FLOAT_LITERAL = {INTEGER_LITERAL} "." {INTEGER_LITERAL}

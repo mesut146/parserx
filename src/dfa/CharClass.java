@@ -31,7 +31,21 @@ public class CharClass {
     //segment to printable range
     public static String seg2str(int seg) {
         int[] arr = desegment(seg);
-        return (char) arr[0] + "-" + (char) arr[1];
+        return printChar(arr[0]) + "-" + printChar(arr[1]);
+    }
+    
+    static String printChar(int chr){
+        if(Character.isAlphabetic(chr)|| Character.isDigit(chr)||isPrintableChar((char)chr)){
+            return Character.toString((char)chr);
+        }
+        return "\\"+chr;
+    }
+    
+    public static boolean isPrintableChar( char c ) {
+        Character.UnicodeBlock block = Character.UnicodeBlock.of( c );
+        return (!Character.isISOControl(c)) &&
+            block != null &&
+            block != Character.UnicodeBlock.SPECIALS;
     }
 
 }

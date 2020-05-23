@@ -262,7 +262,7 @@ public class NFA {
             if (rn.star) {
                 int ns = newState();
                 addEpsilon(start, ns);//zero
-                Pair st = insert(rn.node, start);
+                Pair st = insert(rn.node, ns);
                 addEpsilon(st.end, start);//repeat
                 p.end = ns;
             }
@@ -321,26 +321,39 @@ public class NFA {
         PrintWriter w = new PrintWriter(System.out);
 
         for (int state = initial; state < numStates; state++) {
-            w.print("S");
-            w.println(state);
+            w.println(printState(state));
+            
             List<Transition> arr = trans[state];
             if (arr == null) {//must be accepting
-
-                break;
-            }
+                StateSet eps=epsilon[state];
+                if(eps!=null){
+                    w.print("  ");
+                    for(int e:eps.states){
+                        w.print(printState(e));
+                        w.print(" ");
+                    }
+                }
+                
+            }else
             for (Transition tr : arr) {
                 w.print("  ");
                 //int seg = getSegment(tr.symbol);
                 w.print(CharClass.seg2str(tr.symbol));
 
                 w.print(" -> ");
-                w.print("S");
-                w.print(tr.target);
+                w.print(printState(tr.target));
                 w.println();
             }
             w.println();
         }
         w.flush();
+    }
+    
+    String printState(int st){
+        if(isAccepting(st)){
+            return "(S"+st+")";
+        }
+        return "S"+st;
     }
 
     /*public void dumpAlphabet() {
