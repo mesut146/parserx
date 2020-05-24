@@ -1,11 +1,12 @@
 package dfa;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
 //nfa state set
-public class StateSet {
+public class StateSet implements Iterable<Integer> {
 
     public List<Integer> states;
 
@@ -31,6 +32,11 @@ public class StateSet {
 
     public void clear() {
         states.clear();
+    }
+
+    @Override
+    public Iterator<Integer> iterator() {
+        return states.iterator();
     }
 
     @Override

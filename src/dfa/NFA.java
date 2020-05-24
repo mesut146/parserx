@@ -155,40 +155,31 @@ public class NFA {
     }
 
     //todo
-    /*public DFA dfa() {
-        DFA dfa = new DFA(table.length * 2, numInput);
+    public DFA dfa() {
+        DFA dfa = new DFA(trans.length * 2, numInput);
         Map<StateSet, Integer> map = new HashMap<>();
-        for (int state = initial; state < numStates; state++) {
+        int init = 0;
+        for (int state = initial; state < numStates; ++state) {
             StateSet set = closure(state);
             System.out.println(set.states);
-            for (int input : inputMap.get(state)) {
-                StateSet in = table[state][input];
-                if (in != null) {
-                    int ns;
-                    if (map.containsKey(in)) {
-                        ns = map.get(in);
-                    }
-                    else {
-                        ns = dfa.newState();
-                        map.put(in, ns);
-                    }
-                    dfa.addTransition(state, input, ns);
-                }
+            List<Transition> trList = trans[state];
+            StateSet closure = closure(state);
+            for (int epState : closure) {
+
             }
         }
         return dfa;
-    }*/
+    }
 
     //epsilon closure for dfa conversion
     public StateSet closure(int state) {
         StateSet res = new StateSet();
-        res.addState(state);
-        StateSet s = epsilon[state];
-        if (s == null || s.states.size() == 0) {
+        res.addState(state);//itself
+        StateSet eps = epsilon[state];
+        if (eps == null || eps.states.size() == 0) {
             return res;
         }
-        //res.addAll(s);
-        for (int i : s.states) {
+        for (int i : eps.states) {
             res.addAll(closure(i));
         }
         return res;
