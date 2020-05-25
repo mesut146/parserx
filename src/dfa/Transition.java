@@ -6,4 +6,10 @@ public class Transition {
     int target;
     int symbol;
     int segment;
+
+    public Transition(int state, int input, int target) {
+        this.state = state;
+        this.target = target;
+        this.symbol = input;
+    }
 }

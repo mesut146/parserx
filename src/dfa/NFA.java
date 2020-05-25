@@ -17,7 +17,7 @@ public class NFA {
     StateSet[] epsilon;//[state]=set of next states with epsilon moves
     public int numStates;
     public int numInput;//alphabet
-    int initial = 0;
+    public int initial = 0;//initial state
     //public List<List<Transition>> trans;//state,input,targets
     public List<Transition>[] trans;
     public HashMap<Integer, Integer> alphabet;//code point(segment) to index
@@ -121,10 +121,7 @@ public class NFA {
             arr = new ArrayList<>();
         }
         trans[state] = arr;
-        Transition tr = new Transition();
-        tr.state = state;
-        tr.symbol = input;
-        tr.target = target;
+        Transition tr = new Transition(state, input, target);
         arr.add(tr);
     }
 
@@ -157,19 +154,44 @@ public class NFA {
     //todo
     public DFA dfa() {
         DFA dfa = new DFA(trans.length * 2, numInput);
-        Map<StateSet, Integer> map = new HashMap<>();
+        //Map<StateSet, Integer> map = new HashMap<>();
         int init = 0;
+        Map<StateSet, Integer> trans2 = new HashMap<>();//state set to dfa state
         for (int state = initial; state < numStates; ++state) {
             StateSet set = closure(state);
             System.out.println(set.states);
-            List<Transition> trList = trans[state];
-            StateSet closure = closure(state);
+            StateSet closure = closure(state);//1,2,3
+            //Set<Integer> inputSet = new HashSet<>();//0,1
+            Map<Integer, StateSet> map = new HashMap<>();//input to target states
             for (int epState : closure) {
-
+                List<Transition> trList = trans[epState];
+                for (Transition t : trList) {
+                    //inputSet.add(t.symbol);
+                    StateSet targets = map.get(t.symbol);
+                    if (targets == null) {
+                        targets = new StateSet();
+                        map.put(t.symbol, targets);
+                    }
+                    targets.addState(t.target);
+                }
+            }
+            for (int input : map.keySet()) {
+                StateSet targets = map.get(input);
+                int targets_state;
+                //crate new state corresponding this state set
+                if (trans2.containsKey(targets)) {
+                    targets_state = trans2.get(targets);
+                }
+                else {
+                    targets_state = dfa.newState();
+                    trans2.put(targets, targets_state);
+                }
+                dfa.addTransition(state/*?*/, input, targets_state);
             }
         }
         return dfa;
     }
+
 
     //epsilon closure for dfa conversion
     public StateSet closure(int state) {
@@ -253,25 +275,25 @@ public class NFA {
         else if (node instanceof RegexNode) {
             RegexNode rn = (RegexNode) node;
             if (rn.star) {
-                int ns = newState();
-                addEpsilon(start, ns);//zero
-                Pair st = insert(rn.node, ns);
+                int end = newState();
+                addEpsilon(start, end);//zero
+                Pair st = insert(rn.node, end);
                 addEpsilon(st.end, start);//repeat
-                p.end = ns;
+                p.end = end;
             }
             else if (rn.plus) {
-                int ns = newState();
-                addEpsilon(start, ns);
-                Pair st = insert(rn.node, ns);
-                addEpsilon(st.end, ns);//repeat
-                p.end = ns;
+                int end = newState();
+                addEpsilon(start, end);
+                Pair st = insert(rn.node, end);
+                addEpsilon(st.end, end);//repeat
+                p.end = end;
             }
             else if (rn.optional) {
-                int ns = newState();
-                addEpsilon(start, ns);//zero times
+                int end = newState();
+                addEpsilon(start, end);//zero times
                 Pair st = insert(rn.node, start);
-                addEpsilon(st.end, ns);
-                p.end = ns;
+                addEpsilon(st.end, end);
+                p.end = end;
             }
 
         }
@@ -317,18 +339,7 @@ public class NFA {
             w.println(printState(state));
 
             List<Transition> arr = trans[state];
-            if (arr == null) {//must be accepting
-                StateSet eps = epsilon[state];
-                if (eps != null) {
-                    w.print("  ");
-                    for (int e : eps.states) {
-                        w.print(printState(e));
-                        w.print(" ");
-                    }
-                }
-
-            }
-            else
+            if (arr != null) {
                 for (Transition tr : arr) {
                     w.print("  ");
                     //int seg = getSegment(tr.symbol);
@@ -338,6 +349,15 @@ public class NFA {
                     w.print(printState(tr.target));
                     w.println();
                 }
+            }
+            StateSet eps = epsilon[state];
+            if (eps != null) {
+                w.print("  E -> ");
+                for (int e : eps.states) {
+                    w.print(printState(e));
+                    w.print(" ");
+                }
+            }
             w.println();
         }
         w.flush();

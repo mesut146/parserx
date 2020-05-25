@@ -1,17 +1,16 @@
 package dfa;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.Set;
 
 //nfa state set
 public class StateSet implements Iterable<Integer> {
 
-    public List<Integer> states;
+    public Set<Integer> states;
 
     public StateSet() {
-        states = new ArrayList<>();
+        states = new HashSet<>();
     }
 
     public void addState(int state) {
@@ -22,9 +21,9 @@ public class StateSet implements Iterable<Integer> {
         states.addAll(other.states);
     }
 
-    public int get(int index) {
+    /*public int get(int index) {
         return states.get(index);
-    }
+    }*/
 
     public void remove(int state) {
         states.remove((Integer) state);
@@ -49,6 +48,6 @@ public class StateSet implements Iterable<Integer> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(states);
+        return states.hashCode();
     }
 }

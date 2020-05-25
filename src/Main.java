@@ -19,13 +19,15 @@ import java.util.Arrays;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        String dir = "/home/mesut/IdeaProjects/parserx";
-        //String dir = "/storage/emulated/0/AppProjects/parserx";
+        String dir;
+        dir = "/home/mesut/IdeaProjects/parserx";
+        //dir = "/storage/emulated/0/AppProjects/parserx";
         dir += "/test/";
         String gr = dir + "test.g";
         String test = dir + "test.txt";
 
-        cc(gr);
+        //cc(gr);
+        nfaToDfaTest();
         //bracketTest();
         //segmentTest();
         /*System.out.println(Integer.toHexString((int)Character.MAX_VALUE));
@@ -34,6 +36,24 @@ public class Main {
         //dfa();
         //cup(gr);
         //grTest(gr);
+    }
+
+    static void nfaToDfaTest() throws IOException {
+        NFA nfa = new NFA(100);
+        nfa.initial = 1;
+        nfa.addTransitionRange(1, 2, 0, 0);
+        nfa.addEpsilon(1, 3);
+        nfa.addEpsilon(3, 2);
+        nfa.addTransitionRange(3, 4, 0, 0);
+        nfa.addTransitionRange(4, 3, 0, 0);
+        nfa.addTransitionRange(2, 2, 1, 1);
+        nfa.addTransitionRange(2, 4, 1, 1);
+        nfa.setAccepting(3, true);
+        nfa.setAccepting(4, true);
+        nfa.numStates = 4;
+        nfa.dump("");
+        DFA dfa = nfa.dfa();
+        dfa.dump("");
     }
 
     static void bracketTest() {
@@ -53,26 +73,6 @@ public class Main {
         System.out.println(Arrays.toString(CharClass.desegment(seg)));
     }
 
-    static void match(String str, DFA dfa) {
-        int cur = 1;
-        for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-            int st = dfa.getTransition(cur, c);
-            if (st == 0) {
-                System.out.println("no match at input " + c);
-                return;
-            }
-            else {
-                cur = st;
-            }
-        }
-        if (dfa.isAccepting(cur)) {
-            System.out.println("match success");
-        }
-        else {
-            System.out.println("no match");
-        }
-    }
 
     static void cup(String path) throws Exception {
         //lexer lexer = new lexer(path);
