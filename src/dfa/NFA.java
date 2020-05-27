@@ -5,10 +5,7 @@ import rule.NameNode;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class NFA {
     public Tree tree;
@@ -149,62 +146,6 @@ public class NFA {
             set = epsilon[state] = new StateSet();
         }
         set.addState(target);
-    }
-
-    //todo
-    public DFA dfa() {
-        DFA dfa = new DFA(trans.length * 2, numInput);
-        //Map<StateSet, Integer> map = new HashMap<>();
-        int init = 0;
-        Map<StateSet, Integer> trans2 = new HashMap<>();//state set to dfa state
-        for (int state = initial; state < numStates; ++state) {
-            StateSet set = closure(state);
-            System.out.println(set.states);
-            StateSet closure = closure(state);//1,2,3
-            //Set<Integer> inputSet = new HashSet<>();//0,1
-            Map<Integer, StateSet> map = new HashMap<>();//input to target states
-            for (int epState : closure) {
-                List<Transition> trList = trans[epState];
-                for (Transition t : trList) {
-                    //inputSet.add(t.symbol);
-                    StateSet targets = map.get(t.symbol);
-                    if (targets == null) {
-                        targets = new StateSet();
-                        map.put(t.symbol, targets);
-                    }
-                    targets.addState(t.target);
-                }
-            }
-            for (int input : map.keySet()) {
-                StateSet targets = map.get(input);
-                int targets_state;
-                //crate new state corresponding this state set
-                if (trans2.containsKey(targets)) {
-                    targets_state = trans2.get(targets);
-                }
-                else {
-                    targets_state = dfa.newState();
-                    trans2.put(targets, targets_state);
-                }
-                dfa.addTransition(state/*?*/, input, targets_state);
-            }
-        }
-        return dfa;
-    }
-
-
-    //epsilon closure for dfa conversion
-    public StateSet closure(int state) {
-        StateSet res = new StateSet();
-        res.addState(state);//itself
-        StateSet eps = epsilon[state];
-        if (eps == null || eps.states.size() == 0) {
-            return res;
-        }
-        for (int i : eps.states) {
-            res.addAll(closure(i));
-        }
-        return res;
     }
 
     //add regex to @start
@@ -382,6 +323,75 @@ public class NFA {
             System.out.println(decodeSegment(x));
         }
     }*/
+    //todo
+    public DFA dfa() {
+        DFA dfa = new DFA(trans.length * 2, numInput);
+        //Map<StateSet, Integer> map = new HashMap<>();
+        int init = 0;
+        Map<StateSet, Integer> dfaStateMap = new HashMap<>();//state set to dfa state
+        Queue<Integer> openStates = new LinkedList<>();
+        Set<Integer> processed = new HashSet<>();
+        openStates.add(initial);
+        dfa.numStates = -1;
+        while (!openStates.isEmpty()) {
+            int state = openStates.poll();
+            StateSet closure = closure(state);//1,2,3
+            //openStates.addAll(closure.states);
+            processed.addAll(closure.states);
+            int dfaState = getDfaState(dfaStateMap, closure, dfa);//corresponding dfa state for closure
 
+            System.out.printf("nfa state=%d dfa state=%d\n", state, dfaState);
+            System.out.printf("Closure(%d)=%s\n", state, closure);
+            //Set<Integer> inputSet = new HashSet<>();//0,1
+            Map<Integer, StateSet> map = new HashMap<>();//input -> target states from state
+            //find inputs and target states from state
+            for (int epState : closure) {
+                List<Transition> trList = trans[epState];
+                for (Transition t : trList) {
+                    if(!processed.contains(t.target)){
+                        openStates.offer(t.target);
+                    }
+                    StateSet targets = map.get(t.symbol);//we can cache these
+                    if (targets == null) {
+                        targets = new StateSet();
+                        map.put(t.symbol, targets);
+                    }
+                    targets.addState(t.target);
+                }
+            }
+            System.out.printf("map(%d)=%s\n", state, map);
+            //for each input make transition
+            for (int input : map.keySet()) {
+                StateSet targets = map.get(input);
+                int targets_state = getDfaState(dfaStateMap, targets, dfa);
+                //dfa state for state
+                dfa.addTransition(dfaState/*?*/, input, targets_state);
+            }
+        }
+        return dfa;
+    }
+
+    int getDfaState(Map<StateSet, Integer> map, StateSet set, DFA dfa) {
+        Integer state = map.get(set);
+        if (state == null) {
+            state = dfa.newState();
+            map.put(set, state);
+        }
+        return state;
+    }
+
+    //epsilon closure for dfa conversion
+    public StateSet closure(int state) {
+        StateSet res = new StateSet();
+        res.addState(state);//itself
+        StateSet eps = epsilon[state];
+        if (eps == null || eps.states.size() == 0) {
+            return res;
+        }
+        for (int i : eps.states) {
+            res.addAll(closure(i));
+        }
+        return res;
+    }
 }
 

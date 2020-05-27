@@ -50,4 +50,15 @@ public class StateSet implements Iterable<Integer> {
     public int hashCode() {
         return states.hashCode();
     }
+
+    @Override
+    public String toString() {
+        return "StateSet{" + states + "}";
+    }
+
+    public StateSet copy() {
+        StateSet copy = new StateSet();
+        copy.states.addAll(states);
+        return copy;
+    }
 }

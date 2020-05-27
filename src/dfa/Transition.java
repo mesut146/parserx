@@ -12,4 +12,13 @@ public class Transition {
         this.target = target;
         this.symbol = input;
     }
+
+    @Override
+    public String toString() {
+        return "Transition{" +
+                "state=" + state +
+                ", target=" + target +
+                ", symbol=" + symbol +
+                '}';
+    }
 }

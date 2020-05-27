@@ -27,7 +27,8 @@ public class Main {
         String test = dir + "test.txt";
 
         //cc(gr);
-        nfaToDfaTest();
+        //nfaToDfaTest();
+        nfaToDfaTest2();
         //bracketTest();
         //segmentTest();
         /*System.out.println(Integer.toHexString((int)Character.MAX_VALUE));
@@ -41,17 +42,41 @@ public class Main {
     static void nfaToDfaTest() throws IOException {
         NFA nfa = new NFA(100);
         nfa.initial = 1;
-        nfa.addTransitionRange(1, 2, 0, 0);
+        int zero = '0';
+        int one = '1';
+        nfa.addTransitionRange(1, 2, zero, zero);
         nfa.addEpsilon(1, 3);
         nfa.addEpsilon(3, 2);
-        nfa.addTransitionRange(3, 4, 0, 0);
-        nfa.addTransitionRange(4, 3, 0, 0);
-        nfa.addTransitionRange(2, 2, 1, 1);
-        nfa.addTransitionRange(2, 4, 1, 1);
+        nfa.addTransitionRange(3, 4, zero, zero);
+        nfa.addTransitionRange(4, 3, zero, zero);
+        nfa.addTransitionRange(2, 2, one, one);
+        nfa.addTransitionRange(2, 4, one, one);
         nfa.setAccepting(3, true);
         nfa.setAccepting(4, true);
         nfa.numStates = 4;
         nfa.dump("");
+        System.out.println("-------------");
+        DFA dfa = nfa.dfa();
+        dfa.dump("");
+    }
+
+    static void nfaToDfaTest2() throws IOException {
+        NFA nfa = new NFA(100);
+        nfa.initial = 1;
+        int zero = '0';
+        int one = '1';
+        nfa.addTransition(1, 0, 2);
+        nfa.addEpsilon(1, 3);
+        nfa.addEpsilon(3, 2);
+        nfa.addTransition(3, 0, 4);
+        nfa.addTransition(4, 0, 3);
+        nfa.addTransition(2, 1, 2);
+        nfa.addTransition(2, 1, 4);
+        nfa.setAccepting(3, true);
+        nfa.setAccepting(4, true);
+        nfa.numStates = 4;
+        nfa.dump("");
+        System.out.println("-------------");
         DFA dfa = nfa.dfa();
         dfa.dump("");
     }
