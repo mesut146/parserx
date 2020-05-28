@@ -337,7 +337,8 @@ public class NFA {
             int state = openStates.poll();
             StateSet closure = closure(state);//1,2,3
             //openStates.addAll(closure.states);
-            processed.addAll(closure.states);
+            //processed.addAll(closure.states);
+            processed.add(state);
             int dfaState = getDfaState(dfaStateMap, closure, dfa);//corresponding dfa state for closure
 
             System.out.printf("nfa state=%d dfa state=%d\n", state, dfaState);
@@ -348,7 +349,7 @@ public class NFA {
             for (int epState : closure) {
                 List<Transition> trList = trans[epState];
                 for (Transition t : trList) {
-                    if(!processed.contains(t.target)){
+                    if (!processed.contains(t.target)) {
                         openStates.offer(t.target);
                     }
                     StateSet targets = map.get(t.symbol);//we can cache these
@@ -371,6 +372,7 @@ public class NFA {
         return dfa;
     }
 
+    //make dfa state for nfa state @set
     int getDfaState(Map<StateSet, Integer> map, StateSet set, DFA dfa) {
         Integer state = map.get(set);
         if (state == null) {
