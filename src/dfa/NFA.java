@@ -333,31 +333,35 @@ public class NFA {
         Set<Integer> processed = new HashSet<>();
         openStates.add(initial);
         dfa.numStates = -1;
+        Map<Integer, Integer> lastStates = new HashMap<>();//nfa to dfa
         while (!openStates.isEmpty()) {
             int state = openStates.poll();
             StateSet closure = closure(state);//1,2,3
             //openStates.addAll(closure.states);
-            //processed.addAll(closure.states);
-            processed.add(state);
+            processed.addAll(closure.states);
+            //processed.add(state);
+
             int dfaState = getDfaState(dfaStateMap, closure, dfa);//corresponding dfa state for closure
 
-            System.out.printf("nfa state=%d dfa state=%d\n", state, dfaState);
-            System.out.printf("Closure(%d)=%s\n", state, closure);
+            System.out.printf("Closure(%d)=%s dfa=%d\n", state, closure, dfaState);
             //Set<Integer> inputSet = new HashSet<>();//0,1
             Map<Integer, StateSet> map = new HashMap<>();//input -> target states from state
             //find inputs and target states from state
             for (int epState : closure) {
                 List<Transition> trList = trans[epState];
                 for (Transition t : trList) {
+                    StateSet clOfTarget = closure(t.target);
                     if (!processed.contains(t.target)) {
-                        openStates.offer(t.target);
+                        openStates.addAll(clOfTarget.states);
                     }
+                    lastStates.put(t.target, dfaState);
                     StateSet targets = map.get(t.symbol);//we can cache these
                     if (targets == null) {
                         targets = new StateSet();
                         map.put(t.symbol, targets);
                     }
-                    targets.addState(t.target);
+                    //targets.addState(t.target);
+                    targets.addAll(clOfTarget);
                 }
             }
             System.out.printf("map(%d)=%s\n", state, map);
@@ -365,6 +369,7 @@ public class NFA {
             for (int input : map.keySet()) {
                 StateSet targets = map.get(input);
                 int targets_state = getDfaState(dfaStateMap, targets, dfa);
+                System.out.printf("targets=%s dfa=%d\n", targets, targets_state);
                 //dfa state for state
                 dfa.addTransition(dfaState/*?*/, input, targets_state);
             }
