@@ -17,6 +17,7 @@ public class Bracket extends Node {
     public NodeList<Node> list = new NodeList<>();
     public boolean negate;//[^abc]
     public boolean debug = false;
+    int pos;
 
 
     public void add(Node node) {
@@ -29,7 +30,7 @@ public class Bracket extends Node {
 
     public void parse(String str) throws ParseException {
         //System.out.println(str);
-        int pos = 0;
+        pos = 0;
         if (str.charAt(pos) != '[') {
             err();
         }
@@ -44,29 +45,53 @@ public class Bracket extends Node {
             if (c == ']') {//end
                 return;
             }
-            if (c != '-') {
-                if (c == '\\') {//escape
-                    c = Util.get(str.charAt(pos));
-                    ++pos;
+            if (c == '\\') {//escape
+                c = readUnicode(str);
+            }
+
+            if (pos < str.length() && str.charAt(pos) == '-') {
+                pos++;
+                char end = str.charAt(pos++);
+                if (end == '\\') {
+                    end = readUnicode(str);
                 }
-                if (pos < str.length() && str.charAt(pos) == '-') {
-                    pos++;
-                    char end = str.charAt(pos++);
-                    if (end == '\\') {
-                        end = Util.get(str.charAt(pos++));
-                    }
-                    list.add(new RangeNode(c, end));
-                }
-                else {
-                    list.add(new CharNode(c));
-                }
+                list.add(new RangeNode(c, end));
             }
             else {
-                err();
+                list.add(new CharNode(c));
             }
         }
     }
 
+    char readUnicode(String str) throws ParseException {
+        char c = str.charAt(pos++);
+        if (c == 'u') {//unicode
+            char c1 = str.charAt(pos++);
+            char c2 = str.charAt(pos++);
+            char c3 = str.charAt(pos++);
+            char c4 = str.charAt(pos++);
+            int hex = fromHex(c1) << 12 |
+                    fromHex(c2) << 8 |
+                    fromHex(c3) << 4 |
+                    fromHex(c4);
+            c = (char) hex;
+        }
+        else {
+            c = Util.get(c);
+        }
+        return c;
+    }
+
+    int fromHex(char c) {
+        if (Character.isDigit(c)) {
+            return c - '0';
+        }
+        if (Character.isLowerCase(c)) {
+            return c - 'a' + 10;
+        }
+        //upper
+        return c - 'A' + 10;
+    }
 
     public void sort(List<RangeNode> ranges) {
         Collections.sort(ranges, new Comparator<RangeNode>() {
@@ -121,7 +146,8 @@ public class Bracket extends Node {
         return res;
     }
 
-    RangeNode intersect(RangeNode r1, RangeNode r2) {
+    //return intersection of two ranges
+    public static RangeNode intersect(RangeNode r1, RangeNode r2) {
         int l = Math.max(r1.start, r2.start);
         int r = Math.min(r1.end, r2.end);
         if (l > r) {

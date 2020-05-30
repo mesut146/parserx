@@ -3,6 +3,8 @@ package dfa;
 import nodes.*;
 import rule.NameNode;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
@@ -114,7 +116,7 @@ public class NFA {
         //System.out.printf("state: %d input: %d target: %d\n", state, input, target);
         List<Transition> arr;
         arr = trans[state];
-        if (arr == null || arr.get(0).state != state) {
+        if (arr == null) {
             arr = new ArrayList<>();
         }
         trans[state] = arr;
@@ -127,8 +129,64 @@ public class NFA {
         int seg = CharClass.segment(left, right);
         System.out.printf("st:%d (%s-%s) to st:%d seg:%d\n", state, CharClass.printChar(left), CharClass.printChar(right), target, seg);
         //int inputIndex = checkInput(seg);
+        if (checkDuplicateSegment(state, target, left, right)) {
+            return;
+        }
         addTransition(state, seg, target);
         //addTransition(state, inputIndex, target);
+    }
+
+    boolean checkDuplicateSegment(int state, int target, int left, int right) {
+        List<Transition> list = trans[state];
+        if (list != null) {
+            for (Iterator<Transition> iterator = list.iterator(); iterator.hasNext(); ) {
+                Transition tr = iterator.next();
+                int[] dec = CharClass.desegment(tr.symbol);
+                //if conflicts
+                if (CharClass.conflicts(left, right, dec[0], dec[1])) {
+                    if (left == right && dec[0] != dec[1]) {//if me is single other is ranged
+                        //split other into two halves
+                        int a1 = dec[0];
+                        int a2 = left - 1;
+                        int b1 = left + 1;
+                        int b2 = dec[1];
+                        //remove others and place these
+                        iterator.remove();
+                        if (a1 <= a2) {
+                            addTransitionRange(state, tr.target, a1, a2);
+                        }
+                        if (b1 <= b2) {
+                            addTransitionRange(state, tr.target, b1, b2);
+                        }
+                        addTransitionRange(state, tr.target, left, right);
+                        addTransitionRange(state, target, left, right);
+                        return true;
+                    }
+                    else if (left != right && dec[0] == dec[1]) {//me is ranged other is single
+                        //split me into two halves
+                        int a1 = left;
+                        int a2 = dec[0] - 1;
+                        int b1 = dec[0] + 1;
+                        int b2 = right;
+                        //remove me and place other
+                        if (a1 <= a2) {
+                            addTransitionRange(state, tr.target, a1, a2);
+                        }
+                        if (b1 <= b2) {
+                            addTransitionRange(state, tr.target, b1, b2);
+                        }
+                        //third one is already there
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    //without removing
+    boolean checkDuplicateSegment2(int state, int target, int left, int right) {
+        return false;
     }
 
     public void setAccepting(int state, boolean val) {
@@ -175,32 +233,32 @@ public class NFA {
             Bracket b = node.as(Bracket.class);
             if (b.negate) {
                 //todo all at once
-                int end = newState();//order not matter?
+                int end = newState();
                 List<RangeNode> ranges = b.negateAll();
-                for (int i = 0; i < ranges.size(); i++) {
-                    RangeNode n = ranges.get(i);
-                    //System.out.println(n);
-                    int mid = newState();
+                for (RangeNode n : ranges) {
+                    //int mid = newState();
                     addTransitionRange(start, end, n.start, n.end);
-                    addEpsilon(mid, end);
+                    //addEpsilon(mid, end);
                 }
                 p.end = end;
             }
-            else {
-                //in order to have only one end state we add epsilons
-                int end = newState();//order not matter?
+            else {//normal char range
+                //in order to have only one end state we add epsilons?
+                int end = newState();
                 for (int i = 0; i < b.list.size(); i++) {
                     Node n = b.list.get(i);
-                    int mid = newState();
+                    //int mid = newState();
+                    int left, right;
                     if (n instanceof Bracket.CharNode) {
-                        char ch = ((Bracket.CharNode) n).chr;
-                        addTransitionRange(start, mid, ch, ch);
+                        left = right = ((Bracket.CharNode) n).chr;
                     }
                     else {//range
                         RangeNode rn = (RangeNode) n;
-                        addTransitionRange(start, mid, rn.start, rn.end);
+                        left = rn.start;
+                        right = rn.end;
                     }
-                    addEpsilon(mid, end);
+                    addTransitionRange(start, end, left, right);
+                    //addEpsilon(mid, end);
                 }
                 p.end = end;
             }
@@ -218,16 +276,16 @@ public class NFA {
             if (rn.star) {
                 int end = newState();
                 addEpsilon(start, end);//zero
-                Pair st = insert(rn.node, end);
+                Pair st = insert(rn.node, start);
                 addEpsilon(st.end, start);//repeat
                 p.end = end;
             }
             else if (rn.plus) {
-                int end = newState();
-                addEpsilon(start, end);
-                Pair st = insert(rn.node, end);
-                addEpsilon(st.end, end);//repeat
-                p.end = end;
+                //todo no mid state will cause error later
+                //int end = newState();
+                Pair st = insert(rn.node, start);
+                addEpsilon(st.end, start);//repeat
+                p.end = st.end;
             }
             else if (rn.optional) {
                 int end = newState();
@@ -243,7 +301,7 @@ public class NFA {
             int end = newState();
             for (Node n : or.list.list) {
                 int e = insert(n, start).end;
-                addEpsilon(e, end);
+                addEpsilon(e, end);//to have one end state
             }
             p.end = end;
         }
@@ -325,9 +383,10 @@ public class NFA {
     }*/
     //todo
     public DFA dfa() {
+        System.out.println("dfa conversion started");
         DFA dfa = new DFA(trans.length * 2, numInput);
         //Map<StateSet, Integer> map = new HashMap<>();
-        int init = 0;
+
         Map<StateSet, Integer> dfaStateMap = new HashMap<>();//state set to dfa state
         Queue<Integer> openStates = new LinkedList<>();
         Set<Integer> processed = new HashSet<>();
@@ -339,11 +398,11 @@ public class NFA {
             StateSet closure = closure(state);//1,2,3
             //openStates.addAll(closure.states);
             processed.addAll(closure.states);
-            //processed.add(state);
-            
+            openStates.removeAll(closure.states);
+
             int dfaState;
-            if(lastStates.containsKey(state)){
-                dfaState=lastStates.get(state);
+            if (lastStates.containsKey(state)) {
+                dfaState = lastStates.get(state);
             }
             else dfaState = getDfaState(dfaStateMap, closure, dfa);//corresponding dfa state for closure
 
@@ -353,21 +412,26 @@ public class NFA {
             //find inputs and target states from state
             for (int epState : closure) {
                 List<Transition> trList = trans[epState];
-                if(trList!=null)
-                for (Transition t : trList) {
-                    StateSet clOfTarget = closure(t.target);
-                    if (!processed.contains(t.target)) {
-                        openStates.addAll(clOfTarget.states);
+                if (trList != null)
+                    for (Transition t : trList) {
+                        StateSet clOfTarget = closure(t.target);
+                        for (int cl : clOfTarget) {
+                            if (!processed.contains(cl)) {
+                                openStates.add(cl);
+                            }
+                        }
+                        /*if (!processed.contains(t.target)) {
+                            openStates.addAll(clOfTarget.states);
+                        }*/
+                        //lastStates.put(t.target, dfaState);
+                        StateSet targets = map.get(t.symbol);//we can cache these
+                        if (targets == null) {
+                            targets = new StateSet();
+                            map.put(t.symbol, targets);
+                        }
+                        //targets.addState(t.target);
+                        targets.addAll(clOfTarget);
                     }
-                    //lastStates.put(t.target, dfaState);
-                    StateSet targets = map.get(t.symbol);//we can cache these
-                    if (targets == null) {
-                        targets = new StateSet();
-                        map.put(t.symbol, targets);
-                    }
-                    //targets.addState(t.target);
-                    targets.addAll(clOfTarget);
-                }
             }
             System.out.printf("map(%d)=%s\n", state, map);
             //for each input make transition
@@ -375,16 +439,14 @@ public class NFA {
                 StateSet targets = map.get(input);
                 int targets_state = getDfaState(dfaStateMap, targets, dfa);
                 System.out.printf("targets=%s dfa=%d\n", targets, targets_state);
-                boolean accept=false;
-                for(int s:targets){
-                    lastStates.put(s,targets_state);
-                    accept|=isAccepting(s);
-                    
+                boolean accept = false;
+                for (int s : targets) {
+                    lastStates.put(s, targets_state);
+                    accept |= isAccepting(s);
                 }
-                dfa.setAccepting(targets_state,accept);
+                dfa.setAccepting(targets_state, accept);
                 //dfa state for state
                 dfa.addTransition(dfaState/*?*/, input, targets_state);
-                
             }
         }
         return dfa;
@@ -412,6 +474,41 @@ public class NFA {
             res.addAll(closure(i));
         }
         return res;
+    }
+
+    public void dot(String path) {
+        try {
+            BufferedWriter bw = new BufferedWriter(new FileWriter(path));
+            PrintWriter w = new PrintWriter(bw);
+            w.println("digraph G{");
+            w.println("rankdir = LR");
+            w.printf("%d [color=red]\n", initial);
+            for (int state = initial; state <= numStates; state++) {
+                if (isAccepting(state)) {
+                    w.printf("%d [shape = doublecircle]\n", state);
+                }
+            }
+
+            for (int state = initial; state <= numStates; state++) {
+                List<Transition> list = trans[state];
+                StateSet eps = epsilon[state];
+                if (list != null) {
+                    for (Transition tr : list) {
+                        w.printf("%s -> %s [label=\"[%s]\"]\n", state, tr.target, CharClass.seg2escaped(tr.symbol));
+                    }
+                }
+                if (eps != null) {
+                    for (int target : eps) {
+                        w.printf("%s -> %s [label=\"ε\"]\n", state, target);
+                    }
+                }
+            }
+            w.println("}");
+            w.flush();
+            w.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 

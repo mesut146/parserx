@@ -1,5 +1,7 @@
 package utils;
 
+import grammar.ParseException;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,8 +20,11 @@ public class Util {
         escapeMap.put('s', ' ');//space
     }
 
-    public static char get(char c) {
-        return escapeMap.get(c);
+    public static char get(char c) throws ParseException {
+        if(escapeMap.containsKey(c)){
+           return escapeMap.get(c);
+        }
+        throw new ParseException("invalid escape character = "+c);
     }
 
     //make escaed(slash) form
@@ -39,7 +44,7 @@ public class Util {
         return str;
     }
 
-    public static String fromEscaped(String str) {
+    public static String fromEscaped(String str) throws ParseException {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);

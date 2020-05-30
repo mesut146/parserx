@@ -12,6 +12,7 @@ import nodes.Bracket;
 import nodes.RangeNode;
 import nodes.Tree;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
@@ -20,13 +21,11 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         String dir;
-        //dir = "/home/mesut/IdeaProjects/parserx";
-        dir = "/storage/emulated/0/AppProjects/parserx";
+        dir = "/home/mesut/IdeaProjects/parserx";
+        //dir = "/storage/emulated/0/AppProjects/parserx";
         dir += "/test/";
-        String gr = dir + "test.g";
-        String test = dir + "test.txt";
 
-        cc(gr);
+        cc(dir, "test.g");
         //nfaToDfaTest();
         //nfaToDfaTest2();
         //bracketTest();
@@ -76,9 +75,11 @@ public class Main {
         nfa.setAccepting(4, true);
         nfa.numStates = 4;
         nfa.dump("");
+        nfa.dot("/home/mesut/IdeaProjects/parserx/test/asd.dot");
         System.out.println("-------------");
-        DFA dfa = nfa.dfa();
-        dfa.dump("");
+        /*DFA dfa = nfa.dfa();
+        dfa.dump("");*/
+
     }
 
     static void bracketTest() {
@@ -109,21 +110,22 @@ public class Main {
     }
 
 
-    static void cc(String path) throws Exception {
-        GParser parser = new GParser(new FileReader(path));
+    static void cc(String dir, String name) throws Exception {
+        File file = new File(dir, name);
+        GParser parser = new GParser(new FileReader(file));
         //tokens(parser);
         Tree tree = parser.tree();
         //System.out.println(tree);
         NFA nfa = tree.makeNFA();
-        System.out.println(nfa.numStates);
-        System.out.println(nfa.numInput);
-        System.out.println(nfa.alphabet);
+        System.out.println("total states="+nfa.numStates);
         //System.out.println(nfa.inputMap);
         //System.out.println(nfa.transMap);
         nfa.dump("");
+        //nfa.dot("/home/mesut/IdeaProjects/parserx/test/asd.dot");
         System.out.println("-----DFA-----");
-        DFA dfa=nfa.dfa();
+        DFA dfa = nfa.dfa();
         dfa.dump("");
+        dfa.dot("/home/mesut/IdeaProjects/parserx/test/asd.dot");
         //nfa.dumpAlphabet();
         //System.out.println(nfa.dfa());
     }

@@ -1,5 +1,8 @@
 package dfa;
 
+import nodes.Bracket;
+import nodes.RangeNode;
+
 public class CharClass {
     public int start, end;
     public static int min = 0;
@@ -33,19 +36,39 @@ public class CharClass {
         int[] arr = desegment(seg);
         return printChar(arr[0]) + "-" + printChar(arr[1]);
     }
-    
-    static String printChar(int chr){
-        if(Character.isAlphabetic(chr)|| Character.isDigit(chr)||isPrintableChar((char)chr)){
-            return Character.toString((char)chr);
+
+    //for dot format
+    public static String seg2escaped(int seg) {
+        int[] arr = desegment(seg);
+        String l = printChar(arr[0]);
+        String r = printChar(arr[1]);
+        if (arr[0] == '"') {
+            l = "\\" + l;
         }
-        return "\\"+chr;
+        if (arr[1] == '"') {
+            r = "\\" + r;
+        }
+        return l + "-" + r;
     }
-    
-    public static boolean isPrintableChar( char c ) {
-        Character.UnicodeBlock block = Character.UnicodeBlock.of( c );
+
+    static String printChar(int chr) {
+        if (Character.isAlphabetic(chr) || Character.isDigit(chr) || isPrintableChar((char) chr)) {
+            return Character.toString((char) chr);
+        }
+        return String.format("\\u%04x", chr);//unicode style
+    }
+
+    public static boolean isPrintableChar(char c) {
+        Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
         return (!Character.isISOControl(c)) &&
-            block != null &&
-            block != Character.UnicodeBlock.SPECIALS;
+                block != null &&
+                block != Character.UnicodeBlock.SPECIALS;
+    }
+
+    public static boolean conflicts(int left1, int right1, int left2, int right2) {
+        RangeNode r1 = new RangeNode(left1, right1);
+        RangeNode r2 = new RangeNode(left2, right2);
+        return Bracket.intersect(r1, r2) != null;
     }
 
 }

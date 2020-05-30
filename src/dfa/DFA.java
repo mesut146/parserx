@@ -1,5 +1,8 @@
 package dfa;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -102,5 +105,34 @@ public class DFA {
             return "(S" + st + ")";
         }
         return "S" + st;
+    }
+
+    public void dot(String path) {
+        try {
+            BufferedWriter bw = new BufferedWriter(new FileWriter(path));
+            PrintWriter w = new PrintWriter(bw);
+            w.println("digraph G{");
+            w.println("rankdir = LR");
+            w.printf("%d [color=red]\n", initial);
+            for (int state = initial; state <= numStates; state++) {
+                if (isAccepting(state)) {
+                    w.printf("%d [shape = doublecircle]\n", state);
+                }
+            }
+
+            for (int state = initial; state <= numStates; state++) {
+                List<Transition> list = trans[state];
+                if (list != null) {
+                    for (Transition tr : list) {
+                        w.printf("%s -> %s [label=\"[%s]\"]\n", state, tr.target, CharClass.seg2escaped(tr.symbol));
+                    }
+                }
+            }
+            w.println("}");
+            w.flush();
+            w.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
