@@ -340,8 +340,12 @@ public class NFA {
             //openStates.addAll(closure.states);
             processed.addAll(closure.states);
             //processed.add(state);
-
-            int dfaState = getDfaState(dfaStateMap, closure, dfa);//corresponding dfa state for closure
+            
+            int dfaState;
+            if(lastStates.containsKey(state)){
+                dfaState=lastStates.get(state);
+            }
+            else dfaState = getDfaState(dfaStateMap, closure, dfa);//corresponding dfa state for closure
 
             System.out.printf("Closure(%d)=%s dfa=%d\n", state, closure, dfaState);
             //Set<Integer> inputSet = new HashSet<>();//0,1
@@ -349,12 +353,13 @@ public class NFA {
             //find inputs and target states from state
             for (int epState : closure) {
                 List<Transition> trList = trans[epState];
+                if(trList!=null)
                 for (Transition t : trList) {
                     StateSet clOfTarget = closure(t.target);
                     if (!processed.contains(t.target)) {
                         openStates.addAll(clOfTarget.states);
                     }
-                    lastStates.put(t.target, dfaState);
+                    //lastStates.put(t.target, dfaState);
                     StateSet targets = map.get(t.symbol);//we can cache these
                     if (targets == null) {
                         targets = new StateSet();
@@ -370,8 +375,16 @@ public class NFA {
                 StateSet targets = map.get(input);
                 int targets_state = getDfaState(dfaStateMap, targets, dfa);
                 System.out.printf("targets=%s dfa=%d\n", targets, targets_state);
+                boolean accept=false;
+                for(int s:targets){
+                    lastStates.put(s,targets_state);
+                    accept|=isAccepting(s);
+                    
+                }
+                dfa.setAccepting(targets_state,accept);
                 //dfa state for state
                 dfa.addTransition(dfaState/*?*/, input, targets_state);
+                
             }
         }
         return dfa;

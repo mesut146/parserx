@@ -20,15 +20,15 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         String dir;
-        dir = "/home/mesut/IdeaProjects/parserx";
-        //dir = "/storage/emulated/0/AppProjects/parserx";
+        //dir = "/home/mesut/IdeaProjects/parserx";
+        dir = "/storage/emulated/0/AppProjects/parserx";
         dir += "/test/";
         String gr = dir + "test.g";
         String test = dir + "test.txt";
 
-        //cc(gr);
+        cc(gr);
         //nfaToDfaTest();
-        nfaToDfaTest2();
+        //nfaToDfaTest2();
         //bracketTest();
         //segmentTest();
         /*System.out.println(Integer.toHexString((int)Character.MAX_VALUE));
@@ -121,7 +121,9 @@ public class Main {
         //System.out.println(nfa.inputMap);
         //System.out.println(nfa.transMap);
         nfa.dump("");
-        System.out.println(Arrays.toString(nfa.names));
+        System.out.println("-----DFA-----");
+        DFA dfa=nfa.dfa();
+        dfa.dump("");
         //nfa.dumpAlphabet();
         //System.out.println(nfa.dfa());
     }
