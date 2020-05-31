@@ -109,7 +109,7 @@ public class NFA {
 
 
     //state index,input index,target state index
-    public void addTransition(int state, int input, int target) {
+    public void addTransition(int state, int target, int input) {
         //addInputMap(state, input);
         //addTransMap(state, target);
         expand(state);
@@ -129,10 +129,10 @@ public class NFA {
         int seg = CharClass.segment(left, right);
         System.out.printf("st:%d (%s-%s) to st:%d seg:%d\n", state, CharClass.printChar(left), CharClass.printChar(right), target, seg);
         //int inputIndex = checkInput(seg);
-        if (checkDuplicateSegment(state, target, left, right)) {
+        /*if (checkDuplicateSegment(state, target, left, right)) {
             return;
-        }
-        addTransition(state, seg, target);
+        }*/
+        addTransition(state, target, seg);
         //addTransition(state, inputIndex, target);
     }
 
@@ -177,6 +177,11 @@ public class NFA {
                         }
                         //third one is already there
                         return true;
+                    }
+                    else if (left < right && dec[0] < dec[1]) {//we both ranged
+                        RangeNode r1 = new RangeNode(left, right);
+                        RangeNode r2 = new RangeNode(dec[0], dec[1]);
+
                     }
                 }
             }
@@ -412,11 +417,11 @@ public class NFA {
             //find inputs and target states from state
             for (int epState : closure) {
                 List<Transition> trList = trans[epState];
-                if (trList != null)
+                if (trList != null) {
                     for (Transition t : trList) {
                         StateSet clOfTarget = closure(t.target);
                         for (int cl : clOfTarget) {
-                            if (!processed.contains(cl)) {
+                            if (!processed.contains(cl) && !openStates.contains(cl)) {
                                 openStates.add(cl);
                             }
                         }
@@ -432,21 +437,24 @@ public class NFA {
                         //targets.addState(t.target);
                         targets.addAll(clOfTarget);
                     }
+                }
             }
+
             System.out.printf("map(%d)=%s\n", state, map);
             //for each input make transition
             for (int input : map.keySet()) {
                 StateSet targets = map.get(input);
-                int targets_state = getDfaState(dfaStateMap, targets, dfa);
-                System.out.printf("targets=%s dfa=%d\n", targets, targets_state);
+                //check that same input tr exist in previous friend closure
+                //input,state -> target
+                int target_state = getDfaState(dfaStateMap, targets, dfa);
+                System.out.printf("targets=%s dfa=%d\n", targets, target_state);
                 boolean accept = false;
                 for (int s : targets) {
-                    lastStates.put(s, targets_state);
+                    lastStates.put(s, target_state);
                     accept |= isAccepting(s);
                 }
-                dfa.setAccepting(targets_state, accept);
-                //dfa state for state
-                dfa.addTransition(dfaState/*?*/, input, targets_state);
+                dfa.setAccepting(target_state, accept);
+                dfa.addTransition(dfaState, input, target_state);
             }
         }
         return dfa;

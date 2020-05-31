@@ -19,15 +19,18 @@ import java.util.Arrays;
 
 public class Main {
 
+    static String dir;
+
     public static void main(String[] args) throws Exception {
-        String dir;
         dir = "/home/mesut/IdeaProjects/parserx";
         //dir = "/storage/emulated/0/AppProjects/parserx";
         dir += "/test/";
 
-        cc(dir, "test.g");
+        //cc(dir, "test.g");
         //nfaToDfaTest();
         //nfaToDfaTest2();
+        //nfaToDfaTest3();
+        nfaToDfaTest4();
         //bracketTest();
         //segmentTest();
         /*System.out.println(Integer.toHexString((int)Character.MAX_VALUE));
@@ -64,13 +67,13 @@ public class Main {
         nfa.initial = 1;
         int zero = '0';
         int one = '1';
-        nfa.addTransition(1, 0, 2);
+        nfa.addTransition(1, 2, 0);
         nfa.addEpsilon(1, 3);
         nfa.addEpsilon(3, 2);
-        nfa.addTransition(3, 0, 4);
-        nfa.addTransition(4, 0, 3);
-        nfa.addTransition(2, 1, 2);
-        nfa.addTransition(2, 1, 4);
+        nfa.addTransition(3, 4, 0);
+        nfa.addTransition(4, 3, 0);
+        nfa.addTransition(2, 2, 1);
+        nfa.addTransition(2, 4, 1);
         nfa.setAccepting(3, true);
         nfa.setAccepting(4, true);
         nfa.numStates = 4;
@@ -79,7 +82,46 @@ public class Main {
         System.out.println("-------------");
         /*DFA dfa = nfa.dfa();
         dfa.dump("");*/
+    }
 
+    static void nfaToDfaTest3() throws IOException {
+        NFA nfa = new NFA(100);
+        //nfa.initial = 0;
+        nfa.addTransitionRange(0, 1, '0', '0');
+        nfa.addTransitionRange(1, 2, 'x', 'x');
+        nfa.addTransitionRange(0, 3, '0', '0');
+        nfa.addTransitionRange(3, 4, 'x', 'x');
+        nfa.addTransitionRange(3, 6, 't', 't');
+        nfa.addTransitionRange(4, 5, 'y', 'y');
+        nfa.setAccepting(2, true);
+        nfa.setAccepting(5, true);
+        nfa.setAccepting(6, true);
+        nfa.numStates = 5;
+        nfa.dump("");
+        //nfa.dot("/home/mesut/IdeaProjects/parserx/test/asd.dot");
+        System.out.println("-------------");
+        DFA dfa = nfa.dfa();
+        dfa.dump("");
+        dfa.dot("/home/mesut/IdeaProjects/parserx/test/asd.dot");
+    }
+
+    static void nfaToDfaTest4() throws IOException {
+        NFA nfa = new NFA(100);
+        //nfa.initial = 0;
+        nfa.addTransitionRange(0, 0, '0', '0');
+        nfa.addEpsilon(0, 1);
+        nfa.addTransitionRange(1, 1, '1', '1');
+        nfa.addEpsilon(1, 2);
+        nfa.addTransitionRange(2, 2, '2', '2');
+
+        nfa.setAccepting(2, true);
+        nfa.numStates = 2;
+        nfa.dump("");
+        //nfa.dot("/home/mesut/IdeaProjects/parserx/test/asd.dot");
+        System.out.println("-------------");
+        DFA dfa = nfa.dfa();
+        dfa.dump("");
+        dfa.dot("/home/mesut/IdeaProjects/parserx/test/asd.dot");
     }
 
     static void bracketTest() {
@@ -117,7 +159,7 @@ public class Main {
         Tree tree = parser.tree();
         //System.out.println(tree);
         NFA nfa = tree.makeNFA();
-        System.out.println("total states="+nfa.numStates);
+        System.out.println("total states=" + nfa.numStates);
         //System.out.println(nfa.inputMap);
         //System.out.println(nfa.transMap);
         nfa.dump("");

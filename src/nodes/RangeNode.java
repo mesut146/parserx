@@ -21,16 +21,20 @@ public class RangeNode extends Node {
     public int pack() {
         return (start << 16) | end;
     }
-    
-    RangeNode unpack(int seg){
-        int mask=(1<<16)-1;
-        return new RangeNode(seg>>>16,seg&mask);
+
+    RangeNode unpack(int seg) {
+        int mask = (1 << 16) - 1;
+        return new RangeNode(seg >>> 16, seg & mask);
     }
 
     @Override
     public String toString() {
-        return start+"-"+end;
+        return start + "-" + end;
         //return Bracket.escape(start)+"-"+Bracket.escape(end);
+    }
+
+    public boolean intersect(RangeNode other) {
+        return Bracket.intersect(this, other) != null;
     }
 
     public Iterator<Character> iterator() {
@@ -44,7 +48,7 @@ public class RangeNode extends Node {
 
             @Override
             public Character next() {
-                char c=(char)pos;
+                char c = (char) pos;
                 ++pos;
                 return c;
             }
