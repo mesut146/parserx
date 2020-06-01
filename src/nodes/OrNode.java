@@ -38,6 +38,7 @@ public class OrNode extends Node{
         return sb.toString();
     }*/
 
+    //print with bars
     String normal() {
         StringBuilder sb = new StringBuilder();
         //sb.append("(");

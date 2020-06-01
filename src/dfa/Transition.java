@@ -4,13 +4,13 @@ package dfa;
 public class Transition {
     int state;//from
     int target;
-    int symbol;
+    int input;
     int segment;
 
     public Transition(int state, int input, int target) {
         this.state = state;
         this.target = target;
-        this.symbol = input;
+        this.input = input;
     }
 
     @Override
@@ -18,7 +18,7 @@ public class Transition {
         return "Transition{" +
                 "state=" + state +
                 ", target=" + target +
-                ", symbol=" + symbol +
+                ", symbol=" + input +
                 '}';
     }
 }

@@ -12,7 +12,7 @@ public class NodeList<T> extends Node implements Iterable<T> {
         list.add(node);
     }
 
-    public void addAll(List<T> other) {
+    public <E extends T> void addAll(List<E> other) {
         list.addAll(other);
     }
 

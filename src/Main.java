@@ -26,11 +26,11 @@ public class Main {
         //dir = "/storage/emulated/0/AppProjects/parserx";
         dir += "/test/";
 
-        //cc(dir, "test.g");
+        cc("test.g");
         //nfaToDfaTest();
         //nfaToDfaTest2();
         //nfaToDfaTest3();
-        nfaToDfaTest4();
+        //nfaToDfaTest4();
         //bracketTest();
         //segmentTest();
         /*System.out.println(Integer.toHexString((int)Character.MAX_VALUE));
@@ -84,6 +84,7 @@ public class Main {
         dfa.dump("");*/
     }
 
+    //multiple
     static void nfaToDfaTest3() throws IOException {
         NFA nfa = new NFA(100);
         //nfa.initial = 0;
@@ -93,18 +94,23 @@ public class Main {
         nfa.addTransitionRange(3, 4, 'x', 'x');
         nfa.addTransitionRange(3, 6, 't', 't');
         nfa.addTransitionRange(4, 5, 'y', 'y');
+        nfa.addTransitionRange(0, 7, '1', '1');
+        nfa.addTransitionRange(7, 1, '2', '2');
+        nfa.addEpsilon(4, 1);
+        nfa.addEpsilon(5, 1);
         nfa.setAccepting(2, true);
         nfa.setAccepting(5, true);
         nfa.setAccepting(6, true);
-        nfa.numStates = 5;
+        nfa.numStates = 7;
         nfa.dump("");
-        //nfa.dot("/home/mesut/IdeaProjects/parserx/test/asd.dot");
+        //nfa.dot(dir + "asd.dot");
         System.out.println("-------------");
         DFA dfa = nfa.dfa();
         dfa.dump("");
-        dfa.dot("/home/mesut/IdeaProjects/parserx/test/asd.dot");
+        dfa.dot(dir + "asd.dot");
     }
 
+    //javapoint
     static void nfaToDfaTest4() throws IOException {
         NFA nfa = new NFA(100);
         //nfa.initial = 0;
@@ -113,15 +119,14 @@ public class Main {
         nfa.addTransitionRange(1, 1, '1', '1');
         nfa.addEpsilon(1, 2);
         nfa.addTransitionRange(2, 2, '2', '2');
-
         nfa.setAccepting(2, true);
         nfa.numStates = 2;
-        nfa.dump("");
+        //nfa.dump("");
         //nfa.dot("/home/mesut/IdeaProjects/parserx/test/asd.dot");
         System.out.println("-------------");
         DFA dfa = nfa.dfa();
         dfa.dump("");
-        dfa.dot("/home/mesut/IdeaProjects/parserx/test/asd.dot");
+        dfa.dot(dir + "asd.dot");
     }
 
     static void bracketTest() {
@@ -141,23 +146,15 @@ public class Main {
         System.out.println(Arrays.toString(CharClass.desegment(seg)));
     }
 
-
-    static void cup(String path) throws Exception {
-        //lexer lexer = new lexer(path);
-        /*parser p=new parser(lexer);
-        System.out.println(p.parse());*/
-        /*for(int i=0;i<100;i++){
-            System.out.println(lexer.next_token());
-        }*/
-    }
-
-
-    static void cc(String dir, String name) throws Exception {
+    static void cc(String name) throws Exception {
         File file = new File(dir, name);
         GParser parser = new GParser(new FileReader(file));
         //tokens(parser);
         Tree tree = parser.tree();
         //System.out.println(tree);
+        //System.out.println("----------");
+        tree.makeDistincRanges();
+        // System.out.println(tree);
         NFA nfa = tree.makeNFA();
         System.out.println("total states=" + nfa.numStates);
         //System.out.println(nfa.inputMap);
@@ -166,10 +163,9 @@ public class Main {
         //nfa.dot("/home/mesut/IdeaProjects/parserx/test/asd.dot");
         System.out.println("-----DFA-----");
         DFA dfa = nfa.dfa();
+        dfa.optimize();
         dfa.dump("");
-        dfa.dot("/home/mesut/IdeaProjects/parserx/test/asd.dot");
-        //nfa.dumpAlphabet();
-        //System.out.println(nfa.dfa());
+        dfa.dot(dir + "asd.dot");
     }
 
     static void tokens(GParser parser) {
@@ -184,6 +180,16 @@ public class Main {
             System.out.println(token);
         }
     }
+
+    static void cup(String path) throws Exception {
+        //lexer lexer = new lexer(path);
+        /*parser p=new parser(lexer);
+        System.out.println(p.parse());*/
+        /*for(int i=0;i<100;i++){
+            System.out.println(lexer.next_token());
+        }*/
+    }
+
 
     static void grTest(String path) throws Exception {
         GrammarLexer lexer = new GrammarLexer(new FileReader(path));

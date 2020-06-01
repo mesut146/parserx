@@ -15,11 +15,12 @@ import java.util.List;
 public class Bracket extends Node {
 
     public NodeList<Node> list = new NodeList<>();
+    public List<RangeNode> rangeNodes;
     public boolean negate;//[^abc]
     public boolean debug = false;
-    int pos;
+    private int pos;
 
-
+    //node is RangeNode
     public void add(Node node) {
         list.add(node);
     }
@@ -156,6 +157,7 @@ public class Bracket extends Node {
         return new RangeNode(l, r);
     }
 
+    //merge neighbor ranges
     List<RangeNode> mergeRanges(List<RangeNode> ranges) {
         List<RangeNode> res = new ArrayList<>();
         RangeNode cur = null;
@@ -164,25 +166,15 @@ public class Bracket extends Node {
             if (cur == null) {
                 cur = ranges.get(i);
             }
-            //System.out.println("cur=" + cur+" i="+i);
             if (i < ranges.size() - 1) {
                 next = ranges.get(i + 1);
-                //System.out.println("next=" + next);
                 if (intersect(cur, next) != null) {
-                    RangeNode tmp = new RangeNode(cur.start, Math.max(cur.end, next.end));
-                    //System.out.println("tmp=" + tmp);
-                    //res.add(tmp);
-                    cur = tmp;
-                    //i++;
-                    //curAdded = true;
+                    cur = new RangeNode(cur.start, Math.max(cur.end, next.end));
                 }
                 else {
                     res.add(cur);
                     cur = null;
                 }
-                /*else if (i == ranges.size() - 2) {
-                    res.add(next);
-                }*/
             }
             else {
                 res.add(cur);
@@ -209,6 +201,31 @@ public class Bracket extends Node {
         return sb.toString();
     }
 
+    public List<RangeNode> getRanges() {
+        if (rangeNodes == null) {
+            rangeNodes = new ArrayList<>();
+            for (Node node : list) {
+                if (node.isChar()) {
+                    rangeNodes.add(new RangeNode(node.asChar().chr, node.asChar().chr));
+                }
+                else {
+                    rangeNodes.add(node.asRange());
+                }
+            }
+        }
+        return rangeNodes;
+    }
+
+    public Bracket normalize() {
+        if (negate) {
+            rangeNodes = negateAll();
+            negate = false;
+        }
+        else {
+            getRanges();
+        }
+        return this;
+    }
 
     //single char
     public static class CharNode extends Node {

@@ -19,6 +19,14 @@ public class Node {
         return (RegexNode) this;
     }
 
+    public boolean isOr() {
+        return this instanceof OrNode;
+    }
+
+    public OrNode asOr() {
+        return (OrNode) this;
+    }
+
     public boolean isGroup() {
         return this instanceof GroupNode;
     }
@@ -40,6 +48,10 @@ public class Node {
         return this instanceof Bracket;
     }
 
+    public Bracket asBracket() {
+        return (Bracket) this;
+    }
+
     public boolean isRange() {
         return this instanceof RangeNode;
     }
@@ -49,7 +61,7 @@ public class Node {
     }
 
     public boolean isChar() {
-        return this instanceof RangeNode;
+        return this instanceof Bracket.CharNode;
     }
 
     public Bracket.CharNode asChar() {

@@ -12,9 +12,9 @@ tokens{
 
 
     #string_content = [^\r\n\"]
-    //STRING_LITERAL = "\"" {string_content}* "\""
-    //CHAR_LITERAL = "'" .+ "'"
-    #ANY = [\u0000-\u0009\u000b-\uffff] //equal to dot
+    STRING_LITERAL = "\"" {string_content}* "\""
+    CHAR_LITERAL = "'" .+ "'"
+    //#ANY = [\u0000-\u0009\u000b-\uffff] //equal to dot
     //SEQ =  "a" "x"+ "b"
 
     INTEGER_LITERAL = {DIGITS} | {HEX_INTEGER_LITERAL} | {BIN_INTEGER_LITERAL} | {OCTAL}

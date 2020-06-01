@@ -51,7 +51,7 @@ public class CharClass {
         return l + "-" + r;
     }
 
-    static String printChar(int chr) {
+    public static String printChar(int chr) {
         if (Character.isAlphabetic(chr) || Character.isDigit(chr) || isPrintableChar((char) chr)) {
             return Character.toString((char) chr);
         }

@@ -23,6 +23,7 @@ public class NFA {
     public int[] inputIndex;//index to segment
     //public List<List<Integer>> inputMap;//state to input set
     //public List<List<Integer>> transMap;//state to target state set
+    Set<int[]> inputClasses;
     public String[] names;
 
 
@@ -38,6 +39,7 @@ public class NFA {
         //inputMap = new ArrayList<>();
         //transMap = new ArrayList<>();
         names = new String[100];
+        inputClasses = new HashSet<>();
     }
 
     public void expand(int state) {
@@ -141,7 +143,7 @@ public class NFA {
         if (list != null) {
             for (Iterator<Transition> iterator = list.iterator(); iterator.hasNext(); ) {
                 Transition tr = iterator.next();
-                int[] dec = CharClass.desegment(tr.symbol);
+                int[] dec = CharClass.desegment(tr.input);
                 //if conflicts
                 if (CharClass.conflicts(left, right, dec[0], dec[1])) {
                     if (left == right && dec[0] != dec[1]) {//if me is single other is ranged
@@ -234,8 +236,8 @@ public class NFA {
             }
 
         }
-        else if (node.is(Bracket.class)) {
-            Bracket b = node.as(Bracket.class);
+        else if (node.isBracket()) {
+            Bracket b = node.asBracket();
             if (b.negate) {
                 //todo all at once
                 int end = newState();
@@ -276,8 +278,8 @@ public class NFA {
             }
             p.end = st;
         }
-        else if (node instanceof RegexNode) {
-            RegexNode rn = (RegexNode) node;
+        else if (node.isRegex()) {
+            RegexNode rn = node.asRegex();
             if (rn.star) {
                 int end = newState();
                 addEpsilon(start, end);//zero
@@ -316,7 +318,7 @@ public class NFA {
             p.end = insert(rhs, start).end;
         }
         else if (node.is(NameNode.class)) {//?
-            //we have lexer ref just replace target's regex
+            //we have lexer ref just replace with target's regex
             NameNode name = (NameNode) node;
             p.end = insert(tree.getToken(name.name).regex, start).end;
         }
@@ -347,7 +349,7 @@ public class NFA {
                 for (Transition tr : arr) {
                     w.print("  ");
                     //int seg = getSegment(tr.symbol);
-                    w.print(CharClass.seg2str(tr.symbol));
+                    w.print(CharClass.seg2str(tr.input));
 
                     w.print(" -> ");
                     w.print(printState(tr.target));
@@ -390,28 +392,30 @@ public class NFA {
     public DFA dfa() {
         System.out.println("dfa conversion started");
         DFA dfa = new DFA(trans.length * 2, numInput);
-        //Map<StateSet, Integer> map = new HashMap<>();
 
         Map<StateSet, Integer> dfaStateMap = new HashMap<>();//state set to dfa state
-        Queue<Integer> openStates = new LinkedList<>();
-        Set<Integer> processed = new HashSet<>();
-        openStates.add(initial);
+        Queue<StateSet> openStates = new LinkedList<>();
+        Set<StateSet> processed = new HashSet<>();
+        openStates.add(closure(initial));
         dfa.numStates = -1;
-        Map<Integer, Integer> lastStates = new HashMap<>();//nfa to dfa
+        //Map<Integer, Integer> lastStates = new HashMap<>();//nfa to dfa
+        //Map<Integer, List<StateSet>> closureMap = new HashMap<>();
         while (!openStates.isEmpty()) {
-            int state = openStates.poll();
+            StateSet state = openStates.poll();//current nfa state set
             StateSet closure = closure(state);//1,2,3
+            /*if (closureMap.containsKey(state)) {
+                List<StateSet> list = closureMap.get(state);
+            }*/
+            //closureMap.put(state, closure);
             //openStates.addAll(closure.states);
-            processed.addAll(closure.states);
-            openStates.removeAll(closure.states);
+            //processed.addAll(closure.states);
+            processed.add(state);
+            //openStates.removeAll(closure.states);
 
-            int dfaState;
-            if (lastStates.containsKey(state)) {
-                dfaState = lastStates.get(state);
-            }
-            else dfaState = getDfaState(dfaStateMap, closure, dfa);//corresponding dfa state for closure
+            //get corresponding dfa state
+            int dfaState = getDfaState(dfaStateMap, closure, dfa);
 
-            System.out.printf("Closure(%d)=%s dfa=%d\n", state, closure, dfaState);
+            System.out.printf("Closure(%s)=%s dfa=%d\n", state, closure, dfaState);
             //Set<Integer> inputSet = new HashSet<>();//0,1
             Map<Integer, StateSet> map = new HashMap<>();//input -> target states from state
             //find inputs and target states from state
@@ -419,45 +423,41 @@ public class NFA {
                 List<Transition> trList = trans[epState];
                 if (trList != null) {
                     for (Transition t : trList) {
-                        StateSet clOfTarget = closure(t.target);
-                        for (int cl : clOfTarget) {
-                            if (!processed.contains(cl) && !openStates.contains(cl)) {
-                                openStates.add(cl);
-                            }
-                        }
-                        /*if (!processed.contains(t.target)) {
-                            openStates.addAll(clOfTarget.states);
-                        }*/
-                        //lastStates.put(t.target, dfaState);
-                        StateSet targets = map.get(t.symbol);//we can cache these
+                        StateSet targetCLosure = closure(t.target);
+                        StateSet targets = map.get(t.input);//we can cache these
                         if (targets == null) {
                             targets = new StateSet();
-                            map.put(t.symbol, targets);
+                            map.put(t.input, targets);
                         }
-                        //targets.addState(t.target);
-                        targets.addAll(clOfTarget);
+                        targets.addAll(targetCLosure);
                     }
                 }
             }
 
-            System.out.printf("map(%d)=%s\n", state, map);
+            System.out.printf("map(%s)=%s\n", state, map);
             //for each input make transition
             for (int input : map.keySet()) {
+                String seg = CharClass.seg2escaped(input);
                 StateSet targets = map.get(input);
-                //check that same input tr exist in previous friend closure
-                //input,state -> target
+                if (!openStates.contains(targets) && !processed.contains(targets)) {
+                    openStates.add(targets);
+                }
                 int target_state = getDfaState(dfaStateMap, targets, dfa);
                 System.out.printf("targets=%s dfa=%d\n", targets, target_state);
-                boolean accept = false;
-                for (int s : targets) {
-                    lastStates.put(s, target_state);
-                    accept |= isAccepting(s);
-                }
-                dfa.setAccepting(target_state, accept);
+                dfa.setAccepting(target_state, isAccepting(targets));
                 dfa.addTransition(dfaState, input, target_state);
             }
         }
         return dfa;
+    }
+
+    boolean isAccepting(StateSet set) {
+        for (int state : set) {
+            if (isAccepting(state)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     //make dfa state for nfa state @set
@@ -484,6 +484,15 @@ public class NFA {
         return res;
     }
 
+    //epsilon closure for dfa conversion
+    public StateSet closure(StateSet set) {
+        StateSet res = new StateSet();
+        for (int state : set) {
+            res.addAll(closure(state));
+        }
+        return res;
+    }
+
     public void dot(String path) {
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(path));
@@ -502,7 +511,7 @@ public class NFA {
                 StateSet eps = epsilon[state];
                 if (list != null) {
                     for (Transition tr : list) {
-                        w.printf("%s -> %s [label=\"[%s]\"]\n", state, tr.target, CharClass.seg2escaped(tr.symbol));
+                        w.printf("%s -> %s [label=\"[%s]\"]\n", state, tr.target, CharClass.seg2escaped(tr.input));
                     }
                 }
                 if (eps != null) {
