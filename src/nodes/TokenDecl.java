@@ -4,7 +4,8 @@ package nodes;
 public class TokenDecl extends Node {
 
     public String tokenName;
-    public boolean fragment;
+    public boolean fragment = false;
+    public boolean isSkip = false;
     public Node regex;
 
     public TokenDecl(String tokenName) {

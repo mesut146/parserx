@@ -43,6 +43,10 @@ public class RangeNode extends Node {
         return start <= end;
     }
 
+    public boolean isSingle() {
+        return start < end;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

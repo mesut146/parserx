@@ -22,8 +22,8 @@ public class Main {
     static String dir;
 
     public static void main(String[] args) throws Exception {
-        //dir = "/home/mesut/IdeaProjects/parserx";
-        dir = "/storage/emulated/0/AppProjects/parserx";
+        dir = "/home/mesut/IdeaProjects/parserx";
+        //dir = "/storage/emulated/0/AppProjects/parserx";
         dir += "/test/";
 
         cc("test.g");
@@ -154,18 +154,18 @@ public class Main {
         //System.out.println(tree);
         //System.out.println("----------");
         tree.makeDistincRanges();
-        System.out.println(tree);
+        //System.out.println(tree);
         NFA nfa = tree.makeNFA();
-        System.out.println("total states=" + nfa.numStates);
-        //System.out.println(nfa.inputMap);
-        //System.out.println(nfa.transMap);
-        nfa.dump("");
-        //nfa.dot("/home/mesut/IdeaProjects/parserx/test/asd.dot");
+        System.out.println("total nfa states=" + nfa.numStates);
+        //nfa.dump("");
+        //nfa.dot(dir + "asd.dot");
         System.out.println("-----DFA-----");
-        /*DFA dfa = nfa.dfa();
+        DFA dfa = nfa.dfa();
         dfa.optimize();
-        dfa.dump("");
-        dfa.dot(dir + "asd.dot");*/
+        System.out.println("total dfa states=" + dfa.numStates);
+        //dfa.dump("");
+        dfa.dot(dir + "asd.dot");
+        test.testDFA(dfa);
     }
 
     static void tokens(GParser parser) {

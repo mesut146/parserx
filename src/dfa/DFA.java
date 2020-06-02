@@ -9,11 +9,14 @@ import java.util.*;
 public class DFA {
     //[curState][inputChar]=nextState
     //public int[][] table;
-    List<Transition>[] trans;
+    public List<Transition>[] trans;
     public boolean[] accepting;
-    int numStates;
+    public boolean[] isSkip;
+    public String[] names;
+    public int numStates;
     int numInput;
     public int initial = 0;
+    public static boolean debugTransition = false;
 
     public DFA() {
         this(500, 255);
@@ -25,7 +28,9 @@ public class DFA {
         //table = new int[maxStates][numInput];
         trans = new List[maxStates];
         accepting = new boolean[maxStates];
+        isSkip = new boolean[maxStates];
         this.numStates = 0;
+        names = new String[maxStates];
     }
 
     public void expand(int max) {
@@ -33,20 +38,25 @@ public class DFA {
             return;
         }
         int len = trans.length;
-        //int[][] newTable = new int[max][numInput];
         List<Transition>[] newTrans = new List[max];
         boolean[] newAccepting = new boolean[max];
-        //System.arraycopy(table, 0, newTable, 0, numStates);
+        boolean[] newSkip = new boolean[max];
+        String[] newNames = new String[max];
         System.arraycopy(trans, 0, newTrans, 0, len);
         System.arraycopy(accepting, 0, newAccepting, 0, len);
-        //table = newTable;
+        System.arraycopy(isSkip, 0, newSkip, 0, len);
+        System.arraycopy(names, 0, newNames, 0, len);
         trans = newTrans;
         accepting = newAccepting;
+        isSkip = newSkip;
+        names = newNames;
     }
 
     public void addTransition(int state, int input, int target) {
+        expand(state);
         int[] arr = CharClass.desegment(input);
-        System.out.printf("st:%d to st:%d with:(%s-%s) seg:%d\n", state, target, CharClass.printChar(arr[0]), CharClass.printChar(arr[1]), input);
+        if (debugTransition)
+            System.out.printf("st:%d to st:%d with:(%s-%s) seg:%d\n", state, target, CharClass.printChar(arr[0]), CharClass.printChar(arr[1]), input);
         List<Transition> tr = trans[state];
         if (tr == null) {
             tr = new ArrayList<>();
@@ -102,11 +112,11 @@ public class DFA {
                 list.clear();//remove all transitions
                 for (Map.Entry<Integer, List<Integer>> e : map.entrySet()) {
                     //check the inputs neighbor
-                    List<Integer> l=e.getValue();//inputs
-                    
-                    int[] pre=CharClass.desegment(l.get(0));
-                    if(l.size()==1){
-                        list.add(new Transition(state,CharClass.segment(pre),e.getKey()));
+                    List<Integer> l = e.getValue();//inputs
+
+                    int[] pre = CharClass.desegment(l.get(0));
+                    if (l.size() == 1) {
+                        list.add(new Transition(state, CharClass.segment(pre), e.getKey()));
                     }
                     for (int i = 1; i < l.size(); i++) {
                         int seg1 = l.get(i);
@@ -116,18 +126,20 @@ public class DFA {
                         if (pre[1] + 1 == arr1[0]) {
                             pre[1] = arr1[1];//merge
                             //remove arr2
-                        }else{
-                            //keep pre
-                            list.add(new Transition(state,CharClass.segment(pre),e.getKey()));
-                            pre=arr1;
                         }
-                        if(i==l.size()-1){
-                            list.add(new Transition(state,CharClass.segment(pre),e.getKey()));
+                        else {
+                            //keep pre
+                            list.add(new Transition(state, CharClass.segment(pre), e.getKey()));
+                            pre = arr1;
+                        }
+                        if (i == l.size() - 1) {
+                            list.add(new Transition(state, CharClass.segment(pre), e.getKey()));
                         }
                     }
                 }
             }
         }
+        System.out.println("optimized dfa");
     }
 
     public void dump(String path) {
@@ -171,6 +183,9 @@ public class DFA {
                 if (isAccepting(state)) {
                     w.printf("%d [shape = doublecircle]\n", state);
                 }
+                if (isSkip[state]) {
+                    w.printf("%d [color=blue]\n", state);
+                }
             }
 
             for (int state = initial; state <= numStates; state++) {
@@ -184,6 +199,7 @@ public class DFA {
             w.println("}");
             w.flush();
             w.close();
+            System.out.println("dfa dot file writed");
         } catch (IOException e) {
             e.printStackTrace();
         }

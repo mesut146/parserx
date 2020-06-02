@@ -3,8 +3,8 @@ package dfa;
 //a single arrow
 public class Transition {
     int state;//from
-    int target;
-    int input;
+    public int target;
+    public int input;
     int segment;
 
     public Transition(int state, int input, int target) {

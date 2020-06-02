@@ -1,5 +1,6 @@
 package dfa;
 
+import grammar.ParseException;
 import nodes.*;
 import rule.NameNode;
 
@@ -25,7 +26,9 @@ public class NFA {
     //public List<List<Integer>> transMap;//state to target state set
     Set<int[]> inputClasses;
     public String[] names;
-
+    boolean[] isSkip;//if that final state is ignored
+    public static boolean debugTransition = false;
+    public static boolean debugDFA = false;
 
     public NFA(int numStates) {
         //table = new StateSet[numStates][255];
@@ -38,7 +41,8 @@ public class NFA {
         inputIndex = new int[255];
         //inputMap = new ArrayList<>();
         //transMap = new ArrayList<>();
-        names = new String[100];
+        names = new String[numStates];
+        isSkip = new boolean[numStates];
         inputClasses = new HashSet<>();
     }
 
@@ -50,14 +54,20 @@ public class NFA {
         int len = trans.length;
 
         boolean[] newAccepting = new boolean[max];
+        boolean[] newSkip = new boolean[max];
         StateSet[] newEpsilon = new StateSet[max];
         List<Transition>[] newTrans = new List[max];
-        System.arraycopy(accepting, 0, newAccepting, 0, len);
-        System.arraycopy(epsilon, 0, newEpsilon, 0, len);
-        System.arraycopy(trans, 0, newTrans, 0, len);
-        accepting = newAccepting;
-        epsilon = newEpsilon;
-        trans = newTrans;
+        String[] newNames = new String[max];
+        accepting = expand(accepting, newAccepting, len);
+        epsilon = expand(epsilon, newEpsilon, len);
+        trans = expand(trans, newTrans, len);
+        isSkip = expand(isSkip, newSkip, len);
+        names = expand(names, newNames, len);
+    }
+
+    <T> T expand(Object src, Object target, int len) {
+        System.arraycopy(src, 0, target, 0, len);
+        return (T) target;
     }
 
     //too slow
@@ -129,74 +139,15 @@ public class NFA {
     public void addTransitionRange(int state, int target, int left, int right) {
         //System.out.printf("st:%d (%c-%c) to st:%d nm:%s nm2:%s\n",state,left,right,target,names[state],names[target]);
         int seg = CharClass.segment(left, right);
-        System.out.printf("st:%d (%s-%s) to st:%d seg:%d\n", state, CharClass.printChar(left), CharClass.printChar(right), target, seg);
+        if (debugTransition)
+            System.out.printf("st:%d (%s-%s) to st:%d seg:%d\n", state, CharClass.printChar(left), CharClass.printChar(right), target, seg);
         //int inputIndex = checkInput(seg);
-        /*if (checkDuplicateSegment(state, target, left, right)) {
-            return;
-        }*/
         addTransition(state, target, seg);
         //addTransition(state, inputIndex, target);
     }
 
-    boolean checkDuplicateSegment(int state, int target, int left, int right) {
-        List<Transition> list = trans[state];
-        if (list != null) {
-            for (Iterator<Transition> iterator = list.iterator(); iterator.hasNext(); ) {
-                Transition tr = iterator.next();
-                int[] dec = CharClass.desegment(tr.input);
-                //if conflicts
-                if (CharClass.conflicts(left, right, dec[0], dec[1])) {
-                    if (left == right && dec[0] != dec[1]) {//if me is single other is ranged
-                        //split other into two halves
-                        int a1 = dec[0];
-                        int a2 = left - 1;
-                        int b1 = left + 1;
-                        int b2 = dec[1];
-                        //remove others and place these
-                        iterator.remove();
-                        if (a1 <= a2) {
-                            addTransitionRange(state, tr.target, a1, a2);
-                        }
-                        if (b1 <= b2) {
-                            addTransitionRange(state, tr.target, b1, b2);
-                        }
-                        addTransitionRange(state, tr.target, left, right);
-                        addTransitionRange(state, target, left, right);
-                        return true;
-                    }
-                    else if (left != right && dec[0] == dec[1]) {//me is ranged other is single
-                        //split me into two halves
-                        int a1 = left;
-                        int a2 = dec[0] - 1;
-                        int b1 = dec[0] + 1;
-                        int b2 = right;
-                        //remove me and place other
-                        if (a1 <= a2) {
-                            addTransitionRange(state, tr.target, a1, a2);
-                        }
-                        if (b1 <= b2) {
-                            addTransitionRange(state, tr.target, b1, b2);
-                        }
-                        //third one is already there
-                        return true;
-                    }
-                    else if (left < right && dec[0] < dec[1]) {//we both ranged
-                        RangeNode r1 = new RangeNode(left, right);
-                        RangeNode r2 = new RangeNode(dec[0], dec[1]);
-
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    //without removing
-    boolean checkDuplicateSegment2(int state, int target, int left, int right) {
-        return false;
-    }
-
     public void setAccepting(int state, boolean val) {
+        expand(state);
         accepting[state] = val;
     }
 
@@ -215,7 +166,7 @@ public class NFA {
 
     //add regex to @start
     //return start,end state
-    public Pair insert(Node node, int start) {
+    public Pair insert(Node node, int start) throws ParseException {
         Pair p = new Pair(start + 1, start + 1);
         if (node.is(StringNode.class)) {
             StringNode sn = (StringNode) node;
@@ -331,11 +282,11 @@ public class NFA {
 
 
     //insert regex token to initial state
-    public void addRegex(TokenDecl decl) {
-        //more than one final state?
+    public void addRegex(TokenDecl decl) throws ParseException {
         Pair p = insert(decl.regex, initial);
-        //names[p.end] = decl.tokenName;
         setAccepting(p.end, true);
+        names[p.end] = decl.tokenName;
+        isSkip[p.end] = decl.isSkip;
     }
 
     public void dump(String path) throws IOException {
@@ -390,7 +341,8 @@ public class NFA {
     }*/
     //todo
     public DFA dfa() {
-        System.out.println("dfa conversion started");
+        if (debugDFA)
+            System.out.println("dfa conversion started");
         DFA dfa = new DFA(trans.length * 2, numInput);
 
         Map<StateSet, Integer> dfaStateMap = new HashMap<>();//state set to dfa state
@@ -398,8 +350,7 @@ public class NFA {
         Set<StateSet> processed = new HashSet<>();
         openStates.add(closure(initial));
         dfa.numStates = -1;
-        //Map<Integer, Integer> lastStates = new HashMap<>();//nfa to dfa
-        //Map<Integer, List<StateSet>> closureMap = new HashMap<>();
+
         while (!openStates.isEmpty()) {
             StateSet state = openStates.poll();//current nfa state set
             StateSet closure = closure(state);//1,2,3
@@ -414,8 +365,8 @@ public class NFA {
 
             //get corresponding dfa state
             int dfaState = getDfaState(dfaStateMap, closure, dfa);
-
-            System.out.printf("Closure(%s)=%s dfa=%d\n", state, closure, dfaState);
+            if (debugDFA)
+                System.out.printf("Closure(%s)=%s dfa=%d\n", state, closure, dfaState);
             //Set<Integer> inputSet = new HashSet<>();//0,1
             Map<Integer, StateSet> map = new HashMap<>();//input -> target states from state
             //find inputs and target states from state
@@ -433,19 +384,22 @@ public class NFA {
                     }
                 }
             }
-
-            System.out.printf("map(%s)=%s\n", state, map);
-            //for each input make transition
+            if (debugDFA)
+                System.out.printf("map(%s)=%s\n", state, map);
+            //make transition for each input
             for (int input : map.keySet()) {
-                String seg = CharClass.seg2escaped(input);
+                //String seg = CharClass.seg2escaped(input);
                 StateSet targets = map.get(input);
                 if (!openStates.contains(targets) && !processed.contains(targets)) {
                     openStates.add(targets);
                 }
                 int target_state = getDfaState(dfaStateMap, targets, dfa);
-                System.out.printf("targets=%s dfa=%d\n", targets, target_state);
+                if (debugDFA)
+                    System.out.printf("targets=%s dfa=%d\n", targets, target_state);
                 dfa.setAccepting(target_state, isAccepting(targets));
                 dfa.addTransition(dfaState, input, target_state);
+                dfa.isSkip[target_state] = isSkip(targets);
+                dfa.names[target_state] = getName(targets);
             }
         }
         return dfa;
@@ -458,6 +412,30 @@ public class NFA {
             }
         }
         return false;
+    }
+
+    boolean isSkip(StateSet set) {
+        for (int state : set) {
+            if (isSkip[state]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    String getName(StateSet set) {
+        StringBuilder sb = new StringBuilder();
+        for (int state : set) {
+            if (names[state] != null) {
+                sb.append(names[state]);
+                sb.append(",");
+            }
+        }
+        if (sb.length() > 0) {
+            sb.deleteCharAt(sb.length() - 1);
+            return sb.toString();
+        }
+        return null;
     }
 
     //make dfa state for nfa state @set
@@ -504,6 +482,9 @@ public class NFA {
                 if (isAccepting(state)) {
                     w.printf("%d [shape = doublecircle]\n", state);
                 }
+                if (isSkip[state]) {
+                    w.printf("%d [color=blue]\n", state);
+                }
             }
 
             for (int state = initial; state <= numStates; state++) {
@@ -523,6 +504,7 @@ public class NFA {
             w.println("}");
             w.flush();
             w.close();
+            System.out.println("nfa dot file writed");
         } catch (IOException e) {
             e.printStackTrace();
         }
