@@ -24,9 +24,9 @@ tokens{
     #BIN_INTEGER_LITERAL = "0" [Bb] [01_]+
     #OCTAL= "0" [0-7]+
 
-    //NULL_LITERAL = "null"
-    /*
-    TRUE_KEYWORD = "true"
+    NULL_LITERAL = "null"
+    
+    /*TRUE_KEYWORD = "true"
     FALSE_KEYWORD = "false"
 
     ABSTRACT_KEYWORD = "abstract"
@@ -36,11 +36,11 @@ tokens{
     STATIC_KEYWORD = "static"
     TRANSIENT_KEYWORD = "transient"
     VOLATILE_KEYWORD = "volatile"
-    VOID_KEYWORD = "void"
-    */
+    VOID_KEYWORD = "void"*/
+    
 
 
-    //IDENT = {LETTER} ({LETTER} | {DIGIT} | "_")*
+    IDENT = {LETTER} ({LETTER} | {DIGIT} | "_")*
 }
 
 skip{

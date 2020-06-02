@@ -60,44 +60,41 @@ public class Tree {
             for (Bracket b : map) {
                 for (RangeNode rangeNode : b.rangeNodes) {
                     //if this range intersect some ranges
-                    for (Bracket otherBracket : map) {
-                        for (Iterator<RangeNode> it2 = otherBracket.rangeNodes.iterator(); it2.hasNext(); ) {
-                            RangeNode otherRange = it2.next();
+                    //for (Bracket otherBracket : map) {
+                        for (RangeNode otherRange:ranges ) {
+                            //RangeNode otherRange = it2.next();
                             if (rangeNode.intersect(otherRange) && !rangeNode.same(otherRange)) {
                                 RangeNode inter = Bracket.intersect(rangeNode, otherRange);
                                 RangeNode me1 = RangeNode.of(rangeNode.start, inter.start - 1);
                                 RangeNode me2 = RangeNode.of(inter.end + 1, rangeNode.end);
-                                RangeNode he1 = RangeNode.of(otherRange.start, inter.start - 1);
-                                RangeNode he2 = RangeNode.of(inter.end + 1, otherRange.end);
+                                //RangeNode he1 = RangeNode.of(otherRange.start, inter.start - 1);
+                                //RangeNode he2 = RangeNode.of(inter.end + 1, otherRange.end);
                                 b.rangeNodes.remove(rangeNode);
                                 //otherBracket.rangeNodes.remove(otherRange);
-                                it2.remove();
+                                //it2.remove();
                                 if (me1.isValid()) {
                                     b.rangeNodes.add(me1);
+                                    ranges.add(me1);
                                 }
                                 if (me2.isValid()) {
                                     b.rangeNodes.add(me2);
+                                    ranges.add(me2);
                                 }
                                 b.rangeNodes.add(inter);
-                                if (he1.isValid()) {
-                                    otherBracket.rangeNodes.add(he1);
-                                }
-                                if (he2.isValid()) {
-                                    otherBracket.rangeNodes.add(he2);
-                                }
-                                otherBracket.rangeNodes.add(inter);
+                                ranges.add(inter);
+                                //otherBracket.rangeNodes.add(inter);
                                 b.list.list.clear();
                                 b.list.addAll(b.rangeNodes);
-                                otherBracket.list.list.clear();
-                                otherBracket.list.addAll(otherBracket.rangeNodes);
+                                //otherBracket.list.list.clear();
+                                //otherBracket.list.addAll(otherBracket.rangeNodes);
                                 continue outer;
-                            }
-                        }
-                    }
-                }
+                            }//for ranges
+                        //}//for bracket
+                    }//for ranges
+                }//for bracket
             }
             break;
-        }
+        }//while
     }
 
     void walkNodes(Node root, Set<RangeNode> ranges, List<Bracket> map) {
@@ -116,7 +113,9 @@ public class Tree {
         else if (root.isString()) {
             StringNode stringNode = root.asString();
             if (stringNode.isDot) {
-                map.add(stringNode.toBracket().normalize());
+                Bracket b=stringNode.toBracket().normalize();
+                ranges.addAll(b.rangeNodes);
+                map.add(b);
             }
             else {
                 String str = root.asString().value;

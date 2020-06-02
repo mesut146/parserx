@@ -23,6 +23,10 @@ public class CharClass {
     public static int segment(int start, int end) {
         return (start << 16) | end;
     }
+    
+    public static int segment(int[] arr){
+        return segment(arr[0],arr[1]);
+    }
 
     //segment to code points range
     public static int[] desegment(int seg) {

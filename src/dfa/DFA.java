@@ -89,6 +89,7 @@ public class DFA {
                         return seg1[0] - seg2[0];
                     }
                 });
+                //group same targets
                 Map<Integer, List<Integer>> map = new HashMap<>();//target -> input list
                 for (Transition tr : list) {
                     List<Integer> l = map.get(tr.target);
@@ -98,16 +99,30 @@ public class DFA {
                     }
                     l.add(tr.input);
                 }
+                list.clear();//remove all transitions
                 for (Map.Entry<Integer, List<Integer>> e : map.entrySet()) {
                     //check the inputs neighbor
-                    for (int i = 0; i < e.getValue().size(); i++) {
-                        int seg1 = e.getValue().get(i);
-                        int seg2 = e.getValue().get(i + 1);
+                    List<Integer> l=e.getValue();//inputs
+                    
+                    int[] pre=CharClass.desegment(l.get(0));
+                    if(l.size()==1){
+                        list.add(new Transition(state,CharClass.segment(pre),e.getKey()));
+                    }
+                    for (int i = 1; i < l.size(); i++) {
+                        int seg1 = l.get(i);
+                        //int seg2 = e.getValue().get(i + 1);
                         int[] arr1 = CharClass.desegment(seg1);
-                        int[] arr2 = CharClass.desegment(seg2);
-                        if (arr1[1] + 1 == arr2[0]) {
-                            arr1[1] = arr2[1];
+                        //int[] arr2 = CharClass.desegment(seg2);
+                        if (pre[1] + 1 == arr1[0]) {
+                            pre[1] = arr1[1];//merge
                             //remove arr2
+                        }else{
+                            //keep pre
+                            list.add(new Transition(state,CharClass.segment(pre),e.getKey()));
+                            pre=arr1;
+                        }
+                        if(i==l.size()-1){
+                            list.add(new Transition(state,CharClass.segment(pre),e.getKey()));
                         }
                     }
                 }
