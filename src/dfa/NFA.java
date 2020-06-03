@@ -16,7 +16,6 @@ public class NFA {
     boolean[] accepting;//[state]=isAccepting
     StateSet[] epsilon;//[state]=set of next states with epsilon moves
     public int numStates;
-    public int numInput;//alphabet
     public int initial = 0;//initial state
     //public List<List<Transition>> trans;//state,input,targets
     public List<Transition>[] trans;
@@ -36,7 +35,6 @@ public class NFA {
         accepting = new boolean[numStates];
         epsilon = new StateSet[numStates];
         this.numStates = 0;//just initial
-        this.numInput = 0;
         alphabet = new HashMap<>();
         inputIndex = new int[255];
         //inputMap = new ArrayList<>();
@@ -69,56 +67,6 @@ public class NFA {
         System.arraycopy(src, 0, target, 0, len);
         return (T) target;
     }
-
-    //too slow
-    int getSegment(int index) {
-        for (Map.Entry<Integer, Integer> e : alphabet.entrySet()) {
-            if (e.getValue() == index) {
-                return e.getKey();
-            }
-        }
-        return -2;//no segment,not possible
-    }
-
-    //convert code point(segment) to index
-    int checkInput(int segment) {
-        if (segment == -1) {
-            //System.out.println("aaa");
-        }
-        Integer index = alphabet.get(segment);
-        if (index == null) {
-            //starts from 1
-            numInput++;
-            index = numInput;
-            alphabet.put(segment, index);
-        }
-        return index;
-    }
-
-    /*void addInputMap(int state, int input) {
-        List<Integer> s;
-        if (inputMap.size() < state) {
-            s = new ArrayList<>();
-            inputMap.add(state, s);
-        }
-        else {
-            s = inputMap.get(state);
-        }
-        s.add(input);
-    }*/
-
-    /*void addTransMap(int state, int target) {
-        List<Integer> s;
-        if (transMap.size() < state) {
-            s = new ArrayList<>();
-            transMap.add(state, s);
-        }
-        else {
-            s = transMap.get(state);
-        }
-        s.add(target);
-    }*/
-
 
     //state index,input index,target state index
     public void addTransition(int state, int target, int input) {
@@ -343,7 +291,7 @@ public class NFA {
     public DFA dfa() {
         if (debugDFA)
             System.out.println("dfa conversion started");
-        DFA dfa = new DFA(trans.length * 2, numInput);
+        DFA dfa = new DFA(trans.length * 2);
 
         Map<StateSet, Integer> dfaStateMap = new HashMap<>();//state set to dfa state
         Queue<StateSet> openStates = new LinkedList<>();
@@ -423,19 +371,20 @@ public class NFA {
         return false;
     }
 
+    //get token name for state set as defined order
     String getName(StateSet set) {
-        StringBuilder sb = new StringBuilder();
+        int minIndex = Integer.MAX_VALUE;
+        String name = null;
         for (int state : set) {
             if (names[state] != null) {
-                sb.append(names[state]);
-                sb.append(",");
+                int i = tree.indexOf(names[state]);
+                if (i < minIndex) {
+                    name = names[state];
+                    minIndex = i;
+                }
             }
         }
-        if (sb.length() > 0) {
-            sb.deleteCharAt(sb.length() - 1);
-            return sb.toString();
-        }
-        return null;
+        return name;
     }
 
     //make dfa state for nfa state @set
@@ -456,8 +405,10 @@ public class NFA {
         if (eps == null || eps.states.size() == 0) {
             return res;
         }
-        for (int i : eps.states) {
-            res.addAll(closure(i));
+        for (int st : eps.states) {
+            if (!res.contains(st)) {//prevent stack overflow
+                res.addAll(closure(st));
+            }
         }
         return res;
     }

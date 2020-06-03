@@ -133,7 +133,7 @@ tokens{
 
 skip{
     #LINE_COMMENT = "//" [^\r\n]*
-    #BLOCK_COMMENT = "/*" .* "*/"
+    #BLOCK_COMMENT = "/*" ([^*]* | "*" [^/]*) "/"
     COMMENT = {LINE_COMMENT} | {BLOCK_COMMENT}
     WS = [\s\r\n\t]
 }

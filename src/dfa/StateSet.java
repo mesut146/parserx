@@ -21,6 +21,10 @@ public class StateSet implements Iterable<Integer> {
         states.addAll(other.states);
     }
 
+    public boolean contains(int state) {
+        return states.contains(state);
+    }
+
     /*public int get(int index) {
         return states.get(index);
     }*/

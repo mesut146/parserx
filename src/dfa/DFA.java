@@ -7,23 +7,15 @@ import java.io.PrintWriter;
 import java.util.*;
 
 public class DFA {
-    //[curState][inputChar]=nextState
-    //public int[][] table;
     public List<Transition>[] trans;
     public boolean[] accepting;
     public boolean[] isSkip;
     public String[] names;
     public int numStates;
-    int numInput;
     public int initial = 0;
     public static boolean debugTransition = false;
 
-    public DFA() {
-        this(500, 255);
-    }
-
-    public DFA(int maxStates, int numInput) {
-        this.numInput = numInput;
+    public DFA(int maxStates) {
         this.numStates = 0;
         //table = new int[maxStates][numInput];
         trans = new List[maxStates];
@@ -63,12 +55,8 @@ public class DFA {
             trans[state] = tr;
         }
         tr.add(new Transition(state, input, target));
-        //table[state][input] = target;
     }
 
-    /*public int getTransition(int state, int input) {
-        return table[state][input];
-    }*/
     public void setAccepting(int state, boolean val) {
         accepting[state] = val;
     }
@@ -83,7 +71,7 @@ public class DFA {
 
     @Override
     public String toString() {
-        return "states=" + numStates + " inputs=" + numInput;
+        return "states=" + numStates;
     }
 
     //merge segments
@@ -152,7 +140,6 @@ public class DFA {
             if (arr != null) {
                 for (Transition tr : arr) {
                     w.print("  ");
-                    //int seg = getSegment(tr.symbol);
                     w.print(CharClass.seg2str(tr.input));
 
                     w.print(" -> ");

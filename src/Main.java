@@ -2,12 +2,10 @@
 import dfa.CharClass;
 import dfa.DFA;
 import dfa.NFA;
+import gen.LexerGenerator;
 import grammar.GParser;
 import grammar.GParserConstants;
 import grammar.Token;
-import grammar2.GrammarLexer;
-import grammar2.GrammarParser2;
-import grammar2.GrammarToken;
 import nodes.Bracket;
 import nodes.RangeNode;
 import nodes.Tree;
@@ -153,7 +151,6 @@ public class Main {
         Tree tree = parser.tree();
         //System.out.println(tree);
         //System.out.println("----------");
-        tree.makeDistincRanges();
         //System.out.println(tree);
         NFA nfa = tree.makeNFA();
         System.out.println("total nfa states=" + nfa.numStates);
@@ -164,8 +161,15 @@ public class Main {
         dfa.optimize();
         System.out.println("total dfa states=" + dfa.numStates);
         //dfa.dump("");
-        dfa.dot(dir + "asd.dot");
+        //dfa.dot(dir + "asd.dot");
         test.testDFA(dfa);
+        lexer(dfa);
+    }
+
+    static void lexer(DFA dfa) {
+        String path = dir + "gen.java";
+        LexerGenerator generator = new LexerGenerator(dfa, path);
+        generator.
     }
 
     static void tokens(GParser parser) {
@@ -175,11 +179,6 @@ public class Main {
         }
     }
 
-    static void tokens(GrammarLexer lexer) throws IOException {
-        for (GrammarToken token = lexer.nextToken(); token != null; token = lexer.nextToken()) {
-            System.out.println(token);
-        }
-    }
 
     static void cup(String path) throws Exception {
         //lexer lexer = new lexer(path);
@@ -191,11 +190,4 @@ public class Main {
     }
 
 
-    static void grTest(String path) throws Exception {
-        GrammarLexer lexer = new GrammarLexer(new FileReader(path));
-        //tokens(lexer);
-        GrammarParser2 parser = new GrammarParser2(lexer);
-        parser.parse();
-        System.out.println(parser.tree);
-    }
 }

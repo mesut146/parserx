@@ -49,8 +49,27 @@ public class Tree {
         throw new ParseException("unkdown reference=" + name);
     }
 
+    public int indexOf(String name) {
+        int i = 0;
+        for (TokenDecl decl : tokens) {
+            if (decl.tokenName.equals(name)) {
+                return i;
+            }
+            i++;
+        }
+        i = 0;
+        for (TokenDecl decl : skip) {
+            if (decl.tokenName.equals(name)) {
+                return i;
+            }
+            i++;
+        }
+        throw new ParseException("unkdown reference=" + name);
+    }
+
     //construct NFA from this grammar file
     public NFA makeNFA() throws ParseException {
+        makeDistincRanges();
         NFA nfa = new NFA(100);
         nfa.tree = this;
         for (TokenDecl decl : tokens) {
@@ -128,7 +147,8 @@ public class Tree {
         return sb.toString();
     }
 
-    public void makeDistincRanges() {
+    //find all intersecting inputs and split them so that all of them becomes unique
+    private void makeDistincRanges() {
         Set<RangeNode> ranges = new HashSet<>();//whole input set as ranges nodes
         List<Bracket> map = new ArrayList<>();
         for (TokenDecl decl : tokens) {
@@ -170,14 +190,8 @@ public class Tree {
 
                             b.rangeNodes.add(inter);
                             ranges.add(inter);
-                            //otherBracket.rangeNodes.add(inter);
                             b.list.list.clear();
                             b.list.addAll(b.rangeNodes);
-                            //otherBracket.list.list.clear();
-                            //otherBracket.list.addAll(otherBracket.rangeNodes);
-                            //System.out.println(this);
-                            //System.out.println(ranges);
-                            //System.out.println("-----------------");
                             continue outer;
                         }//for ranges
                         //}//for bracket
