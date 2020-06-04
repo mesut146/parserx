@@ -11,6 +11,7 @@ import nodes.RangeNode;
 import nodes.Tree;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
@@ -23,17 +24,14 @@ public class Main {
         dir = "/home/mesut/IdeaProjects/parserx";
         //dir = "/storage/emulated/0/AppProjects/parserx";
         dir += "/test/";
-
-        cc("test.g");
+        System.out.println('\100');
+        //cc("lexer.g");
         //nfaToDfaTest();
         //nfaToDfaTest2();
         //nfaToDfaTest3();
         //nfaToDfaTest4();
         //bracketTest();
         //segmentTest();
-        /*System.out.println(Integer.toHexString((int)Character.MAX_VALUE));
-        System.out.println(Integer.toHexString((int)Character.MAX_CODE_POINT));
-        System.out.println((char)Character.MAX_CODE_POINT);*/
         //dfa();
         //cup(gr);
         //grTest(gr);
@@ -161,15 +159,15 @@ public class Main {
         dfa.optimize();
         System.out.println("total dfa states=" + dfa.numStates);
         //dfa.dump("");
-        //dfa.dot(dir + "asd.dot");
-        test.testDFA(dfa);
-        lexer(dfa);
+        dfa.dot(dir + "asd.dot");
+        //test.testDFA(dfa);
+        //lexer(dfa);
     }
 
-    static void lexer(DFA dfa) {
+    static void lexer(DFA dfa) throws FileNotFoundException {
         String path = dir + "gen.java";
         LexerGenerator generator = new LexerGenerator(dfa, path);
-        generator.
+        generator.generate();
     }
 
     static void tokens(GParser parser) {
