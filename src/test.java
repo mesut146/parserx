@@ -6,13 +6,14 @@ import java.io.FileReader;
 
 public class test {
 
+    //tokenize an input file using DFA
     public static void testDFA(DFA dfa) throws Exception {
-        //String inputPath = "/home/mesut/IdeaProjects/parserx/test/test.java";
-        String inputPath = "/home/mesut/IdeaProjects/parserx/src/Main.java";
+        //String inputPath = Main.testDir + "test.java";
+        String inputPath = Main.dir + "/src/Main.java";
         FileReader reader = new FileReader(inputPath);
         StringBuilder yybuf = new StringBuilder();
         int curState = dfa.initial;
-        int lastState = -1;
+        int lastState = -1;//previously accepted state(lookahead)
         int yychar = '\0';
         int EOF = -1;
         int yypos = 0;
@@ -31,6 +32,7 @@ public class test {
                     if (!dfa.isSkip[lastState]) {
                         System.out.printf("token=%s pos=%d name=%s\n", yybuf, yypos, dfa.names[lastState]);
                     }
+                    //re init
                     //System.out.printf("token=%s pos=%d name=%s\n", yybuf, yypos, dfa.names[lastState]);
                     yybuf.setLength(0);
                     curState = dfa.initial;

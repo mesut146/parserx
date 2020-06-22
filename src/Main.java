@@ -5,7 +5,6 @@ import dfa.NFA;
 import gen.LexerGenerator;
 import grammar.GParser;
 import grammar.GParserConstants;
-import grammar.Token;
 import nodes.Bracket;
 import nodes.RangeNode;
 import nodes.Tree;
@@ -19,13 +18,15 @@ import java.util.Arrays;
 public class Main {
 
     static String dir;
+    static String testDir;
 
     public static void main(String[] args) throws Exception {
         dir = "/home/mesut/IdeaProjects/parserx";
         //dir = "/storage/emulated/0/AppProjects/parserx";
-        dir += "/test/";
-        System.out.println('\100');
-        //cc("lexer.g");
+        testDir = dir + "/test/";
+
+        //cc("test.g");
+        genTest();
         //nfaToDfaTest();
         //nfaToDfaTest2();
         //nfaToDfaTest3();
@@ -143,7 +144,7 @@ public class Main {
     }
 
     static void cc(String name) throws Exception {
-        File file = new File(dir, name);
+        File file = new File(testDir, name);
         GParser parser = new GParser(new FileReader(file));
         //tokens(parser);
         Tree tree = parser.tree();
@@ -160,8 +161,21 @@ public class Main {
         System.out.println("total dfa states=" + dfa.numStates);
         //dfa.dump("");
         dfa.dot(dir + "asd.dot");
+        LexerGenerator generator = new LexerGenerator(dfa, dir + "/src");
+        generator.setClassName("gen");
+        generator.generate();
+
+
         //test.testDFA(dfa);
         //lexer(dfa);
+    }
+
+    static void genTest() throws IOException {
+        gen gen = new gen(new FileReader(dir + "/src/Main.java"));
+        Token token;
+        while ((token = gen.next()) != null) {
+            System.out.println(token);
+        }
     }
 
     static void lexer(DFA dfa) throws FileNotFoundException {
@@ -170,12 +184,12 @@ public class Main {
         generator.generate();
     }
 
-    static void tokens(GParser parser) {
+    /*static void tokens(GParser parser) {
         Token t;
         while ((t = parser.getNextToken()) != null && t.kind != GParserConstants.EOF) {
             System.out.println(t.kind + " " + t.image);
         }
-    }
+    }*/
 
 
     static void cup(String path) throws Exception {
