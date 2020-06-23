@@ -3,7 +3,7 @@ lexer &amp; parser generator for java
 
 ## todo
 
-- [X] nfa contruction
+- [X] nfa construction
 - [X] nfa to dfa
 - [ ] dfa minimization 
 - [X] lexer generator
