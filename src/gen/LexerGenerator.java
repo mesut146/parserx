@@ -57,6 +57,7 @@ public class LexerGenerator extends IndentWriter {
         unindent();
         writer.close();
         writeTokenClass();
+        System.out.println("lexer file generated");
     }
 
     void makeSkip() {
@@ -215,7 +216,8 @@ public class LexerGenerator extends IndentWriter {
         indent();
 
         lineln("curState=0;");//yyinitial
-        lineln("backup=false;");
+        lineln("lastState=-1;");
+        //lineln("backup=false;");
 
         lineln("while(true){");
         indent();

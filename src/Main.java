@@ -1,19 +1,11 @@
 
-import dfa.CharClass;
-import dfa.DFA;
-import dfa.NFA;
-import gen.LexerGenerator;
-import grammar.GParser;
-import grammar.GParserConstants;
-import nodes.Bracket;
-import nodes.RangeNode;
-import nodes.Tree;
+import dfa.*;
+import gen.*;
+import grammar.*;
+import java.io.*;
+import java.util.*;
+import nodes.*;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.Arrays;
 
 public class Main {
 
@@ -22,7 +14,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         dir = "/home/mesut/IdeaProjects/parserx";
-        //dir = "/storage/emulated/0/AppProjects/parserx";
+        dir = "/storage/emulated/0/AppProjects/parserx";
         testDir = dir + "/test/";
 
         //cc("test.g");
@@ -75,7 +67,7 @@ public class Main {
         nfa.setAccepting(4, true);
         nfa.numStates = 4;
         nfa.dump("");
-        nfa.dot("/home/mesut/IdeaProjects/parserx/test/asd.dot");
+        nfa.dot(testDir+"asd.dot");
         System.out.println("-------------");
         /*DFA dfa = nfa.dfa();
         dfa.dump("");*/
@@ -104,7 +96,7 @@ public class Main {
         System.out.println("-------------");
         DFA dfa = nfa.dfa();
         dfa.dump("");
-        dfa.dot(dir + "asd.dot");
+        dfa.dot(dir + "/asd.dot");
     }
 
     //javapoint
@@ -162,7 +154,7 @@ public class Main {
         //dfa.dump("");
         dfa.dot(dir + "asd.dot");
         LexerGenerator generator = new LexerGenerator(dfa, dir + "/src");
-        generator.setClassName("gen");
+        generator.setClassName("Gen");
         generator.generate();
 
 
@@ -171,7 +163,10 @@ public class Main {
     }
 
     static void genTest() throws IOException {
-        gen gen = new gen(new FileReader(dir + "/src/Main.java"));
+        String testFile;
+        testFile=dir + "/src/Main.java";
+        //testFile=testDir+"test.java";
+        Gen gen = new Gen(new FileReader(testFile));
         Token token;
         while ((token = gen.next()) != null) {
             System.out.println(token);
