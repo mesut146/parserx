@@ -57,11 +57,13 @@ public interface GParserConstants {
   /** RegularExpression Id. */
   int STRING_LITERAL = 31;
   /** RegularExpression Id. */
-  int IDENT = 32;
+  int INCLUDE = 32;
   /** RegularExpression Id. */
-  int CHAR = 33;
+  int IDENT = 33;
   /** RegularExpression Id. */
-  int BRACKET_LIST = 34;
+  int CHAR = 34;
+  /** RegularExpression Id. */
+  int BRACKET_LIST = 35;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -106,6 +108,7 @@ public interface GParserConstants {
     "\"tokens\"",
     "\"skip\"",
     "<STRING_LITERAL>",
+    "\"include\"",
     "<IDENT>",
     "<CHAR>",
     "<BRACKET_LIST>",

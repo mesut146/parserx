@@ -139,9 +139,8 @@ public class Main {
 
     static void cc(String name) throws Exception {
         File file = new File(testDir, name);
-        GParser parser = new GParser(new FileReader(file));
         //tokens(parser);
-        Tree tree = parser.tree();
+        Tree tree = Tree.makeTree(file);
         //System.out.println(tree);
         //System.out.println("----------");
         //System.out.println(tree);

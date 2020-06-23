@@ -1,9 +1,13 @@
 package nodes;
 
 import dfa.NFA;
+import grammar.GParser;
 import grammar.ParseException;
 import rule.RuleDecl;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -15,11 +19,45 @@ public class Tree {
     List<TokenDecl> skip;
     List<TokenDecl> tokens;
     List<RuleDecl> rules;
+    List<File> includes;
+    public File file = null;
 
     public Tree() {
         tokens = new ArrayList<>();
         rules = new ArrayList<>();
         skip = new ArrayList<>();
+        includes = new ArrayList<>();
+    }
+
+    public static Tree makeTree(File path) {
+        try {
+            GParser parser = new GParser(new FileReader(path));
+            return parser.tree(path);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    void mergeWith(Tree other) {
+        tokens.addAll(other.tokens);
+        skip.addAll(other.skip);
+        rules.addAll(other.rules);
+    }
+
+    public void addInclude(String path) {
+        if (file != null) {
+            File refFile = new File(file.getParent(), path);
+            if (!refFile.exists()) {
+                throw new IllegalArgumentException("grammar file " + path + " not found");
+            }
+            Tree other = makeTree(refFile);
+            mergeWith(other);
+            includes.add(refFile);
+        }
+        else {
+            throw new IllegalArgumentException("grammar file " + path + " not found");
+        }
     }
 
     public void addToken(TokenDecl token) {

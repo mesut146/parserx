@@ -6,11 +6,32 @@ import nodes.*;
 import rule.*;
 import utils.*;
 import java.util.*;
+import java.io.File;
 
 public class GParser implements GParserConstants {
+  String getStringValue(String str){
+    if(str.startsWith("\"")&&str.endsWith("\"")){
+      return str.substring(1,str.length()-1);
+    }
+    return str;
+  }
 
-  final public Tree tree() throws ParseException {Tree tree=new Tree();
+  final public Tree tree(File file) throws ParseException {Tree tree=new Tree();
+  tree.file=file;
     label_1:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+      case INCLUDE:{
+        ;
+        break;
+        }
+      default:
+        jj_la1[0] = jj_gen;
+        break label_1;
+      }
+      includeStatement(tree);
+    }
+    label_2:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case TOKENS:
@@ -19,8 +40,8 @@ public class GParser implements GParserConstants {
         break;
         }
       default:
-        jj_la1[0] = jj_gen;
-        break label_1;
+        jj_la1[1] = jj_gen;
+        break label_2;
       }
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case TOKENS:{
@@ -32,12 +53,12 @@ public class GParser implements GParserConstants {
         break;
         }
       default:
-        jj_la1[1] = jj_gen;
+        jj_la1[2] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
     }
-    label_2:
+    label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case IDENT:{
@@ -45,13 +66,19 @@ public class GParser implements GParserConstants {
         break;
         }
       default:
-        jj_la1[2] = jj_gen;
-        break label_2;
+        jj_la1[3] = jj_gen;
+        break label_3;
       }
       ruleDecl(tree);
     }
 {if ("" != null) return tree;}
     throw new Error("Missing return statement in function");
+}
+
+  final public void includeStatement(Tree tree) throws ParseException {Token tok;
+    jj_consume_token(INCLUDE);
+    tok = jj_consume_token(STRING_LITERAL);
+tree.addInclude(getStringValue(tok.image));
 }
 
 //lexer rules
@@ -64,7 +91,7 @@ void tokenBlock(Tree tree) throws ParseException {
 }
 
   final public void tokenList(Tree tree,boolean skip) throws ParseException {
-    label_3:
+    label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case HASH:
@@ -73,8 +100,8 @@ void tokenBlock(Tree tree) throws ParseException {
         break;
         }
       default:
-        jj_la1[3] = jj_gen;
-        break label_3;
+        jj_la1[4] = jj_gen;
+        break label_4;
       }
       tokenDecl(tree,skip);
     }
@@ -91,7 +118,7 @@ frag=true;
       break;
       }
     default:
-      jj_la1[4] = jj_gen;
+      jj_la1[5] = jj_gen;
       ;
     }
     name = name();
@@ -116,18 +143,18 @@ decl=new TokenDecl(name);
   boolean more=false;
     rule = lexer_rhs_list();
 or.add(rule);
-    label_4:
+    label_5:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case 35:{
+      case 36:{
         ;
         break;
         }
       default:
-        jj_la1[5] = jj_gen;
-        break label_4;
+        jj_la1[6] = jj_gen;
+        break label_5;
       }
-      jj_consume_token(35);
+      jj_consume_token(36);
       rule = lexer_rhs_list();
 or.add(rule);
       more=true;
@@ -138,7 +165,7 @@ or.add(rule);
 
   final public Node lexer_rhs_list() throws ParseException {Sequence s=new Sequence();
   Node r;
-    label_5:
+    label_6:
     while (true) {
       r = lexer_regex();
 s.add(r);
@@ -152,8 +179,8 @@ s.add(r);
         break;
         }
       default:
-        jj_la1[6] = jj_gen;
-        break label_5;
+        jj_la1[7] = jj_gen;
+        break label_6;
       }
     }
 {if ("" != null) return s.normal();}
@@ -185,7 +212,7 @@ regex.optional=true;
         break;
         }
       default:
-        jj_la1[7] = jj_gen;
+        jj_la1[8] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -193,14 +220,13 @@ regex.optional=true;
       break;
       }
     default:
-      jj_la1[8] = jj_gen;
+      jj_la1[9] = jj_gen;
       ;
     }
 {if ("" != null) return rule;}
     throw new Error("Missing return statement in function");
 }
 
-//todo add dot
   final public Node lexer_simple() throws ParseException {Node rule;
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case LPAREN:{
@@ -224,7 +250,7 @@ regex.optional=true;
       break;
       }
     default:
-      jj_la1[9] = jj_gen;
+      jj_la1[10] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -287,7 +313,7 @@ void ruleDecl(Tree tree) throws ParseException {RuleDecl decl=new RuleDecl();
       break;
       }
     default:
-      jj_la1[10] = jj_gen;
+      jj_la1[11] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -304,18 +330,18 @@ decl.name=name;
   boolean more=false;
     rule = rhs_list();
 or.add(rule);
-    label_6:
+    label_7:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case 35:{
+      case 36:{
         ;
         break;
         }
       default:
-        jj_la1[11] = jj_gen;
-        break label_6;
+        jj_la1[12] = jj_gen;
+        break label_7;
       }
-      jj_consume_token(35);
+      jj_consume_token(36);
       rule = rhs_list();
 or.add(rule);
       more=true;
@@ -327,7 +353,7 @@ or.add(rule);
 //sequence no or
   final public Node rhs_list() throws ParseException {Sequence s=new Sequence();
   Node r;
-    label_7:
+    label_8:
     while (true) {
       r = regex();
 s.add(r);
@@ -339,8 +365,8 @@ s.add(r);
         break;
         }
       default:
-        jj_la1[12] = jj_gen;
-        break label_7;
+        jj_la1[13] = jj_gen;
+        break label_8;
       }
     }
 {if ("" != null) return s.normal();}
@@ -372,7 +398,7 @@ regex.optional=true;
         break;
         }
       default:
-        jj_la1[13] = jj_gen;
+        jj_la1[14] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -380,7 +406,7 @@ regex.optional=true;
       break;
       }
     default:
-      jj_la1[14] = jj_gen;
+      jj_la1[15] = jj_gen;
       ;
     }
 {if ("" != null) return rule;}
@@ -402,7 +428,7 @@ regex.optional=true;
       break;
       }
     default:
-      jj_la1[15] = jj_gen;
+      jj_la1[16] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -448,7 +474,7 @@ group.rhs=rule;
   public Token jj_nt;
   private int jj_ntk;
   private int jj_gen;
-  final private int[] jj_la1 = new int[16];
+  final private int[] jj_la1 = new int[17];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -456,10 +482,10 @@ group.rhs=rule;
 	   jj_la1_init_1();
 	}
 	private static void jj_la1_init_0() {
-	   jj_la1_0 = new int[] {0x60000000,0x60000000,0x0,0x8000000,0x8000000,0x0,0x80045000,0x1c00000,0x1c00000,0x80045000,0x220000,0x0,0x80001000,0x1c00000,0x1c00000,0x80001000,};
+	   jj_la1_0 = new int[] {0x0,0x60000000,0x60000000,0x0,0x8000000,0x8000000,0x0,0x80045000,0x1c00000,0x1c00000,0x80045000,0x220000,0x0,0x80001000,0x1c00000,0x1c00000,0x80001000,};
 	}
 	private static void jj_la1_init_1() {
-	   jj_la1_1 = new int[] {0x0,0x0,0x1,0x1,0x0,0x8,0x4,0x0,0x0,0x4,0x0,0x8,0x1,0x0,0x0,0x1,};
+	   jj_la1_1 = new int[] {0x1,0x0,0x0,0x2,0x2,0x0,0x10,0x8,0x0,0x0,0x8,0x0,0x10,0x2,0x0,0x0,0x2,};
 	}
 
   /** Constructor with InputStream. */
@@ -473,7 +499,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 16; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 17; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -487,7 +513,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 16; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 17; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -497,7 +523,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 16; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 17; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -515,7 +541,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 16; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 17; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -524,7 +550,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 16; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 17; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -533,7 +559,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 16; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 17; i++) jj_la1[i] = -1;
   }
 
   private Token jj_consume_token(int kind) throws ParseException {
@@ -584,12 +610,12 @@ group.rhs=rule;
   /** Generate ParseException. */
   public ParseException generateParseException() {
 	 jj_expentries.clear();
-	 boolean[] la1tokens = new boolean[36];
+	 boolean[] la1tokens = new boolean[37];
 	 if (jj_kind >= 0) {
 	   la1tokens[jj_kind] = true;
 	   jj_kind = -1;
 	 }
-	 for (int i = 0; i < 16; i++) {
+	 for (int i = 0; i < 17; i++) {
 	   if (jj_la1[i] == jj_gen) {
 		 for (int j = 0; j < 32; j++) {
 		   if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -601,7 +627,7 @@ group.rhs=rule;
 		 }
 	   }
 	 }
-	 for (int i = 0; i < 36; i++) {
+	 for (int i = 0; i < 37; i++) {
 	   if (la1tokens[i]) {
 		 jj_expentry = new int[1];
 		 jj_expentry[0] = i;

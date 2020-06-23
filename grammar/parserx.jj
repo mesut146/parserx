@@ -13,10 +13,16 @@ import nodes.*;
 import rule.*;
 import utils.*;
 import java.util.*;
+import java.io.File;
 
 public class GParser
 {
- 
+  String getStringValue(String str){
+    if(str.startsWith("\"")&&str.endsWith("\"")){
+      return str.substring(1,str.length()-1);
+    }
+    return str;
+  }
 }
 PARSER_END(GParser)
 
@@ -86,6 +92,7 @@ TOKEN:
 | <TOKENS: "tokens">
 | <SKIP_: "skip">
 | <STRING_LITERAL: "\"" (~["\r","\n","\""] | "\\\"")* "\"">
+| <INCLUDE: "include">
 }
 
 TOKEN:
@@ -97,14 +104,26 @@ TOKEN:
 | <BRACKET_LIST: "["  (~["]"])* "]">
 }
 
-Tree tree():
+Tree tree(File file):
 {
   Tree tree=new Tree();
+  tree.file=file;
 }
 {
-  (tokenBlock(tree) | skipBlock(tree))*  (ruleDecl(tree))*
+  (includeStatement(tree))* (tokenBlock(tree) | skipBlock(tree))*  (ruleDecl(tree))*
   {
     return tree;
+  }
+}
+
+void includeStatement(Tree tree):
+{
+  Token tok;
+}
+{
+  "include" tok=<STRING_LITERAL>
+  {
+    tree.addInclude(getStringValue(tok.image));
   }
 }
 
@@ -187,7 +206,6 @@ Node lexer_regex():
      {return rule;}
 }
 
-//todo add dot
 Node lexer_simple():
 {
   Node rule;
