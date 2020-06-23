@@ -2,8 +2,10 @@
 import dfa.*;
 import gen.*;
 import grammar.*;
+
 import java.io.*;
 import java.util.*;
+
 import nodes.*;
 
 
@@ -14,11 +16,11 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         dir = "/home/mesut/IdeaProjects/parserx";
-        dir = "/storage/emulated/0/AppProjects/parserx";
+        //dir = "/storage/emulated/0/AppProjects/parserx";
         testDir = dir + "/test/";
 
         //cc("test.g");
-        genTest();
+        //genTest();
         //nfaToDfaTest();
         //nfaToDfaTest2();
         //nfaToDfaTest3();
@@ -67,7 +69,7 @@ public class Main {
         nfa.setAccepting(4, true);
         nfa.numStates = 4;
         nfa.dump("");
-        nfa.dot(testDir+"asd.dot");
+        nfa.dot(testDir + "asd.dot");
         System.out.println("-------------");
         /*DFA dfa = nfa.dfa();
         dfa.dump("");*/
@@ -164,12 +166,12 @@ public class Main {
 
     static void genTest() throws IOException {
         String testFile;
-        testFile=dir + "/src/Main.java";
+        testFile = dir + "/src/Main.java";
         //testFile=testDir+"test.java";
         Gen gen = new Gen(new FileReader(testFile));
         Token token;
         while ((token = gen.next()) != null) {
-            System.out.println(token);
+            System.out.println(token + " pos=" + token.offset);
         }
     }
 

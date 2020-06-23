@@ -1,5 +1,7 @@
 package dfa;
 
+import nodes.Tree;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -14,6 +16,7 @@ public class DFA {
     public int numStates;
     public int initial = 0;
     public static boolean debugTransition = false;
+    public Tree tree;
 
     public DFA(int maxStates) {
         this.numStates = 0;

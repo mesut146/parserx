@@ -60,17 +60,24 @@ public class LexerGenerator extends IndentWriter {
         System.out.println("lexer file generated");
     }
 
-    void makeSkip() {
-
-    }
-
     void makeTables() {
-        //int[] stateToInputIndex = new int[dfa.numStates];//[state]=input index
-        int[][] inputMap = new int[dfa.numStates + 1][];//[state]={inputs}
+        int[][] inputMap = new int[dfa.numStates + 1][];//[state]={input set}
         int[][] targetMap = new int[dfa.numStates + 1][];//[state][offset] = target state
-        Map<String, Integer> nameMap = new HashMap<>();
+
+        Map<String, Integer> idMap = new HashMap<>();//incremental unique ids for tokens
+        int[] idArr = new int[dfa.numStates + 1];
+        int idIdx = 1;
 
         for (int state = dfa.initial; state <= dfa.numStates; state++) {
+            //make id for token
+            String name = dfa.names[state];
+            if (name != null && dfa.isAccepting(state)) {
+                if (!idMap.containsKey(name)) {//if previously not assigned
+                    idMap.put(name, idIdx);
+                    idIdx++;
+                }
+                idArr[state] = idMap.get(name);
+            }
             List<Transition> list = dfa.trans[state];
             if (list != null) {
                 int inputIdx = 0;
@@ -126,10 +133,21 @@ public class LexerGenerator extends IndentWriter {
         ByteArrayOutputStream names_baos = new ByteArrayOutputStream();
         PrintWriter names_pw = new PrintWriter(names_baos);
 
+        ByteArrayOutputStream id_baos = new ByteArrayOutputStream();
+        PrintWriter id_pw = new PrintWriter(id_baos);
+
         line("boolean[] skip={");
         acc.print("boolean[] accepting={");
         names_pw.print("String[] names={");
+        id_pw.print("int[] ids={");
+        idIdx = 0;
         for (int state = dfa.initial; state <= dfa.numStates; state++) {
+            if (idIdx > 0) {
+                id_pw.print(",");
+            }
+            id_pw.print(idArr[state]);
+            idIdx++;
+
             print(dfa.isSkip[state]);
             acc.print(dfa.isAccepting(state));
             names_pw.print("\"" + dfa.names[state] + "\"");
@@ -142,10 +160,13 @@ public class LexerGenerator extends IndentWriter {
         println("};");
         acc.println("};");
         names_pw.println("};");
+        id_pw.println("};");
         acc.flush();
         names_pw.flush();
+        id_pw.flush();
         line(baos.toString());
         line(names_baos.toString());
+        line(id_baos.toString());
     }
 
     void writeImports() {
@@ -156,6 +177,7 @@ public class LexerGenerator extends IndentWriter {
         lineln("Reader reader;");
         lineln("int curState;");
         lineln("int lastState=-1;");
+        lineln("static int INITIAL=0;");
         lineln("int yypos=0;");
         lineln("int yychar;");
         lineln("boolean backup=false;");
@@ -215,9 +237,9 @@ public class LexerGenerator extends IndentWriter {
         linef("public %s %s() throws IOException {\n", tokenClassName, functionName);
         indent();
 
-        lineln("curState=0;");//yyinitial
+        lineln("curState=INITIAL;");//yyinitial
         lineln("lastState=-1;");
-        //lineln("backup=false;");
+        lineln("int startPos=yypos;");
 
         lineln("while(true){");
         indent();
@@ -230,7 +252,8 @@ public class LexerGenerator extends IndentWriter {
         lineln("Token token=null;");
         lineln("if(!skip[lastState]){");
         indent();
-        lineln("token=new Token(1,yybuf.toString());");
+        lineln("token=new Token(ids[lastState],yybuf.toString());");
+        lineln("token.offset=startPos;");
         lineln("lastState=-1;");
         unindent();
         lineln("}");
@@ -272,6 +295,7 @@ public class LexerGenerator extends IndentWriter {
         tokenWriter.indent();
         tokenWriter.lineln("public int type;");
         tokenWriter.lineln("public String value;");
+        tokenWriter.lineln("public int offset;");
         tokenWriter.lineln();
 
         tokenWriter.linef("public %s(){}\n\n", tokenClassName);

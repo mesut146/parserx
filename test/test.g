@@ -93,7 +93,7 @@ tokens{
     SINGLE_QUOTE = "'"
     DOUBLE_QUOTE = "\""
     UNDERSCORE = "_"
-    QUESITON = "?"
+    QUESTION = "?"
     EQ = "="
     EQEQ = "=="
 

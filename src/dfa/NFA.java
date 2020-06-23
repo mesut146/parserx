@@ -287,11 +287,12 @@ public class NFA {
             System.out.println(decodeSegment(x));
         }
     }*/
-    //todo
+
     public DFA dfa() {
         if (debugDFA)
             System.out.println("dfa conversion started");
         DFA dfa = new DFA(trans.length * 2);
+        dfa.tree=tree;
 
         Map<StateSet, Integer> dfaStateMap = new HashMap<>();//state set to dfa state
         Queue<StateSet> openStates = new LinkedList<>();

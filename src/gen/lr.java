@@ -1,4 +1,4 @@
-package core;
+package gen;
 import java.util.*;
 
 public class lr
@@ -10,7 +10,6 @@ public class lr
     }
     
     public void gen(){
-        Token tok=null;
         
     }
 }
