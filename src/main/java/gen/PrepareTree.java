@@ -59,7 +59,7 @@ public class PrepareTree {
             }
         }
         else {
-            throw new RuntimeException("internal error: " + node);
+            throw new RuntimeException("internal error on check: " + node);
         }
     }
 }

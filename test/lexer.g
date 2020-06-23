@@ -90,7 +90,7 @@ tokens{
     UNDERSCORE = "_"
     QUESTION = "?"
     EQ = "="
-    EQEQ = "=="
+    VARARGS = "..."
 
     //operators
     PLUS = "+"
@@ -103,6 +103,9 @@ tokens{
     OR = "|"
     OROR = "||"
     XOR = "^"
+    TILDE = "~"
+    PLUSPLUS = "++"
+    MINUSMINUS = "--"
 
     //operator assignments
     PLUSEQ = "+="
@@ -114,6 +117,8 @@ tokens{
     PERCENTEQ = "%="
 
     //relational operators
+    EQEQ = "=="
+    NEQ = "!="
     LT = "<"
     GT = ">"
     LTLT = "<<"
