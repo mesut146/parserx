@@ -10,3 +10,4 @@ lexer &amp; parser generator for java
 - [ ] lr(k) parser generator
 - [ ] ll(k) parser generator
 - [ ] recursive descent parser generator
+- [ ] c++, python implementations
