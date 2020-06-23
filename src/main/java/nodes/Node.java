@@ -1,5 +1,7 @@
 package nodes;
 
+import rule.NameNode;
+
 //base class used in grammar file
 public class Node {
 
@@ -66,6 +68,14 @@ public class Node {
 
     public Bracket.CharNode asChar() {
         return (Bracket.CharNode) this;
+    }
+
+    public boolean isName() {
+        return this instanceof NameNode;
+    }
+
+    public NameNode asName() {
+        return (NameNode) this;
     }
 
     public <T> boolean is(Class<T> c) {

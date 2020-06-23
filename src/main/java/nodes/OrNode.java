@@ -1,16 +1,18 @@
 package nodes;
 
 import nodes.NodeList;
+
 import java.util.*;
+
 import nodes.*;
 
 // rule1 | rule2 | rule3...
-public class OrNode extends Node{
-    
+public class OrNode extends Node implements Iterable<Node> {
+
     //seq,single
-    public NodeList<Node> list=new NodeList<>();
-    
-    public void add(Node rule){
+    public NodeList<Node> list = new NodeList<>();
+
+    public void add(Node rule) {
         list.add(rule);
     }
 
@@ -53,4 +55,8 @@ public class OrNode extends Node{
     }
 
 
+    @Override
+    public Iterator<Node> iterator() {
+        return list.iterator();
+    }
 }

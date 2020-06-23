@@ -4,12 +4,12 @@ import dfa.Transition;
 
 import java.io.FileReader;
 
-public class test {
+public class DfaSimulate {
 
     //tokenize an input file using DFA
-    public static void testDFA(DFA dfa) throws Exception {
+    public static void testDFA(DFA dfa, String dir) throws Exception {
         //String inputPath = Main.testDir + "test.java";
-        String inputPath = Main.dir + "/src/Main.java";
+        String inputPath = dir + "/src/Main.java";
         FileReader reader = new FileReader(inputPath);
         StringBuilder yybuf = new StringBuilder();
         int curState = dfa.initial;
@@ -71,5 +71,4 @@ public class test {
         }
         return -1;
     }
-
 }

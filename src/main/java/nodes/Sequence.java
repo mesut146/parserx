@@ -4,11 +4,12 @@ import nodes.Node;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 //list of rules
 //rhs
-public class Sequence extends Node {
+public class Sequence extends Node implements Iterable<Node> {
 
     //public NodeList<Node> list = new NodeList<>();
     public List<Node> list = new ArrayList<>();
@@ -53,4 +54,8 @@ public class Sequence extends Node {
     }
 
 
+    @Override
+    public Iterator<Node> iterator() {
+        return list.iterator();
+    }
 }

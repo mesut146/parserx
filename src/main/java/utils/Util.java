@@ -20,6 +20,7 @@ public class Util {
         escapeMap.put('s', ' ');//space
     }
 
+    //get escaped char to real char
     public static char get(char c) throws ParseException {
         if(escapeMap.containsKey(c)){
            return escapeMap.get(c);
@@ -27,7 +28,7 @@ public class Util {
         throw new ParseException("invalid escape character = "+c);
     }
 
-    //make escaed(slash) form
+    //make escaped(slash) form
     public static String escape(int val) {
         for (Map.Entry<Character, Character> e : escapeMap.entrySet()) {
             if (e.getValue() == val) {
@@ -37,6 +38,7 @@ public class Util {
         return Character.toString((char) val);
     }
 
+    //remove string quotes
     public static String trim(String str) {
         if (str.startsWith("\"") && str.endsWith("\"")) {
             return str.substring(1, str.length() - 1);
@@ -44,17 +46,19 @@ public class Util {
         return str;
     }
 
+    //convert escaped string to unescaped
+    //e.g "a\tb\sc" to "a    b c"
     public static String fromEscaped(String str) throws ParseException {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-            if (c == '\\') {
+            char chr = str.charAt(i);
+            if (chr == '\\') {
                 char next = str.charAt(i + 1);
                 sb.append(get(next));
                 i++;
             }
             else {
-                sb.append(c);
+                sb.append(chr);
             }
         }
         return sb.toString();

@@ -18,7 +18,7 @@ public class Tree {
 
     List<TokenDecl> skip;
     List<TokenDecl> tokens;
-    List<RuleDecl> rules;
+    public List<RuleDecl> rules;
     List<File> includes;
     public File file = null;
 
@@ -39,6 +39,7 @@ public class Tree {
         }
     }
 
+    //merge two grammar files(lexer,parser)
     void mergeWith(Tree other) {
         tokens.addAll(other.tokens);
         skip.addAll(other.skip);
@@ -73,8 +74,39 @@ public class Tree {
         rules.add(rule);
     }
 
-    public TokenDecl getToken(String name) throws ParseException {
+    public boolean hasRule(String name) {
+        for (RuleDecl decl : rules) {
+            if (decl.name.equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public TokenDecl getTokenByValue(String val) {
         for (TokenDecl decl : tokens) {
+            if (decl.regex.isString() && decl.regex.asString().value.equals(val)) {
+                return decl;
+            }
+        }
+        for (TokenDecl decl : skip) {
+            if (decl.regex.isString() && decl.regex.asString().value.equals(val)) {
+                return decl;
+            }
+        }
+        return null;
+    }
+
+    public TokenDecl getToken(String name) {
+        int idx = indexOf(name);
+        if (idx == -1) {
+            return null;
+        }
+        if (idx < tokens.size()) {
+            return tokens.get(idx);
+        }
+        return skip.get(idx);
+        /*for (TokenDecl decl : tokens) {
             if (decl.tokenName.equals(name)) {
                 return decl;
             }
@@ -84,9 +116,10 @@ public class Tree {
                 return decl;
             }
         }
-        throw new ParseException("unkdown reference=" + name);
+        throw new IllegalArgumentException("unknown token reference = " + name);*/
     }
 
+    //get index of token by name
     public int indexOf(String name) {
         int i = 0;
         for (TokenDecl decl : tokens) {
@@ -102,7 +135,7 @@ public class Tree {
             }
             i++;
         }
-        throw new ParseException("unkdown reference=" + name);
+        return -1;
     }
 
     //construct NFA from this grammar file
