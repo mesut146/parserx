@@ -2,7 +2,7 @@ package nodes;
 
 import dfa.CharClass;
 import grammar.ParseException;
-import utils.Util;
+import utils.UnicodeUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,7 +78,7 @@ public class Bracket extends Node {
             c = (char) hex;
         }
         else {
-            c = Util.get(c);
+            c = UnicodeUtils.get(c);
         }
         return c;
     }
@@ -237,7 +237,7 @@ public class Bracket extends Node {
 
         @Override
         public String toString() {
-            return Util.escape(chr);
+            return UnicodeUtils.escape(chr);
         }
     }
 }

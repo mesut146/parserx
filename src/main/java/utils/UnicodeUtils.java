@@ -5,8 +5,10 @@ import grammar.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Util {
+public class UnicodeUtils {
     public static Map<Character, Character> escapeMap = new HashMap<>();
+
+    public static Map<Character, Character> escapeMapSimple = new HashMap<>();
 
     static {
         escapeMap.put('t', '\t');
@@ -18,24 +20,48 @@ public class Util {
         escapeMap.put('"', '\"');
         escapeMap.put('\\', '\\');
         escapeMap.put('s', ' ');//space
+        escapeMapSimple.putAll(escapeMap);
+        escapeMapSimple.remove('s');
+        //escapeMapSimple.remove('\\');
+        escapeMapSimple.remove('\'');
     }
 
     //get escaped char to real char
     public static char get(char c) throws ParseException {
-        if(escapeMap.containsKey(c)){
-           return escapeMap.get(c);
+        if (escapeMap.containsKey(c)) {
+            return escapeMap.get(c);
         }
-        throw new ParseException("invalid escape character = "+c);
+        throw new ParseException("invalid escape character = " + c);
     }
 
     //make escaped(slash) form
     public static String escape(int val) {
-        for (Map.Entry<Character, Character> e : escapeMap.entrySet()) {
-            if (e.getValue() == val) {
-                return "\\" + (char) e.getKey();
+        for (Map.Entry<Character, Character> entry : escapeMap.entrySet()) {
+            if (entry.getValue() == val) {
+                return "\\" + (char) entry.getKey();
             }
         }
         return Character.toString((char) val);
+    }
+
+    //make unicode escaped form
+    public static String escapeUnicode(int val) {
+        if (isSpecial(val)) {
+            return escape(val);
+        }
+        StringBuilder hex = new StringBuilder(Integer.toHexString(val));
+        if (hex.length() < 4) {
+            int need = 4 - hex.length();
+            for (int i = 0; i < need; i++) {
+                hex.insert(0, "0");
+            }
+        }
+        hex.insert(0, "\\u");
+        return hex.toString();
+    }
+
+    public static boolean isSpecial(int val) {
+        return escapeMapSimple.containsValue((char) val);
     }
 
     //remove string quotes

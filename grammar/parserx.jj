@@ -12,8 +12,6 @@ package grammar;
 import nodes.*;
 import rule.*;
 import utils.*;
-import java.util.*;
-import java.io.File;
 
 public class GParser
 {
@@ -23,6 +21,7 @@ public class GParser
     }
     return str;
   }
+}}
 }
 PARSER_END(GParser)
 
@@ -344,9 +343,9 @@ Node stringNode():
 }
 {
   tok=<STRING_LITERAL>{
-    String str = Util.fromEscaped(Util.trim(tok.image));
-    return new StringNode(str);
-  }
+  String str = UnicodeUtils.fromEscaped(Util.trim(tok.image));
+  return new StringNode(str);
+}
 }
 
 Node groupRule():

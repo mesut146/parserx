@@ -1,13 +1,14 @@
 package gen;
 
+import dfa.CharClass;
 import dfa.DFA;
 import dfa.Transition;
+import utils.UnicodeUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,13 +47,14 @@ public class LexerGenerator extends IndentWriter {
         writer.printf("public class %s{\n", className);
         indent();
 
-        makeTables();
+        makeTables2();
         writeFields();
         writeConstructor();
         writeRead();
-        writeGetState();
+        writeGetState2();
+        writeGetBit();
         writeNextToken();
-
+        writeUnpack();
         writer.println("}");//end class
         unindent();
         writer.close();
@@ -169,8 +171,172 @@ public class LexerGenerator extends IndentWriter {
         line(id_baos.toString());
     }
 
+    void makeTables2() {
+        int[][] inputMap = new int[dfa.numStates + 1][];//[state]={input set}
+        int[][] targetMap = new int[dfa.numStates + 1][];//[state][offset] = target state
+
+        Map<String, Integer> idMap = new HashMap<>();//incremental unique ids for tokens
+        int[] idArr = new int[dfa.numStates + 1];
+        int idIdx = 1;
+
+        for (int state = dfa.initial; state <= dfa.numStates; state++) {
+            //make id for token
+            String name = dfa.names[state];
+            if (name != null && dfa.isAccepting(state)) {
+                if (!idMap.containsKey(name)) {//if previously not assigned
+                    idMap.put(name, idIdx);
+                    idIdx++;
+                }
+                idArr[state] = idMap.get(name);
+            }
+            List<Transition> list = dfa.trans[state];
+            if (list != null) {
+                int inputIdx = 0;
+                inputMap[state] = new int[list.size()];
+                targetMap[state] = new int[list.size()];
+                for (Transition tr : list) {
+                    inputMap[state][inputIdx] = tr.input;
+                    targetMap[state][inputIdx] = tr.target;
+                    inputIdx++;
+                }
+            }
+        }
+        //write inputMap
+        lineln("static int[][] inputMap = unpack(");
+        String indent = "            ";
+        for (int i = 0; i < inputMap.length; i++) {
+            int[] arr = inputMap[i];
+            int len = arr == null ? 0 : arr.length;
+            print(indent);
+            print("\"");
+            print(UnicodeUtils.escapeUnicode(len));
+            for (int j = 0; j < len; j++) {
+                int[] seg = CharClass.desegment(arr[j]);
+                print(UnicodeUtils.escapeUnicode(seg[0]));
+                print(UnicodeUtils.escapeUnicode(seg[1]));
+                print(UnicodeUtils.escapeUnicode(targetMap[i][j]));
+            }
+            print("\"");
+            if (i < inputMap.length - 1) {
+                print("+\n");
+            }
+        }
+
+        println(");");
+
+        /*line("static int[][] targetMap = {");
+        for (int i = 0; i < targetMap.length; i++) {
+            int[] arr = targetMap[i];
+            print("{");
+            if (arr != null)
+                for (int j = 0; j < arr.length; j++) {
+                    print(arr[j]);
+                    if (j < arr.length - 1) {
+                        print(",");
+                    }
+                }
+            print("}");
+            if (i < targetMap.length - 1) {
+                print(",");
+            }
+        }
+        println("};");*/
+
+        ByteArrayOutputStream names_baos = new ByteArrayOutputStream();
+        PrintWriter names_pw = new PrintWriter(names_baos);
+
+        ByteArrayOutputStream ids_baos = new ByteArrayOutputStream();
+        PrintWriter ids_pw = new PrintWriter(ids_baos);
+
+        line("int[] skip=");
+        printArr(makeIntArr(dfa.isSkip));
+
+        line("int[] accepting=");
+        printArr(makeIntArr(dfa.accepting));
+
+        names_pw.print("String[] names={");
+        ids_pw.print("int[] ids={");
+        idIdx = 0;
+        for (int state = dfa.initial; state <= dfa.numStates; state++) {
+            if (idIdx > 0) {
+                ids_pw.print(",");
+            }
+            ids_pw.print(idArr[state]);
+            idIdx++;
+
+            names_pw.print("\"" + dfa.names[state] + "\"");
+            if (state <= dfa.numStates - 1) {
+                names_pw.print(",");
+            }
+        }
+
+
+        names_pw.println("};");
+        ids_pw.println("};");
+        names_pw.flush();
+        ids_pw.flush();
+
+        line(names_baos.toString());
+        line(ids_baos.toString());
+    }
+
+    private void printArr(int[] arr) {
+        print("{");
+        for (int i = 0; i < arr.length; i++) {
+            print(arr[i]);
+            if (i < arr.length - 1) {
+                print(",");
+            }
+        }
+        println("};");
+    }
+
+    int[] makeIntArr(boolean[] arr) {
+        int[] res = new int[arr.length / 32 + 1];
+        int pos = 0;
+        int cur;
+        for (int start = 0; start < arr.length; start += 32) {
+            cur = 0;
+            for (int j = 0; j < 32 && start + j < arr.length; j++) {
+                int bit = arr[start + j] ? 1 : 0;
+                cur |= bit << j;
+            }
+            res[pos++] = cur;
+        }
+        return res;
+    }
+
+    void writeUnpack() {
+        linef("static int[][] unpack(String str){\n");
+        indent();
+        lineln("int pos = 0;");
+        lineln("List<int[]> list = new ArrayList<>();");
+        lineln("while (pos < str.length()) {");
+        indent();
+        lineln("char groupLen = str.charAt(pos++);");
+        lineln("int[] arr = new int[groupLen * 3];//left,right,target");
+        lineln("int arrPos = 0;");
+        lineln("for (int i = 0; i < groupLen; i++) {");
+        indent();
+        lineln("arr[arrPos++] = str.charAt(pos++);");//left
+        lineln("arr[arrPos++] = str.charAt(pos++);");//right
+        lineln("arr[arrPos++] = str.charAt(pos++);");//target
+        unindent();
+        lineln("}");
+        lineln("list.add(arr);");
+        unindent();
+        lineln("}");
+        lineln("return list.toArray(new int[0][]);");
+
+        unindent();
+
+        lineln("}");
+
+    }
+
     void writeImports() {
         lineln("import java.io.*;\n");
+        lineln("import java.util.*;\n");
     }
 
     void writeFields() {
@@ -233,6 +399,32 @@ public class LexerGenerator extends IndentWriter {
         lineln("}\n");
     }
 
+    void writeGetState2() {
+        lineln("int getState(){");
+        indent();
+        lineln("int[] arr=inputMap[curState];");//inputs
+        lineln("for(int i=0;i<arr.length;i+=3){");
+        indent();
+        lineln("if(yychar>=arr[i]&&yychar<=arr[i+1]){");
+        indent();
+        lineln("return arr[i+2];");
+        unindent();
+        lineln("}");//if
+        unindent();
+        lineln("}");//for
+        lineln("return -1;");
+        unindent();
+        lineln("}\n");
+    }
+
+    void writeGetBit() {
+        lineln("static boolean getBit(int[] arr, int state) {");
+        indent();
+        lineln("return ((arr[state/32]>>(state%32))&1)!=0;");
+        unindent();
+        lineln("}");
+    }
+
     void writeNextToken() {
         linef("public %s %s() throws IOException {\n", tokenClassName, functionName);
         indent();
@@ -250,7 +442,7 @@ public class LexerGenerator extends IndentWriter {
         lineln("if(lastState!=-1){");
         indent();
         lineln("Token token=null;");
-        lineln("if(!skip[lastState]){");
+        lineln("if(!getBit(skip,lastState)){");
         indent();
         lineln("token=new Token(ids[lastState],yybuf.toString());");
         lineln("token.offset=startPos;");
@@ -262,7 +454,7 @@ public class LexerGenerator extends IndentWriter {
         lineln("yybuf.setLength(0);");
         lineln("if(token!=null) return token;");
         lineln("if(yychar==-1) break;");
-        linef("if(skip[lastState]) return %s();\n", functionName);
+        linef("if(getBit(skip,lastState)) return %s();\n", functionName);
         unindent();
         lineln("}");//if last state
         lineln("else{ throw new IOException(\"invalid input=\"+yychar+\" yybuf= \"+yybuf);}");
@@ -273,7 +465,7 @@ public class LexerGenerator extends IndentWriter {
         lineln("yybuf.append((char) yychar);");
         lineln("backup=false;");
         lineln("curState=st;");
-        lineln("if(accepting[curState]) lastState = curState;");//if final
+        lineln("if(getBit(accepting,curState)) lastState = curState;");//if final
 
         unindent();
         lineln("}");//else
@@ -290,7 +482,7 @@ public class LexerGenerator extends IndentWriter {
 
         tokenWriter.writer = new PrintWriter(dir + "/" + tokenClassName + ".java");
         if (packageName != null)
-            tokenWriter.linef("package %s;", packageName);
+            tokenWriter.linef("package %s;\n", packageName);
         tokenWriter.linef("public class %s{\n", tokenClassName);
         tokenWriter.indent();
         tokenWriter.lineln("public int type;");

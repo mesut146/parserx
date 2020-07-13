@@ -5,7 +5,7 @@ package grammar;
 import nodes.*;
 import rule.*;
 import utils.*;
-import java.util.*;
+
 import java.io.File;
 
 public class GParser implements GParserConstants {
@@ -438,7 +438,7 @@ regex.optional=true;
 
   final public Node stringNode() throws ParseException {Token tok;
     tok = jj_consume_token(STRING_LITERAL);
-String str = Util.fromEscaped(Util.trim(tok.image));
+String str = UnicodeUtils.fromEscaped(UnicodeUtils.trim(tok.image));
     {if ("" != null) return new StringNode(str);}
     throw new Error("Missing return statement in function");
 }

@@ -1,3 +1,4 @@
+package gen;
 public class Token{
     public int type;
     public String value;
