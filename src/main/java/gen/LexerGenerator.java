@@ -437,7 +437,7 @@ public class LexerGenerator extends IndentWriter {
         indent();
         lineln("return ((arr[state/32]>>(state%32))&1)!=0;");
         unindent();
-        lineln("}");
+        lineln("}\n");
     }
 
     void writeNextToken() {
