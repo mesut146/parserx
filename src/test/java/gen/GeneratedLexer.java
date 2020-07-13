@@ -371,6 +371,7 @@ public class GeneratedLexer{
                     if(!getBit(skip,lastState)){
                         token=new Token(ids[lastState],yybuf.toString());
                         token.offset=startPos;
+                        token.name=names[lastState];
                         lastState=-1;
                     }
                     curState=0;

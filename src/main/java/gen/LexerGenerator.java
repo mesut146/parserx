@@ -15,15 +15,16 @@ import java.util.Map;
 
 public class LexerGenerator extends IndentWriter {
     DFA dfa;
-    String dir;
+    String outDir;
     String className;
     String packageName;
     String tokenClassName = "Token";
     String functionName = "next";
+    boolean outDirAuto;
 
-    public LexerGenerator(DFA dfa, String dir) {
+    public LexerGenerator(DFA dfa, String outDir) {
         this.dfa = dfa;
-        this.dir = dir;
+        this.outDir = outDir;
     }
 
     public void setClassName(String className) {
@@ -34,9 +35,23 @@ public class LexerGenerator extends IndentWriter {
         this.packageName = packageName;
     }
 
-    public void generate() throws FileNotFoundException {
+    public void setOutDirFromPackage(boolean value) {
+        this.outDirAuto = value;
+    }
 
-        File file = new File(dir, className + ".java");
+    public void setFunctionName(String functionName) {
+        this.functionName = functionName;
+    }
+
+    public void generate() throws FileNotFoundException {
+        File file;
+        if (outDirAuto) {
+            file = new File(outDir, packageName.replace('.', '/') + "/" + className + ".java");
+        }
+        else {
+            file = new File(outDir, className + ".java");
+        }
+
         writer = new PrintWriter(file);
 
         if (packageName != null) {
@@ -446,6 +461,7 @@ public class LexerGenerator extends IndentWriter {
         indent();
         lineln("token=new Token(ids[lastState],yybuf.toString());");
         lineln("token.offset=startPos;");
+        lineln("token.name=names[lastState];");
         lineln("lastState=-1;");
         unindent();
         lineln("}");
@@ -480,7 +496,7 @@ public class LexerGenerator extends IndentWriter {
     void writeTokenClass() throws FileNotFoundException {
         IndentWriter tokenWriter = new IndentWriter();
 
-        tokenWriter.writer = new PrintWriter(dir + "/" + tokenClassName + ".java");
+        tokenWriter.writer = new PrintWriter(outDir + "/" + tokenClassName + ".java");
         if (packageName != null)
             tokenWriter.linef("package %s;\n", packageName);
         tokenWriter.linef("public class %s{\n", tokenClassName);
@@ -488,6 +504,7 @@ public class LexerGenerator extends IndentWriter {
         tokenWriter.lineln("public int type;");
         tokenWriter.lineln("public String value;");
         tokenWriter.lineln("public int offset;");
+        tokenWriter.lineln("public String name;//token name that's declared in grammar");
         tokenWriter.lineln();
 
         tokenWriter.linef("public %s(){}\n\n", tokenClassName);

@@ -3,6 +3,7 @@ public class Token{
     public int type;
     public String value;
     public int offset;
+    public String name;//token name that's declared in grammar
 
     public Token(){}
 

@@ -4,13 +4,12 @@ import gen.GeneratedLexer;
 import gen.LexerGenerator;
 import gen.Token;
 import org.junit.Test;
+import utils.UnicodeUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class LexerGenTest {
 
@@ -48,34 +47,17 @@ public class LexerGenTest {
         GeneratedLexer gen = new GeneratedLexer(new FileReader(getTestFile2()));
         Token token;
         while ((token = gen.next()) != null) {
-            System.out.println(token + " pos=" + token.offset);
+            System.out.println(token + " pos=" + token.offset + " id=" + token.name);
         }
     }
 
     @Test
     public void escapeTest() {
         char[] chars = {'\n', '\r', '\t', ' ', '\0'};
-        /*for (char c : chars) {
+        for (char c : chars) {
             System.out.println(UnicodeUtils.escapeUnicode(c));
-        }*/
+        }
         System.out.println((int) '\u0010');
     }
 
-    static int[][] unpack(String str) {
-        int pos = 0;
-        List<int[]> list = new ArrayList<>();
-        while (pos < str.length()) {
-            char groupLen = str.charAt(pos++);
-            int[] arr = new int[groupLen * 2];//left and right
-            int arrPos = 0;
-            for (int i = 0; i < groupLen; i++) {
-                char c1 = str.charAt(pos++);
-                char c2 = str.charAt(pos++);
-                arr[arrPos++] = c1;
-                arr[arrPos++] = c2;
-            }
-            list.add(arr);
-        }
-        return list.toArray(new int[0][]);
-    }
 }
