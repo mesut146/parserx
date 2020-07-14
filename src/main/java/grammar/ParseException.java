@@ -11,7 +11,7 @@ package grammar;
  * You can modify this class to customize your error reporting
  * mechanisms so long as you retain the public fields.
  */
-public class ParseException extends RuntimeException {
+public class ParseException extends Exception {
 
   /**
    * The version identifier for this Serializable class.

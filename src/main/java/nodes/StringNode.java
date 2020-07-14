@@ -1,5 +1,8 @@
 package nodes;
 
+import grammar.ParseException;
+import utils.UnicodeUtils;
+
 //lexer rule without regex
 //can be in lexer or parser part
 public class StringNode extends Node {
@@ -12,6 +15,10 @@ public class StringNode extends Node {
 
     public StringNode(String value) {
         this.value = value;
+    }
+
+    public static StringNode from(String str) throws ParseException {
+        return new StringNode(UnicodeUtils.fromEscaped(UnicodeUtils.trimQuotes(str)));
     }
 
     public Bracket toBracket() {

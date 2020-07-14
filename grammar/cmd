@@ -28,7 +28,7 @@ lexer()
 javacc()
 {
   grammar="${dir}/parserx.jj"
-  out="${dir}/../src/grammar"
+  out="${dir}/../src/main/java/grammar"
   #-FORCE_LA_CHECK=true
   
   java -cp $cc javacc -OUTPUT_DIRECTORY=${out} -FORCE_LA_CHECK=true $grammar

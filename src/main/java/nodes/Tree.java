@@ -33,7 +33,7 @@ public class Tree {
         try {
             GParser parser = new GParser(new FileReader(path));
             return parser.tree(path);
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException | ParseException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }

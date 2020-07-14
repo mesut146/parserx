@@ -12,6 +12,7 @@ package grammar;
 import nodes.*;
 import rule.*;
 import utils.*;
+import java.io.*;
 
 public class GParser
 {
@@ -21,7 +22,6 @@ public class GParser
     }
     return str;
   }
-}}
 }
 PARSER_END(GParser)
 
@@ -91,7 +91,7 @@ TOKEN:
 | <TOKENS: "tokens">
 | <SKIP_: "skip">
 | <STRING_LITERAL: "\"" (~["\r","\n","\""] | "\\\"")* "\"">
-| <INCLUDE: "include">
+| <INCLUDE_DIRECTIVE: "include">
 }
 
 TOKEN:
@@ -343,8 +343,7 @@ Node stringNode():
 }
 {
   tok=<STRING_LITERAL>{
-  String str = UnicodeUtils.fromEscaped(Util.trim(tok.image));
-  return new StringNode(str);
+  return StringNode.from(tok.image);
 }
 }
 
@@ -367,7 +366,8 @@ Node nameRule():
   String name;
 }
 {
-  name = name(){
+  (name = name() | "{" name=name() "}")
+  {
     return new NameNode(name);
   }
 }

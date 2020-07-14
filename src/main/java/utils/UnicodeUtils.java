@@ -65,7 +65,7 @@ public class UnicodeUtils {
     }
 
     //remove string quotes
-    public static String trim(String str) {
+    public static String trimQuotes(String str) {
         if (str.startsWith("\"") && str.endsWith("\"")) {
             return str.substring(1, str.length() - 1);
         }

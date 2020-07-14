@@ -9,7 +9,7 @@ import rule.RuleDecl;
 public class PrepareTree {
 
     //check references
-    public static Tree prepare(Tree tree) {
+    public static Tree checkReferences(Tree tree) {
         for (RuleDecl decl : tree.rules) {
             check(decl.rhs, tree);
         }

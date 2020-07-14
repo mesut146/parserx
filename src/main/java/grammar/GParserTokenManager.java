@@ -4,8 +4,7 @@ package grammar;
 import nodes.*;
 import rule.*;
 import utils.*;
-import java.util.*;
-import java.io.File;
+import java.io.*;
 
 /** Token Manager. */
 @SuppressWarnings ("unused")

@@ -1,7 +1,7 @@
 import dfa.DFA;
 import dfa.NFA;
-import gen.LexerGenerator;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
@@ -13,9 +13,14 @@ public class DfaTest {
         dfa.optimize();
         System.out.println("total dfa states=" + dfa.numStates);
         //dfa.dump("");
-        //dfa.dot(dir + "asd.dot");
-        //test.testDFA(dfa);
-        //lexer(dfa);
+        return dfa;
+    }
+
+    public static DFA makeDFA(File grammar) throws Exception {
+        NFA nfa = NfaTest.makeNFA(grammar);
+        nfa.dot(grammar.getAbsolutePath() + "-nfa.dot");
+        DFA dfa = makeDFA(nfa);
+        dfa.dot(grammar.getAbsolutePath() + "-dfa.dot");
         return dfa;
     }
 

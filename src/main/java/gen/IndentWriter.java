@@ -47,7 +47,7 @@ public class IndentWriter {
         writer.printf(str, args);
     }
 
-    void indent() {
+    void calcIndent() {
         indentLevel++;
         indentStr = "";
         for (int i = 0; i < indentLevel; i++) {
@@ -57,6 +57,6 @@ public class IndentWriter {
 
     void unindent() {
         indentLevel -= 2;
-        indent();
+        calcIndent();
     }
 }

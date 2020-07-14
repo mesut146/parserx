@@ -60,7 +60,7 @@ public class LexerGenerator extends IndentWriter {
         writeImports();
 
         writer.printf("public class %s{\n", className);
-        indent();
+        calcIndent();
 
         makeTables2();
         writeFields();
@@ -323,16 +323,16 @@ public class LexerGenerator extends IndentWriter {
 
     void writeUnpack() {
         linef("static int[][] unpack(String str){\n");
-        indent();
+        calcIndent();
         lineln("int pos = 0;");
         lineln("List<int[]> list = new ArrayList<>();");
         lineln("while (pos < str.length()) {");
-        indent();
+        calcIndent();
         lineln("char groupLen = str.charAt(pos++);");
         lineln("int[] arr = new int[groupLen * 3];//left,right,target");
         lineln("int arrPos = 0;");
         lineln("for (int i = 0; i < groupLen; i++) {");
-        indent();
+        calcIndent();
         lineln("arr[arrPos++] = str.charAt(pos++);");//left
         lineln("arr[arrPos++] = str.charAt(pos++);");//right
         lineln("arr[arrPos++] = str.charAt(pos++);");//target
@@ -359,6 +359,7 @@ public class LexerGenerator extends IndentWriter {
         lineln("int curState;");
         lineln("int lastState=-1;");
         lineln("static int INITIAL=0;");
+        lineln("static int EOF=-1;");
         lineln("int yypos=0;");
         lineln("int yychar;");
         lineln("boolean backup=false;");
@@ -368,13 +369,13 @@ public class LexerGenerator extends IndentWriter {
 
     void writeConstructor() {
         linef("public %s(Reader reader){\n", className);
-        indent();
+        calcIndent();
         lineln("this.reader=reader;");
         unindent();
         lineln("}");
 
         linef("public %s(String file) throws FileNotFoundException{ \n", className);
-        indent();
+        calcIndent();
         lineln("this.reader=new FileReader(file);");
         unindent();
         lineln("}\n");
@@ -382,9 +383,9 @@ public class LexerGenerator extends IndentWriter {
 
     void writeRead() {
         lineln("int read() throws IOException {");
-        indent();
+        calcIndent();
         lineln("if(!backup){");
-        indent();
+        calcIndent();
         lineln("yychar=reader.read();");
         lineln("yypos++;");
         unindent();
@@ -396,14 +397,14 @@ public class LexerGenerator extends IndentWriter {
 
     void writeGetState() {
         lineln("int getState(){");
-        indent();
+        calcIndent();
         lineln("int[] arr=inputMap[curState];");//inputs
         lineln("if(arr.length==0) return -1;");
         lineln("for(int i=0;i<arr.length;i++){");
-        indent();
+        calcIndent();
         lineln("int[] seg={arr[i]>>>16,arr[i]&((1 << 16) - 1)};");
         lineln("if(yychar>=seg[0]&&yychar<=seg[1]){");
-        indent();
+        calcIndent();
         lineln("return targetMap[curState][i];");
         unindent();
         lineln("}");//if
@@ -416,12 +417,12 @@ public class LexerGenerator extends IndentWriter {
 
     void writeGetState2() {
         lineln("int getState(){");
-        indent();
+        calcIndent();
         lineln("int[] arr=inputMap[curState];");//inputs
         lineln("for(int i=0;i<arr.length;i+=3){");
-        indent();
+        calcIndent();
         lineln("if(yychar>=arr[i]&&yychar<=arr[i+1]){");
-        indent();
+        calcIndent();
         lineln("return arr[i+2];");
         unindent();
         lineln("}");//if
@@ -434,7 +435,7 @@ public class LexerGenerator extends IndentWriter {
 
     void writeGetBit() {
         lineln("static boolean getBit(int[] arr, int state) {");
-        indent();
+        calcIndent();
         lineln("return ((arr[state/32]>>(state%32))&1)!=0;");
         unindent();
         lineln("}\n");
@@ -442,23 +443,27 @@ public class LexerGenerator extends IndentWriter {
 
     void writeNextToken() {
         linef("public %s %s() throws IOException {\n", tokenClassName, functionName);
-        indent();
+        calcIndent();
 
         lineln("curState=INITIAL;");//yyinitial
         lineln("lastState=-1;");
         lineln("int startPos=yypos;");
 
+        lineln("read();");
+        lineln("if(yychar==EOF) return null;");
+        lineln("backup=true;");
+
         lineln("while(true){");
-        indent();
+        calcIndent();
         lineln("read();");
         lineln("int st=getState();");
         lineln("if(st==-1){");
-        indent();
+        calcIndent();
         lineln("if(lastState!=-1){");
-        indent();
+        calcIndent();
         lineln("Token token=null;");
         lineln("if(!getBit(skip,lastState)){");
-        indent();
+        calcIndent();
         lineln("token=new Token(ids[lastState],yybuf.toString());");
         lineln("token.offset=startPos;");
         lineln("token.name=names[lastState];");
@@ -467,6 +472,7 @@ public class LexerGenerator extends IndentWriter {
         lineln("}");
         lineln("curState=0;");
         lineln("backup=true;");
+        //lineln("yypos--;//we read extra input, push back");
         lineln("yybuf.setLength(0);");
         lineln("if(token!=null) return token;");
         lineln("if(yychar==-1) break;");
@@ -477,7 +483,7 @@ public class LexerGenerator extends IndentWriter {
         unindent();
         lineln("}");//if st==-1
         lineln("else{");//transit to target state
-        indent();
+        calcIndent();
         lineln("yybuf.append((char) yychar);");
         lineln("backup=false;");
         lineln("curState=st;");
@@ -500,7 +506,7 @@ public class LexerGenerator extends IndentWriter {
         if (packageName != null)
             tokenWriter.linef("package %s;\n", packageName);
         tokenWriter.linef("public class %s{\n", tokenClassName);
-        tokenWriter.indent();
+        tokenWriter.calcIndent();
         tokenWriter.lineln("public int type;");
         tokenWriter.lineln("public String value;");
         tokenWriter.lineln("public int offset;");
@@ -509,7 +515,7 @@ public class LexerGenerator extends IndentWriter {
 
         tokenWriter.linef("public %s(){}\n\n", tokenClassName);
         tokenWriter.linef("public %s(int type,String value){\n", tokenClassName);
-        tokenWriter.indent();
+        tokenWriter.calcIndent();
         tokenWriter.lineln("this.type=type;");
         tokenWriter.lineln("this.value=value;");
         tokenWriter.unindent();

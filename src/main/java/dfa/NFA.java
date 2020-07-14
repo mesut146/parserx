@@ -188,10 +188,11 @@ public class NFA {
             }
             else if (rn.plus) {
                 //todo no mid state will cause error later
-                //int end = newState();
-                Pair st = insert(rn.node, start);
-                addEpsilon(st.end, start);//repeat
-                p.end = st.end;
+                int newState = newState();
+                addEpsilon(start, newState);
+                Pair st = insert(rn.node, newState);
+                addEpsilon(st.end, newState);//repeat
+                p = st;
             }
             else if (rn.optional) {
                 int end = newState();
@@ -292,7 +293,7 @@ public class NFA {
         if (debugDFA)
             System.out.println("dfa conversion started");
         DFA dfa = new DFA(trans.length * 2);
-        dfa.tree=tree;
+        dfa.tree = tree;
 
         Map<StateSet, Integer> dfaStateMap = new HashMap<>();//state set to dfa state
         Queue<StateSet> openStates = new LinkedList<>();

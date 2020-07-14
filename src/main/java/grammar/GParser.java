@@ -5,8 +5,7 @@ package grammar;
 import nodes.*;
 import rule.*;
 import utils.*;
-
-import java.io.File;
+import java.io.*;
 
 public class GParser implements GParserConstants {
   String getStringValue(String str){
@@ -21,7 +20,7 @@ public class GParser implements GParserConstants {
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case INCLUDE:{
+      case INCLUDE_DIRECTIVE:{
         ;
         break;
         }
@@ -76,7 +75,7 @@ public class GParser implements GParserConstants {
 }
 
   final public void includeStatement(Tree tree) throws ParseException {Token tok;
-    jj_consume_token(INCLUDE);
+    jj_consume_token(INCLUDE_DIRECTIVE);
     tok = jj_consume_token(STRING_LITERAL);
 tree.addInclude(getStringValue(tok.image));
 }
@@ -359,6 +358,7 @@ or.add(rule);
 s.add(r);
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case LPAREN:
+      case LBRACE:
       case STRING_LITERAL:
       case IDENT:{
         ;
@@ -419,6 +419,7 @@ regex.optional=true;
       rule = groupRule();
       break;
       }
+    case LBRACE:
     case IDENT:{
       rule = nameRule();
       break;
@@ -438,8 +439,7 @@ regex.optional=true;
 
   final public Node stringNode() throws ParseException {Token tok;
     tok = jj_consume_token(STRING_LITERAL);
-String str = UnicodeUtils.fromEscaped(UnicodeUtils.trim(tok.image));
-    {if ("" != null) return new StringNode(str);}
+{if ("" != null) return StringNode.from(tok.image);}
     throw new Error("Missing return statement in function");
 }
 
@@ -454,7 +454,22 @@ group.rhs=rule;
 }
 
   final public Node nameRule() throws ParseException {String name;
-    name = name();
+    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+    case IDENT:{
+      name = name();
+      break;
+      }
+    case LBRACE:{
+      jj_consume_token(LBRACE);
+      name = name();
+      jj_consume_token(RBRACE);
+      break;
+      }
+    default:
+      jj_la1[17] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
 {if ("" != null) return new NameNode(name);}
     throw new Error("Missing return statement in function");
 }
@@ -474,7 +489,7 @@ group.rhs=rule;
   public Token jj_nt;
   private int jj_ntk;
   private int jj_gen;
-  final private int[] jj_la1 = new int[17];
+  final private int[] jj_la1 = new int[18];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -482,10 +497,10 @@ group.rhs=rule;
 	   jj_la1_init_1();
 	}
 	private static void jj_la1_init_0() {
-	   jj_la1_0 = new int[] {0x0,0x60000000,0x60000000,0x0,0x8000000,0x8000000,0x0,0x80045000,0x1c00000,0x1c00000,0x80045000,0x220000,0x0,0x80001000,0x1c00000,0x1c00000,0x80001000,};
+	   jj_la1_0 = new int[] {0x0,0x60000000,0x60000000,0x0,0x8000000,0x8000000,0x0,0x80045000,0x1c00000,0x1c00000,0x80045000,0x220000,0x0,0x80005000,0x1c00000,0x1c00000,0x80005000,0x4000,};
 	}
 	private static void jj_la1_init_1() {
-	   jj_la1_1 = new int[] {0x1,0x0,0x0,0x2,0x2,0x0,0x10,0x8,0x0,0x0,0x8,0x0,0x10,0x2,0x0,0x0,0x2,};
+	   jj_la1_1 = new int[] {0x1,0x0,0x0,0x2,0x2,0x0,0x10,0x8,0x0,0x0,0x8,0x0,0x10,0x2,0x0,0x0,0x2,0x2,};
 	}
 
   /** Constructor with InputStream. */
@@ -499,7 +514,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 17; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 18; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -513,7 +528,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 17; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 18; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -523,7 +538,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 17; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 18; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -541,7 +556,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 17; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 18; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -550,7 +565,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 17; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 18; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -559,7 +574,7 @@ group.rhs=rule;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 17; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 18; i++) jj_la1[i] = -1;
   }
 
   private Token jj_consume_token(int kind) throws ParseException {
@@ -615,7 +630,7 @@ group.rhs=rule;
 	   la1tokens[jj_kind] = true;
 	   jj_kind = -1;
 	 }
-	 for (int i = 0; i < 17; i++) {
+	 for (int i = 0; i < 18; i++) {
 	   if (jj_la1[i] == jj_gen) {
 		 for (int j = 0; j < 32; j++) {
 		   if ((jj_la1_0[i] & (1<<j)) != 0) {

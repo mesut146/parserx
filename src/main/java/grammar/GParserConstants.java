@@ -57,7 +57,7 @@ public interface GParserConstants {
   /** RegularExpression Id. */
   int STRING_LITERAL = 31;
   /** RegularExpression Id. */
-  int INCLUDE = 32;
+  int INCLUDE_DIRECTIVE = 32;
   /** RegularExpression Id. */
   int IDENT = 33;
   /** RegularExpression Id. */

@@ -8,13 +8,17 @@ import utils.UnicodeUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 
 public class LexerGenTest {
 
     public static File getGrammar() {
-        return new File(Env.testDir, "test.g");
+        return new File(Env.testDir, "lexer.g");
+    }
+
+    public static File getExpr() {
+        return new File(Env.testDir, "expr.g");
     }
 
     static File getTestFile() {
@@ -35,6 +39,15 @@ public class LexerGenTest {
         generateTest(dfa, outDir);
     }
 
+    public static void generateLexer(File grammar) throws Exception {
+        NFA nfa = NfaTest.makeNFA(grammar);
+        DFA dfa = DfaTest.makeDFA(nfa);
+        String outDir;
+        outDir = Env.testJava + "/gen";
+        //outDir = Main.javaDir;
+        generateTest(dfa, outDir);
+    }
+
     static void generateTest(DFA dfa, String outDir) throws FileNotFoundException {
         LexerGenerator generator = new LexerGenerator(dfa, outDir);
         generator.setClassName("GeneratedLexer");
@@ -42,9 +55,8 @@ public class LexerGenTest {
         generator.generate();
     }
 
-    @Test
-    public void tokenizerTest() throws IOException {
-        GeneratedLexer gen = new GeneratedLexer(new FileReader(getTestFile2()));
+    public static void tokenizerTest(Reader reader) throws IOException {
+        GeneratedLexer gen = new GeneratedLexer(reader);
         Token token;
         while ((token = gen.next()) != null) {
             System.out.println(token + " pos=" + token.offset + " id=" + token.name);
