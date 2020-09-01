@@ -1,0 +1,4 @@
+stack<int> states;
+stack<symbol> symbols;
+
+table[state][tokens][rules]

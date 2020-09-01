@@ -10,9 +10,8 @@ import java.util.Map;
 //transform ebnf to bnf
 public class Transformer {
 
-    Tree tree;
-    Tree res;
-    int count = 0;
+    Tree tree;//in
+    Tree res;//out
     Map<String, Integer> countMap = new HashMap<>();
 
     public Transformer(Tree tree) {
