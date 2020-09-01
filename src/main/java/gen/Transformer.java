@@ -94,12 +94,22 @@ public class Transformer {
     }
 
     Node transform(OrNode orNode, RuleDecl decl) {
-        for (Node node : orNode) {
-            RuleDecl newDecl = new RuleDecl();
-            newDecl.name = decl.name;
-            newDecl.rhs = transform(node, newDecl);
-            addRule(newDecl);
+        if (Config.expand_or) {
+            for (Node node : orNode) {
+                RuleDecl newDecl = new RuleDecl();
+                newDecl.name = decl.name;
+                newDecl.rhs = transform(node, newDecl);
+                addRule(newDecl);
+            }
         }
+        else {
+            OrNode or = new OrNode();
+            for (Node node : orNode) {
+                or.add(transform(node, decl));
+            }
+            return or;
+        }
+
         return null;
     }
 

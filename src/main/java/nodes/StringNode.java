@@ -1,5 +1,6 @@
 package nodes;
 
+import gen.Config;
 import grammar.ParseException;
 import utils.UnicodeUtils;
 
@@ -35,6 +36,9 @@ public class StringNode extends Node {
     public String toString() {
         if (isDot) {
             return ".";
+        }
+        if (Config.string_quote) {
+            return "\"" + value + "\"";
         }
         return value;
     }
