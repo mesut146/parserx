@@ -16,6 +16,11 @@ public class RuleDecl extends Node {
         this.name = name;
     }
 
+    public RuleDecl(String name, Node rhs) {
+        this.name = name;
+        this.rhs = rhs;
+    }
+
     @Override
     public String toString() {
         return name + " = " + rhs + ";";

@@ -2,7 +2,7 @@ package dfa;
 
 import grammar.ParseException;
 import nodes.*;
-import rule.NameNode;
+import nodes.NameNode;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

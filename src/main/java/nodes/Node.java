@@ -1,7 +1,5 @@
 package nodes;
 
-import rule.NameNode;
-
 //base class used in grammar file
 public class Node {
 

@@ -11,8 +11,6 @@ package grammar;
 
 import nodes.*;
 import rule.*;
-import utils.*;
-import java.io.*;
 
 public class GParser
 {
@@ -22,6 +20,7 @@ public class GParser
     }
     return str;
   }
+}}
 }
 PARSER_END(GParser)
 
@@ -290,7 +289,7 @@ void ruleDecl(Tree tree):
 
 void startDecl(Tree tree):
 {
- Node rhs;
+ NameNode rhs;
 }
 {
   <START_SIRECTIVE> ("=" | ":") rhs = nameRule() ";"
@@ -373,7 +372,7 @@ Node groupRule():
 }
 
 
-Node nameRule():
+NameNode nameRule():
 {
   String name;
 }

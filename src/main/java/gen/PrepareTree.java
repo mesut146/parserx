@@ -1,9 +1,9 @@
 package gen;
 
+import nodes.NameNode;
 import nodes.Node;
 import nodes.TokenDecl;
 import nodes.Tree;
-import rule.NameNode;
 import rule.RuleDecl;
 
 public class PrepareTree {
@@ -49,7 +49,7 @@ public class PrepareTree {
             String val = node.asString().value;
             TokenDecl decl = tree.getTokenByValue(val);
             if (decl == null) {
-                throw new RuntimeException("unknown string value: " + val);
+                throw new RuntimeException("unknown string token: " + val);
             }
             //todo replace
         }

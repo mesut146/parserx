@@ -1,4 +1,7 @@
-package rule;
+package nodes;
+
+import rule.Rule;
+import rule.RuleDecl;
 
 //right side
 //can refer to rule or token

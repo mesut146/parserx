@@ -14,22 +14,6 @@ public class RegexNode extends Node {
         this.node = rule;
     }
 
-    //convert ebnf to bnf
-    public void transform() {
-        if (star) {
-            //r=e*;
-            //e*=
-        }
-        else if (plus) {
-
-        }
-        else if (optional) {
-            //r= e?;
-            //e?= e | ;
-
-        }
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

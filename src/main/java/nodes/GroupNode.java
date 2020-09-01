@@ -4,10 +4,9 @@ import java.util.Iterator;
 
 //can be lexer group or parser group
 //(rule1 rule2)
+//T is Node
 public class GroupNode<T extends Node> extends Node implements Iterable<Node> {
 
-    static int count = 0;
-    //public Rule rhs;//sequence,or,single
     public T rhs;
 
     /*public Rule transform(RuleDecl decl, Tree tree) {

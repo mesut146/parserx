@@ -3,7 +3,6 @@ package nodes;
 import dfa.NFA;
 import grammar.GParser;
 import grammar.ParseException;
-import rule.NameNode;
 import rule.RuleDecl;
 
 import java.io.File;

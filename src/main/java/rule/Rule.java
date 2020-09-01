@@ -1,5 +1,6 @@
 package rule;
 
+import nodes.NameNode;
 import nodes.Node;
 import nodes.Tree;
 
@@ -74,7 +75,4 @@ public class Rule extends Node {
     }*/
 
 
-    public Rule transform(RuleDecl decl, Tree tree) {
-        return this;
-    }
 }

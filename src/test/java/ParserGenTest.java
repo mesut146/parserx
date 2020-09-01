@@ -1,4 +1,5 @@
 import gen.PrepareTree;
+import gen.Transformer;
 import nodes.Tree;
 import org.junit.Test;
 
@@ -22,7 +23,9 @@ public class ParserGenTest {
         //LexerGenTest.tokenizerTest(new StringReader(input));
 
         Tree tree = Tree.makeTree(grammar);
-        PrepareTree.checkReferences(tree);
+        //PrepareTree.checkReferences(tree);
+        Transformer transformer = new Transformer(tree);
+        tree = transformer.transform(tree);
         System.out.println(tree);
 
     }

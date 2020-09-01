@@ -9,7 +9,6 @@ import java.util.List;
 //rhs
 public class Sequence extends Node implements Iterable<Node> {
 
-    //public NodeList<Node> list = new NodeList<>();
     public List<Node> list = new ArrayList<>();
 
     public Sequence(Node... arr) {
