@@ -20,6 +20,16 @@ public class Bracket extends Node {
     public boolean debug = false;
     private int pos;
 
+    //return intersection of two ranges
+    public static RangeNode intersect(RangeNode r1, RangeNode r2) {
+        int l = Math.max(r1.start, r2.start);
+        int r = Math.min(r1.end, r2.end);
+        if (l > r) {
+            return null;
+        }
+        return new RangeNode(l, r);
+    }
+
     //node is RangeNode
     public void add(Node node) {
         list.add(node);
@@ -145,16 +155,6 @@ public class Bracket extends Node {
         res.add(new RangeNode(last, CharClass.max));
         if (debug) System.out.println("negated=" + res);
         return res;
-    }
-
-    //return intersection of two ranges
-    public static RangeNode intersect(RangeNode r1, RangeNode r2) {
-        int l = Math.max(r1.start, r2.start);
-        int r = Math.min(r1.end, r2.end);
-        if (l > r) {
-            return null;
-        }
-        return new RangeNode(l, r);
     }
 
     //merge neighbor ranges

@@ -1,7 +1,7 @@
 package rule;
 
 import nodes.Node;
-import nodes.*;
+import nodes.Tree;
 
 //base class for parser rules
 //optional,star,plus,group,or
@@ -72,9 +72,9 @@ public class Rule extends Node {
     public Sequence asSequence() {
         return (Sequence) this;
     }*/
-    
-    
-    public Rule transform(RuleDecl decl,Tree tree){
+
+
+    public Rule transform(RuleDecl decl, Tree tree) {
         return this;
     }
 }

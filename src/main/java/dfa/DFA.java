@@ -9,13 +9,13 @@ import java.io.PrintWriter;
 import java.util.*;
 
 public class DFA {
+    public static boolean debugTransition = false;
     public List<Transition>[] trans;
     public boolean[] accepting;
     public boolean[] isSkip;
     public String[] names;
     public int numStates;
     public int initial = 0;
-    public static boolean debugTransition = false;
     public Tree tree;
 
     public DFA(int maxStates) {

@@ -4,9 +4,9 @@ import nodes.Bracket;
 import nodes.RangeNode;
 
 public class CharClass {
-    public int start, end;
     public static int min = 0;
     public static int max = 0xffff;
+    public int start, end;
 
     public static CharClass fromChar(char c) {
         CharClass cc = new CharClass();
@@ -23,9 +23,9 @@ public class CharClass {
     public static int segment(int start, int end) {
         return (start << 16) | end;
     }
-    
-    public static int segment(int[] arr){
-        return segment(arr[0],arr[1]);
+
+    public static int segment(int[] arr) {
+        return segment(arr[0], arr[1]);
     }
 
     //segment to code points range

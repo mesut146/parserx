@@ -2,7 +2,6 @@
 
 dir=$(dirname $0)
 
-beaver="/storage/emulated/0/AppProjects/cup/beaver-cc-0.9.11.jar"
 flex="/storage/extSdCard/lib/jflex-full-1.8.1.jar"
 #cc="/storage/extSdCard/lib/javacc-7.0.5.jar"
 cc="/home/mesut/Desktop/lib/javacc-7.0.5.jar"
@@ -44,13 +43,6 @@ flex()
   java8 -jar $flex -d $out $dir/_JavaLexer.flex
 }
 
-beaver()
-{
-  gr="expr.grammar"
-  out="../src/grammar"
-  java -jar $beaver -d $out $gr
-
-}
 
 $1
 

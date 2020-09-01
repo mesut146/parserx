@@ -7,7 +7,7 @@ public class IndentWriter {
     String indentStr = "";
     PrintWriter writer;
 
-    public void flush(){
+    public void flush() {
         writer.flush();
     }
 

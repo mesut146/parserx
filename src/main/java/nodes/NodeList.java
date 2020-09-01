@@ -8,6 +8,17 @@ public class NodeList<T> extends Node implements Iterable<T> {
 
     public List<T> list = new ArrayList<>();
 
+    public static <T> String join(List<T> list, String del) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < list.size(); i++) {
+            sb.append(list.get(i));
+            if (i < list.size() - 1) {
+                sb.append(del);
+            }
+        }
+        return sb.toString();
+    }
+
     public <E extends T> void add(E node) {
         list.add(node);
     }
@@ -24,17 +35,6 @@ public class NodeList<T> extends Node implements Iterable<T> {
         return list.get(index);
     }
 
-    public static <T> String join(List<T> list, String del) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < list.size(); i++) {
-            sb.append(list.get(i));
-            if (i < list.size() - 1) {
-                sb.append(del);
-            }
-        }
-        return sb.toString();
-    }
-
     public String join(String del) {
         return join(list, del);
     }
@@ -49,10 +49,9 @@ public class NodeList<T> extends Node implements Iterable<T> {
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return list.toString();
     }
-    
-    
+
+
 }

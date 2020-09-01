@@ -20,6 +20,10 @@ public class RangeNode extends Node {
         this.end = end;
     }
 
+    public static RangeNode of(int start, int end) {
+        return new RangeNode(start, end);
+    }
+
     @Override
     public String toString() {
         return CharClass.printChar(start) + "-" + CharClass.printChar(end);
@@ -33,10 +37,6 @@ public class RangeNode extends Node {
 
     public boolean same(RangeNode other) {
         return start == other.start && end == other.end;
-    }
-
-    public static RangeNode of(int start, int end) {
-        return new RangeNode(start, end);
     }
 
     public boolean isValid() {

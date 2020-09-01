@@ -3,6 +3,7 @@ package gen;
 import nodes.Tree;
 import rule.RuleDecl;
 
+//recursive descent generator
 public class RDGenerator {
     String dir;
     Tree tree;

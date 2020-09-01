@@ -1,17 +1,14 @@
 package nodes;
 
-import nodes.*;
-
 import java.util.Iterator;
 
 //can be lexer group or parser group
 //(rule1 rule2)
 public class GroupNode<T extends Node> extends Node implements Iterable<Node> {
 
+    static int count = 0;
     //public Rule rhs;//sequence,or,single
     public T rhs;
-
-    static int count = 0;
 
     /*public Rule transform(RuleDecl decl, Tree tree) {
         //r = pre (e1 e2) end;

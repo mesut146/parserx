@@ -16,11 +16,11 @@ import java.util.Set;
 //the grammar file for both lexer and parser
 public class Tree {
 
+    public List<RuleDecl> rules;
+    public File file = null;
     List<TokenDecl> skip;
     List<TokenDecl> tokens;
-    public List<RuleDecl> rules;
     List<File> includes;
-    public File file = null;
 
     public Tree() {
         tokens = new ArrayList<>();

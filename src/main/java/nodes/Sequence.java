@@ -1,7 +1,5 @@
 package nodes;
 
-import nodes.Node;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -18,8 +16,15 @@ public class Sequence extends Node implements Iterable<Node> {
         list.addAll(Arrays.asList(arr));
     }
 
-    public void add(Node rule) {
-        list.add(rule);
+    public static <T> String join(List<T> list, String del) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < list.size(); i++) {
+            sb.append(list.get(i));
+            if (i < list.size() - 1) {
+                sb.append(del);
+            }
+        }
+        return sb.toString();
     }
 
     /*public Rule transform(RuleDecl decl, Tree tree) {
@@ -30,22 +35,15 @@ public class Sequence extends Node implements Iterable<Node> {
         return s;
     }*/
 
+    public void add(Node rule) {
+        list.add(rule);
+    }
+
     public Node normal() {
         if (list.size() == 1) {
             return list.get(0);
         }
         return this;
-    }
-
-    public static <T> String join(List<T> list, String del) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < list.size(); i++) {
-            sb.append(list.get(i));
-            if (i < list.size() - 1) {
-                sb.append(del);
-            }
-        }
-        return sb.toString();
     }
 
     @Override

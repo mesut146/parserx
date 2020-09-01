@@ -11,23 +11,23 @@ import java.io.PrintWriter;
 import java.util.*;
 
 public class NFA {
+    public static boolean debugTransition = false;
+    public static boolean debugDFA = false;
     public Tree tree;
-    //StateSet[][] table;//[curState][input]=nextStateSet
-    boolean[] accepting;//[state]=isAccepting
-    StateSet[] epsilon;//[state]=set of next states with epsilon moves
     public int numStates;
     public int initial = 0;//initial state
     //public List<List<Transition>> trans;//state,input,targets
     public List<Transition>[] trans;
     public HashMap<Integer, Integer> alphabet;//code point(segment) to index
     public int[] inputIndex;//index to segment
+    public String[] names;
+    //StateSet[][] table;//[curState][input]=nextStateSet
+    boolean[] accepting;//[state]=isAccepting
+    StateSet[] epsilon;//[state]=set of next states with epsilon moves
     //public List<List<Integer>> inputMap;//state to input set
     //public List<List<Integer>> transMap;//state to target state set
     Set<int[]> inputClasses;
-    public String[] names;
     boolean[] isSkip;//if that final state is ignored
-    public static boolean debugTransition = false;
-    public static boolean debugDFA = false;
 
     public NFA(int numStates) {
         //table = new StateSet[numStates][255];

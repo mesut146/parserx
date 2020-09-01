@@ -1,12 +1,3 @@
-
-import dfa.*;
-import gen.*;
-
-import java.io.*;
-
-import nodes.*;
-
-
 public class Main {
 
 

@@ -29,16 +29,6 @@ public class LexerGenTest {
         return new File(Env.testDir, "test.java");
     }
 
-    @Test
-    public void all() throws Exception {
-        NFA nfa = NfaTest.makeNFA(getGrammar());
-        DFA dfa = DfaTest.makeDFA(nfa);
-        String outDir;
-        outDir = Env.testJava + "/gen";
-        //outDir = Main.javaDir;
-        generateTest(dfa, outDir);
-    }
-
     public static void generateLexer(File grammar) throws Exception {
         NFA nfa = NfaTest.makeNFA(grammar);
         DFA dfa = DfaTest.makeDFA(nfa);
@@ -61,6 +51,16 @@ public class LexerGenTest {
         while ((token = gen.next()) != null) {
             System.out.println(token + " pos=" + token.offset + " id=" + token.name);
         }
+    }
+
+    @Test
+    public void all() throws Exception {
+        NFA nfa = NfaTest.makeNFA(getGrammar());
+        DFA dfa = DfaTest.makeDFA(nfa);
+        String outDir;
+        outDir = Env.testJava + "/gen";
+        //outDir = Main.javaDir;
+        generateTest(dfa, outDir);
     }
 
     @Test
