@@ -3,6 +3,7 @@ package nodes;
 import dfa.NFA;
 import grammar.GParser;
 import grammar.ParseException;
+import rule.NameNode;
 import rule.RuleDecl;
 
 import java.io.File;
@@ -17,6 +18,7 @@ import java.util.Set;
 public class Tree {
 
     public List<RuleDecl> rules;
+    public NameNode start;
     public File file = null;
     List<TokenDecl> skip;
     List<TokenDecl> tokens;

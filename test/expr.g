@@ -10,7 +10,7 @@ tokens{
   NUMBER = {DIGIT}+ ("." {DIGIT}+)?
 }
 
-
+@start = expr ;
 expr = mul (("+" | "-") expr)* ;
 mul = atom (("*" | "/") mul)*;
 atom = {NUMBER} | "(" expr ")" | "-" expr;

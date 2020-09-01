@@ -92,6 +92,7 @@ TOKEN:
 | <SKIP_: "skip">
 | <STRING_LITERAL: "\"" (~["\r","\n","\""] | "\\\"")* "\"">
 | <INCLUDE_DIRECTIVE: "include">
+| <START_SIRECTIVE: "@start">
 }
 
 TOKEN:
@@ -103,13 +104,15 @@ TOKEN:
 | <BRACKET_LIST: "["  (~["]"])* "]">
 }
 
+
+//--------parser rules-------------------
 Tree tree(File file):
 {
   Tree tree=new Tree();
   tree.file=file;
 }
 {
-  (includeStatement(tree))* (tokenBlock(tree) | skipBlock(tree))*  (ruleDecl(tree))*
+  (includeStatement(tree))* (tokenBlock(tree) | skipBlock(tree))*  [startDecl(tree)]  (ruleDecl(tree))*
   {
     return tree;
   }
@@ -283,6 +286,15 @@ void ruleDecl(Tree tree):
     decl.rhs=rhs;
     tree.addRule(decl);
   }
+}
+
+void startDecl(Tree tree):
+{
+ Node rhs;
+}
+{
+  <START_SIRECTIVE> ("=" | ":") rhs = nameRule() ";"
+  {tree.start=rhs;}
 }
 
 //or series
