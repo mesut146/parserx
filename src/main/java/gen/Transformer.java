@@ -7,6 +7,7 @@ import rule.RuleDecl;
 import java.util.HashMap;
 import java.util.Map;
 
+//transform ebnf to bnf
 public class Transformer {
 
     Tree tree;
@@ -46,9 +47,13 @@ public class Transformer {
 
         for (RuleDecl decl : tree.rules) {
             RuleDecl newDecl = new RuleDecl(decl.name);
-
             Node rhs = decl.rhs;
-            newDecl.rhs = transform(rhs, decl);
+            if (rhs.isGroup()) {//unnecessary group
+                newDecl.rhs = rhs.asGroup().rhs;
+            }
+            else {
+                newDecl.rhs = transform(rhs, decl);
+            }
             addRule(newDecl);
         }
         return res;
@@ -81,10 +86,9 @@ public class Transformer {
         if (!rhs.isOr() && !rhs.isSequence()) {
             return rhs;
         }
-        rhs = transform(rhs, decl);
         String nname = decl.name + "_g" + getCount(decl.name);
         RuleDecl newDecl = new RuleDecl(nname);
-        newDecl.rhs = rhs;
+        newDecl.rhs = transform(rhs, newDecl);
         addRule(newDecl);
         return new NameNode(nname);
     }
@@ -98,7 +102,6 @@ public class Transformer {
         }
         return null;
     }
-
 
     Node transform(Sequence sequence, RuleDecl decl) {
         Sequence res = new Sequence();
@@ -120,22 +123,22 @@ public class Transformer {
             //b* = b | b* b;//more
             NameNode nameNode = new NameNode(decl.name + "_" + getCount(decl.name) + "*");
             //declare
-            RuleDecl empty = new RuleDecl(nameNode.name, new EmptyRule());
             RuleDecl d1 = new RuleDecl(nameNode.name);
-            d1.rhs = transform(new OrNode(regexNode.node, new Sequence(nameNode, regexNode.node)), d1);
-            res.addRule(empty);
+            d1.rhs = transform(new Sequence(nameNode, regexNode.node), d1);
+            res.addRule(new RuleDecl(nameNode.name, new EmptyRule()));
             addRule(d1);
             return nameNode;
         }
         else if (regexNode.plus) {
             //b+ = b b*;
-            NameNode nameNode = new NameNode(decl.name + "_" + count++ + "+");
+            NameNode nameNode = new NameNode(decl.name + "_" + getCount(decl.name) + "+");
             RegexNode star = new RegexNode();
             star.star = true;
             star.node = regexNode.node;
 
-            RuleDecl expansion = new RuleDecl(nameNode.name, new Sequence(regexNode.node, transform(star, decl)));
-            res.addRule(expansion);
+            RuleDecl expansion = new RuleDecl(nameNode.name);
+            expansion.rhs = transform(new Sequence(regexNode.node, transform(star, expansion)), expansion);
+            addRule(expansion);
             return nameNode;
         }
         else if (regexNode.optional) {
@@ -143,8 +146,8 @@ public class Transformer {
             //r = ;//zero
             //r = a;//one
             NameNode nameNode = new NameNode(decl.name + "_" + getCount(decl.name) + "?");
-            res.addRule(new RuleDecl(nameNode.name, new EmptyRule()));
-            res.addRule(new RuleDecl(nameNode.name, regexNode.node));
+            addRule(new RuleDecl(nameNode.name, new EmptyRule()));
+            addRule(new RuleDecl(nameNode.name, regexNode.node));
             return nameNode;
         }
         throw new RuntimeException("invalid regex: " + regexNode);
