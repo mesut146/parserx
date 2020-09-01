@@ -8,114 +8,182 @@ package grammar;
  */
 public interface GParserConstants {
 
-  /** End of File. */
-  int EOF = 0;
-  /** RegularExpression Id. */
-  int SINGLE_LINE_COMMENT = 8;
-  /** RegularExpression Id. */
-  int FORMAL_COMMENT = 9;
-  /** RegularExpression Id. */
-  int MULTI_LINE_COMMENT = 10;
-  /** RegularExpression Id. */
-  int LPAREN = 12;
-  /** RegularExpression Id. */
-  int RPAREN = 13;
-  /** RegularExpression Id. */
-  int LBRACE = 14;
-  /** RegularExpression Id. */
-  int RBRACE = 15;
-  /** RegularExpression Id. */
-  int SEMI = 16;
-  /** RegularExpression Id. */
-  int COLON = 17;
-  /** RegularExpression Id. */
-  int DOT = 18;
-  /** RegularExpression Id. */
-  int COMMA = 19;
-  /** RegularExpression Id. */
-  int QUOTE = 20;
-  /** RegularExpression Id. */
-  int EQ = 21;
-  /** RegularExpression Id. */
-  int STAR = 22;
-  /** RegularExpression Id. */
-  int PLUS = 23;
-  /** RegularExpression Id. */
-  int QUES = 24;
-  /** RegularExpression Id. */
-  int XOR = 25;
-  /** RegularExpression Id. */
-  int TILDE = 26;
-  /** RegularExpression Id. */
-  int HASH = 27;
-  /** RegularExpression Id. */
-  int TOKEN_ = 28;
-  /** RegularExpression Id. */
-  int TOKENS = 29;
-  /** RegularExpression Id. */
-  int SKIP_ = 30;
-  /** RegularExpression Id. */
-  int STRING_LITERAL = 31;
-  /** RegularExpression Id. */
-  int INCLUDE_DIRECTIVE = 32;
-  /** RegularExpression Id. */
-  int START_SIRECTIVE = 33;
-  /** RegularExpression Id. */
-  int IDENT = 34;
-  /** RegularExpression Id. */
-  int CHAR = 35;
-  /** RegularExpression Id. */
-  int BRACKET_LIST = 36;
+    /**
+     * End of File.
+     */
+    int EOF = 0;
+    /**
+     * RegularExpression Id.
+     */
+    int SINGLE_LINE_COMMENT = 8;
+    /**
+     * RegularExpression Id.
+     */
+    int FORMAL_COMMENT = 9;
+    /**
+     * RegularExpression Id.
+     */
+    int MULTI_LINE_COMMENT = 10;
+    /**
+     * RegularExpression Id.
+     */
+    int LPAREN = 12;
+    /**
+     * RegularExpression Id.
+     */
+    int RPAREN = 13;
+    /**
+     * RegularExpression Id.
+     */
+    int LBRACE = 14;
+    /**
+     * RegularExpression Id.
+     */
+    int RBRACE = 15;
+    /**
+     * RegularExpression Id.
+     */
+    int SEMI = 16;
+    /**
+     * RegularExpression Id.
+     */
+    int COLON = 17;
+    /**
+     * RegularExpression Id.
+     */
+    int DOT = 18;
+    /**
+     * RegularExpression Id.
+     */
+    int COMMA = 19;
+    /**
+     * RegularExpression Id.
+     */
+    int QUOTE = 20;
+    /**
+     * RegularExpression Id.
+     */
+    int EQ = 21;
+    /**
+     * RegularExpression Id.
+     */
+    int STAR = 22;
+    /**
+     * RegularExpression Id.
+     */
+    int PLUS = 23;
+    /**
+     * RegularExpression Id.
+     */
+    int QUES = 24;
+    /**
+     * RegularExpression Id.
+     */
+    int XOR = 25;
+    /**
+     * RegularExpression Id.
+     */
+    int TILDE = 26;
+    /**
+     * RegularExpression Id.
+     */
+    int HASH = 27;
+    /**
+     * RegularExpression Id.
+     */
+    int TOKEN_ = 28;
+    /**
+     * RegularExpression Id.
+     */
+    int TOKENS = 29;
+    /**
+     * RegularExpression Id.
+     */
+    int SKIP_ = 30;
+    /**
+     * RegularExpression Id.
+     */
+    int STRING_LITERAL = 31;
+    /**
+     * RegularExpression Id.
+     */
+    int INCLUDE_DIRECTIVE = 32;
+    /**
+     * RegularExpression Id.
+     */
+    int START_SIRECTIVE = 33;
+    /**
+     * RegularExpression Id.
+     */
+    int IDENT = 34;
+    /**
+     * RegularExpression Id.
+     */
+    int CHAR = 35;
+    /**
+     * RegularExpression Id.
+     */
+    int BRACKET_LIST = 36;
 
-  /** Lexical state. */
-  int DEFAULT = 0;
-  /** Lexical state. */
-  int IN_SINGLE_LINE_COMMENT = 1;
-  /** Lexical state. */
-  int IN_FORMAL_COMMENT = 2;
-  /** Lexical state. */
-  int IN_MULTI_LINE_COMMENT = 3;
+    /**
+     * Lexical state.
+     */
+    int DEFAULT = 0;
+    /**
+     * Lexical state.
+     */
+    int IN_SINGLE_LINE_COMMENT = 1;
+    /**
+     * Lexical state.
+     */
+    int IN_FORMAL_COMMENT = 2;
+    /**
+     * Lexical state.
+     */
+    int IN_MULTI_LINE_COMMENT = 3;
 
-  /** Literal token values. */
-  String[] tokenImage = {
-    "<EOF>",
-    "\" \"",
-    "\"\\r\"",
-    "\"\\n\"",
-    "\"\\t\"",
-    "\"//\"",
-    "<token of kind 6>",
-    "\"/*\"",
-    "<SINGLE_LINE_COMMENT>",
-    "\"*/\"",
-    "\"*/\"",
-    "<token of kind 11>",
-    "\"(\"",
-    "\")\"",
-    "\"{\"",
-    "\"}\"",
-    "\";\"",
-    "\":\"",
-    "\".\"",
-    "\",\"",
-    "\"\\\'\"",
-    "\"=\"",
-    "\"*\"",
-    "\"+\"",
-    "\"?\"",
-    "\"^\"",
-    "\"~\"",
-    "\"#\"",
-    "\"token\"",
-    "\"tokens\"",
-    "\"skip\"",
-    "<STRING_LITERAL>",
-    "\"include\"",
-    "\"@start\"",
-    "<IDENT>",
-    "<CHAR>",
-    "<BRACKET_LIST>",
-    "\"|\"",
-  };
+    /**
+     * Literal token values.
+     */
+    String[] tokenImage = {
+            "<EOF>",
+            "\" \"",
+            "\"\\r\"",
+            "\"\\n\"",
+            "\"\\t\"",
+            "\"//\"",
+            "<token of kind 6>",
+            "\"/*\"",
+            "<SINGLE_LINE_COMMENT>",
+            "\"*/\"",
+            "\"*/\"",
+            "<token of kind 11>",
+            "\"(\"",
+            "\")\"",
+            "\"{\"",
+            "\"}\"",
+            "\";\"",
+            "\":\"",
+            "\".\"",
+            "\",\"",
+            "\"\\\'\"",
+            "\"=\"",
+            "\"*\"",
+            "\"+\"",
+            "\"?\"",
+            "\"^\"",
+            "\"~\"",
+            "\"#\"",
+            "\"token\"",
+            "\"tokens\"",
+            "\"skip\"",
+            "<STRING_LITERAL>",
+            "\"include\"",
+            "\"@start\"",
+            "<IDENT>",
+            "<CHAR>",
+            "<BRACKET_LIST>",
+            "\"|\"",
+    };
 
 }

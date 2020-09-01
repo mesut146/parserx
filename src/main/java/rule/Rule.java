@@ -2,7 +2,6 @@ package rule;
 
 import nodes.NameNode;
 import nodes.Node;
-import nodes.Tree;
 
 //base class for parser rules
 //optional,star,plus,group,or

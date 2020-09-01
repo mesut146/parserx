@@ -2,3 +2,26 @@ stack<int> states;
 stack<symbol> symbols;
 
 table[state][tokens][rules]
+
+
+state = 0
+push(state)
+read(symbol)
+entry = T[state,symbol]
+while entry.action != accept do
+  if entry.action == shift then
+    push(symbol)
+    state = entry.state
+    push(state)
+    read(symbol)
+  else if entry.action == reduce then
+    do 2∗size rhs times {pop()}
+    state := top-of-stack()
+    push(entry.rule.lhs)
+    state = T[state,entry.rule.lhs]
+    push(state)
+  else if entry.action == blank then
+    error
+  entry = T[state, symbol]
+end while
+if symbol 6= $ then error

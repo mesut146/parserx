@@ -6,7 +6,7 @@ tokens{
   POW = "^"
   LPAREN = "("
   RPAREN = ")"
-  #DIGIT=[0-9]
+  #DIGIT = [0-9]
   NUMBER = {DIGIT}+ ("." {DIGIT}+)?
 }
 

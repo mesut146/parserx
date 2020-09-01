@@ -25,16 +25,9 @@ public class StateSet implements Iterable<Integer> {
         return states.contains(state);
     }
 
-    /*public int get(int index) {
-        return states.get(index);
-    }*/
 
     public void remove(int state) {
-        states.remove((Integer) state);
-    }
-
-    public void clear() {
-        states.clear();
+        states.remove(state);
     }
 
     @Override
@@ -60,9 +53,5 @@ public class StateSet implements Iterable<Integer> {
         return "StateSet{" + states + "}";
     }
 
-    public StateSet copy() {
-        StateSet copy = new StateSet();
-        copy.states.addAll(states);
-        return copy;
-    }
+
 }

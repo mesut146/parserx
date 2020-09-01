@@ -2,7 +2,6 @@ package dfa;
 
 import grammar.ParseException;
 import nodes.*;
-import nodes.NameNode;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -10,35 +9,29 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 
+@SuppressWarnings("unchecked")
 public class NFA {
     public static boolean debugTransition = false;
     public static boolean debugDFA = false;
-    public Tree tree;
+    public Tree tree;//grammar file
     public int numStates;
     public int initial = 0;//initial state
-    //public List<List<Transition>> trans;//state,input,targets
     public List<Transition>[] trans;
     public HashMap<Integer, Integer> alphabet;//code point(segment) to index
     public int[] inputIndex;//index to segment
     public String[] names;
-    //StateSet[][] table;//[curState][input]=nextStateSet
     boolean[] accepting;//[state]=isAccepting
     StateSet[] epsilon;//[state]=set of next states with epsilon moves
-    //public List<List<Integer>> inputMap;//state to input set
-    //public List<List<Integer>> transMap;//state to target state set
     Set<int[]> inputClasses;
     boolean[] isSkip;//if that final state is ignored
 
     public NFA(int numStates) {
-        //table = new StateSet[numStates][255];
         trans = new List[numStates];
         accepting = new boolean[numStates];
         epsilon = new StateSet[numStates];
         this.numStates = 0;//just initial
         alphabet = new HashMap<>();
         inputIndex = new int[255];
-        //inputMap = new ArrayList<>();
-        //transMap = new ArrayList<>();
         names = new String[numStates];
         isSkip = new boolean[numStates];
         inputClasses = new HashSet<>();
@@ -70,8 +63,6 @@ public class NFA {
 
     //state index,input index,target state index
     public void addTransition(int state, int target, int input) {
-        //addInputMap(state, input);
-        //addTransMap(state, target);
         expand(state);
         //System.out.printf("state: %d input: %d target: %d\n", state, input, target);
         List<Transition> arr;
@@ -89,9 +80,7 @@ public class NFA {
         int seg = CharClass.segment(left, right);
         if (debugTransition)
             System.out.printf("st:%d (%s-%s) to st:%d seg:%d\n", state, CharClass.printChar(left), CharClass.printChar(right), target, seg);
-        //int inputIndex = checkInput(seg);
         addTransition(state, target, seg);
-        //addTransition(state, inputIndex, target);
     }
 
     public void setAccepting(int state, boolean val) {
@@ -275,19 +264,6 @@ public class NFA {
         }
         return "S" + st;
     }
-
-    /*public void dumpAlphabet() {
-        for (int state = initial; state < numStates; state++) {
-            Set<Integer> set = inputMap.get(state);
-            for (int input : set) {
-                System.out.println(decodeSegment(input));
-            }
-        }
-        for (
-                int x : alphabet.keySet()) {
-            System.out.println(decodeSegment(x));
-        }
-    }*/
 
     public DFA dfa() {
         if (debugDFA)

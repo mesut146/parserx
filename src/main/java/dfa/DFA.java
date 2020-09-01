@@ -20,7 +20,6 @@ public class DFA {
 
     public DFA(int maxStates) {
         this.numStates = 0;
-        //table = new int[maxStates][numInput];
         trans = new List[maxStates];
         accepting = new boolean[maxStates];
         isSkip = new boolean[maxStates];
@@ -102,7 +101,7 @@ public class DFA {
                 }
                 list.clear();//remove all transitions
                 for (Map.Entry<Integer, List<Integer>> e : map.entrySet()) {
-                    //check the inputs neighbor
+                    //check the inputs neighbour
                     List<Integer> l = e.getValue();//inputs
 
                     int[] pre = CharClass.desegment(l.get(0));
