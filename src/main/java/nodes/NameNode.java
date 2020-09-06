@@ -11,6 +11,11 @@ public class NameNode extends Node {
         this.name = name;
     }
 
+    public NameNode(String name, boolean isToken) {
+        this.name = name;
+        this.isToken = isToken;
+    }
+
     @Override
     public String toString() {
         if (isToken) {

@@ -2,7 +2,7 @@ options
 {
     JAVA_UNICODE_ESCAPE = true;
     //LOOKAHEAD=3;
-    STATIC=false;
+    STATIC = false;
 }
 
 PARSER_BEGIN(GParser)
@@ -14,14 +14,9 @@ import rule.*;
 
 public class GParser
 {
-  String getStringValue(String str){
-    if(str.startsWith("\"")&&str.endsWith("\"")){
-      return str.substring(1,str.length()-1);
-    }
-    return str;
-  }
-}}
+
 }
+
 PARSER_END(GParser)
 
 SKIP :
@@ -124,7 +119,7 @@ void includeStatement(Tree tree):
 {
   "include" tok=<STRING_LITERAL>
   {
-    tree.addInclude(getStringValue(tok.image));
+    tree.addInclude(UnicodeUtils.trimQuotes(tok.image));
   }
 }
 
@@ -244,29 +239,18 @@ Node bracketNode():
 
 Node lexerRef():
 {
-  String s;
-  NameNode ref;
+  String name;
 }
 {
- "{" s=name() "}"
- {
-   ref=new NameNode(s);
-   ref.isToken=true;
-   return ref;
- }
+ "{" name=name(){return new NameNode(name,true);} "}"
 }
 
 Node lexer_group():
 {
-  GroupNode group=new GroupNode();
   Node rule;
 }
 {
-  "(" rule=lexer_rhs() ")"
-  {
-    group.rhs=rule;
-    return group;
-  }
+  "(" rule=lexer_rhs(){ return new GroupNode(rule); } ")"
 }
 
 //--------------------------------
@@ -344,7 +328,8 @@ Node simple():
 {
   (rule=groupRule()
    | rule=nameRule()
-   | rule=stringNode())
+   | rule=stringNode()
+   | rule=untilNode())
    {return rule;}
 }
 
@@ -353,22 +338,26 @@ Node stringNode():
   Token tok;
 }
 {
-  tok=<STRING_LITERAL>{
-  return StringNode.from(tok.image);
+  tok=<STRING_LITERAL>
+  {
+    return StringNode.from(tok.image);
+  }
 }
+
+Node untilNode():
+{
+  Node node;
+}
+{
+  "~" node = stringNode(){return new UntilNode(node);}
 }
 
 Node groupRule():
 {
-  GroupNode group=new GroupNode();
   Node rule;
 }
 {
-  "(" rule=rhs() ")"
-  {
-    group.rhs=rule;
-    return group;
-  }
+  "(" rule=rhs(){return new GroupNode(rule);} ")"
 }
 
 

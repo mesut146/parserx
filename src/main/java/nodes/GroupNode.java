@@ -9,6 +9,10 @@ public class GroupNode<T extends Node> extends Node implements Iterable<Node> {
 
     public T rhs;
 
+    public GroupNode(T rhs) {
+        this.rhs = rhs;
+    }
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("(");
