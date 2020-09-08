@@ -13,11 +13,13 @@ tokenList::= tokenDecl*;
 
 declSeparator::= ":" | "=" | ":=" | ":==";
 tokenDecl::= "#"? name declSeparator rhs;
+ruleDecl::= name declSeparator rhs;
 
-rhs::= rhs_list ("|" rhs_list)*;
+rhs::= rhs_list ("|" rhs_list)*;//aka or list
 rhs_list::= regex+;
 regex::= simple ("*" | "+" | "?")?
 simple::= group | ref | stringNode | bracketNode | untilNode | dotNode;
+
 group::="(" rhs ")";
 stringNode::= <STRING_LITERAL>
 bracketNode::= <BRACKET_LIST>//easier to handle as token
@@ -26,7 +28,8 @@ dotNode::= "."
 
 startDecl::="@start" "=" name;
 
-ruleDecl::= name declSeparator rhs;
 
+
+ref::= lexerRef | name;
 lexerRef::= "{" name "}";
 name::=<IDENT>;

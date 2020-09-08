@@ -126,7 +126,7 @@ frag=true;
     }
     name = name();
     jj_consume_token(EQ);
-    rhs = lexer_rhs();
+    rhs = rhs();
 decl=new TokenDecl(name);
     decl.fragment=frag;
     decl.regex=rhs;
@@ -141,10 +141,10 @@ decl=new TokenDecl(name);
     jj_consume_token(RBRACE);
 }
 
-  final public Node lexer_rhs() throws ParseException {Node rule;
+  final public Node rhs() throws ParseException {Node rule;
   OrNode or=new OrNode();
   boolean more=false;
-    rule = lexer_rhs_list();
+    rule = rhs_list();
 or.add(rule);
     label_5:
     while (true) {
@@ -158,7 +158,7 @@ or.add(rule);
         break label_5;
       }
       jj_consume_token(39);
-      rule = lexer_rhs_list();
+      rule = rhs_list();
 or.add(rule);
       more=true;
     }
@@ -166,11 +166,11 @@ or.add(rule);
     throw new Error("Missing return statement in function");
 }
 
-  final public Node lexer_rhs_list() throws ParseException {Sequence s = new Sequence();
+  final public Node rhs_list() throws ParseException {Sequence s = new Sequence();
   Node r;
     label_6:
     while (true) {
-      r = lexer_regex();
+      r = regex();
 s.add(r);
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case LPAREN:
@@ -178,6 +178,7 @@ s.add(r);
       case DOT:
       case TILDE:
       case STRING_LITERAL:
+      case IDENT:
       case BRACKET_LIST:{
         ;
         break;
@@ -191,9 +192,9 @@ s.add(r);
     throw new Error("Missing return statement in function");
 }
 
-  final public Node lexer_regex() throws ParseException {Node rule;
+  final public Node regex() throws ParseException {Node rule;
   RegexNode regex;
-    rule = lexer_simple();
+    rule = simple();
 regex=new RegexNode(rule);
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case STAR:
@@ -231,14 +232,15 @@ regex.optional=true;
     throw new Error("Missing return statement in function");
 }
 
-  final public Node lexer_simple() throws ParseException {Node rule;
+  final public Node simple() throws ParseException {Node rule;
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case LPAREN:{
-      rule = lexer_group();
+      rule = group();
       break;
       }
-    case LBRACE:{
-      rule = lexerRef();
+    case LBRACE:
+    case IDENT:{
+      rule = ref();
       break;
       }
     case STRING_LITERAL:{
@@ -283,17 +285,9 @@ b.parse(t.image);
     throw new Error("Missing return statement in function");
 }
 
-  final public Node lexerRef() throws ParseException {String name;
-    jj_consume_token(LBRACE);
-    name = name();
-{if ("" != null) return new NameNode(name,true);}
-    jj_consume_token(RBRACE);
-    throw new Error("Missing return statement in function");
-}
-
-  final public Node lexer_group() throws ParseException {Node rule;
+  final public Node group() throws ParseException {Node rule;
     jj_consume_token(LPAREN);
-    rule = lexer_rhs();
+    rule = rhs();
 {if ("" != null) return new GroupNode(rule);}
     jj_consume_token(RPAREN);
     throw new Error("Missing return statement in function");
@@ -301,7 +295,7 @@ b.parse(t.image);
 
   final public Node untilNode() throws ParseException {Node node;
     jj_consume_token(TILDE);
-    node = lexer_regex();
+    node = regex();
 {if ("" != null) return new UntilNode(node);}
     throw new Error("Missing return statement in function");
 }
@@ -309,10 +303,7 @@ b.parse(t.image);
 //--------------------------------
 //parser rules
   final public 
-void ruleDecl(Tree tree) throws ParseException {RuleDecl decl=new RuleDecl();
-  String name;
-  Node rhs;
-    name = name();
+void declSeparator() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case EQ:{
       jj_consume_token(EQ);
@@ -335,6 +326,13 @@ void ruleDecl(Tree tree) throws ParseException {RuleDecl decl=new RuleDecl();
       jj_consume_token(-1);
       throw new ParseException();
     }
+}
+
+  final public void ruleDecl(Tree tree) throws ParseException {RuleDecl decl=new RuleDecl();
+  String name;
+  Node rhs;
+    name = name();
+    declSeparator();
     rhs = rhs();
     jj_consume_token(SEMI);
 decl.name=name;
@@ -358,128 +356,9 @@ decl.name=name;
       jj_consume_token(-1);
       throw new ParseException();
     }
-    rhs = nameRule();
+    rhs = ref();
     jj_consume_token(SEMI);
 tree.start=rhs;
-}
-
-//or series
-  final public Node rhs() throws ParseException {Node rule;
-  OrNode or=new OrNode();
-  boolean more=false;
-    rule = rhs_list();
-or.add(rule);
-    label_7:
-    while (true) {
-      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case 39:{
-        ;
-        break;
-        }
-      default:
-        jj_la1[14] = jj_gen;
-        break label_7;
-      }
-      jj_consume_token(39);
-      rule = rhs_list();
-or.add(rule);
-      more=true;
-    }
-{if ("" != null) return more?or:rule;}
-    throw new Error("Missing return statement in function");
-}
-
-//sequence no or
-  final public Node rhs_list() throws ParseException {Sequence s=new Sequence();
-  Node r;
-    label_8:
-    while (true) {
-      r = regex();
-s.add(r);
-      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case LPAREN:
-      case LBRACE:
-      case TILDE:
-      case STRING_LITERAL:
-      case IDENT:{
-        ;
-        break;
-        }
-      default:
-        jj_la1[15] = jj_gen;
-        break label_8;
-      }
-    }
-{if ("" != null) return s.normal();}
-    throw new Error("Missing return statement in function");
-}
-
-  final public Node regex() throws ParseException {Node rule;
-  RegexNode regex;
-    rule = simple();
-regex=new RegexNode(rule);
-    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case STAR:
-    case PLUS:
-    case QUES:{
-      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case STAR:{
-        jj_consume_token(STAR);
-regex.star=true;
-        break;
-        }
-      case PLUS:{
-        jj_consume_token(PLUS);
-regex.plus=true;
-        break;
-        }
-      case QUES:{
-        jj_consume_token(QUES);
-regex.optional=true;
-        break;
-        }
-      default:
-        jj_la1[16] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
-      }
-{if ("" != null) return regex;}
-      break;
-      }
-    default:
-      jj_la1[17] = jj_gen;
-      ;
-    }
-{if ("" != null) return rule;}
-    throw new Error("Missing return statement in function");
-}
-
-  final public Node simple() throws ParseException {Node rule;
-    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case LPAREN:{
-      rule = groupRule();
-      break;
-      }
-    case LBRACE:
-    case IDENT:{
-      rule = nameRule();
-      break;
-      }
-    case STRING_LITERAL:{
-      rule = stringNode();
-      break;
-      }
-    case TILDE:{
-      rule = untilNode();
-      break;
-      }
-    default:
-      jj_la1[18] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
-{if ("" != null) return rule;}
-    throw new Error("Missing return statement in function");
 }
 
   final public Node stringNode() throws ParseException {Token tok;
@@ -488,32 +367,32 @@ regex.optional=true;
     throw new Error("Missing return statement in function");
 }
 
-  final public Node groupRule() throws ParseException {Node rule;
-    jj_consume_token(LPAREN);
-    rule = rhs();
-{if ("" != null) return new GroupNode(rule);}
-    jj_consume_token(RPAREN);
+  final public NameNode lexerRef() throws ParseException {String name;
+    jj_consume_token(LBRACE);
+    name = name();
+{if ("" != null) return new NameNode(name,true);}
+    jj_consume_token(RBRACE);
     throw new Error("Missing return statement in function");
 }
 
-  final public NameNode nameRule() throws ParseException {String name;
+  final public NameNode ref() throws ParseException {String name;
+  NameNode ref;
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case IDENT:{
       name = name();
+ref = new NameNode(name);
       break;
       }
     case LBRACE:{
-      jj_consume_token(LBRACE);
-      name = name();
-      jj_consume_token(RBRACE);
+      ref = lexerRef();
       break;
       }
     default:
-      jj_la1[19] = jj_gen;
+      jj_la1[14] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
-{if ("" != null) return new NameNode(name);}
+{if ("" != null) return ref;}
     throw new Error("Missing return statement in function");
 }
 
@@ -532,7 +411,7 @@ regex.optional=true;
   public Token jj_nt;
   private int jj_ntk;
   private int jj_gen;
-  final private int[] jj_la1 = new int[20];
+  final private int[] jj_la1 = new int[15];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -540,10 +419,10 @@ regex.optional=true;
 	   jj_la1_init_1();
 	}
 	private static void jj_la1_init_0() {
-	   jj_la1_0 = new int[] {0x0,0x40000000,0x40000000,0x0,0x0,0x20000000,0x20000000,0x0,0x10045000,0x7000000,0x7000000,0x10045000,0xe20000,0x220000,0x0,0x10005000,0x7000000,0x7000000,0x10005000,0x4000,};
+	   jj_la1_0 = new int[] {0x0,0x40000000,0x40000000,0x0,0x0,0x20000000,0x20000000,0x0,0x10045000,0x7000000,0x7000000,0x10045000,0xe20000,0x220000,0x4000,};
 	}
 	private static void jj_la1_init_1() {
-	   jj_la1_1 = new int[] {0x4,0x1,0x1,0x8,0x10,0x10,0x0,0x80,0x42,0x0,0x0,0x42,0x0,0x0,0x80,0x12,0x0,0x0,0x12,0x10,};
+	   jj_la1_1 = new int[] {0x4,0x1,0x1,0x8,0x10,0x10,0x0,0x80,0x52,0x0,0x0,0x52,0x0,0x0,0x10,};
 	}
 
   /** Constructor with InputStream. */
@@ -557,7 +436,7 @@ regex.optional=true;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -571,7 +450,7 @@ regex.optional=true;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -581,7 +460,7 @@ regex.optional=true;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -599,7 +478,7 @@ regex.optional=true;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -608,7 +487,7 @@ regex.optional=true;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -617,7 +496,7 @@ regex.optional=true;
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
   }
 
   private Token jj_consume_token(int kind) throws ParseException {
@@ -673,7 +552,7 @@ regex.optional=true;
 	   la1tokens[jj_kind] = true;
 	   jj_kind = -1;
 	 }
-	 for (int i = 0; i < 20; i++) {
+	 for (int i = 0; i < 15; i++) {
 	   if (jj_la1[i] == jj_gen) {
 		 for (int j = 0; j < 32; j++) {
 		   if ((jj_la1_0[i] & (1<<j)) != 0) {

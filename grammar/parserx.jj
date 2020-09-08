@@ -139,7 +139,7 @@ void tokenBlock(Tree tree):
  "token" "{" tokenList(tree,false) "}"
 }
 
-void tokenList(Tree tree,boolean skip):
+void tokenList(Tree tree, boolean skip):
 {}
 {
  (tokenDecl(tree,skip))*
@@ -153,11 +153,11 @@ void tokenDecl(Tree tree,boolean skip):
   Node rhs;
 }
 {
-  ("#"{frag=true;})? name=name() "=" rhs=lexer_rhs()
+  ("#"{frag=true;})? name=name() "=" rhs = rhs()
   {
     decl=new TokenDecl(name);
     decl.fragment=frag;
-    decl.regex=rhs;
+    decl.regex = rhs;
     if(skip){tree.addSkip(decl);}
     else{tree.addToken(decl);}
   }
@@ -170,15 +170,15 @@ void skipBlock(Tree tree):
  "skip" "{" tokenList(tree,true) "}"
 }
 
-Node lexer_rhs():
+Node rhs():
 {
   Node rule;
   OrNode or=new OrNode();
   boolean more=false;
 }
 {
-  rule=lexer_rhs_list(){or.add(rule);}
-   ("|" rule=lexer_rhs_list()
+  rule=rhs_list(){or.add(rule);}
+   ("|" rule=rhs_list()
     {
       or.add(rule);
       more=true;
@@ -186,36 +186,36 @@ Node lexer_rhs():
    { return more?or:rule; }
 }
 
-Node lexer_rhs_list():
+Node rhs_list():
 {
   Sequence s = new Sequence();
   Node r;
 }
 {
-  (r=lexer_regex(){s.add(r);})+
+  (r=regex(){s.add(r);})+
   {return s.normal();}
 }
 
-Node lexer_regex():
+Node regex():
 {
   Node rule;
   RegexNode regex;
 }
 {
-  rule=lexer_simple(){regex=new RegexNode(rule);}
+  rule=simple(){regex=new RegexNode(rule);}
    (("*"{regex.star=true;}
   | "+"{regex.plus=true;}
   | "?"{regex.optional=true;}){return regex;})?
      {return rule;}
 }
 
-Node lexer_simple():
+Node simple():
 {
   Node rule;
 }
 {
-  (rule=lexer_group()
-   | rule=lexerRef()//before nameRule
+  (rule=group()
+   | rule=ref()
    | rule=stringNode()
    | rule=bracketNode()
    | rule=untilNode()
@@ -245,20 +245,13 @@ Node bracketNode():
   }
 }
 
-Node lexerRef():
-{
-  String name;
-}
-{
- "{" name=name(){return new NameNode(name,true);} "}"
-}
 
-Node lexer_group():
+Node group():
 {
   Node rule;
 }
 {
-  "(" rule = lexer_rhs(){ return new GroupNode(rule); } ")"
+  "(" rule = rhs(){ return new GroupNode(rule); } ")"
 }
 
 Node untilNode():
@@ -266,11 +259,17 @@ Node untilNode():
   Node node;
 }
 {
-  "~" node = lexer_regex() {return new UntilNode(node);}
+  "~" node = regex() {return new UntilNode(node);}
 }
 
 //--------------------------------
 //parser rules
+
+void declSeparator():
+{}
+{
+  "=" | ":" | ":==" | ":="
+}
 
 void ruleDecl(Tree tree):
 {
@@ -279,7 +278,7 @@ void ruleDecl(Tree tree):
   Node rhs;
 }
 {
-  name=name() ("=" | ":" | ":==" | ":=") rhs=rhs()  ";"
+  name=name() declSeparator() rhs=rhs()  ";"
   {
     decl.name=name;
     decl.rhs=rhs;
@@ -292,61 +291,10 @@ void startDecl(Tree tree):
  NameNode rhs;
 }
 {
-  <START_SIRECTIVE> ("=" | ":") rhs = nameRule() ";"
+  <START_SIRECTIVE> ("=" | ":") rhs = ref() ";"
   {tree.start=rhs;}
 }
 
-//or series
-Node rhs():
-{
-  Node rule;
-  OrNode or=new OrNode();
-  boolean more=false;
-}
-{
-  rule=rhs_list(){or.add(rule);}
-   ("|" rule=rhs_list()
-    {
-      or.add(rule);
-      more=true;
-    })*
-   { return more?or:rule; }
-}
-
-//sequence no or
-Node rhs_list():
-{
-  Sequence s=new Sequence();
-  Node r;
-}
-{
-  (r=regex(){s.add(r);})+
-  {return s.normal();}
-}
-
-Node regex():
-{
-  Node rule;
-  RegexNode regex;
-}
-{
-  rule=simple(){regex=new RegexNode(rule);}
-   (("*"{regex.star=true;}
-  | "+"{regex.plus=true;}
-  | "?"{regex.optional=true;}){return regex;})?
-     {return rule;}
-}
-
-Node simple():
-{
-  Node rule;
-}
-{
-  (rule=groupRule()
-   | rule=nameRule()
-   | rule=stringNode())
-   {return rule;}
-}
 
 
 Node stringNode():
@@ -360,23 +308,23 @@ Node stringNode():
   }
 }
 
-Node groupRule():
-{
-  Node rule;
-}
-{
-  "(" rule=rhs(){return new GroupNode(rule);} ")"
-}
-
-
-NameNode nameRule():
+NameNode lexerRef():
 {
   String name;
 }
 {
-  (name = name() | "{" name=name() "}")
+ "{" name=name(){return new NameNode(name,true);} "}"
+}
+
+NameNode ref():
+{
+  String name;
+  NameNode ref;
+}
+{
+  (name = name(){ref = new NameNode(name);} | ref = lexerRef() )
   {
-    return new NameNode(name);
+    return ref;
   }
 }
 
