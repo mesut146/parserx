@@ -1,4 +1,4 @@
-tokens{
+token{
   PLUS = "+"
   MINUS = "-"
   STAR = "*"

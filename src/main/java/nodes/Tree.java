@@ -122,15 +122,16 @@ public class Tree {
 
     //get index of token by name
     public int indexOf(String name) {
-        int i = 0;
-        for (TokenDecl decl : tokens) {
-            if (decl.tokenName.equals(name)) {
-                return i;
-            }
-            i++;
+        int i = indexOf(tokens, name);
+        if (i != -1) {
+            return i;
         }
-        i = 0;
-        for (TokenDecl decl : skip) {
+        return indexOf(skip, name);
+    }
+
+    static int indexOf(List<TokenDecl> list, String name) {
+        int i = 0;
+        for (TokenDecl decl : list) {
             if (decl.tokenName.equals(name)) {
                 return i;
             }
@@ -157,52 +158,32 @@ public class Tree {
         return nfa;
     }
 
-    //ebnf to bnf
-    /*public Tree transform() {
-        Tree tree = new Tree();//result tree
-
-        for (RuleDecl decl : rules.list) {
-            RuleDecl d = new RuleDecl(decl.name);
-            Rule rhs = decl.rhs;
-            if (rhs.isGroup()) {
-                //remove unnecessary parenthesis
-                //r = (s1 s2);
-                d.rhs = rhs.asGroup().rhs;
-                tree.addRule(d);
-            }
-            else if (rhs.isName()) {
-                tree.addRule(decl);
-            }
-            else if (rhs.isSequence()) {
-                //todo
-                d.rhs=rhs.asSequence().transform(decl,tree);
-                tree.addRule(d);
-            }
-        }
-
-        return tree;
-    }*/
-
     void printTokens(StringBuilder sb) {
-        sb.append("/* tokens */\n\n");
-        sb.append("tokens{\n");
-        for (TokenDecl td : tokens) {
-            sb.append("  ");
-            sb.append(td);
-            sb.append("\n");
+        if (!tokens.isEmpty()) {
+            sb.append("/* tokens */\n");
+            sb.append("token{\n");
+            for (TokenDecl td : tokens) {
+                sb.append("  ");
+                sb.append(td);
+                sb.append("\n");
+            }
+            sb.append("}");
+            sb.append("\n\n");
         }
-        sb.append("}");
     }
 
     void printSkips(StringBuilder sb) {
-        sb.append("/* skip tokens */\n\n");
-        sb.append("skip{\n");
-        for (TokenDecl td : skip) {
-            sb.append("  ");
-            sb.append(td);
-            sb.append("\n");
+        if (!skip.isEmpty()) {
+            sb.append("/* skip tokens */\n");
+            sb.append("skip{\n");
+            for (TokenDecl td : skip) {
+                sb.append("  ");
+                sb.append(td);
+                sb.append("\n");
+            }
+            sb.append("}");
+            sb.append("\n\n");
         }
-        sb.append("}");
     }
 
     @Override
@@ -210,12 +191,13 @@ public class Tree {
         StringBuilder sb = new StringBuilder();
 
         printTokens(sb);
-        sb.append("\n\n");
         printSkips(sb);
-        sb.append("\n\n");
 
-        sb.append("/* rules */\n\n");
-        sb.append(NodeList.join(rules, "\n"));
+        if (!rules.isEmpty()) {
+            sb.append("/* rules */\n\n");
+            sb.append(NodeList.join(rules, "\n"));
+        }
+
         return sb.toString();
     }
 

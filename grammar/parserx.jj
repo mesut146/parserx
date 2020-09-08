@@ -11,6 +11,8 @@ package grammar;
 
 import nodes.*;
 import rule.*;
+import utils.*;
+import java.io.*;
 
 public class GParser
 {
@@ -71,6 +73,8 @@ TOKEN :
 | < COMMA: "," >
 | < QUOTE: "'" >
 | < EQ: "=">
+| <COLONEQEQ: ":==">
+| <COLONEQ: ":=">
 | < STAR: "*">
 | < PLUS: "+">
 | < QUES: "?">
@@ -81,9 +85,9 @@ TOKEN :
 
 TOKEN:
 {
-  <TOKEN_: "token">
-| <TOKENS: "tokens">
-| <SKIP_: "skip">
+  <KEYWORD_TOKEN: "token">
+| <KEYWORD_TOKENS: "tokens">
+| <KEYWORD_SKIP: "skip">
 | <STRING_LITERAL: "\"" (~["\r","\n","\""] | "\\\"")* "\"">
 | <INCLUDE_DIRECTIVE: "include">
 | <START_SIRECTIVE: "@start">
@@ -106,7 +110,10 @@ Tree tree(File file):
   tree.file=file;
 }
 {
-  (includeStatement(tree))* (tokenBlock(tree) | skipBlock(tree))*  [startDecl(tree)]  (ruleDecl(tree))*
+  (includeStatement(tree))*
+  (tokenBlock(tree) | skipBlock(tree))*
+  [startDecl(tree)]
+  (ruleDecl(tree))*
   {
     return tree;
   }
@@ -129,7 +136,7 @@ void tokenBlock(Tree tree):
 {
 }
 {
- "tokens" "{" tokenList(tree,false) "}"
+ "token" "{" tokenList(tree,false) "}"
 }
 
 void tokenList(Tree tree,boolean skip):
@@ -181,7 +188,7 @@ Node lexer_rhs():
 
 Node lexer_rhs_list():
 {
-  Sequence s=new Sequence();
+  Sequence s = new Sequence();
   Node r;
 }
 {
@@ -211,6 +218,7 @@ Node lexer_simple():
    | rule=lexerRef()//before nameRule
    | rule=stringNode()
    | rule=bracketNode()
+   | rule=untilNode()
    | rule=dotNode()){return rule;}
 }
 
@@ -250,7 +258,15 @@ Node lexer_group():
   Node rule;
 }
 {
-  "(" rule=lexer_rhs(){ return new GroupNode(rule); } ")"
+  "(" rule = lexer_rhs(){ return new GroupNode(rule); } ")"
+}
+
+Node untilNode():
+{
+  Node node;
+}
+{
+  "~" node = lexer_regex() {return new UntilNode(node);}
 }
 
 //--------------------------------
@@ -263,7 +279,7 @@ void ruleDecl(Tree tree):
   Node rhs;
 }
 {
-  name=name() ("=" | ":") rhs=rhs()  ";"
+  name=name() ("=" | ":" | ":==" | ":=") rhs=rhs()  ";"
   {
     decl.name=name;
     decl.rhs=rhs;
@@ -328,10 +344,10 @@ Node simple():
 {
   (rule=groupRule()
    | rule=nameRule()
-   | rule=stringNode()
-   | rule=untilNode())
+   | rule=stringNode())
    {return rule;}
 }
+
 
 Node stringNode():
 {
@@ -342,14 +358,6 @@ Node stringNode():
   {
     return StringNode.from(tok.image);
   }
-}
-
-Node untilNode():
-{
-  Node node;
-}
-{
-  "~" node = stringNode(){return new UntilNode(node);}
 }
 
 Node groupRule():

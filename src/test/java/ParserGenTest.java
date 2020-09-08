@@ -25,7 +25,7 @@ public class ParserGenTest {
         Tree tree = Tree.makeTree(grammar);
         //PrepareTree.checkReferences(tree);
         Transformer transformer = new Transformer(tree);
-        tree = transformer.transform(tree);
+        //tree = transformer.transform(tree);
         System.out.println(tree);
 
     }

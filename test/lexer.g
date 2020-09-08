@@ -1,4 +1,4 @@
-tokens{
+token{
     #LETTER = [a-zA-Z] //todo need unicode
     #DIGIT = [0-9]
     #DIGIT_OR_UNDERSCORE = [0-9_]
