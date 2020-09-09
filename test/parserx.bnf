@@ -15,18 +15,18 @@ declSeparator::= ":" | "=" | ":=" | ":==";
 tokenDecl::= "#"? name declSeparator rhs;
 ruleDecl::= name declSeparator rhs;
 
-rhs::= rhs_list ("|" rhs_list)*;//aka or list
-rhs_list::= regex+;
+rhs::= sequence ("|" sequence)*;//aka or list
+sequence::= regex+;
 regex::= simple ("*" | "+" | "?")?
 simple::= group | ref | stringNode | bracketNode | untilNode | dotNode;
 
-group::="(" rhs ")";
+group::= "(" rhs ")";
 stringNode::= <STRING_LITERAL>
 bracketNode::= <BRACKET_LIST>//easier to handle as token
 untilNode::= "~" regex;
 dotNode::= "."
 
-startDecl::="@start" "=" name;
+startDecl::= "@start" "=" name;
 
 
 

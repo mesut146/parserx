@@ -8,13 +8,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 //transform ebnf to bnf
-public class Transformer {
+public class EbnfTransformer {
 
     Tree tree;//in ebnf
     Tree res;//out bnf
     Map<String, Integer> countMap = new HashMap<>();
 
-    public Transformer(Tree tree) {
+    public EbnfTransformer(Tree tree) {
         this.tree = tree;
     }
 
@@ -77,7 +77,7 @@ public class Transformer {
         return node;
     }
 
-    Node transform(GroupNode<Node> groupNode, RuleDecl decl) {
+    Node transform(GroupNode groupNode, RuleDecl decl) {
         //r = pre (e1 e2) end;
         //r = pre r_g end;
         //r_g = e1 e2;
@@ -125,7 +125,7 @@ public class Transformer {
 
     Node transform(RegexNode regexNode, RuleDecl decl) {
         regexNode.node = transform(regexNode.node, decl);
-        if (regexNode.star) {
+        if (regexNode.isStar()) {
             //r = a b*;
             //r = a b*;
             //b* = ;empty node means zero times
@@ -138,11 +138,11 @@ public class Transformer {
             addRule(d1);
             return nameNode;
         }
-        else if (regexNode.plus) {
+        else if (regexNode.isPlus()) {
             //b+ = b b*;
             NameNode nameNode = new NameNode(decl.name + "_" + getCount(decl.name) + "+");
             RegexNode star = new RegexNode();
-            star.star = true;
+            star.setType("*");
             star.node = regexNode.node;
 
             RuleDecl expansion = new RuleDecl(nameNode.name);
@@ -150,7 +150,7 @@ public class Transformer {
             addRule(expansion);
             return nameNode;
         }
-        else if (regexNode.optional) {
+        else if (regexNode.isOptional()) {
             //r = a?;
             //r = ;//zero
             //r = a;//one

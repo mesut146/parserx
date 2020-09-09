@@ -37,17 +37,11 @@ public class GParser implements GParserConstants {
         jj_la1[1] = jj_gen;
         break label_2;
       }
-      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case KEYWORD_TOKEN:{
+      if (jj_2_1(2147483647)) {
         tokenBlock(tree);
-        break;
-        }
-      case KEYWORD_SKIP:{
+      } else if (jj_2_2(2147483647)) {
         skipBlock(tree);
-        break;
-        }
-      default:
-        jj_la1[2] = jj_gen;
+      } else {
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -58,7 +52,7 @@ public class GParser implements GParserConstants {
       break;
       }
     default:
-      jj_la1[3] = jj_gen;
+      jj_la1[2] = jj_gen;
       ;
     }
     label_3:
@@ -69,7 +63,7 @@ public class GParser implements GParserConstants {
         break;
         }
       default:
-        jj_la1[4] = jj_gen;
+        jj_la1[3] = jj_gen;
         break label_3;
       }
       ruleDecl(tree);
@@ -93,7 +87,7 @@ void tokenBlock(Tree tree) throws ParseException {
     jj_consume_token(RBRACE);
 }
 
-  final public void tokenList(Tree tree,boolean skip) throws ParseException {
+  final public void tokenList(Tree tree, boolean skip) throws ParseException {
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
@@ -103,7 +97,7 @@ void tokenBlock(Tree tree) throws ParseException {
         break;
         }
       default:
-        jj_la1[5] = jj_gen;
+        jj_la1[4] = jj_gen;
         break label_4;
       }
       tokenDecl(tree,skip);
@@ -121,15 +115,16 @@ frag=true;
       break;
       }
     default:
-      jj_la1[6] = jj_gen;
+      jj_la1[5] = jj_gen;
       ;
     }
     name = name();
     jj_consume_token(EQ);
     rhs = rhs();
+    jj_consume_token(SEMI);
 decl=new TokenDecl(name);
     decl.fragment=frag;
-    decl.regex=rhs;
+    decl.regex = rhs;
     if(skip){tree.addSkip(decl);}
     else{tree.addToken(decl);}
 }
@@ -141,10 +136,68 @@ decl=new TokenDecl(name);
     jj_consume_token(RBRACE);
 }
 
+  final public void declSeparator() throws ParseException {
+    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+    case EQ:{
+      jj_consume_token(EQ);
+      break;
+      }
+    case COLON:{
+      jj_consume_token(COLON);
+      break;
+      }
+    case COLONEQEQ:{
+      jj_consume_token(COLONEQEQ);
+      break;
+      }
+    case COLONEQ:{
+      jj_consume_token(COLONEQ);
+      break;
+      }
+    default:
+      jj_la1[6] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+}
+
+  final public void ruleDecl(Tree tree) throws ParseException {RuleDecl decl=new RuleDecl();
+  String name;
+  Node rhs;
+    name = name();
+    declSeparator();
+    rhs = rhs();
+    jj_consume_token(SEMI);
+decl.name=name;
+    decl.rhs=rhs;
+    tree.addRule(decl);
+}
+
+  final public void startDecl(Tree tree) throws ParseException {NameNode rhs;
+    jj_consume_token(START_SIRECTIVE);
+    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+    case EQ:{
+      jj_consume_token(EQ);
+      break;
+      }
+    case COLON:{
+      jj_consume_token(COLON);
+      break;
+      }
+    default:
+      jj_la1[7] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    rhs = ref();
+    jj_consume_token(SEMI);
+tree.start=rhs;
+}
+
   final public Node rhs() throws ParseException {Node rule;
   OrNode or=new OrNode();
   boolean more=false;
-    rule = rhs_list();
+    rule = sequence();
 or.add(rule);
     label_5:
     while (true) {
@@ -154,11 +207,11 @@ or.add(rule);
         break;
         }
       default:
-        jj_la1[7] = jj_gen;
+        jj_la1[8] = jj_gen;
         break label_5;
       }
       jj_consume_token(39);
-      rule = rhs_list();
+      rule = sequence();
 or.add(rule);
       more=true;
     }
@@ -166,7 +219,7 @@ or.add(rule);
     throw new Error("Missing return statement in function");
 }
 
-  final public Node rhs_list() throws ParseException {Sequence s = new Sequence();
+  final public Node sequence() throws ParseException {Sequence s = new Sequence();
   Node r;
     label_6:
     while (true) {
@@ -184,7 +237,7 @@ s.add(r);
         break;
         }
       default:
-        jj_la1[8] = jj_gen;
+        jj_la1[9] = jj_gen;
         break label_6;
       }
     }
@@ -193,35 +246,14 @@ s.add(r);
 }
 
   final public Node regex() throws ParseException {Node rule;
-  RegexNode regex;
+  String type;
     rule = simple();
-regex=new RegexNode(rule);
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case STAR:
     case PLUS:
     case QUES:{
-      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case STAR:{
-        jj_consume_token(STAR);
-regex.star=true;
-        break;
-        }
-      case PLUS:{
-        jj_consume_token(PLUS);
-regex.plus=true;
-        break;
-        }
-      case QUES:{
-        jj_consume_token(QUES);
-regex.optional=true;
-        break;
-        }
-      default:
-        jj_la1[9] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
-      }
-{if ("" != null) return regex;}
+      type = regexType();
+{if ("" != null) return new RegexNode(rule, type);}
       break;
       }
     default:
@@ -229,6 +261,29 @@ regex.optional=true;
       ;
     }
 {if ("" != null) return rule;}
+    throw new Error("Missing return statement in function");
+}
+
+  final public String regexType() throws ParseException {
+    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+    case STAR:{
+      jj_consume_token(STAR);
+      break;
+      }
+    case PLUS:{
+      jj_consume_token(PLUS);
+      break;
+      }
+    case QUES:{
+      jj_consume_token(QUES);
+      break;
+      }
+    default:
+      jj_la1[11] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+{if ("" != null) return getToken(0).image;}
     throw new Error("Missing return statement in function");
 }
 
@@ -260,7 +315,7 @@ regex.optional=true;
       break;
       }
     default:
-      jj_la1[11] = jj_gen;
+      jj_la1[12] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -270,7 +325,7 @@ regex.optional=true;
 
   final public Node dotNode() throws ParseException {
     jj_consume_token(DOT);
-StringNode str=new StringNode();
+StringNode str = new StringNode();
     str.isDot=true;
     {if ("" != null) return str;}
     throw new Error("Missing return statement in function");
@@ -288,8 +343,8 @@ b.parse(t.image);
   final public Node group() throws ParseException {Node rule;
     jj_consume_token(LPAREN);
     rule = rhs();
-{if ("" != null) return new GroupNode(rule);}
     jj_consume_token(RPAREN);
+{if ("" != null) return new GroupNode(rule);}
     throw new Error("Missing return statement in function");
 }
 
@@ -298,67 +353,6 @@ b.parse(t.image);
     node = regex();
 {if ("" != null) return new UntilNode(node);}
     throw new Error("Missing return statement in function");
-}
-
-//--------------------------------
-//parser rules
-  final public 
-void declSeparator() throws ParseException {
-    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case EQ:{
-      jj_consume_token(EQ);
-      break;
-      }
-    case COLON:{
-      jj_consume_token(COLON);
-      break;
-      }
-    case COLONEQEQ:{
-      jj_consume_token(COLONEQEQ);
-      break;
-      }
-    case COLONEQ:{
-      jj_consume_token(COLONEQ);
-      break;
-      }
-    default:
-      jj_la1[12] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
-}
-
-  final public void ruleDecl(Tree tree) throws ParseException {RuleDecl decl=new RuleDecl();
-  String name;
-  Node rhs;
-    name = name();
-    declSeparator();
-    rhs = rhs();
-    jj_consume_token(SEMI);
-decl.name=name;
-    decl.rhs=rhs;
-    tree.addRule(decl);
-}
-
-  final public void startDecl(Tree tree) throws ParseException {NameNode rhs;
-    jj_consume_token(START_SIRECTIVE);
-    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case EQ:{
-      jj_consume_token(EQ);
-      break;
-      }
-    case COLON:{
-      jj_consume_token(COLON);
-      break;
-      }
-    default:
-      jj_la1[13] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
-    rhs = ref();
-    jj_consume_token(SEMI);
-tree.start=rhs;
 }
 
   final public Node stringNode() throws ParseException {Token tok;
@@ -370,8 +364,8 @@ tree.start=rhs;
   final public NameNode lexerRef() throws ParseException {String name;
     jj_consume_token(LBRACE);
     name = name();
-{if ("" != null) return new NameNode(name,true);}
     jj_consume_token(RBRACE);
+{if ("" != null) return new NameNode(name,true);}
     throw new Error("Missing return statement in function");
 }
 
@@ -388,7 +382,7 @@ ref = new NameNode(name);
       break;
       }
     default:
-      jj_la1[14] = jj_gen;
+      jj_la1[13] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -402,6 +396,36 @@ ref = new NameNode(name);
     throw new Error("Missing return statement in function");
 }
 
+  private boolean jj_2_1(int xla)
+ {
+    jj_la = xla; jj_lastpos = jj_scanpos = token;
+    try { return (!jj_3_1()); }
+    catch(LookaheadSuccess ls) { return true; }
+    finally { jj_save(0, xla); }
+  }
+
+  private boolean jj_2_2(int xla)
+ {
+    jj_la = xla; jj_lastpos = jj_scanpos = token;
+    try { return (!jj_3_2()); }
+    catch(LookaheadSuccess ls) { return true; }
+    finally { jj_save(1, xla); }
+  }
+
+  private boolean jj_3_1()
+ {
+    if (jj_scan_token(KEYWORD_TOKEN)) return true;
+    if (jj_scan_token(LBRACE)) return true;
+    return false;
+  }
+
+  private boolean jj_3_2()
+ {
+    if (jj_scan_token(KEYWORD_SKIP)) return true;
+    if (jj_scan_token(LBRACE)) return true;
+    return false;
+  }
+
   /** Generated Token Manager. */
   public GParserTokenManager token_source;
   JavaCharStream jj_input_stream;
@@ -410,8 +434,10 @@ ref = new NameNode(name);
   /** Next token. */
   public Token jj_nt;
   private int jj_ntk;
+  private Token jj_scanpos, jj_lastpos;
+  private int jj_la;
   private int jj_gen;
-  final private int[] jj_la1 = new int[15];
+  final private int[] jj_la1 = new int[14];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -419,11 +445,14 @@ ref = new NameNode(name);
 	   jj_la1_init_1();
 	}
 	private static void jj_la1_init_0() {
-	   jj_la1_0 = new int[] {0x0,0x40000000,0x40000000,0x0,0x0,0x20000000,0x20000000,0x0,0x10045000,0x7000000,0x7000000,0x10045000,0xe20000,0x220000,0x4000,};
+	   jj_la1_0 = new int[] {0x0,0x40000000,0x0,0x0,0x20000000,0x20000000,0xe20000,0x220000,0x0,0x10045000,0x7000000,0x7000000,0x10045000,0x4000,};
 	}
 	private static void jj_la1_init_1() {
-	   jj_la1_1 = new int[] {0x4,0x1,0x1,0x8,0x10,0x10,0x0,0x80,0x52,0x0,0x0,0x52,0x0,0x0,0x10,};
+	   jj_la1_1 = new int[] {0x4,0x1,0x8,0x10,0x10,0x0,0x0,0x0,0x80,0x52,0x0,0x0,0x52,0x10,};
 	}
+  final private JJCalls[] jj_2_rtns = new JJCalls[2];
+  private boolean jj_rescan = false;
+  private int jj_gc = 0;
 
   /** Constructor with InputStream. */
   public GParser(java.io.InputStream stream) {
@@ -436,7 +465,8 @@ ref = new NameNode(name);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 14; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
   /** Reinitialise. */
@@ -450,7 +480,8 @@ ref = new NameNode(name);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 14; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
   /** Constructor. */
@@ -460,7 +491,8 @@ ref = new NameNode(name);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 14; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
   /** Reinitialise. */
@@ -478,7 +510,8 @@ ref = new NameNode(name);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 14; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
   /** Constructor with generated Token Manager. */
@@ -487,7 +520,8 @@ ref = new NameNode(name);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 14; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
   /** Reinitialise. */
@@ -496,7 +530,8 @@ ref = new NameNode(name);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 14; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
   private Token jj_consume_token(int kind) throws ParseException {
@@ -506,11 +541,50 @@ ref = new NameNode(name);
 	 jj_ntk = -1;
 	 if (token.kind == kind) {
 	   jj_gen++;
+	   if (++jj_gc > 100) {
+		 jj_gc = 0;
+		 for (int i = 0; i < jj_2_rtns.length; i++) {
+		   JJCalls c = jj_2_rtns[i];
+		   while (c != null) {
+			 if (c.gen < jj_gen) c.first = null;
+			 c = c.next;
+		   }
+		 }
+	   }
 	   return token;
 	 }
 	 token = oldToken;
 	 jj_kind = kind;
 	 throw generateParseException();
+  }
+
+  @SuppressWarnings("serial")
+  static private final class LookaheadSuccess extends java.lang.Error {
+    @Override
+    public Throwable fillInStackTrace() {
+      return this;
+    }
+  }
+  static private final LookaheadSuccess jj_ls = new LookaheadSuccess();
+  private boolean jj_scan_token(int kind) {
+	 if (jj_scanpos == jj_lastpos) {
+	   jj_la--;
+	   if (jj_scanpos.next == null) {
+		 jj_lastpos = jj_scanpos = jj_scanpos.next = token_source.getNextToken();
+	   } else {
+		 jj_lastpos = jj_scanpos = jj_scanpos.next;
+	   }
+	 } else {
+	   jj_scanpos = jj_scanpos.next;
+	 }
+	 if (jj_rescan) {
+	   int i = 0; Token tok = token;
+	   while (tok != null && tok != jj_scanpos) { i++; tok = tok.next; }
+	   if (tok != null) jj_add_error_token(kind, i);
+	 }
+	 if (jj_scanpos.kind != kind) return true;
+	 if (jj_la == 0 && jj_scanpos == jj_lastpos) throw jj_ls;
+	 return false;
   }
 
 
@@ -543,6 +617,46 @@ ref = new NameNode(name);
   private java.util.List<int[]> jj_expentries = new java.util.ArrayList<int[]>();
   private int[] jj_expentry;
   private int jj_kind = -1;
+  private int[] jj_lasttokens = new int[100];
+  private int jj_endpos;
+
+  private void jj_add_error_token(int kind, int pos) {
+	 if (pos >= 100) {
+		return;
+	 }
+
+	 if (pos == jj_endpos + 1) {
+	   jj_lasttokens[jj_endpos++] = kind;
+	 } else if (jj_endpos != 0) {
+	   jj_expentry = new int[jj_endpos];
+
+	   for (int i = 0; i < jj_endpos; i++) {
+		 jj_expentry[i] = jj_lasttokens[i];
+	   }
+
+	   for (int[] oldentry : jj_expentries) {
+		 if (oldentry.length == jj_expentry.length) {
+		   boolean isMatched = true;
+
+		   for (int i = 0; i < jj_expentry.length; i++) {
+			 if (oldentry[i] != jj_expentry[i]) {
+			   isMatched = false;
+			   break;
+			 }
+
+		   }
+		   if (isMatched) {
+			 jj_expentries.add(jj_expentry);
+			 break;
+		   }
+		 }
+	   }
+
+	   if (pos != 0) {
+		 jj_lasttokens[(jj_endpos = pos) - 1] = kind;
+	   }
+	 }
+  }
 
   /** Generate ParseException. */
   public ParseException generateParseException() {
@@ -552,7 +666,7 @@ ref = new NameNode(name);
 	   la1tokens[jj_kind] = true;
 	   jj_kind = -1;
 	 }
-	 for (int i = 0; i < 15; i++) {
+	 for (int i = 0; i < 14; i++) {
 	   if (jj_la1[i] == jj_gen) {
 		 for (int j = 0; j < 32; j++) {
 		   if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -571,6 +685,9 @@ ref = new NameNode(name);
 		 jj_expentries.add(jj_expentry);
 	   }
 	 }
+	 jj_endpos = 0;
+	 jj_rescan_token();
+	 jj_add_error_token(0, 0);
 	 int[][] exptokseq = new int[jj_expentries.size()][];
 	 for (int i = 0; i < jj_expentries.size(); i++) {
 	   exptokseq[i] = jj_expentries.get(i);
@@ -591,6 +708,47 @@ ref = new NameNode(name);
 
   /** Disable tracing. */
   final public void disable_tracing() {
+  }
+
+  private void jj_rescan_token() {
+	 jj_rescan = true;
+	 for (int i = 0; i < 2; i++) {
+	   try {
+		 JJCalls p = jj_2_rtns[i];
+
+		 do {
+		   if (p.gen > jj_gen) {
+			 jj_la = p.arg; jj_lastpos = jj_scanpos = p.first;
+			 switch (i) {
+			   case 0: jj_3_1(); break;
+			   case 1: jj_3_2(); break;
+			 }
+		   }
+		   p = p.next;
+		 } while (p != null);
+
+		 } catch(LookaheadSuccess ls) { }
+	 }
+	 jj_rescan = false;
+  }
+
+  private void jj_save(int index, int xla) {
+	 JJCalls p = jj_2_rtns[index];
+	 while (p.gen > jj_gen) {
+	   if (p.next == null) { p = p.next = new JJCalls(); break; }
+	   p = p.next;
+	 }
+
+	 p.gen = jj_gen + xla - jj_la; 
+	 p.first = token;
+	 p.arg = xla;
+  }
+
+  static final class JJCalls {
+	 int gen;
+	 Token first;
+	 int arg;
+	 JJCalls next;
   }
 
 }

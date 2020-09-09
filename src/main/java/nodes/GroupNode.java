@@ -1,27 +1,20 @@
 package nodes;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 //can be lexer group or parser group
 //(rule1 rule2)
-//T is Node
-public class GroupNode<T extends Node> extends Node implements Iterable<Node> {
+public class GroupNode extends Node implements Iterable<Node> {
 
-    public T rhs;
+    public Node rhs;
 
-    public GroupNode() {
-    }
-
-    public GroupNode(T rhs) {
+    public GroupNode(Node rhs) {
         this.rhs = rhs;
     }
 
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("(");
-        sb.append(rhs);
-        sb.append(")");
-        return sb.toString();
+        return "(" + rhs + ")";
     }
 
     @Override
@@ -29,24 +22,6 @@ public class GroupNode<T extends Node> extends Node implements Iterable<Node> {
         if (rhs.isSequence()) {
             return rhs.asSequence().iterator();
         }
-        return new Iterator<Node>() {
-            int pos = 0;
-
-            @Override
-            public boolean hasNext() {
-                return pos == 0;
-            }
-
-            @Override
-            public Node next() {
-                pos++;
-                return rhs;
-            }
-
-            @Override
-            public void remove() {
-
-            }
-        };
+        return Arrays.asList(rhs).iterator();
     }
 }

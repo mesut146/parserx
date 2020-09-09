@@ -14,11 +14,15 @@ import java.io.Reader;
 public class LexerGenTest {
 
     public static File getGrammar() {
-        return new File(Env.testDir, "lexer.g");
+        return new File(Env.testDir, "javaLexer.g");
+    }
+
+    public static File getCalc() {
+        return new File(Env.testDir, "calc.g");
     }
 
     public static File getExpr() {
-        return new File(Env.testDir, "expr.g");
+        return new File(Env.testDir, "calc.g");
     }
 
     static File getTestFile() {

@@ -40,6 +40,17 @@ public class Tree {
         }
     }
 
+    static int indexOf(List<TokenDecl> list, String name) {
+        int i = 0;
+        for (TokenDecl decl : list) {
+            if (decl.tokenName.equals(name)) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
+
     //merge two grammar files(lexer,parser)
     void mergeWith(Tree other) {
         tokens.addAll(other.tokens);
@@ -129,17 +140,6 @@ public class Tree {
         return indexOf(skip, name);
     }
 
-    static int indexOf(List<TokenDecl> list, String name) {
-        int i = 0;
-        for (TokenDecl decl : list) {
-            if (decl.tokenName.equals(name)) {
-                return i;
-            }
-            i++;
-        }
-        return -1;
-    }
-
     //construct NFA from this grammar file
     public NFA makeNFA() throws ParseException {
         makeDistincRanges();
@@ -162,11 +162,7 @@ public class Tree {
         if (!tokens.isEmpty()) {
             sb.append("/* tokens */\n");
             sb.append("token{\n");
-            for (TokenDecl td : tokens) {
-                sb.append("  ");
-                sb.append(td);
-                sb.append("\n");
-            }
+            printToken(sb, tokens);
             sb.append("}");
             sb.append("\n\n");
         }
@@ -176,13 +172,17 @@ public class Tree {
         if (!skip.isEmpty()) {
             sb.append("/* skip tokens */\n");
             sb.append("skip{\n");
-            for (TokenDecl td : skip) {
-                sb.append("  ");
-                sb.append(td);
-                sb.append("\n");
-            }
+            printToken(sb, skip);
             sb.append("}");
             sb.append("\n\n");
+        }
+    }
+
+    private static void printToken(StringBuilder sb, List<TokenDecl> list) {
+        for (TokenDecl td : list) {
+            sb.append("  ");
+            sb.append(td);
+            sb.append(";\n");
         }
     }
 
@@ -195,6 +195,9 @@ public class Tree {
 
         if (!rules.isEmpty()) {
             sb.append("/* rules */\n\n");
+            if (start != null) {
+                sb.append("@start = ").append(start).append(";\n");
+            }
             sb.append(NodeList.join(rules, "\n"));
         }
 

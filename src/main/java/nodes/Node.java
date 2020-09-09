@@ -31,8 +31,8 @@ public class Node {
         return this instanceof GroupNode;
     }
 
-    public GroupNode<Node> asGroup() {
-        return (GroupNode<Node>) this;
+    public GroupNode asGroup() {
+        return (GroupNode) this;
     }
 
     public boolean isString() {

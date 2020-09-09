@@ -1,4 +1,4 @@
-include "lexer.g"//token definitions
+include "javaLexer.g"//token definitions
 
 qname = IDENT ("." IDENT)* ;
 typeList = typeName ("," typeName)* ;

@@ -168,14 +168,14 @@ public class NFA {
         }
         else if (node.isRegex()) {
             RegexNode rn = node.asRegex();
-            if (rn.star) {
+            if (rn.isStar()) {
                 int end = newState();
                 addEpsilon(start, end);//zero
                 Pair st = insert(rn.node, start);
                 addEpsilon(st.end, start);//repeat
                 p.end = end;
             }
-            else if (rn.plus) {
+            else if (rn.isPlus()) {
                 //todo no mid state will cause error later
                 int newState = newState();
                 addEpsilon(start, newState);
@@ -183,14 +183,13 @@ public class NFA {
                 addEpsilon(st.end, newState);//repeat
                 p = st;
             }
-            else if (rn.optional) {
+            else if (rn.isOptional()) {
                 int end = newState();
                 addEpsilon(start, end);//zero times
                 Pair st = insert(rn.node, start);
                 addEpsilon(st.end, end);
                 p.end = end;
             }
-
         }
         else if (node.is(OrNode.class)) {
             OrNode or = (OrNode) node;
@@ -202,7 +201,7 @@ public class NFA {
             p.end = end;
         }
         else if (node.isGroup()) {
-            GroupNode<Node> group = node.asGroup();
+            GroupNode group = node.asGroup();
             Node rhs = group.rhs;
             p.end = insert(rhs, start).end;
         }

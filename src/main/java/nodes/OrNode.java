@@ -31,11 +31,7 @@ public class OrNode extends Node implements Iterable<Node> {
 
     //print with bars
     String normal() {
-        StringBuilder sb = new StringBuilder();
-        //sb.append("(");
-        sb.append(list.join(" | "));
-        //sb.append(")");
-        return sb.toString();
+        return list.join(" | ");
     }
 
     @Override

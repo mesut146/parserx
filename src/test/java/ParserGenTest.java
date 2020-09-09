@@ -1,5 +1,5 @@
 import gen.PrepareTree;
-import gen.Transformer;
+import gen.EbnfTransformer;
 import nodes.Tree;
 import org.junit.Test;
 
@@ -16,7 +16,7 @@ public class ParserGenTest {
     @Test
     public void recursiveTest() throws Exception {
         String input = "1+2*3.1415/(66-33)";
-        File grammar = LexerGenTest.getExpr();
+        File grammar = LexerGenTest.getCalc();
 
 
         //LexerGenTest.generateLexer(grammar);
@@ -24,8 +24,8 @@ public class ParserGenTest {
 
         Tree tree = Tree.makeTree(grammar);
         //PrepareTree.checkReferences(tree);
-        Transformer transformer = new Transformer(tree);
-        //tree = transformer.transform(tree);
+        EbnfTransformer transformer = new EbnfTransformer(tree);
+        tree = transformer.transform(tree);
         System.out.println(tree);
 
     }

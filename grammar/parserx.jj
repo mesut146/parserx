@@ -16,7 +16,6 @@ import java.io.*;
 
 public class GParser
 {
-
 }
 
 PARSER_END(GParser)
@@ -111,7 +110,7 @@ Tree tree(File file):
 }
 {
   (includeStatement(tree))*
-  (tokenBlock(tree) | skipBlock(tree))*
+  (LOOKAHEAD("token" "{")tokenBlock(tree) | LOOKAHEAD("skip" "{")skipBlock(tree))*
   [startDecl(tree)]
   (ruleDecl(tree))*
   {
@@ -153,7 +152,7 @@ void tokenDecl(Tree tree,boolean skip):
   Node rhs;
 }
 {
-  ("#"{frag=true;})? name=name() "=" rhs = rhs()
+  ("#"{frag=true;})? name = name() "=" rhs = rhs() ";"
   {
     decl=new TokenDecl(name);
     decl.fragment=frag;
@@ -170,6 +169,36 @@ void skipBlock(Tree tree):
  "skip" "{" tokenList(tree,true) "}"
 }
 
+void declSeparator():
+{}
+{
+  "=" | ":" | ":==" | ":="
+}
+
+void ruleDecl(Tree tree):
+{
+  RuleDecl decl=new RuleDecl();
+  String name;
+  Node rhs;
+}
+{
+  name=name() declSeparator() rhs = rhs() ";"
+  {
+    decl.name=name;
+    decl.rhs=rhs;
+    tree.addRule(decl);
+  }
+}
+
+void startDecl(Tree tree):
+{
+ NameNode rhs;
+}
+{
+  <START_SIRECTIVE> ("=" | ":") rhs = ref() ";"
+  {tree.start=rhs;}
+}
+
 Node rhs():
 {
   Node rule;
@@ -177,8 +206,8 @@ Node rhs():
   boolean more=false;
 }
 {
-  rule=rhs_list(){or.add(rule);}
-   ("|" rule=rhs_list()
+  rule = sequence(){or.add(rule);}
+   ("|" rule = sequence()
     {
       or.add(rule);
       more=true;
@@ -186,27 +215,36 @@ Node rhs():
    { return more?or:rule; }
 }
 
-Node rhs_list():
+Node sequence():
 {
   Sequence s = new Sequence();
   Node r;
 }
 {
-  (r=regex(){s.add(r);})+
+  (r = regex(){s.add(r);})+
   {return s.normal();}
 }
 
 Node regex():
 {
   Node rule;
-  RegexNode regex;
+  String type;
 }
 {
-  rule=simple(){regex=new RegexNode(rule);}
-   (("*"{regex.star=true;}
-  | "+"{regex.plus=true;}
-  | "?"{regex.optional=true;}){return regex;})?
-     {return rule;}
+  rule = simple()
+   [type = regexType()
+   {
+     return new RegexNode(rule, type);
+   }]
+  { return rule; }
+}
+
+String regexType():{}
+{
+ ("*" | "+" | "?")
+  {
+    return getToken(0).image;
+  }
 }
 
 Node simple():
@@ -214,19 +252,20 @@ Node simple():
   Node rule;
 }
 {
-  (rule=group()
-   | rule=ref()
-   | rule=stringNode()
-   | rule=bracketNode()
-   | rule=untilNode()
-   | rule=dotNode()){return rule;}
+  (rule = group()
+   | rule = ref()
+   | rule = stringNode()
+   | rule = bracketNode()
+   | rule = untilNode()
+   | rule = dotNode())
+   { return rule; }
 }
 
 Node dotNode():
 {}
 {
   <DOT>{
-    StringNode str=new StringNode();
+    StringNode str = new StringNode();
     str.isDot=true;
     return str;
   }
@@ -251,7 +290,10 @@ Node group():
   Node rule;
 }
 {
-  "(" rule = rhs(){ return new GroupNode(rule); } ")"
+  "(" rule = rhs() ")"
+  {
+    return new GroupNode(rule);
+  }
 }
 
 Node untilNode():
@@ -261,40 +303,6 @@ Node untilNode():
 {
   "~" node = regex() {return new UntilNode(node);}
 }
-
-//--------------------------------
-//parser rules
-
-void declSeparator():
-{}
-{
-  "=" | ":" | ":==" | ":="
-}
-
-void ruleDecl(Tree tree):
-{
-  RuleDecl decl=new RuleDecl();
-  String name;
-  Node rhs;
-}
-{
-  name=name() declSeparator() rhs=rhs()  ";"
-  {
-    decl.name=name;
-    decl.rhs=rhs;
-    tree.addRule(decl);
-  }
-}
-
-void startDecl(Tree tree):
-{
- NameNode rhs;
-}
-{
-  <START_SIRECTIVE> ("=" | ":") rhs = ref() ";"
-  {tree.start=rhs;}
-}
-
 
 
 Node stringNode():
@@ -313,7 +321,10 @@ NameNode lexerRef():
   String name;
 }
 {
- "{" name=name(){return new NameNode(name,true);} "}"
+ "{" name = name() "}"
+ {
+   return new NameNode(name,true);
+ }
 }
 
 NameNode ref():
@@ -322,7 +333,10 @@ NameNode ref():
   NameNode ref;
 }
 {
-  (name = name(){ref = new NameNode(name);} | ref = lexerRef() )
+  (name = name(){
+    ref = new NameNode(name);
+  }
+  | ref = lexerRef() )
   {
     return ref;
   }
@@ -333,5 +347,5 @@ String name():
   Token token;
 }
 {
-  token=<IDENT>{return token.image;}
+  token = <IDENT>{return token.image;}
 }
