@@ -42,6 +42,7 @@ public class LeftRecursive {
         }
     }
 
+    //map first rule of production
     Node getFirst(RuleDecl decl, Node rhs) {
         if (rhs.isName() && !rhs.asName().isToken) {
             return rhs;
