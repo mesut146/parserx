@@ -217,4 +217,5 @@ LeftHandSide:
 
 AssignmentOperator:
     "=" | "*=" | "/=" | "%=" | "+=" | "-=" "<<=" | ">>=" | ">>>=" | "&=" | "^=" | "|=";
+    
 exprList = expr ("," expr)*;

@@ -10,11 +10,17 @@ token
   #DIGIT = [0-9];
   NUMBER = {DIGIT}+ ("." {DIGIT}+)?;
 }
+//productions
 
 @start = expr ;
-expr = add | term;
-add = term ("+" | "-") expr;
-mul = term ("*" | "/") term;
+expr = add | term | pow;
+add = (term | pow) ("+" | "-") expr;
+mul = (unary | number | pow) ("*" | "/") (term2 | pow);
+term2 = mul | ;
+pow = atom "^" atom;
 term = mul | atom;
-atom = NUMBER | "(" expr ")" | "-" expr;
+unary =  atom | "-" expr | "+" expr;
+
+atom = NUMBER | par;
+par = "(" expr ")";
 
