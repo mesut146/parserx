@@ -173,31 +173,18 @@ decl.name=name;
     tree.addRule(decl);
 }
 
-  final public void startDecl(Tree tree) throws ParseException {NameNode rhs;
+  final public void startDecl(Tree tree) throws ParseException {
     jj_consume_token(START_SIRECTIVE);
-    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case EQ:{
-      jj_consume_token(EQ);
-      break;
-      }
-    case COLON:{
-      jj_consume_token(COLON);
-      break;
-      }
-    default:
-      jj_la1[7] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
-    rhs = ref();
+    declSeparator();
+    tree.start = ref();
     jj_consume_token(SEMI);
-tree.start=rhs;
 }
 
+//or list
   final public Node rhs() throws ParseException {Node rule;
-  OrNode or=new OrNode();
+  OrNode or = new OrNode();
   boolean more=false;
-    rule = sequence();
+    rule = orNode();
 or.add(rule);
     label_5:
     while (true) {
@@ -207,15 +194,35 @@ or.add(rule);
         break;
         }
       default:
-        jj_la1[8] = jj_gen;
+        jj_la1[7] = jj_gen;
         break label_5;
       }
       jj_consume_token(39);
-      rule = sequence();
+      rule = orNode();
 or.add(rule);
-      more=true;
+      more = true;
     }
-{if ("" != null) return more?or:rule;}
+{if ("" != null) return more ? or : rule;}
+    throw new Error("Missing return statement in function");
+}
+
+  final public Node orNode() throws ParseException {Node node = new EmptyNode();
+    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+    case LPAREN:
+    case LBRACE:
+    case DOT:
+    case TILDE:
+    case STRING_LITERAL:
+    case IDENT:
+    case BRACKET_LIST:{
+      node = sequence();
+      break;
+      }
+    default:
+      jj_la1[8] = jj_gen;
+      ;
+    }
+{if ("" != null) return node;}
     throw new Error("Missing return statement in function");
 }
 
@@ -445,10 +452,10 @@ ref = new NameNode(name);
 	   jj_la1_init_1();
 	}
 	private static void jj_la1_init_0() {
-	   jj_la1_0 = new int[] {0x0,0x40000000,0x0,0x0,0x20000000,0x20000000,0xe20000,0x220000,0x0,0x10045000,0x7000000,0x7000000,0x10045000,0x4000,};
+	   jj_la1_0 = new int[] {0x0,0x40000000,0x0,0x0,0x20000000,0x20000000,0xe20000,0x0,0x10045000,0x10045000,0x7000000,0x7000000,0x10045000,0x4000,};
 	}
 	private static void jj_la1_init_1() {
-	   jj_la1_1 = new int[] {0x4,0x1,0x8,0x10,0x10,0x0,0x0,0x0,0x80,0x52,0x0,0x0,0x52,0x10,};
+	   jj_la1_1 = new int[] {0x4,0x1,0x8,0x10,0x10,0x0,0x0,0x80,0x52,0x52,0x0,0x0,0x52,0x10,};
 	}
   final private JJCalls[] jj_2_rtns = new JJCalls[2];
   private boolean jj_rescan = false;

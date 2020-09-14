@@ -30,6 +30,13 @@ public class Tree {
         includes = new ArrayList<>();
     }
 
+    public Tree(Tree tree) {
+        this();
+        start = tree.start;
+        includes.addAll(tree.includes);
+        file = tree.file;
+    }
+
     public static Tree makeTree(File path) {
         try {
             GParser parser = new GParser(new FileReader(path));
@@ -298,5 +305,14 @@ public class Tree {
                 walkNodes(c, ranges, map);
             }
         }
+    }
+
+    public RuleDecl getRule(String name) {
+        for (RuleDecl decl : rules) {
+            if (decl.name.equals(name)) {
+                return decl;
+            }
+        }
+        return null;
     }
 }

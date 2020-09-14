@@ -191,28 +191,37 @@ void ruleDecl(Tree tree):
 }
 
 void startDecl(Tree tree):
+{}
 {
- NameNode rhs;
-}
-{
-  <START_SIRECTIVE> ("=" | ":") rhs = ref() ";"
-  {tree.start=rhs;}
+  <START_SIRECTIVE> declSeparator() tree.start = ref() ";"
 }
 
+//or list
 Node rhs():
 {
   Node rule;
-  OrNode or=new OrNode();
+  OrNode or = new OrNode();
   boolean more=false;
 }
 {
-  rule = sequence(){or.add(rule);}
-   ("|" rule = sequence()
+  rule = orNode() { or.add(rule); }
+   ("|" rule = orNode()
     {
       or.add(rule);
-      more=true;
+      more = true;
     })*
-   { return more?or:rule; }
+   { return more ? or : rule; }
+}
+
+Node orNode():
+{
+  Node node = new EmptyNode();
+}
+{
+  (node = sequence())?
+  {
+    return node;
+  }
 }
 
 Node sequence():

@@ -1,5 +1,6 @@
-import gen.PrepareTree;
+import gen.ClosureHelper;
 import gen.EbnfTransformer;
+import gen.PrepareTree;
 import nodes.Tree;
 import org.junit.Test;
 
@@ -28,5 +29,8 @@ public class ParserGenTest {
         tree = transformer.transform(tree);
         System.out.println(tree);
 
+        new ClosureHelper(tree).all();
     }
+
+
 }

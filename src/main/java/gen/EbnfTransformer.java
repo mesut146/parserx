@@ -42,7 +42,7 @@ public class EbnfTransformer {
     }
 
     public Tree transform(Tree tree) {
-        res = new Tree();//result tree
+        res = new Tree(tree);//result tree
 
         for (RuleDecl decl : tree.rules) {
             RuleDecl newDecl = new RuleDecl(decl.name);
