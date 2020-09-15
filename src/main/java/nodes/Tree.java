@@ -33,8 +33,9 @@ public class Tree {
     public Tree(Tree tree) {
         this();
         start = tree.start;
-        includes.addAll(tree.includes);
+        includes = tree.includes;
         file = tree.file;
+        tokens = tree.tokens;
     }
 
     public static Tree makeTree(File path) {
@@ -89,7 +90,10 @@ public class Tree {
         skip.add(token);
     }
 
+    int ruleIndex = 0;
+
     public void addRule(RuleDecl rule) {
+        rule.index = ruleIndex++;
         rules.add(rule);
     }
 
@@ -102,6 +106,7 @@ public class Tree {
         return false;
     }
 
+    //find token by string literal
     public TokenDecl getTokenByValue(String val) {
         for (TokenDecl decl : tokens) {
             if (decl.regex.isString() && decl.regex.asString().value.equals(val)) {
@@ -201,9 +206,9 @@ public class Tree {
         printSkips(sb);
 
         if (!rules.isEmpty()) {
-            sb.append("/* rules */\n\n");
+            sb.append("/* rules */\n");
             if (start != null) {
-                sb.append("@start = ").append(start).append(";\n");
+                sb.append("@start = ").append(start).append(";\n\n");
             }
             sb.append(NodeList.join(rules, "\n"));
         }

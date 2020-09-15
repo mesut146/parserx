@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class NodeList<T> extends Node implements Iterable<T> {
+public class NodeList<T> implements Iterable<T> {
 
     public List<T> list = new ArrayList<>();
 
@@ -27,9 +27,6 @@ public class NodeList<T> extends Node implements Iterable<T> {
         list.addAll(other);
     }
 
-    public void addAll(NodeList<T> other) {
-        list.addAll(other.list);
-    }
 
     public T get(int index) {
         return list.get(index);

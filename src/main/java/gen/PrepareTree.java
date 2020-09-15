@@ -1,9 +1,6 @@
 package gen;
 
-import nodes.NameNode;
-import nodes.Node;
-import nodes.TokenDecl;
-import nodes.Tree;
+import nodes.*;
 import rule.RuleDecl;
 
 public class PrepareTree {
@@ -11,16 +8,30 @@ public class PrepareTree {
     //check rule , token, string references
     public static Tree checkReferences(Tree tree) {
         for (RuleDecl decl : tree.rules) {
-            check(decl.rhs, tree);
+            decl.rhs = check(decl.rhs, tree);
         }
         return tree;
     }
 
-    static void check(Node node, Tree tree) {
+    static Node check(Node node, Tree tree) {
         if (node.isSequence()) {
-            for (Node sub : node.asSequence()) {
-                check(sub, tree);
+            Sequence sequence = node.asSequence();
+            for (int i = 0; i < sequence.list.size(); i++) {
+                sequence.list.set(i, check(sequence.list.get(i), tree));
             }
+        }
+        else if (node.isOr()) {
+            OrNode orNode = node.asOr();
+            for (int i = 0; i < orNode.list.size(); i++) {
+                orNode.list.set(i, check(orNode.list.get(i), tree));
+            }
+        }
+        else if (node.isGroup()) {
+            GroupNode orNode = node.asGroup();
+            orNode.rhs = check(orNode.rhs, tree);
+            /*for (Node sub : node.asGroup()) {
+                check(sub, tree);
+            }*/
         }
         else if (node.isName()) {
             NameNode nameNode = node.asName();
@@ -37,13 +48,8 @@ public class PrepareTree {
                 nameNode.isToken = true;
             }
         }
-        else if (node.isGroup()) {
-            for (Node sub : node.asGroup()) {
-                check(sub, tree);
-            }
-        }
         else if (node.isRegex()) {
-            check(node.asRegex().node, tree);
+            return check(node.asRegex().node, tree);
         }
         else if (node.isString()) {
             String val = node.asString().value;
@@ -51,15 +57,12 @@ public class PrepareTree {
             if (decl == null) {
                 throw new RuntimeException("unknown string token: " + val);
             }
-            //todo replace
-        }
-        else if (node.isOr()) {
-            for (Node sub : node.asOr()) {
-                check(sub, tree);
-            }
+            //replace
+            return decl.makeReference();
         }
         else {
             throw new RuntimeException("internal error on check: " + node);
         }
+        return node;
     }
 }

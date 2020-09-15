@@ -24,9 +24,10 @@ public class ParserGenTest {
         //LexerGenTest.tokenizerTest(new StringReader(input));
 
         Tree tree = Tree.makeTree(grammar);
-        //PrepareTree.checkReferences(tree);
+        PrepareTree.checkReferences(tree);
         EbnfTransformer transformer = new EbnfTransformer(tree);
         tree = transformer.transform(tree);
+        PrepareTree.checkReferences(tree);
         System.out.println(tree);
 
         new ClosureHelper(tree).all();

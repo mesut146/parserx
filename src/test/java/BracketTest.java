@@ -1,12 +1,12 @@
 import dfa.CharClass;
 import nodes.Bracket;
 import nodes.RangeNode;
-
-import java.util.Arrays;
+import org.junit.Test;
 
 public class BracketTest {
 
-    static void bracketTest() {
+    @Test
+    public void bracketTest() {
         Bracket b = new Bracket();
         b.add(new RangeNode(10, 15));
         b.add(new RangeNode(20, 30));
@@ -16,11 +16,14 @@ public class BracketTest {
         System.out.println("negated=" + b.negateAll());
     }
 
-    static void segmentTest() {
+    @Test
+    public void segmentTest() {
         int l = 'a';
         int r = 'z';
         int seg = CharClass.segment(l, r);
-        System.out.println(Arrays.toString(CharClass.desegment(seg)));
+        int[] arr = CharClass.desegment(seg);
+        assert l == arr[0];
+        assert r == arr[1];
     }
 
 }

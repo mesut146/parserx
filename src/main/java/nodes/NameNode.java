@@ -1,5 +1,7 @@
 package nodes;
 
+import java.util.Objects;
+
 //right side
 //can refer to rule or token
 public class NameNode extends Node {
@@ -24,5 +26,17 @@ public class NameNode extends Node {
         return name;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NameNode nameNode = (NameNode) o;
+        return isToken == nameNode.isToken &&
+                Objects.equals(name, nameNode.name);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, isToken);
+    }
 }

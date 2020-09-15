@@ -4,10 +4,10 @@ import nodes.Node;
 import nodes.Tree;
 import rule.RuleDecl;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class ClosureHelper {
     Tree tree;
@@ -17,21 +17,20 @@ public class ClosureHelper {
     }
 
     public void all() {
-        int i = 0;
         for (RuleDecl decl : tree.rules) {
-            decl.index = i;
-            System.out.println(closureDecl(decl, new HashMap<RuleDecl, List<Node>>()));
+            System.out.printf("closure(%s) = %s\n", decl, closureDecl(decl, new HashMap<RuleDecl, Set<Node>>()));
         }
     }
 
-    List<Node> closureDecl(RuleDecl decl, Map<RuleDecl, List<Node>> map) {
+    Set<Node> closureDecl(RuleDecl decl, Map<RuleDecl, Set<Node>> map) {
         if (!map.containsKey(decl)) {
-            return closure(decl.rhs, new ArrayList<Node>());
+            return closure(decl.rhs, new HashSet<Node>());
         }
         return closure(decl.rhs, map.get(decl));
     }
 
-    List<Node> closure(Node node, List<Node> list) {
+    Set<Node> closure(Node node, Set<Node> list) {
+        //System.out.println("node=" + node);
         if (node.isName()) {
             if (node.asName().isToken) {
                 list.add(node);

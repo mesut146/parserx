@@ -5,10 +5,6 @@ import java.io.File;
 
 public class NfaTest {
 
-    static File getFile() {
-        return new File(Env.testDir, "test.g");
-    }
-
     static NFA makeNFA(File grammar) throws Exception {
         Tree tree = Tree.makeTree(grammar);
         NFA nfa = tree.makeNFA();

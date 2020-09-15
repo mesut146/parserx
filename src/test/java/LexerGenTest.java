@@ -14,23 +14,11 @@ import java.io.Reader;
 public class LexerGenTest {
 
     public static File getGrammar() {
-        return new File(Env.testDir, "javaLexer.g");
+        return Env.getFile("javaLexer.g");
     }
 
     public static File getCalc() {
-        return new File(Env.testDir, "calc.g");
-    }
-
-    public static File getExpr() {
-        return new File(Env.testDir, "calc.g");
-    }
-
-    static File getTestFile() {
-        return new File(Env.javaDir, "Main.java");
-    }
-
-    static File getTestFile2() {
-        return new File(Env.testDir, "test.java");
+        return Env.getFile("calc.g");
     }
 
     public static void generateLexer(File grammar) throws Exception {
@@ -70,10 +58,14 @@ public class LexerGenTest {
     @Test
     public void escapeTest() {
         char[] chars = {'\n', '\r', '\t', ' ', '\0'};
-        for (char c : chars) {
-            System.out.println(UnicodeUtils.escapeUnicode(c));
+        String[] strArr = {"\\n", "\\r", "\\t", "\\u0020", "\\u0000"};
+
+        for (int i = 0; i < chars.length; i++) {
+            char ch = chars[i];
+            String escaped = UnicodeUtils.escapeUnicode(ch);
+            assert escaped.equals(strArr[i]);
+            System.out.println(escaped);
         }
-        System.out.println((int) '\u0010');
     }
 
 }

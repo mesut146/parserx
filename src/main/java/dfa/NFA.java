@@ -105,7 +105,7 @@ public class NFA {
     //return start,end state
     public Pair insert(Node node, int start) throws ParseException {
         Pair p = new Pair(start + 1, start + 1);
-        if (node.is(StringNode.class)) {
+        if (node.isString()) {
             StringNode sn = (StringNode) node;
             if (sn.isDot) {
                 p = insert(sn.toBracket(), start);
@@ -191,10 +191,10 @@ public class NFA {
                 p.end = end;
             }
         }
-        else if (node.is(OrNode.class)) {
+        else if (node.isOr()) {
             OrNode or = (OrNode) node;
             int end = newState();
-            for (Node n : or.list.list) {
+            for (Node n : or.list) {
                 int e = insert(n, start).end;
                 addEpsilon(e, end);//to have one end state
             }
@@ -205,7 +205,7 @@ public class NFA {
             Node rhs = group.rhs;
             p.end = insert(rhs, start).end;
         }
-        else if (node.is(NameNode.class)) {//?
+        else if (node.isName()) {//?
             //we have lexer ref just replace with target's regex
             NameNode name = (NameNode) node;
             p.end = insert(tree.getToken(name.name).regex, start).end;

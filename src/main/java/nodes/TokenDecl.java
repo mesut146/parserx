@@ -12,8 +12,13 @@ public class TokenDecl extends Node {
         this.tokenName = tokenName;
     }
 
+
     public void setName(String name) {
         this.tokenName = name;
+    }
+
+    public NameNode makeReference() {
+        return new NameNode(tokenName, true);
     }
 
     @Override

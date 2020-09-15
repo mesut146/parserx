@@ -1,6 +1,7 @@
 package gen;
 
 public class Config {
-    public static boolean expand_or = false;
+    //transform or's into separate productions
+    public static boolean expand_or = true;
     public static boolean string_quote = true;
 }

@@ -3,6 +3,7 @@ package nodes;
 //base class used in grammar file
 public class Node {
 
+
     public boolean isSequence() {
         return this instanceof Sequence;
     }
@@ -76,11 +77,5 @@ public class Node {
         return (NameNode) this;
     }
 
-    public <T> boolean is(Class<T> c) {
-        return getClass() == c;
-    }
 
-    public <T> T as(Class<T> c) {
-        return (T) this;
-    }
 }

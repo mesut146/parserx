@@ -1,13 +1,15 @@
 package nodes;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 // rule1 | rule2 | rule3...
 public class OrNode extends Node implements Iterable<Node> {
 
     //seq,single
-    public NodeList<Node> list = new NodeList<>();
+    public List<Node> list = new ArrayList<>();
 
     public OrNode() {
     }
@@ -21,17 +23,9 @@ public class OrNode extends Node implements Iterable<Node> {
     }
 
 
-    /*String array() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        sb.append(list.join(""));
-        sb.append("]");
-        return sb.toString();
-    }*/
-
     //print with bars
     String normal() {
-        return list.join(" | ");
+        return NodeList.join(list, " | ");
     }
 
     @Override
