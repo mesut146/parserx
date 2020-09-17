@@ -11,4 +11,10 @@ public class UntilNode extends Node {
     public String toString() {
         return "~" + node;
     }
+
+    public Node transform() {
+        //make normal regex
+
+        return null;
+    }
 }

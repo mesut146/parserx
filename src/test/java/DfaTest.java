@@ -7,6 +7,8 @@ import java.io.IOException;
 
 public class DfaTest {
 
+
+
     static DFA makeDFA(NFA nfa) throws FileNotFoundException {
         System.out.println("-----DFA-----");
         DFA dfa = nfa.dfa();

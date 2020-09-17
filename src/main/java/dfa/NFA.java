@@ -103,7 +103,7 @@ public class NFA {
 
     //add regex to @start
     //return start,end state
-    public Pair insert(Node node, int start) throws ParseException {
+    public Pair insert(Node node, int start) {
         Pair p = new Pair(start + 1, start + 1);
         if (node.isString()) {
             StringNode sn = (StringNode) node;
@@ -122,7 +122,6 @@ public class NFA {
                 }
                 p.end = ns;
             }
-
         }
         else if (node.isBracket()) {
             Bracket b = node.asBracket();

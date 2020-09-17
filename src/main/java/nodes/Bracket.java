@@ -9,9 +9,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-//for lexer or node, aka character list
-//[a-zA-Z_0-9]
-//consist of char,char range
+//character set
+//[a-zA-Z0-9_]
+//consist of char or char range
 public class Bracket extends Node {
 
     public NodeList<Node> list = new NodeList<>();
@@ -31,7 +31,7 @@ public class Bracket extends Node {
     }
 
     //node is RangeNode
-    public void add(Node node) {
+    public void add(RangeNode node) {
         list.add(node);
     }
 

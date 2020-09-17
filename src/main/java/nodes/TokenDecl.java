@@ -12,6 +12,10 @@ public class TokenDecl extends Node {
         this.tokenName = tokenName;
     }
 
+    public TokenDecl(String tokenName, Node regex) {
+        this.tokenName = tokenName;
+        this.regex = regex;
+    }
 
     public void setName(String name) {
         this.tokenName = name;

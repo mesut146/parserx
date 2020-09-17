@@ -64,8 +64,8 @@ TOKEN :
 | < RPAREN: ")" >
 | < LBRACE: "{" >
 | < RBRACE: "}" >
-//| < LBRACKET: "[" >
-//| < RBRACKET: "]" >
+| < LBRACKET: "[" >
+| < RBRACKET: "]" >
 | < SEMI: ";" >
 | < COLON: ":" >
 | < DOT: ".">
@@ -94,11 +94,19 @@ TOKEN:
 
 TOKEN:
 {
-  <IDENT: <CHAR> ( <CHAR> | ["0"-"9"] | "_" )* >
+  <IDENT: <CHAR> ( <CHAR> | ["0"-"9","_"])* >
 | <#CHAR: ["a"-"z","A"-"Z"]>
-//| <#ESCAPED: ("\\" ["r","n","t","s"])>
-//| <BRACKET_LIST: "[" ("^")? (<ESCAPED> | (<CHAR>))+ "]">
+| <#DIGIT: ["0"-"9"]>
+| <#HEX_DIGIT: ["a"-"f","A"-"f","0"-"9"]>
+| <#ESCAPED_SPECIAL: ("\\" ["a","b","e","f","n","r","t","v","\\","'","\"","?","s"])>
+| <#OCTAL_DIGIT: ["0"-"7"]>
+| <ESCAPED_HEX: "\\x" (<HEX_DIGIT>)+ >
+| <ESCAPED_OCTAL: "\\" (<OCTAL_DIGIT>)+ >
+| <#UNICODE: "\\u" <HEX_DIGIT> <HEX_DIGIT> <HEX_DIGIT> <HEX_DIGIT> >
+//| <RANGE: <UNIT> "-" <UNIT> >
+//| <UNIT: <UNICODE> | <ESCAPED_SPECIAL> | <ESCAPED_HEX> | <ESCAPED_OCTAL> >
 | <BRACKET_LIST: "["  (~["]"])* "]">
+| <INTEGER: (<DIGIT>)+>
 }
 
 
@@ -240,7 +248,7 @@ Node regex():
   String type;
 }
 {
-  rule = simple()
+  (rule = simple() | LOOKAHEAD(repetition()) rule = repetition())
    [type = regexType()
    {
      return new RegexNode(rule, type);
@@ -358,3 +366,37 @@ String name():
 {
   token = <IDENT>{return token.image;}
 }
+
+Node repetition():
+{
+  Node node;
+  Token num;
+}
+{
+  node = simple() "{" num = <INTEGER> "}"
+  {
+    return new Repetition(node, Integer.valueOf(num.toString()));
+  }
+}
+
+/*Bracket bracket():
+{
+  Bracket b = new Bracket();
+  Node node;
+}
+{
+  "[" ["^"] (node = bracketUnit(){b.add(node);})+ "]"
+  {
+    return b;
+  }
+}*/
+
+/*Node bracketUnit():
+{}
+{
+ <RANGE>{
+
+ } | <UNIT>{
+
+ }
+}*/

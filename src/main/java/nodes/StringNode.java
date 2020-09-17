@@ -22,12 +22,21 @@ public class StringNode extends Node {
         return new StringNode(UnicodeUtils.fromEscaped(UnicodeUtils.trimQuotes(str)));
     }
 
+    //convert dot to bracket node
     public Bracket toBracket() {
         if (!isDot) {
             return null;
         }
         Bracket b = new Bracket();
         b.add('\n');
+        b.negate = true;
+        return b;
+    }
+
+    Bracket dot2() {
+        Bracket b = new Bracket();
+        b.add('\n');
+        b.add('\r');
         b.negate = true;
         return b;
     }
