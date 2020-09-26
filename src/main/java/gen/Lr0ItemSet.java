@@ -24,7 +24,7 @@ public class Lr0ItemSet {
     }
 
     void closure(Node node) {
-        if (node.isName()) {
+        if (node.isName() && !node.asName().isToken) {
             RuleDecl ruleDecl = tree.getRule(node.asName().name);
             Lr0Item item = new Lr0Item(ruleDecl, 0);
             others.add(item);

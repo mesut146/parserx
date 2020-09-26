@@ -3,6 +3,9 @@ package gen;
 import nodes.Tree;
 import rule.RuleDecl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 //lr(1),lalr(1)
 public class LrGenerator extends IndentWriter {
     Tree tree;
@@ -19,6 +22,8 @@ public class LrGenerator extends IndentWriter {
         check();
         //System.out.println(tree);
 
+        List<LrTransition> transitions = new ArrayList<>();
+
         RuleDecl start = new RuleDecl("s'", tree.start);
         Lr0Item first = new Lr0Item(start, 0);
 
@@ -26,6 +31,7 @@ public class LrGenerator extends IndentWriter {
         itemSet.tree = tree;
         itemSet.closure();
         System.out.println(itemSet);
+
     }
 
     private void check() {

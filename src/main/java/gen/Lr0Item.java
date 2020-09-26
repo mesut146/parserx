@@ -32,6 +32,22 @@ public class Lr0Item {
             }
             return !sequence.list.get(dotPos).asName().isToken;
         }
+        else if (rhs.isOr()) {
+            OrNode orNode = rhs.asOr();
+            if (dotPos == orNode.list.size()) {
+                return false;
+            }
+            for (int i = 0; i < orNode.list.size(); i++) {
+                Node or = orNode.list.get(i);
+                if (i == dotPos) {
+                    return or.isName() && !or.asName().isToken;
+                }
+
+            }
+        }
+        else {
+            throw new RuntimeException("invalid node: " + rhs);
+        }
         return false;
     }
 
@@ -57,6 +73,9 @@ public class Lr0Item {
                     sb.append(". ");
                 }
                 sb.append(sequence.list.get(i));
+                if (i < sequence.list.size() - 1) {
+                    sb.append(" ");
+                }
             }
             if (sequence.list.size() == dotPos) {
                 sb.append(".");
@@ -78,22 +97,38 @@ public class Lr0Item {
         return sb.toString();
     }
 
-    public Node getDotNode() {
-        Node rhs = ruleDecl.rhs;
-        if (rhs.isName()) {
+    Node getDot(Node node) {
+        if (node.isName()) {
             if (dotPos == 0) {
-                return rhs;
+                return node;
             }
             return null;
         }
-        else if (rhs.isSequence()) {
-            Sequence sequence = rhs.asSequence();
+        else if (node.isSequence()) {
+            Sequence sequence = node.asSequence();
 
             if (dotPos == sequence.list.size()) {
                 return null;
             }
             return sequence.list.get(dotPos);
         }
+        else if (node.isOr()) {
+            OrNode orNode = node.asOr();
+            for (int i = 0; i < orNode.list.size(); i++) {
+                Node asd = orNode.list.get(i);
+                Node dot = getDot(asd);
+                if (dot != null) {
+                    return asd;
+                }
+            }
+        }
+        else {
+            throw new RuntimeException("invalid node: " + node);
+        }
         return null;
+    }
+
+    public Node getDotNode() {
+        return getDot(ruleDecl.rhs);
     }
 }
