@@ -43,4 +43,5 @@ public class RuleDecl extends Node {
     public int hashCode() {
         return Objects.hash(name, rhs, index);
     }
+
 }

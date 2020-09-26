@@ -1,5 +1,6 @@
 import dfa.DFA;
 import dfa.NFA;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -7,12 +8,9 @@ import java.io.IOException;
 
 public class DfaTest {
 
-
-
     static DFA makeDFA(NFA nfa) throws FileNotFoundException {
         System.out.println("-----DFA-----");
         DFA dfa = nfa.dfa();
-        dfa.optimize();
         System.out.println("total dfa states=" + dfa.numStates);
         //dfa.dump("");
         return dfa;
@@ -74,7 +72,8 @@ public class DfaTest {
     }
 
     //javapoint
-    static void nfaToDfaTest4() throws IOException {
+    @Test
+    public void nfaToDfaTest4() throws IOException {
         NFA nfa = new NFA(100);
         //nfa.initial = 0;
         nfa.addTransitionRange(0, 0, '0', '0');

@@ -15,9 +15,23 @@ public class LrGenerator extends IndentWriter {
         this.tree = tree;
     }
 
-
     public void generate() {
+        check();
+        //System.out.println(tree);
+
         RuleDecl start = new RuleDecl("s'", tree.start);
-        LrItem item = new LrItem(start, 0);
+        Lr0Item first = new Lr0Item(start, 0);
+
+        Lr0ItemSet itemSet = new Lr0ItemSet(first);
+        itemSet.tree = tree;
+        itemSet.closure();
+        System.out.println(itemSet);
+    }
+
+    private void check() {
+        PrepareTree.checkReferences(tree);
+        EbnfTransformer transformer = new EbnfTransformer(tree);
+        tree = transformer.transform(tree);
+        PrepareTree.checkReferences(tree);
     }
 }

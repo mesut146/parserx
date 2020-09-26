@@ -13,13 +13,6 @@ import java.io.Reader;
 
 public class LexerGenTest {
 
-    public static File getGrammar() {
-        return Env.getFile("javaLexer.g");
-    }
-
-    public static File getCalc() {
-        return Env.getFile("calc.g");
-    }
 
     public static void generateLexer(File grammar) throws Exception {
         NFA nfa = NfaTest.makeNFA(grammar);
@@ -47,7 +40,7 @@ public class LexerGenTest {
 
     @Test
     public void all() throws Exception {
-        NFA nfa = NfaTest.makeNFA(getGrammar());
+        NFA nfa = NfaTest.makeNFA(Env.getJavaLexer());
         DFA dfa = DfaTest.makeDFA(nfa);
         String outDir;
         outDir = Env.testJava + "/gen";

@@ -10,14 +10,14 @@ public class ParserGenTest {
 
     @Test
     public void test() {
-        Tree tree = Tree.makeTree(LexerGenTest.getGrammar());
+        Tree tree = Tree.makeTree(Env.getJavaLexer());
         PrepareTree.checkReferences(tree);
     }
 
     @Test
     public void recursiveTest() throws Exception {
         String input = "1+2*3.1415/(66-33)";
-        File grammar = LexerGenTest.getCalc();
+        File grammar = Env.getCalc();
 
 
         //LexerGenTest.generateLexer(grammar);

@@ -326,6 +326,7 @@ public class NFA {
                 dfa.names[target_state] = getName(targets);
             }
         }
+        dfa.optimize();
         return dfa;
     }
 
