@@ -313,11 +313,20 @@ public class Tree {
     }
 
     public RuleDecl getRule(String name) {
-        for (RuleDecl decl : rules) {
-            if (decl.name.equals(name)) {
-                return decl;
-            }
+        List<RuleDecl> list = getRules(name);
+        if (!list.isEmpty()) {
+            return list.get(0);
         }
         return null;
+    }
+
+    public List<RuleDecl> getRules(String name) {
+        List<RuleDecl> list = new ArrayList<>();
+        for (RuleDecl decl : rules) {
+            if (decl.name.equals(name)) {
+                list.add(decl);
+            }
+        }
+        return list;
     }
 }

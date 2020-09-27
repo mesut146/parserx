@@ -5,6 +5,8 @@ import nodes.OrNode;
 import nodes.Sequence;
 import rule.RuleDecl;
 
+import java.util.Objects;
+
 public class Lr0Item {
     RuleDecl ruleDecl;
     int dotPos = 0;
@@ -97,7 +99,11 @@ public class Lr0Item {
         return sb.toString();
     }
 
-    Node getDot(Node node) {
+    public Node getDotNode() {
+        return getDotNode(ruleDecl.rhs);
+    }
+
+    Node getDotNode(Node node) {
         if (node.isName()) {
             if (dotPos == 0) {
                 return node;
@@ -116,7 +122,7 @@ public class Lr0Item {
             OrNode orNode = node.asOr();
             for (int i = 0; i < orNode.list.size(); i++) {
                 Node asd = orNode.list.get(i);
-                Node dot = getDot(asd);
+                Node dot = getDotNode(asd);
                 if (dot != null) {
                     return asd;
                 }
@@ -128,7 +134,21 @@ public class Lr0Item {
         return null;
     }
 
-    public Node getDotNode() {
-        return getDot(ruleDecl.rhs);
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (other == null || getClass() != other.getClass()) return false;
+
+        Lr0Item item = (Lr0Item) other;
+
+        if (dotPos != item.dotPos) return false;
+        return Objects.equals(ruleDecl, item.ruleDecl);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = ruleDecl != null ? ruleDecl.hashCode() : 0;
+        result = 31 * result + dotPos;
+        return result;
     }
 }

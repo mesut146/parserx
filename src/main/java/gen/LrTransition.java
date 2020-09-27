@@ -11,5 +11,7 @@ public class LrTransition {
         this.from = from;
         this.to = to;
         this.symbol = symbol;
+
+        System.out.println("transition by " + symbol + " " + from.first + " to " + to.first);
     }
 }
