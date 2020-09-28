@@ -1,17 +1,15 @@
 package gen;
 
+import nodes.NameNode;
 import nodes.Node;
 import nodes.Tree;
 import rule.RuleDecl;
 import utils.Helper;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class Lr0ItemSet {
     Lr0Item first;
-    List<Lr0Item> others = new ArrayList<>();
     List<Lr0Item> all = new ArrayList<>();
     int curIndex = 0;
     Tree tree;
@@ -19,6 +17,7 @@ public class Lr0ItemSet {
     public Lr0ItemSet(Lr0Item first, Tree tree) {
         this.first = first;
         this.tree = tree;
+        all.add(first);
     }
 
     int getIndex(Lr0Item item) {
@@ -43,34 +42,37 @@ public class Lr0ItemSet {
     }
 
     public void closure() {
+        if (all.size() > 1) {
+            return;
+        }
         if (first.isDotTerminal()) {
             closure(first.getDotNode());
         }
-        all.add(first);
-        all.addAll(others);
     }
 
-    void closure(Node node) {
-        if (node.isName() && !node.asName().isToken) {
-            RuleDecl ruleDecl = tree.getRule(node.asName().name);
-            Lr0Item item = new Lr0Item(ruleDecl, 0);
-            others.add(item);
-            if (item.isDotTerminal()) {
-                closure(item.getDotNode());
+    void closure(NameNode node) {
+        if (!node.isToken) {
+            List<RuleDecl> ruleDecl = tree.getRules(node.name);
+            for (RuleDecl decl : ruleDecl) {
+                Lr0Item item = new Lr0Item(decl, 0);
+                if (!all.contains(item)) {
+                    all.add(item);
+                    if (item.isDotTerminal()) {
+                        closure(item.getDotNode());
+                    }
+                }
             }
+
         }
         else {
-            throw new RuntimeException("closure error on non name node");
+            throw new RuntimeException("closure error on node: " + node);
         }
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append(first);
-        sb.append("\n");
-        sb.append(Helper.join(others, "\n"));
-        return sb.toString();
+        //sort();
+        return Helper.join(all, "\n");
     }
 
     @Override
@@ -86,5 +88,14 @@ public class Lr0ItemSet {
     @Override
     public int hashCode() {
         return first != null ? first.hashCode() : 0;
+    }
+
+    public void sort() {
+        Collections.sort(all, new Comparator<Lr0Item>() {
+            @Override
+            public int compare(Lr0Item item, Lr0Item t1) {
+                return item.ruleDecl.name.compareTo(t1.ruleDecl.name);
+            }
+        });
     }
 }

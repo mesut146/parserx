@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-//lr(1),lalr(1)
+// lr(0)
 public class LrGenerator extends IndentWriter {
     Tree tree;
     String dir;
@@ -36,15 +36,19 @@ public class LrGenerator extends IndentWriter {
         Lr0ItemSet firstSet = new Lr0ItemSet(first, tree);
         itemSets.add(firstSet);
         firstSet.closure();
-        System.out.println(firstSet);
+        //System.out.println("\nset = " + firstSet);
 
-        //queue.add(firstSet);
+        queue.add(firstSet);
 
         while (!queue.isEmpty()) {
             Lr0ItemSet curSet = queue.peek();
             Lr0Item from = curSet.findTransitable();
             if (from != null) {
-                Lr0Item toFirst = new Lr0Item(from.ruleDecl, from.dotPos + 1);
+                NameNode symbol = from.getDotNode();
+                Lr0Item toFirst = new Lr0Item(from.ruleDecl, ++from.dotPos);
+                if (toFirst.getDotNode() == null) {//we cant transit any more->increment
+                    curSet.curIndex++;
+                }
                 Lr0ItemSet toSet;
                 toSet = getSet(toFirst);
                 if (toSet == null) {
@@ -54,7 +58,7 @@ public class LrGenerator extends IndentWriter {
                 }
                 System.out.println("from " + curSet.first);
                 System.out.println("to " + toSet.first);
-                transitions.add(new LrTransition(curSet, toSet, (NameNode) from.getDotNode()));
+                transitions.add(new LrTransition(curSet, toSet, symbol));
                 queue.add(toSet);
 
             }

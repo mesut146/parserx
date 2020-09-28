@@ -1,5 +1,6 @@
 package gen;
 
+import nodes.NameNode;
 import nodes.Node;
 import nodes.OrNode;
 import nodes.Sequence;
@@ -99,14 +100,14 @@ public class Lr0Item {
         return sb.toString();
     }
 
-    public Node getDotNode() {
+    public NameNode getDotNode() {
         return getDotNode(ruleDecl.rhs);
     }
 
-    Node getDotNode(Node node) {
+    NameNode getDotNode(Node node) {
         if (node.isName()) {
             if (dotPos == 0) {
-                return node;
+                return node.asName();
             }
             return null;
         }
@@ -116,7 +117,7 @@ public class Lr0Item {
             if (dotPos == sequence.list.size()) {
                 return null;
             }
-            return sequence.list.get(dotPos);
+            return sequence.list.get(dotPos).asName();
         }
         else if (node.isOr()) {
             OrNode orNode = node.asOr();
@@ -124,7 +125,7 @@ public class Lr0Item {
                 Node asd = orNode.list.get(i);
                 Node dot = getDotNode(asd);
                 if (dot != null) {
-                    return asd;
+                    return asd.asName();
                 }
             }
         }

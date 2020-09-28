@@ -10,6 +10,7 @@ token
   #DIGIT = [0-9];
   NUMBER = {DIGIT}+ ("." {DIGIT}+)?;
 }
+
 //productions
 
 @start = expr ;

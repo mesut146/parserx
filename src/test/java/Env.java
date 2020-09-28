@@ -14,14 +14,18 @@ public class Env {
 
 
     public static File getJavaLexer() {
-        return Env.getFile("javaLexer.g");
+        return Env.getResFile("javaLexer.g");
     }
 
     public static File getCalc() {
-        return Env.getFile("calc.g");
+        return Env.getResFile("calc.g");
     }
 
-    public static File getFile(String name) {
+    public static File getFile2(String name) {
+        return new File(testRes, name);
+    }
+
+    public static File getResFile(String name) {
         return new File(Env.class.getClassLoader().getResource(name).getPath());
     }
 }
