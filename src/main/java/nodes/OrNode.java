@@ -18,6 +18,10 @@ public class OrNode extends Node implements Iterable<Node> {
         list.addAll(Arrays.asList(args));
     }
 
+    public OrNode(List<Node> args) {
+        list.addAll(args);
+    }
+
     public void add(Node rule) {
         list.add(rule);
     }

@@ -67,8 +67,6 @@ public class LrGenerator extends IndentWriter {
             }
 
         }
-
-
     }
 
     //get itemSet that contains item
