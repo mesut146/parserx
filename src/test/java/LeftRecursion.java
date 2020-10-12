@@ -7,7 +7,7 @@ import java.io.File;
 public class LeftRecursion {
 
     @Test
-    public void remove() {
+    public void remove() throws Exception {
         File file = Env.getResFile("leftRec.g");
         Tree tree = Tree.makeTree(file);
         LeftRecursive leftRecursive = new LeftRecursive(tree);

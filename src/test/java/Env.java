@@ -1,4 +1,5 @@
 import java.io.File;
+import java.net.URL;
 
 public class Env {
     static String dir;
@@ -13,11 +14,11 @@ public class Env {
     }
 
 
-    public static File getJavaLexer() {
+    public static File getJavaLexer() throws Exception {
         return Env.getResFile("javaLexer.g");
     }
 
-    public static File getCalc() {
+    public static File getCalc() throws Exception {
         return Env.getResFile("calc.g");
     }
 
@@ -25,7 +26,11 @@ public class Env {
         return new File(testRes, name);
     }
 
-    public static File getResFile(String name) {
-        return new File(Env.class.getClassLoader().getResource(name).getPath());
+    public static File getResFile(String name) throws Exception {
+        URL url = Env.class.getClassLoader().getResource(name);
+        if (url == null) {
+            throw new Exception(name + " not found");
+        }
+        return new File(url.getPath());
     }
 }

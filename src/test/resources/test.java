@@ -13,6 +13,14 @@ public class test<Integer> extends other implements iface, iface2<Integer> {
     my block comment
      */
 
+    test() {
+
+    }
+
+    <T> test(T t) {
+
+    }
+
     public static final void normal(Param p1, X p2, String... p3) {
         //comment
         new X().run();
@@ -20,14 +28,6 @@ public class test<Integer> extends other implements iface, iface2<Integer> {
     }
 
     <T> void generic(int x, T y) {
-
-    }
-
-    test() {
-
-    }
-
-    <T> test(T t) {
 
     }
 

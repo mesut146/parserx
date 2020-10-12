@@ -1,9 +1,6 @@
 package gen;
 
-import nodes.NameNode;
-import nodes.Node;
-import nodes.OrNode;
-import nodes.Sequence;
+import nodes.*;
 import rule.RuleDecl;
 
 import java.util.Objects;
@@ -47,6 +44,9 @@ public class Lr0Item {
                 }
 
             }
+        }
+        else if (rhs instanceof EmptyNode) {
+            return false;
         }
         else {
             throw new RuntimeException("invalid node: " + rhs);
@@ -128,6 +128,9 @@ public class Lr0Item {
                     return asd.asName();
                 }
             }
+        }
+        else if (node.isEmpty()) {
+            return null;
         }
         else {
             throw new RuntimeException("invalid node: " + node);

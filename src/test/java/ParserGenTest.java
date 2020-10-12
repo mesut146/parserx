@@ -9,7 +9,7 @@ import java.io.File;
 public class ParserGenTest {
 
     @Test
-    public void test() {
+    public void test() throws Exception {
         Tree tree = Tree.makeTree(Env.getJavaLexer());
         PrepareTree.checkReferences(tree);
     }

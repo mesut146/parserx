@@ -60,6 +60,9 @@ public class PrepareTree {
             //replace
             return decl.makeReference();
         }
+        else if (node instanceof EmptyNode) {
+
+        }
         else {
             throw new RuntimeException("internal error on check: " + node);
         }

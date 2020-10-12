@@ -1,9 +1,8 @@
-
 public class a {
 
-    char chr = 'a';
-    public int myInt = 5;
     private static inner in = null;
+    public int myInt = 5;
+    char chr = 'a';
     String str[][] = {{"test"}, {"asd"}};
     long mylong[];
 
@@ -28,12 +27,12 @@ public class a {
     static class inner {
         Object field = null;
 
-        void inner_norm() {
-            System.out.println("inner_norm");
-        }
-
         static void inner_static() {
             System.out.println("inner_static");
+        }
+
+        void inner_norm() {
+            System.out.println("inner_norm");
         }
     }
 
@@ -45,12 +44,12 @@ public class a {
 
 class outer {
 
-    void outer_norm() {
-        System.out.println("outer_norm");
-    }
-
     static void outer_static() {
         System.out.println("outer_static");
+    }
+
+    void outer_norm() {
+        System.out.println("outer_norm");
     }
 }
 

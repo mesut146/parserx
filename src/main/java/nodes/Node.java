@@ -77,5 +77,8 @@ public class Node {
         return (NameNode) this;
     }
 
+    public boolean isEmpty() {
+        return this instanceof EmptyNode;
+    }
 
 }

@@ -22,6 +22,7 @@ public class Tree {
     List<TokenDecl> skip;
     List<TokenDecl> tokens;
     List<File> includes;
+    int ruleIndex = 0;
 
     public Tree() {
         tokens = new ArrayList<>();
@@ -59,6 +60,14 @@ public class Tree {
         return -1;
     }
 
+    private static void printToken(StringBuilder sb, List<TokenDecl> list) {
+        for (TokenDecl td : list) {
+            sb.append("  ");
+            sb.append(td);
+            sb.append(";\n");
+        }
+    }
+
     //merge two grammar files(lexer,parser)
     void mergeWith(Tree other) {
         tokens.addAll(other.tokens);
@@ -89,8 +98,6 @@ public class Tree {
         token.isSkip = true;
         skip.add(token);
     }
-
-    int ruleIndex = 0;
 
     public void addRule(RuleDecl rule) {
         rule.index = ruleIndex++;
@@ -187,14 +194,6 @@ public class Tree {
             printToken(sb, skip);
             sb.append("}");
             sb.append("\n\n");
-        }
-    }
-
-    private static void printToken(StringBuilder sb, List<TokenDecl> list) {
-        for (TokenDecl td : list) {
-            sb.append("  ");
-            sb.append(td);
-            sb.append(";\n");
         }
     }
 
