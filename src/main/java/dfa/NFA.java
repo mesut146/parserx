@@ -160,7 +160,7 @@ public class NFA {
         else if (node.isSequence()) {
             Sequence seq = node.asSequence();
             int st = start;
-            for (Node child : seq.list) {
+            for (Node child : seq) {
                 st = insert(child, st).end;
             }
             p.end = st;
@@ -193,7 +193,7 @@ public class NFA {
         else if (node.isOr()) {
             OrNode or = (OrNode) node;
             int end = newState();
-            for (Node n : or.list) {
+            for (Node n : or) {
                 int e = insert(n, start).end;
                 addEpsilon(e, end);//to have one end state
             }

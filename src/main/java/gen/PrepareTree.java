@@ -16,36 +16,33 @@ public class PrepareTree {
     static Node check(Node node, Tree tree) {
         if (node.isSequence()) {
             Sequence sequence = node.asSequence();
-            for (int i = 0; i < sequence.list.size(); i++) {
-                sequence.list.set(i, check(sequence.list.get(i), tree));
+            for (int i = 0; i < sequence.size(); i++) {
+                sequence.set(i, check(sequence.get(i), tree));
             }
         }
         else if (node.isOr()) {
             OrNode orNode = node.asOr();
-            for (int i = 0; i < orNode.list.size(); i++) {
-                orNode.list.set(i, check(orNode.list.get(i), tree));
+            for (int i = 0; i < orNode.size(); i++) {
+                orNode.set(i, check(orNode.get(i), tree));
             }
         }
         else if (node.isGroup()) {
             GroupNode orNode = node.asGroup();
             orNode.rhs = check(orNode.rhs, tree);
-            /*for (Node sub : node.asGroup()) {
-                check(sub, tree);
-            }*/
         }
         else if (node.isName()) {
             NameNode nameNode = node.asName();
-            if (tree.getToken(nameNode.name) == null) {
-                //parser ref
-                if (tree.hasRule(nameNode.name)) {
-                    nameNode.isToken = false;
-                }
-                else {
-                    throw new RuntimeException("invalid reference: " + nameNode.name);
-                }
+            //first look into rules
+            if (tree.hasRule(nameNode.name)) {
+                nameNode.isToken = false;
             }
             else {
-                nameNode.isToken = true;
+                if (tree.getToken(nameNode.name) == null) {
+                    throw new RuntimeException("invalid reference: " + nameNode.name);
+                }
+                else {
+                    nameNode.isToken = true;
+                }
             }
         }
         else if (node.isRegex()) {
@@ -64,7 +61,7 @@ public class PrepareTree {
 
         }
         else {
-            throw new RuntimeException("internal error on check: " + node);
+            throw new RuntimeException("unexpected node: " + node);
         }
         return node;
     }

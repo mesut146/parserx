@@ -4,6 +4,6 @@ public class EmptyNode extends Node {
 
     @Override
     public String toString() {
-        return "";
+        return "\uD835\uDF74";
     }
 }

@@ -9,15 +9,22 @@ import utils.Helper;
 import java.util.*;
 
 public class Lr0ItemSet {
-    Lr0Item first;
+    List<Lr0Item> first;
     List<Lr0Item> all = new ArrayList<>();
-    int curIndex = 0;
+    int curIndex = 0;//rule index
+    Set<Lr0Item> done = new LinkedHashSet<>();
     Tree tree;
 
-    public Lr0ItemSet(Lr0Item first, Tree tree) {
+    public Lr0ItemSet(List<Lr0Item> first, Tree tree) {
         this.first = first;
         this.tree = tree;
-        all.add(first);
+        all.addAll(this.first);
+    }
+
+    public Lr0ItemSet(Lr0Item first, Tree tree) {
+        this.first = new ArrayList<>(Collections.singletonList(first));
+        this.tree = tree;
+        all.addAll(this.first);
     }
 
     int getIndex(Lr0Item item) {
@@ -33,9 +40,11 @@ public class Lr0ItemSet {
     public Lr0Item findTransitable() {
         for (int i = curIndex; i < all.size(); i++) {
             Lr0Item item = all.get(i);
-            Node token = item.getDotNode();
-            if (token != null) {
-                return item;
+            if (!done.contains(item)) {
+                Node token = item.getDotNode();
+                if (token != null) {
+                    return item;
+                }
             }
         }
         return null;
@@ -45,9 +54,12 @@ public class Lr0ItemSet {
         if (all.size() > 1) {
             return;
         }
-        if (first.isDotTerminal()) {
-            closure(first.getDotNode());
+        for (Lr0Item item : first) {
+            if (item.isDotTerminal()) {
+                closure(item.getDotNode());
+            }
         }
+
     }
 
     void closure(NameNode node) {
@@ -87,7 +99,7 @@ public class Lr0ItemSet {
 
     @Override
     public int hashCode() {
-        return first != null ? first.hashCode() : 0;
+        return first.hashCode();
     }
 
     public void sort() {

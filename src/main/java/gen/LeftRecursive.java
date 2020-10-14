@@ -48,7 +48,7 @@ public class LeftRecursive {
             return rhs;
         }
         else if (rhs.isSequence()) {
-            return getFirst(decl, rhs.asSequence().list.get(0));
+            return getFirst(decl, rhs.asSequence().get(0));
         }
         else if (rhs.isOr()) {
             for (Node or : rhs.asOr()) {

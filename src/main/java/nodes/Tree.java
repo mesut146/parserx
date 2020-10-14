@@ -137,17 +137,6 @@ public class Tree {
             return tokens.get(idx);
         }
         return skip.get(idx);
-        /*for (TokenDecl decl : tokens) {
-            if (decl.tokenName.equals(name)) {
-                return decl;
-            }
-        }
-        for (TokenDecl decl : skip) {
-            if (decl.tokenName.equals(name)) {
-                return decl;
-            }
-        }
-        throw new IllegalArgumentException("unknown token reference = " + name);*/
     }
 
     //get index of token by name

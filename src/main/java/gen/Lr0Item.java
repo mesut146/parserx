@@ -1,57 +1,29 @@
 package gen;
 
-import nodes.*;
+import nodes.NameNode;
+import nodes.Node;
+import nodes.Sequence;
 import rule.RuleDecl;
 
 import java.util.Objects;
 
 public class Lr0Item {
     RuleDecl ruleDecl;
-    int dotPos = 0;
-
+    int dotPos;//orig
+    int dotPos2;//current
 
     public Lr0Item(RuleDecl ruleDecl, int dotPos) {
         this.ruleDecl = ruleDecl;
         this.dotPos = dotPos;
-    }
-
-    public void step() {
-        dotPos++;
+        this.dotPos2 = dotPos;
     }
 
     public boolean isDotTerminal() {
-        Node rhs = ruleDecl.rhs;
-        if (rhs.isName()) {
-            return dotPos == 0 && !rhs.asName().isToken;
-        }
-        else if (rhs.isSequence()) {
-            Sequence sequence = rhs.asSequence();
-
-            if (dotPos == sequence.list.size()) {
-                return false;
-            }
-            return !sequence.list.get(dotPos).asName().isToken;
-        }
-        else if (rhs.isOr()) {
-            OrNode orNode = rhs.asOr();
-            if (dotPos == orNode.list.size()) {
-                return false;
-            }
-            for (int i = 0; i < orNode.list.size(); i++) {
-                Node or = orNode.list.get(i);
-                if (i == dotPos) {
-                    return or.isName() && !or.asName().isToken;
-                }
-
-            }
-        }
-        else if (rhs instanceof EmptyNode) {
+        NameNode nameNode = getDotNode();
+        if (nameNode == null) {
             return false;
         }
-        else {
-            throw new RuntimeException("invalid node: " + rhs);
-        }
-        return false;
+        return !nameNode.isToken;
     }
 
     @Override
@@ -71,27 +43,26 @@ public class Lr0Item {
         }
         else if (rhs.isSequence()) {
             Sequence sequence = rhs.asSequence();
-            for (int i = 0; i < sequence.list.size(); i++) {
+            for (int i = 0; i < sequence.size(); i++) {
                 if (i == dotPos) {
                     sb.append(". ");
                 }
-                sb.append(sequence.list.get(i));
-                if (i < sequence.list.size() - 1) {
+                sb.append(sequence.get(i));
+                if (i < sequence.size() - 1) {
                     sb.append(" ");
                 }
             }
-            if (sequence.list.size() == dotPos) {
+            if (sequence.size() == dotPos) {
                 sb.append(".");
             }
         }
-        else if (rhs.isOr()) {
-            OrNode orNode = rhs.asOr();
-            for (int i = 0; i < orNode.list.size(); i++) {
+        else if (rhs.isEmpty()) {
+            if (dotPos == 0) {
                 sb.append(". ");
-                sb.append(orNode.list.get(i));
-                if (i < orNode.list.size() - 1) {
-                    sb.append(" | ");
-                }
+            }
+            sb.append(rhs);
+            if (dotPos == 1) {
+                sb.append(".");
             }
         }
         else {
@@ -106,7 +77,7 @@ public class Lr0Item {
 
     NameNode getDotNode(Node node) {
         if (node.isName()) {
-            if (dotPos == 0) {
+            if (dotPos2 == 0) {
                 return node.asName();
             }
             return null;
@@ -114,20 +85,10 @@ public class Lr0Item {
         else if (node.isSequence()) {
             Sequence sequence = node.asSequence();
 
-            if (dotPos == sequence.list.size()) {
+            if (dotPos2 == sequence.size()) {
                 return null;
             }
-            return sequence.list.get(dotPos).asName();
-        }
-        else if (node.isOr()) {
-            OrNode orNode = node.asOr();
-            for (int i = 0; i < orNode.list.size(); i++) {
-                Node asd = orNode.list.get(i);
-                Node dot = getDotNode(asd);
-                if (dot != null) {
-                    return asd.asName();
-                }
-            }
+            return sequence.get(dotPos2).asName();
         }
         else if (node.isEmpty()) {
             return null;
@@ -135,7 +96,6 @@ public class Lr0Item {
         else {
             throw new RuntimeException("invalid node: " + node);
         }
-        return null;
     }
 
     @Override

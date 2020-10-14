@@ -1,12 +1,21 @@
 package nodes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-public class NodeList<T> implements Iterable<T> {
+public class NodeList extends Node implements Iterable<Node> {
 
-    public List<T> list = new ArrayList<>();
+    public List<Node> list;
+
+    public NodeList(List<Node> list) {
+        this.list = list;
+    }
+
+    public NodeList(Node... list) {
+        this.list = new ArrayList<>(Arrays.asList(list));
+    }
 
     public static <T> String join(List<T> list, String del) {
         StringBuilder sb = new StringBuilder();
@@ -19,16 +28,19 @@ public class NodeList<T> implements Iterable<T> {
         return sb.toString();
     }
 
-    public <E extends T> void add(E node) {
+    public void add(Node node) {
         list.add(node);
     }
 
-    public <E extends T> void addAll(List<E> other) {
+    /*public void addAll(List<Node> other) {
+        list.addAll(other);
+    }*/
+
+    public <T extends Node> void addAll(List<T> other) {
         list.addAll(other);
     }
 
-
-    public T get(int index) {
+    public Node get(int index) {
         return list.get(index);
     }
 
@@ -40,8 +52,19 @@ public class NodeList<T> implements Iterable<T> {
         return list.size();
     }
 
+    public void clear() {
+        list.clear();
+    }
+
+    public Node normal() {
+        if (list.size() == 1) {
+            return list.get(0);
+        }
+        return this;
+    }
+
     @Override
-    public Iterator<T> iterator() {
+    public Iterator<Node> iterator() {
         return list.iterator();
     }
 
@@ -51,4 +74,7 @@ public class NodeList<T> implements Iterable<T> {
     }
 
 
+    public void set(int i, Node node) {
+        list.set(i, node);
+    }
 }

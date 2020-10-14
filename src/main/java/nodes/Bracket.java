@@ -14,7 +14,7 @@ import java.util.List;
 //consist of char or char range
 public class Bracket extends Node {
 
-    public NodeList<Node> list = new NodeList<>();
+    public NodeList list = new NodeList();
     public List<RangeNode> rangeNodes;
     public boolean negate;//[^abc]
     public boolean debug = false;

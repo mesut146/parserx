@@ -40,7 +40,7 @@ public class ClosureHelper {
             }
         }
         else if (node.isSequence()) {
-            closure(node.asSequence().list.get(0), list);
+            closure(node.asSequence().get(0), list);
         }
         else if (node.isOr()) {
             for (Node first : node.asOr()) {
