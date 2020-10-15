@@ -27,15 +27,6 @@ public class Lr0ItemSet {
         all.addAll(this.first);
     }
 
-    int getIndex(Lr0Item item) {
-        for (int i = 0; i < all.size(); i++) {
-            if (all.get(i).equals(item)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
     //get first item that can transit
     public Lr0Item findTransitable() {
         for (int i = curIndex; i < all.size(); i++) {
@@ -102,12 +93,4 @@ public class Lr0ItemSet {
         return first.hashCode();
     }
 
-    public void sort() {
-        Collections.sort(all, new Comparator<Lr0Item>() {
-            @Override
-            public int compare(Lr0Item item, Lr0Item t1) {
-                return item.ruleDecl.name.compareTo(t1.ruleDecl.name);
-            }
-        });
-    }
 }

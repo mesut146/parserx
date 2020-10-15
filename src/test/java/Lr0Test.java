@@ -1,5 +1,5 @@
 import gen.Lr0Item;
-import gen.LrGenerator;
+import gen.Lr0Generator;
 import nodes.NameNode;
 import nodes.OrNode;
 import nodes.Sequence;
@@ -28,8 +28,9 @@ public class Lr0Test {
         file = Env.getCalc();
         //file = Env.getResFile("lr0/calc_lr.g");
         //file = Env.getResFile("lr0/left.g");
+        file = Env.getResFile("lr1/calc.g");
         Tree tree = Tree.makeTree(file);
-        LrGenerator generator = new LrGenerator(null, null, tree);
+        Lr0Generator generator = new Lr0Generator(null, null, tree);
         generator.dotWriter = new PrintWriter(Env.getFile2("lr0/lr0.dot"));
         generator.generate();
     }

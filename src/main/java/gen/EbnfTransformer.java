@@ -13,6 +13,7 @@ public class EbnfTransformer {
     Tree res;//out bnf
     Map<String, Integer> countMap = new HashMap<>();
     public static boolean leftRecursive = true;
+    public static boolean expand_or = true;
 
     public EbnfTransformer(Tree tree) {
         this.tree = tree;
@@ -93,7 +94,7 @@ public class EbnfTransformer {
     }
 
     Node transform(OrNode orNode, RuleDecl decl) {
-        if (Config.expand_or) {
+        if (expand_or) {
             for (Node node : orNode) {
                 RuleDecl newDecl = new RuleDecl();
                 newDecl.name = decl.name;
