@@ -78,36 +78,6 @@ public class Lr1ItemSet {
         }
     }
 
-    //get tokens after the symbol can appear anywhere in grammar
-    public void follow(NameNode nameNode) {
-        for (RuleDecl decl : tree.rules) {
 
-        }
-    }
 
-    //first terminals of rule
-    public List<Node> first(NameNode nameNode) {
-        List<Node> list = new ArrayList<>();
-        for (RuleDecl decl : tree.getRules(nameNode.name)) {
-            Node node = decl.rhs;
-            if (node.isSequence()) {
-                first(node.asSequence().get(0), list);
-            }
-            else if (node.isName()) {
-                first(node.asName(), list);
-            }
-        }
-        return list;
-    }
-
-    void first(Node node, List<Node> list) {
-        if (node.isName()) {
-            if (node.asName().isToken) {
-                list.add(node);
-            }
-            else {
-                list.addAll(first(node.asName()));
-            }
-        }
-    }
 }
