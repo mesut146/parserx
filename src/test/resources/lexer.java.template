@@ -1,0 +1,112 @@
+package $package$;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
+
+public class $lexer_class$ {
+    static int[][] inputMap = unpack($input_map$);
+    static int INITIAL = 0;
+    static int EOF = -1;
+    int[] skip = {$skip_list$};
+    int[] accepting = {$final_list$};
+    String[] names = {$name_list$};
+    int[] ids = {$id_list$};
+    Reader reader;
+    int curState;
+    int lastState = -1;
+    int yypos = 0;
+    int yychar;
+    boolean backup = false;
+    StringBuilder yybuf = new StringBuilder();
+
+    public GeneratedLexer(Reader reader) {
+        this.reader = reader;
+    }
+
+    public GeneratedLexer(String file) throws FileNotFoundException {
+        this.reader = new FileReader(file);
+    }
+
+    static boolean getBit(int[] arr, int state) {
+        return ((arr[state / 32] >> (state % 32)) & 1) != 0;
+    }
+
+    static int[][] unpack(String str) {
+        int pos = 0;
+        List<int[]> list = new ArrayList<>();
+        while (pos < str.length()) {
+            char groupLen = str.charAt(pos++);
+            int[] arr = new int[groupLen * 3];//left,right,target
+            int arrPos = 0;
+            for (int i = 0; i < groupLen; i++) {
+                arr[arrPos++] = str.charAt(pos++);
+                arr[arrPos++] = str.charAt(pos++);
+                arr[arrPos++] = str.charAt(pos++);
+            }
+            list.add(arr);
+        }
+        return list.toArray(new int[0][]);
+    }
+
+    int read() throws IOException {
+        if (!backup) {
+            yychar = reader.read();
+            yypos++;
+        }
+        return yychar;
+    }
+
+    int getState() {
+        int[] arr = inputMap[curState];
+        for (int i = 0; i < arr.length; i += 3) {
+            if (yychar >= arr[i] && yychar <= arr[i + 1]) {
+                return arr[i + 2];
+            }
+        }
+        return -1;
+    }
+
+    public Token next() throws IOException {
+        curState = INITIAL;
+        lastState = -1;
+        int startPos = yypos;
+        read();
+        if (yychar == EOF) return null;
+        backup = true;
+        while (true) {
+            read();
+            int st = getState();
+            if (st == -1) {
+                if (lastState != -1) {
+                    Token token = null;
+                    if (!getBit(skip, lastState)) {
+                        token = new Token(ids[lastState], yybuf.toString());
+                        token.offset = startPos;
+                        token.name = names[lastState];
+                        lastState = -1;
+                    }
+                    curState = 0;
+                    backup = true;
+                    yybuf.setLength(0);
+                    if (token != null) return token;
+                    if (yychar == -1) break;
+                    if (getBit(skip, lastState)) return next();
+                }
+                else {
+                    throw new IOException("invalid input=" + yychar + " yybuf= " + yybuf);
+                }
+            }
+            else {
+                yybuf.append((char) yychar);
+                backup = false;
+                curState = st;
+                if (getBit(accepting, curState)) lastState = curState;
+            }
+        }
+        return null;
+    }
+}

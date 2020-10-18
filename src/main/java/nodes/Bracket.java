@@ -10,11 +10,10 @@ import java.util.Comparator;
 import java.util.List;
 
 //character set
-//[a-zA-Z0-9_]
+//e.g [a-zA-Z0-9_]
 //consist of char or char range
-public class Bracket extends Node {
+public class Bracket extends NodeList {
 
-    public NodeList list = new NodeList();
     public List<RangeNode> rangeNodes;
     public boolean negate;//[^abc]
     public boolean debug = false;
@@ -30,13 +29,8 @@ public class Bracket extends Node {
         return new RangeNode(l, r);
     }
 
-    //node is RangeNode
-    public void add(RangeNode node) {
-        list.add(node);
-    }
-
     public void add(char chr) {
-        list.add(new CharNode(chr));
+        add(new CharNode(chr));
     }
 
     public void parse(String str) throws ParseException {
@@ -66,10 +60,10 @@ public class Bracket extends Node {
                 if (end == '\\') {
                     end = readUnicode(str);
                 }
-                list.add(new RangeNode(c, end));
+                add(new RangeNode(c, end));
             }
             else {
-                list.add(new CharNode(c));
+                add(new CharNode(c));
             }
         }
     }
@@ -120,11 +114,11 @@ public class Bracket extends Node {
     }
 
     public List<RangeNode> negateAll() {
-        if (debug) System.out.println("negating " + list);
+        if (debug) System.out.println("negating " + this);
         List<RangeNode> res = new ArrayList<>();
         List<RangeNode> ranges = new ArrayList<>();
         //negate all ranges
-        for (Node node : list) {
+        for (Node node : this) {
             RangeNode range;
             if (node instanceof CharNode) {
                 range = new RangeNode(node.asChar().chr, node.asChar().chr);
@@ -196,7 +190,7 @@ public class Bracket extends Node {
         if (negate) {
             sb.append("^");
         }
-        sb.append(list.join(""));
+        sb.append(join(""));
         sb.append("]");
         return sb.toString();
     }
@@ -204,7 +198,7 @@ public class Bracket extends Node {
     public List<RangeNode> getRanges() {
         if (rangeNodes == null) {
             rangeNodes = new ArrayList<>();
-            for (Node node : list) {
+            for (Node node : this) {
                 if (node.isChar()) {
                     rangeNodes.add(new RangeNode(node.asChar().chr, node.asChar().chr));
                 }
@@ -216,6 +210,7 @@ public class Bracket extends Node {
         return rangeNodes;
     }
 
+    //remove negation
     public Bracket normalize() {
         if (negate) {
             rangeNodes = negateAll();

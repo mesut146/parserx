@@ -22,7 +22,6 @@ public class Tree {
     List<TokenDecl> skip;
     List<TokenDecl> tokens;
     List<File> includes;
-    int ruleIndex = 0;
 
     public Tree() {
         tokens = new ArrayList<>();
@@ -100,7 +99,7 @@ public class Tree {
     }
 
     public void addRule(RuleDecl rule) {
-        rule.index = ruleIndex++;
+        rule.index = rules.size();
         rules.add(rule);
     }
 
@@ -150,7 +149,7 @@ public class Tree {
 
     //construct NFA from this grammar file
     public NFA makeNFA() throws ParseException {
-        makeDistincRanges();
+        makeDistinctRanges();
         NFA nfa = new NFA(100);
         nfa.tree = this;
         for (TokenDecl decl : tokens) {
@@ -205,7 +204,7 @@ public class Tree {
     }
 
     //find all intersecting inputs and split them so that all of them becomes unique
-    private void makeDistincRanges() {
+    private void makeDistinctRanges() {
         Set<RangeNode> ranges = new HashSet<>();//whole input set as ranges nodes
         List<Bracket> map = new ArrayList<>();
         for (TokenDecl decl : tokens) {
@@ -219,10 +218,8 @@ public class Tree {
         while (true) {
             for (Bracket b : map) {
                 for (RangeNode rangeNode : b.rangeNodes) {
-                    //if this range intersect some ranges
-                    //for (Bracket otherBracket : map) {
+                    //if this range intersect other ranges
                     for (RangeNode otherRange : ranges) {
-                        //RangeNode otherRange = it2.next();
                         if (rangeNode.isSingle() && rangeNode.intersect(otherRange) && !rangeNode.same(otherRange)) {
                             RangeNode inter = Bracket.intersect(rangeNode, otherRange);
                             RangeNode me1 = RangeNode.of(rangeNode.start, inter.start - 1);
@@ -231,8 +228,6 @@ public class Tree {
                             RangeNode he2 = RangeNode.of(inter.end + 1, otherRange.end);
                             b.rangeNodes.remove(rangeNode);
                             ranges.remove(rangeNode);
-                            //otherBracket.rangeNodes.remove(otherRange);
-                            //it2.remove();
                             if (me1.isValid()) {
                                 b.rangeNodes.add(me1);
                                 ranges.add(me1);
@@ -247,54 +242,55 @@ public class Tree {
 
                             b.rangeNodes.add(inter);
                             ranges.add(inter);
-                            b.list.list.clear();
-                            b.list.addAll(b.rangeNodes);
+                            b.clear();
+                            b.addAll(b.rangeNodes);
+                            //start from zero to check if newly added ranges breaks existing ones
                             continue outer;
                         }//for ranges
-                        //}//for bracket
                     }//for ranges
                 }//for bracket
             }
-            break;
+            break;//found none break while
         }//while
     }
 
-    void walkNodes(Node root, Set<RangeNode> ranges, List<Bracket> map) {
+    static void walkNodes(Node node, Set<RangeNode> ranges, List<Bracket> map) {
         //find all ranges and store them
-        if (root.isBracket()) {
-            Bracket b = root.asBracket();
+        if (node.isBracket()) {
+            Bracket b = node.asBracket();
             b.normalize();
             ranges.addAll(b.rangeNodes);
             map.add(b);
         }
-        else if (root.isSequence()) {
-            for (Node c : root.asSequence().list) {
+        else if (node.isSequence()) {
+            for (Node c : node.asSequence()) {
                 walkNodes(c, ranges, map);
             }
         }
-        else if (root.isString()) {
-            StringNode stringNode = root.asString();
+        else if (node.isString()) {
+            StringNode stringNode = node.asString();
             if (stringNode.isDot) {
                 Bracket b = stringNode.toBracket().normalize();
                 ranges.addAll(b.rangeNodes);
                 map.add(b);
             }
             else {
-                String str = root.asString().value;
+                //make range for each char in string
+                String str = node.asString().value;
                 for (char c : str.toCharArray()) {
                     ranges.add(RangeNode.of(c, c));
                 }
             }
 
         }
-        else if (root.isGroup()) {
-            walkNodes(root.asGroup().rhs, ranges, map);
+        else if (node.isGroup()) {
+            walkNodes(node.asGroup().rhs, ranges, map);
         }
-        else if (root.isRegex()) {
-            walkNodes(root.asRegex().node, ranges, map);
+        else if (node.isRegex()) {
+            walkNodes(node.asRegex().node, ranges, map);
         }
-        else if (root.isOr()) {
-            for (Node c : root.asOr().list) {
+        else if (node.isOr()) {
+            for (Node c : node.asOr()) {
                 walkNodes(c, ranges, map);
             }
         }

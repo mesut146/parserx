@@ -2,18 +2,12 @@ package nodes;
 
 import dfa.CharClass;
 
-import java.util.Iterator;
 import java.util.Objects;
 
 public class RangeNode extends Node {
 
     public int start;
     public int end;
-
-    public RangeNode(String s1, String s2) {
-        start = s1.charAt(0);
-        end = s2.charAt(0);
-    }
 
     public RangeNode(int start, int end) {
         this.start = start;
@@ -61,26 +55,5 @@ public class RangeNode extends Node {
         return Objects.hash(start, end);
     }
 
-    public Iterator<Character> iterator() {
-        return new Iterator<Character>() {
-            int pos = start;
-
-            @Override
-            public boolean hasNext() {
-                return pos <= end;
-            }
-
-            @Override
-            public Character next() {
-                char c = (char) pos;
-                ++pos;
-                return c;
-            }
-
-            @Override
-            public void remove() {
-            }
-        };
-    }
 
 }

@@ -1,6 +1,5 @@
 package dfa;
 
-import grammar.ParseException;
 import nodes.*;
 
 import java.io.BufferedWriter;
@@ -139,8 +138,8 @@ public class NFA {
             else {//normal char range
                 //in order to have only one end state we add epsilons?
                 int end = newState();
-                for (int i = 0; i < b.list.size(); i++) {
-                    Node n = b.list.get(i);
+                for (int i = 0; i < b.size(); i++) {
+                    Node n = b.get(i);
                     //int mid = newState();
                     int left, right;
                     if (n instanceof Bracket.CharNode) {
@@ -218,7 +217,7 @@ public class NFA {
 
 
     //insert regex token to initial state
-    public void addRegex(TokenDecl decl) throws ParseException {
+    public void addRegex(TokenDecl decl) {
         Pair p = insert(decl.regex, initial);
         setAccepting(p.end, true);
         names[p.end] = decl.tokenName;

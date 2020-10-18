@@ -1,24 +1,8 @@
 package dfa;
 
-import nodes.Bracket;
-import nodes.RangeNode;
-
 public class CharClass {
     public static int min = 0;
     public static int max = 0xffff;
-    public int start, end;
-
-    public static CharClass fromChar(char c) {
-        CharClass cc = new CharClass();
-        cc.start = cc.end = c;
-        return cc;
-    }
-
-    public static CharClass fromRange(char c) {
-        CharClass cc = new CharClass();
-        cc.start = cc.end = c;
-        return cc;
-    }
 
     public static int segment(int start, int end) {
         return (start << 16) | end;
@@ -69,10 +53,5 @@ public class CharClass {
                 block != Character.UnicodeBlock.SPECIALS;
     }
 
-    public static boolean conflicts(int left1, int right1, int left2, int right2) {
-        RangeNode r1 = new RangeNode(left1, right1);
-        RangeNode r2 = new RangeNode(left2, right2);
-        return Bracket.intersect(r1, r2) != null;
-    }
 
 }

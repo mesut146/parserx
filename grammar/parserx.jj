@@ -80,6 +80,7 @@ TOKEN :
 | < XOR: "^">//negation
 | < TILDE: "~">//read until
 | < HASH: "#">
+| <EMPTY: "%empty">
 }
 
 TOKEN:
@@ -376,6 +377,14 @@ Node repetition():
   node = simple() "{" num = <INTEGER> "}"
   {
     return new Repetition(node, Integer.valueOf(num.toString()));
+  }
+}
+
+EmptyNode empty():
+{}
+{
+  "%empty"{
+    return new EmptyNode();
   }
 }
 
