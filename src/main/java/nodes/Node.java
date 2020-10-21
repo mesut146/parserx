@@ -3,7 +3,6 @@ package nodes;
 //base class used in grammar file
 public class Node {
 
-
     public boolean isSequence() {
         return this instanceof Sequence;
     }

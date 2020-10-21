@@ -20,13 +20,24 @@ public class RangeNode extends Node {
 
     @Override
     public String toString() {
+        if (start == end) {
+            return CharClass.printChar(start);
+        }
         return CharClass.printChar(start) + "-" + CharClass.printChar(end);
-        //return start + "-" + end;
-        //return Bracket.escape(start)+"-"+Bracket.escape(end);
+    }
+
+
+    public static RangeNode intersect(RangeNode r1, RangeNode r2) {
+        int l = Math.max(r1.start, r2.start);
+        int r = Math.min(r1.end, r2.end);
+        if (l > r) {
+            return null;
+        }
+        return new RangeNode(l, r);
     }
 
     public boolean intersect(RangeNode other) {
-        return Bracket.intersect(this, other) != null;
+        return intersect(this, other) != null;
     }
 
     public boolean same(RangeNode other) {
@@ -56,4 +67,7 @@ public class RangeNode extends Node {
     }
 
 
+    public int[] toArray() {
+        return new int[]{start, end};
+    }
 }

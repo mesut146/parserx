@@ -8,6 +8,12 @@ import java.io.IOException;
 
 public class DfaTest {
 
+    @Test
+    public void javaLexer() throws Exception {
+        DFA dfa = makeDFA(Env.getFile2("javaLexer.g"));
+        dfa.dump(null);
+    }
+
     static DFA makeDFA(NFA nfa) throws FileNotFoundException {
         System.out.println("-----DFA-----");
         DFA dfa = nfa.dfa();

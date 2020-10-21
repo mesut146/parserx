@@ -2,6 +2,7 @@ package gen;
 
 import nodes.NameNode;
 import nodes.Node;
+import nodes.NodeList;
 import nodes.Tree;
 import rule.RuleDecl;
 import utils.Helper;
@@ -75,7 +76,7 @@ public class Lr0ItemSet {
     @Override
     public String toString() {
         //sort();
-        return Helper.join(all, "\n");
+        return NodeList.join(all, "\n");
     }
 
     @Override

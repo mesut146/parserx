@@ -4,13 +4,26 @@ package dfa;
 public class Transition {
     public int target;
     public int input;
-    int state;//from
-    int segment;
+    public int state;//from
 
     public Transition(int state, int input, int target) {
         this.state = state;
         this.target = target;
         this.input = input;
+    }
+
+    public static Transition from(int from) {
+        return new Transition(from, 0, 0);
+    }
+
+    public Transition to(int to) {
+        this.target = to;
+        return this;
+    }
+
+    public Transition by(int by) {
+        this.input = by;
+        return this;
     }
 
     @Override

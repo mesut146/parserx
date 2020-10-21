@@ -7,7 +7,6 @@ import org.junit.Test;
 import utils.UnicodeUtils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
 
@@ -23,7 +22,7 @@ public class LexerGenTest {
         generateTest(dfa, outDir);
     }
 
-    static void generateTest(DFA dfa, String outDir) throws FileNotFoundException {
+    static void generateTest(DFA dfa, String outDir) throws IOException {
         LexerGenerator generator = new LexerGenerator(dfa, outDir);
         generator.setClassName("GeneratedLexer");
         generator.setPackageName("gen");
@@ -43,7 +42,8 @@ public class LexerGenTest {
         NFA nfa = NfaTest.makeNFA(Env.getJavaLexer());
         DFA dfa = DfaTest.makeDFA(nfa);
         String outDir;
-        outDir = Env.testJava + "/gen";
+        //outDir = Env.testJava + "/gen";
+        outDir = "/home/mesut/IdeaProjects/parserx/src/test/resources/java";
         //outDir = Main.javaDir;
         generateTest(dfa, outDir);
     }

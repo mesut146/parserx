@@ -89,4 +89,17 @@ public class UnicodeUtils {
         }
         return sb.toString();
     }
+
+    public static String escapeString(String str) {
+        StringBuilder sb = new StringBuilder();
+        for (char c : str.toCharArray()) {
+            if (isSpecial(c)) {
+                sb.append(escape(c));
+            }
+            else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
 }

@@ -2,6 +2,7 @@ import dfa.DFA;
 import dfa.NFA;
 import grammar.GParser;
 import grammar.ParseException;
+import nodes.Node;
 import nodes.TokenDecl;
 import nodes.Tree;
 import org.junit.Test;
@@ -11,10 +12,22 @@ import java.io.StringReader;
 
 public class NfaTest {
 
+
+    @Test
+    public void splitRanges() throws ParseException {
+        Tree tree = new Tree();
+        tree.addToken(new TokenDecl("hex", makeRegex("[a-f]")));
+        tree.addToken(new TokenDecl("a", makeRegex("[b-z]")));
+        tree.makeNFA();
+    }
+
+    static Node makeRegex(String regex) throws ParseException {
+        return new GParser(new StringReader(regex)).regex();
+    }
+
     static Tree makeTree(String regex) throws ParseException {
         Tree tree = new Tree();
-        GParser parser = new GParser(new StringReader(regex));
-        tree.addToken(new TokenDecl("test", parser.regex()));
+        tree.addToken(new TokenDecl("test", makeRegex(regex)));
         return tree;
     }
 
@@ -30,7 +43,7 @@ public class NfaTest {
         dfa.dot(Env.testRes + "/test-dfa.dot");
     }
 
-    static NFA makeNFA(File grammar) throws Exception {
+    static NFA makeNFA(File grammar) {
         Tree tree = Tree.makeTree(grammar);
         NFA nfa = tree.makeNFA();
         System.out.println("total nfa states=" + nfa.numStates);

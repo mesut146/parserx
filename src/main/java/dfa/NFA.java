@@ -1,6 +1,7 @@
 package dfa;
 
 import nodes.*;
+import utils.UnicodeUtils;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -16,12 +17,10 @@ public class NFA {
     public int numStates;
     public int initial = 0;//initial state
     public List<Transition>[] trans;
-    public HashMap<Integer, Integer> alphabet;//code point(segment) to index
     public int[] inputIndex;//index to segment
     public String[] names;
     boolean[] accepting;//[state]=isAccepting
     StateSet[] epsilon;//[state]=set of next states with epsilon moves
-    Set<int[]> inputClasses;
     boolean[] isSkip;//if that final state is ignored
 
     public NFA(int numStates) {
@@ -29,11 +28,9 @@ public class NFA {
         accepting = new boolean[numStates];
         epsilon = new StateSet[numStates];
         this.numStates = 0;//just initial
-        alphabet = new HashMap<>();
         inputIndex = new int[255];
         names = new String[numStates];
         isSkip = new boolean[numStates];
-        inputClasses = new HashSet<>();
     }
 
     public void expand(int state) {
@@ -60,7 +57,7 @@ public class NFA {
         return (T) target;
     }
 
-    //state index,input index,target state index
+    //state,input index,target state
     public void addTransition(int state, int target, int input) {
         expand(state);
         //System.out.printf("state: %d input: %d target: %d\n", state, input, target);
@@ -68,18 +65,16 @@ public class NFA {
         arr = trans[state];
         if (arr == null) {
             arr = new ArrayList<>();
+            trans[state] = arr;
         }
-        trans[state] = arr;
         Transition tr = new Transition(state, input, target);
         arr.add(tr);
     }
 
     public void addTransitionRange(int state, int target, int left, int right) {
-        //System.out.printf("st:%d (%c-%c) to st:%d nm:%s nm2:%s\n",state,left,right,target,names[state],names[target]);
-        int seg = CharClass.segment(left, right);
         if (debugTransition)
-            System.out.printf("st:%d (%s-%s) to st:%d seg:%d\n", state, CharClass.printChar(left), CharClass.printChar(right), target, seg);
-        addTransition(state, target, seg);
+            System.out.printf("st:%d (%s-%s) to st:%d\n", state, CharClass.printChar(left), CharClass.printChar(right), target);
+        addTransition(state, target, tree.alphabet.getId(RangeNode.of(left, right)));
     }
 
     public void setAccepting(int state, boolean val) {
@@ -124,20 +119,15 @@ public class NFA {
         }
         else if (node.isBracket()) {
             Bracket b = node.asBracket();
+            int end = newState();
             if (b.negate) {
-                //todo all at once
-                int end = newState();
                 List<RangeNode> ranges = b.negateAll();
                 for (RangeNode n : ranges) {
-                    //int mid = newState();
                     addTransitionRange(start, end, n.start, n.end);
-                    //addEpsilon(mid, end);
                 }
-                p.end = end;
             }
             else {//normal char range
                 //in order to have only one end state we add epsilons?
-                int end = newState();
                 for (int i = 0; i < b.size(); i++) {
                     Node n = b.get(i);
                     //int mid = newState();
@@ -153,8 +143,8 @@ public class NFA {
                     addTransitionRange(start, end, left, right);
                     //addEpsilon(mid, end);
                 }
-                p.end = end;
             }
+            p.end = end;
         }
         else if (node.isSequence()) {
             Sequence seq = node.asSequence();
@@ -174,7 +164,6 @@ public class NFA {
                 p.end = end;
             }
             else if (rn.isPlus()) {
-                //todo no mid state will cause error later
                 int newState = newState();
                 addEpsilon(start, newState);
                 Pair st = insert(rn.node, newState);
@@ -215,7 +204,6 @@ public class NFA {
         return ++numStates;
     }
 
-
     //insert regex token to initial state
     public void addRegex(TokenDecl decl) {
         Pair p = insert(decl.regex, initial);
@@ -224,7 +212,7 @@ public class NFA {
         isSkip[p.end] = decl.isSkip;
     }
 
-    public void dump(String path) throws IOException {
+    public void dump(String path) {
         PrintWriter w = new PrintWriter(System.out);
 
         for (int state = initial; state <= numStates + 1; state++) {
@@ -407,10 +395,10 @@ public class NFA {
             w.printf("%d [color=red]\n", initial);
             for (int state = initial; state <= numStates; state++) {
                 if (isAccepting(state)) {
-                    w.printf("%d [shape = doublecircle]\n", state);
+                    w.printf("%d [shape = doublecircle xlabel=\"%s\"]\n", state, names[state]);
                 }
                 if (isSkip[state]) {
-                    w.printf("%d [color=blue]\n", state);
+                    w.printf("%d [color=blue xlabel=\"%s\"]\n", state, names[state]);
                 }
             }
 
@@ -419,7 +407,7 @@ public class NFA {
                 StateSet eps = epsilon[state];
                 if (list != null) {
                     for (Transition tr : list) {
-                        w.printf("%s -> %s [label=\"[%s]\"]\n", state, tr.target, CharClass.seg2escaped(tr.input));
+                        w.printf("%s -> %s [label=\"[%s]\"]\n", state, tr.target, UnicodeUtils.escapeString(tree.alphabet.getRange(tr.input).toString()));
                     }
                 }
                 if (eps != null) {

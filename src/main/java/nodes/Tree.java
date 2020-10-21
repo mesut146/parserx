@@ -1,5 +1,6 @@
 package nodes;
 
+import dfa.Alphabet;
 import dfa.NFA;
 import grammar.GParser;
 import grammar.ParseException;
@@ -19,14 +20,13 @@ public class Tree {
     public List<RuleDecl> rules;
     public NameNode start;
     public File file = null;
-    List<TokenDecl> skip;
     List<TokenDecl> tokens;
     List<File> includes;
+    public Alphabet alphabet = new Alphabet();
 
     public Tree() {
         tokens = new ArrayList<>();
         rules = new ArrayList<>();
-        skip = new ArrayList<>();
         includes = new ArrayList<>();
     }
 
@@ -59,18 +59,10 @@ public class Tree {
         return -1;
     }
 
-    private static void printToken(StringBuilder sb, List<TokenDecl> list) {
-        for (TokenDecl td : list) {
-            sb.append("  ");
-            sb.append(td);
-            sb.append(";\n");
-        }
-    }
 
     //merge two grammar files(lexer,parser)
     void mergeWith(Tree other) {
         tokens.addAll(other.tokens);
-        skip.addAll(other.skip);
         rules.addAll(other.rules);
     }
 
@@ -95,7 +87,7 @@ public class Tree {
 
     public void addSkip(TokenDecl token) {
         token.isSkip = true;
-        skip.add(token);
+        addToken(token);
     }
 
     public void addRule(RuleDecl rule) {
@@ -119,11 +111,6 @@ public class Tree {
                 return decl;
             }
         }
-        for (TokenDecl decl : skip) {
-            if (decl.regex.isString() && decl.regex.asString().value.equals(val)) {
-                return decl;
-            }
-        }
         return null;
     }
 
@@ -132,23 +119,16 @@ public class Tree {
         if (idx == -1) {
             return null;
         }
-        if (idx < tokens.size()) {
-            return tokens.get(idx);
-        }
-        return skip.get(idx);
+        return tokens.get(idx);
     }
 
     //get index of token by name
     public int indexOf(String name) {
-        int i = indexOf(tokens, name);
-        if (i != -1) {
-            return i;
-        }
-        return indexOf(skip, name);
+        return indexOf(tokens, name);
     }
 
     //construct NFA from this grammar file
-    public NFA makeNFA() throws ParseException {
+    public NFA makeNFA() {
         makeDistinctRanges();
         NFA nfa = new NFA(100);
         nfa.tree = this;
@@ -157,29 +137,18 @@ public class Tree {
                 nfa.addRegex(decl);
             }
         }
-        for (TokenDecl decl : skip) {
-            if (!decl.fragment) {
-                nfa.addRegex(decl);
-            }
-        }
         return nfa;
     }
 
-    void printTokens(StringBuilder sb) {
-        if (!tokens.isEmpty()) {
-            sb.append("/* tokens */\n");
-            sb.append("token{\n");
-            printToken(sb, tokens);
-            sb.append("}");
-            sb.append("\n\n");
-        }
-    }
-
-    void printSkips(StringBuilder sb) {
-        if (!skip.isEmpty()) {
-            sb.append("/* skip tokens */\n");
-            sb.append("skip{\n");
-            printToken(sb, skip);
+    void printTokens(StringBuilder sb, List<TokenDecl> list, String title) {
+        if (!list.isEmpty()) {
+            sb.append(title);
+            sb.append("{\n");
+            for (TokenDecl td : list) {
+                sb.append("  ");
+                sb.append(td);
+                sb.append(";\n");
+            }
             sb.append("}");
             sb.append("\n\n");
         }
@@ -188,9 +157,18 @@ public class Tree {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-
-        printTokens(sb);
-        printSkips(sb);
+        List<TokenDecl> normal = new ArrayList<>();
+        List<TokenDecl> skips = new ArrayList<>();
+        for (TokenDecl tokenDecl : tokens) {
+            if (tokenDecl.isSkip) {
+                skips.add(tokenDecl);
+            }
+            else {
+                normal.add(tokenDecl);
+            }
+        }
+        printTokens(sb, normal, "token");
+        printTokens(sb, skips, "skip");
 
         if (!rules.isEmpty()) {
             sb.append("/* rules */\n");
@@ -206,22 +184,19 @@ public class Tree {
     //find all intersecting inputs and split them so that all of them becomes unique
     private void makeDistinctRanges() {
         Set<RangeNode> ranges = new HashSet<>();//whole input set as ranges nodes
-        List<Bracket> map = new ArrayList<>();
+        List<Bracket> brackets = new ArrayList<>();
         for (TokenDecl decl : tokens) {
-            walkNodes(decl.regex, ranges, map);
+            walkNodes(decl.regex, ranges, brackets);
         }
-        for (TokenDecl decl : skip) {
-            walkNodes(decl.regex, ranges, map);
-        }
-        //find conflicting ranges and split them
+        //find intersecting ranges and split them
         outer:
         while (true) {
-            for (Bracket b : map) {
+            for (Bracket b : brackets) {
                 for (RangeNode rangeNode : b.rangeNodes) {
                     //if this range intersect other ranges
                     for (RangeNode otherRange : ranges) {
                         if (rangeNode.isSingle() && rangeNode.intersect(otherRange) && !rangeNode.same(otherRange)) {
-                            RangeNode inter = Bracket.intersect(rangeNode, otherRange);
+                            RangeNode inter = RangeNode.intersect(rangeNode, otherRange);
                             RangeNode me1 = RangeNode.of(rangeNode.start, inter.start - 1);
                             RangeNode me2 = RangeNode.of(inter.end + 1, rangeNode.end);
                             RangeNode he1 = RangeNode.of(otherRange.start, inter.start - 1);
@@ -252,19 +227,21 @@ public class Tree {
             }
             break;//found none break while
         }//while
+        for (RangeNode rangeNode : ranges) {
+            alphabet.add(rangeNode);
+        }
     }
 
-    static void walkNodes(Node node, Set<RangeNode> ranges, List<Bracket> map) {
+    static void walkNodes(Node node, Set<RangeNode> ranges, List<Bracket> brackets) {
         //find all ranges and store them
         if (node.isBracket()) {
             Bracket b = node.asBracket();
-            b.normalize();
-            ranges.addAll(b.rangeNodes);
-            map.add(b);
+            ranges.addAll(b.normalize().rangeNodes);
+            brackets.add(b);
         }
         else if (node.isSequence()) {
             for (Node c : node.asSequence()) {
-                walkNodes(c, ranges, map);
+                walkNodes(c, ranges, brackets);
             }
         }
         else if (node.isString()) {
@@ -272,7 +249,7 @@ public class Tree {
             if (stringNode.isDot) {
                 Bracket b = stringNode.toBracket().normalize();
                 ranges.addAll(b.rangeNodes);
-                map.add(b);
+                brackets.add(b);
             }
             else {
                 //make range for each char in string
@@ -284,14 +261,14 @@ public class Tree {
 
         }
         else if (node.isGroup()) {
-            walkNodes(node.asGroup().rhs, ranges, map);
+            walkNodes(node.asGroup().rhs, ranges, brackets);
         }
         else if (node.isRegex()) {
-            walkNodes(node.asRegex().node, ranges, map);
+            walkNodes(node.asRegex().node, ranges, brackets);
         }
         else if (node.isOr()) {
             for (Node c : node.asOr()) {
-                walkNodes(c, ranges, map);
+                walkNodes(c, ranges, brackets);
             }
         }
     }

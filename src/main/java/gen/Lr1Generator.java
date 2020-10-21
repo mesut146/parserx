@@ -91,7 +91,7 @@ public class Lr1Generator extends IndentWriter {
     }
 
     //get itemSet that contains item
-    Lr1ItemSet getSet(Lr0Item first) {
+    Lr1ItemSet getSet(Lr1Item first) {
         for (Lr1ItemSet itemSet : itemSets) {
             if (itemSet.first.equals(first)) {
                 return itemSet;
@@ -144,7 +144,7 @@ public class Lr1Generator extends IndentWriter {
         return -1;
     }
 
-    int getId(Lr0Item item) {
+    int getId(Lr1Item item) {
         for (Map.Entry<Lr1ItemSet, Integer> entry : idMap.entrySet()) {
             if (entry.getKey().first.contains(item)) {
                 return entry.getValue();

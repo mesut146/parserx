@@ -8,13 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class $lexer_class$ {
-    static int[][] inputMap = unpack($input_map$);
-    static int INITIAL = 0;
-    static int EOF = -1;
+    static int[][] trans = unpack($trans$);
+    static int[] cMap = unpackCMap($cmap$);
     int[] skip = {$skip_list$};
     int[] accepting = {$final_list$};
-    String[] names = {$name_list$};
-    int[] ids = {$id_list$};
+    String[] names = {$name_list$};//token names
+    int[] ids = {$id_list$};//token ids
+    static int INITIAL = 0;
+    static int EOF = -1;
     Reader reader;
     int curState;
     int lastState = -1;
@@ -23,11 +24,11 @@ public class $lexer_class$ {
     boolean backup = false;
     StringBuilder yybuf = new StringBuilder();
 
-    public GeneratedLexer(Reader reader) {
+    public $lexer_class$(Reader reader) {
         this.reader = reader;
     }
 
-    public GeneratedLexer(String file) throws FileNotFoundException {
+    public $lexer_class$(String file) throws FileNotFoundException {
         this.reader = new FileReader(file);
     }
 
@@ -39,17 +40,31 @@ public class $lexer_class$ {
         int pos = 0;
         List<int[]> list = new ArrayList<>();
         while (pos < str.length()) {
-            char groupLen = str.charAt(pos++);
-            int[] arr = new int[groupLen * 3];//left,right,target
+            int groupLen = (int)str.charAt(pos++);
+            int[] arr = new int[groupLen * 2];//input id,target
             int arrPos = 0;
             for (int i = 0; i < groupLen; i++) {
-                arr[arrPos++] = str.charAt(pos++);
-                arr[arrPos++] = str.charAt(pos++);
-                arr[arrPos++] = str.charAt(pos++);
+                arr[arrPos++] = str.charAt(pos++);//input
+                arr[arrPos++] = str.charAt(pos++);//target
             }
             list.add(arr);
         }
         return list.toArray(new int[0][]);
+    }
+
+    static int[] unpackCMap(String str){
+        int pos = 0;
+        int[] arr = new int[0x010FFFF];//covers all code points
+        Arrays.fill(arr, -1);//unused chars leads error
+        while(pos < str.length()){
+            int left = str.charAt(pos++);
+            int right = str.charAt(pos++);
+            int id = str.charAt(pos++);
+            for(int i = left;i <= right;i++){
+                arr[i] = id;
+            }
+      }
+      return arr;
     }
 
     int read() throws IOException {
@@ -61,16 +76,10 @@ public class $lexer_class$ {
     }
 
     int getState() {
-        int[] arr = inputMap[curState];
-        for (int i = 0; i < arr.length; i += 3) {
-            if (yychar >= arr[i] && yychar <= arr[i + 1]) {
-                return arr[i + 2];
-            }
-        }
-        return -1;
+        return trans[curState][cMap[yychar]];
     }
 
-    public Token next() throws IOException {
+    public Token $next_token$() throws IOException {
         curState = INITIAL;
         lastState = -1;
         int startPos = yypos;

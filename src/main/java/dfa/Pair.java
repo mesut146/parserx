@@ -1,6 +1,5 @@
 package dfa;
 
-//nfa,dfa start end states
 public class Pair {
 
     public int start;
@@ -11,5 +10,7 @@ public class Pair {
         this.end = end;
     }
 
-
+    public static Pair of(int start, int end) {
+        return new Pair(start, end);
+    }
 }

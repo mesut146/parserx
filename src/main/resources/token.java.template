@@ -1,0 +1,18 @@
+package $package$;
+
+public class $token_class${
+    public int type;
+    public String value;
+    public int offset;
+    public String name;//token name that's declared in grammar
+
+    public $token_class$(){}
+
+    public $token_class$(int type, String value){
+        this.type = type;
+        this.value = value;
+    }
+    public String toString(){
+        return value + " type = " + type;
+    }
+}

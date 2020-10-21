@@ -1,12 +1,14 @@
 package dfa;
 
 import nodes.Tree;
+import utils.UnicodeUtils;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DFA {
     public static boolean debugTransition = false;
@@ -48,9 +50,9 @@ public class DFA {
 
     public void addTransition(int state, int input, int target) {
         expand(state);
-        int[] arr = CharClass.desegment(input);
-        if (debugTransition)
-            System.out.printf("st:%d to st:%d with:(%s-%s) seg:%d\n", state, target, CharClass.printChar(arr[0]), CharClass.printChar(arr[1]), input);
+        if (debugTransition) {
+            System.out.printf("st:%d to st:%d with:%s\n", state, target, tree.alphabet.getRange(input));
+        }
         List<Transition> tr = trans[state];
         if (tr == null) {
             tr = new ArrayList<>();
@@ -78,14 +80,15 @@ public class DFA {
 
     //merge segments
     public void optimize() {
+        /*
         for (int state = initial; state <= numStates; state++) {
             List<Transition> list = trans[state];
             if (list != null) {
                 Collections.sort(list, new Comparator<Transition>() {
                     @Override
                     public int compare(Transition o1, Transition o2) {
-                        int[] seg1 = CharClass.desegment(o1.input);
-                        int[] seg2 = CharClass.desegment(o2.input);
+                        int[] seg1 = tree.alphabet.getRange(o1.input).toArray();
+                        int[] seg2 = tree.alphabet.getRange(o2.input).toArray();
                         return seg1[0] - seg2[0];
                     }
                 });
@@ -128,7 +131,7 @@ public class DFA {
                     }
                 }
             }
-        }
+        }*/
         System.out.println("optimized dfa");
     }
 
@@ -142,8 +145,7 @@ public class DFA {
             if (arr != null) {
                 for (Transition tr : arr) {
                     w.print("  ");
-                    w.print(CharClass.seg2str(tr.input));
-
+                    w.print(tree.alphabet.getRange(tr.input));
                     w.print(" -> ");
                     w.print(printState(tr.target));
                     w.println();
@@ -156,7 +158,7 @@ public class DFA {
 
     String printState(int st) {
         if (isAccepting(st)) {
-            return "(S" + st + ")";
+            return "(S" + st + ", " + names[st] + ")";
         }
         return "S" + st;
     }
@@ -181,7 +183,7 @@ public class DFA {
                 List<Transition> list = trans[state];
                 if (list != null) {
                     for (Transition tr : list) {
-                        w.printf("%s -> %s [label=\"[%s]\"]\n", state, tr.target, CharClass.seg2escaped(tr.input));
+                        w.printf("%s -> %s [label=\"[%s]\"]\n", state, tr.target, UnicodeUtils.escapeString(tree.alphabet.getRange(tr.input).toString()));
                     }
                 }
             }

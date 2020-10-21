@@ -2,6 +2,7 @@ package gen;
 
 import nodes.NameNode;
 import nodes.Node;
+import nodes.NodeList;
 import nodes.Tree;
 import rule.RuleDecl;
 import utils.Helper;
@@ -30,7 +31,7 @@ public class Lr1ItemSet {
     @Override
     public String toString() {
         //sort();
-        return Helper.join(all, "\n");
+        return NodeList.join(all, "\n");
     }
 
     //get first item that can transit
@@ -77,7 +78,6 @@ public class Lr1ItemSet {
             throw new RuntimeException("closure error on node: " + node);
         }
     }
-
 
 
 }

@@ -10,6 +10,7 @@ public class StringNode extends Node {
     public String value;
     public boolean isDot = false;//[^\n]
     public static boolean string_quote = true;
+    public Bracket bracket;
 
     public StringNode() {
     }
@@ -27,9 +28,13 @@ public class StringNode extends Node {
         if (!isDot) {
             return null;
         }
+        if (bracket != null) {
+            return bracket;
+        }
         Bracket b = new Bracket();
         b.add('\n');
         b.negate = true;
+        bracket = b;
         return b;
     }
 

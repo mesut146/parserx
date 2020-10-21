@@ -28,6 +28,28 @@ public class NodeList extends Node implements Iterable<Node> {
         return sb.toString();
     }
 
+    public static String join(int[] list, String del) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < list.length; i++) {
+            sb.append(list[i]);
+            if (i < list.length - 1) {
+                sb.append(del);
+            }
+        }
+        return sb.toString();
+    }
+
+    public static String join(String[] list, String del) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < list.length; i++) {
+            sb.append(list[i]);
+            if (i < list.length - 1) {
+                sb.append(del);
+            }
+        }
+        return sb.toString();
+    }
+
     public void add(Node node) {
         list.add(node);
     }

@@ -19,16 +19,6 @@ public class Bracket extends NodeList {
     public boolean debug = false;
     private int pos;
 
-    //return intersection of two ranges
-    public static RangeNode intersect(RangeNode r1, RangeNode r2) {
-        int l = Math.max(r1.start, r2.start);
-        int r = Math.min(r1.end, r2.end);
-        if (l > r) {
-            return null;
-        }
-        return new RangeNode(l, r);
-    }
-
     public void add(char chr) {
         add(new CharNode(chr));
     }
@@ -162,7 +152,7 @@ public class Bracket extends NodeList {
             }
             if (i < ranges.size() - 1) {
                 next = ranges.get(i + 1);
-                if (intersect(cur, next) != null) {
+                if (RangeNode.intersect(cur, next) != null) {
                     cur = new RangeNode(cur.start, Math.max(cur.end, next.end));
                 }
                 else {

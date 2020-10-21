@@ -5,8 +5,7 @@ import dfa.NFA;
 import grammar.ParseException;
 import nodes.Tree;
 
-import java.io.File;
-import java.util.List;
+import java.io.*;
 
 public class Helper {
     public static NFA makeNFA(File path) throws ParseException {
@@ -17,13 +16,12 @@ public class Helper {
         return Tree.makeTree(path).makeNFA().dfa();
     }
 
-    public static <T> String join(List<T> list, String del) {
+    public static String read(InputStream inputStream) throws IOException {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < list.size(); i++) {
-            sb.append(list.get(i));
-            if (i < list.size() - 1) {
-                sb.append(del);
-            }
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            sb.append(line).append("\n");
         }
         return sb.toString();
     }
