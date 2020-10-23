@@ -11,18 +11,6 @@ public class IndentWriter {
         writer.flush();
     }
 
-    void print(Object str) {
-        writer.print(str);
-    }
-
-    void line(Object str) {
-        writer.print(indentStr);
-        writer.print(str);
-    }
-
-    void println(String str) {
-        writer.println(str);
-    }
 
     void lineln(String str) {
         writer.print(indentStr);

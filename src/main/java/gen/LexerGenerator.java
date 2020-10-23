@@ -22,7 +22,6 @@ public class LexerGenerator extends IndentWriter {
     String packageName;
     String tokenClassName = "Token";
     String functionName = "next";
-    boolean external = true;
     boolean outDirAuto;
 
     public LexerGenerator(DFA dfa, String outDir) {
@@ -64,7 +63,7 @@ public class LexerGenerator extends IndentWriter {
         writer.write(template);
         writer.close();
         writeTokenClass();
-        System.out.println("lexer file generated");
+        System.out.println("lexer file generated to " + file);
     }
 
     String replace(String name, String val, String template) {
@@ -77,9 +76,9 @@ public class LexerGenerator extends IndentWriter {
         int[] idArr = new int[dfa.numStates + 1];
         int idIdx = 1;
 
-        Writer transWriter = new Writer();
-        transWriter.print("\"");
         int maxCharId = dfa.tree.alphabet.map.size();
+        template = makeTrans(template);
+
         for (int state = dfa.initial; state <= dfa.numStates; state++) {
             //make id for token
             String name = dfa.names[state];
@@ -90,16 +89,8 @@ public class LexerGenerator extends IndentWriter {
                 }
                 idArr[state] = idMap.get(name);
             }
-            List<Transition> list = dfa.trans[state];
-            if (list != null) {
-                transWriter.print(UnicodeUtils.escapeUnicode(list.size()));
-                for (Transition transition : list) {
-                    transWriter.print(UnicodeUtils.escapeUnicode(transition.input));
-                    transWriter.print(UnicodeUtils.escapeUnicode(transition.target));
-                }
-            }
         }
-        transWriter.print("\"");
+
         //write inputMap
         Writer cmapWriter = new Writer();
         cmapWriter.print("\"");
@@ -129,7 +120,7 @@ public class LexerGenerator extends IndentWriter {
             idWriter.print(idArr[state]);
             idIdx++;
 
-            nameWriter.print("\"" + dfa.names[state] + "\"");
+            nameWriter.print("\"" + (dfa.names[state] == null ? "" : dfa.names[state]) + "\"");
             if (state <= dfa.numStates - 1) {
                 nameWriter.print(",");
             }
@@ -140,6 +131,52 @@ public class LexerGenerator extends IndentWriter {
         return template;
     }
 
+    String makeTrans(String template) {
+        Writer transWriter = new Writer();
+        String indent = "        ";
+        transWriter.print("\n");
+        int maxId = dfa.getAlphabet().map.size();
+        for (int state = 0; state <= dfa.numStates; state++) {
+            List<Transition> list = dfa.trans[state];
+            transWriter.print(indent);
+            transWriter.print("\"");
+            if (list == null) {
+                transWriter.print(makeOctal(0));
+            }
+            else {
+                transWriter.print(makeOctal(list.size()));
+                for (Transition transition : list) {
+                    transWriter.print(makeOctal(transition.input));
+                    transWriter.print(makeOctal(transition.target));
+                }
+            }
+            transWriter.print("\"");
+            if (state <= dfa.numStates - 1) {
+                transWriter.print(" +\n");
+            }
+        }
+
+        template = replace("trans", transWriter.getString(), template);
+        template = replace("max", String.valueOf(maxId), template);
+        return template;
+    }
+
+    Transition getTransition(int id, List<Transition> list) {
+        for (Transition transition : list) {
+            if (transition.input == id) {
+                return transition;
+            }
+        }
+        return null;
+    }
+
+    String makeOctal(int val) {
+        if (val <= 255) {
+            return "\\" + Integer.toOctalString(val);
+        }
+        return UnicodeUtils.escapeUnicode(val);
+        //throw new RuntimeException("can't make octal from " + val);
+    }
 
     int[] makeIntArr(boolean[] arr) {
         int[] res = new int[arr.length / 32 + 1];

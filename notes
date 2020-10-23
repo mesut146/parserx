@@ -1,1 +1,6 @@
 page 214 left factoring
+
+trans[rowMap[curState] + cMap[input]] = nextState
+
+trans[state][input] = nextState
+trans[state] = {}

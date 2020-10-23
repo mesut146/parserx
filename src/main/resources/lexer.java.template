@@ -6,14 +6,18 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
 
 public class $lexer_class$ {
-    static int[][] trans = unpack($trans$);
-    static int[] cMap = unpackCMap($cmap$);
+    static String trans_packed = $trans$;
+    static int[][] trans = unpackTrans(trans_packed, $max$);
+    static int[] cMap = unpackCMap($cMap$);
     int[] skip = {$skip_list$};
     int[] accepting = {$final_list$};
-    String[] names = {$name_list$};//token names
-    int[] ids = {$id_list$};//token ids
+    //token names
+    String[] names = {$name_list$};
+    //token ids
+    int[] ids = {$id_list$};
     static int INITIAL = 0;
     static int EOF = -1;
     Reader reader;
@@ -36,16 +40,16 @@ public class $lexer_class$ {
         return ((arr[state / 32] >> (state % 32)) & 1) != 0;
     }
 
-    static int[][] unpack(String str) {
+    static int[][] unpackTrans(String str, int max) {
         int pos = 0;
         List<int[]> list = new ArrayList<>();
         while (pos < str.length()) {
-            int groupLen = (int)str.charAt(pos++);
-            int[] arr = new int[groupLen * 2];//input id,target
-            int arrPos = 0;
-            for (int i = 0; i < groupLen; i++) {
-                arr[arrPos++] = str.charAt(pos++);//input
-                arr[arrPos++] = str.charAt(pos++);//target
+            int size = str.charAt(pos++);
+            int[] arr = new int[max];
+            Arrays.fill(arr, -1);
+            //i is input id
+            for (int i = 0; i < size; i++) {
+                arr[str.charAt(pos++)] = str.charAt(pos++);
             }
             list.add(arr);
         }
@@ -73,6 +77,10 @@ public class $lexer_class$ {
             yypos++;
         }
         return yychar;
+    }
+
+    void expected(){
+        //trans[curState]
     }
 
     int getState() {

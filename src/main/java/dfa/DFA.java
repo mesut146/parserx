@@ -8,7 +8,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DFA {
     public static boolean debugTransition = false;
@@ -19,6 +21,10 @@ public class DFA {
     public int numStates;
     public int initial = 0;
     public Tree tree;
+
+    public Alphabet getAlphabet() {
+        return tree.alphabet;
+    }
 
     public DFA(int maxStates) {
         this.numStates = 0;
@@ -78,61 +84,31 @@ public class DFA {
         return "states=" + numStates;
     }
 
-    //merge segments
-    public void optimize() {
+    //merge transitions
+    public void merge() {
         /*
         for (int state = initial; state <= numStates; state++) {
             List<Transition> list = trans[state];
             if (list != null) {
-                Collections.sort(list, new Comparator<Transition>() {
-                    @Override
-                    public int compare(Transition o1, Transition o2) {
-                        int[] seg1 = tree.alphabet.getRange(o1.input).toArray();
-                        int[] seg2 = tree.alphabet.getRange(o2.input).toArray();
-                        return seg1[0] - seg2[0];
-                    }
-                });
-                //group same targets
-                Map<Integer, List<Integer>> map = new HashMap<>();//target -> input list
+                //target -> input list
+                Map<Integer, List<Integer>> map = new HashMap<>();
                 for (Transition tr : list) {
-                    List<Integer> l = map.get(tr.target);
-                    if (l == null) {
-                        l = new ArrayList<>();
-                        map.put(tr.target, l);
+                    if (map.containsKey(tr.target)) {
+                        map.get(tr.target).add(tr.input);
                     }
-                    l.add(tr.input);
+                    else {
+                        List<Integer> arr = new ArrayList<>();
+                        arr.add(tr.input);
+                        map.put(tr.target, arr);
+                    }
                 }
-                list.clear();//remove all transitions
-                for (Map.Entry<Integer, List<Integer>> e : map.entrySet()) {
-                    //check the inputs neighbour
-                    List<Integer> l = e.getValue();//inputs
+                for (int target : map.keySet()) {
+                    List<Integer> inputs = map.get(target);
 
-                    int[] pre = CharClass.desegment(l.get(0));
-                    if (l.size() == 1) {
-                        list.add(new Transition(state, CharClass.segment(pre), e.getKey()));
-                    }
-                    for (int i = 1; i < l.size(); i++) {
-                        int seg1 = l.get(i);
-                        //int seg2 = e.getValue().get(i + 1);
-                        int[] arr1 = CharClass.desegment(seg1);
-                        //int[] arr2 = CharClass.desegment(seg2);
-                        if (pre[1] + 1 == arr1[0]) {
-                            pre[1] = arr1[1];//merge
-                            //remove arr2
-                        }
-                        else {
-                            //keep pre
-                            list.add(new Transition(state, CharClass.segment(pre), e.getKey()));
-                            pre = arr1;
-                        }
-                        if (i == l.size() - 1) {
-                            list.add(new Transition(state, CharClass.segment(pre), e.getKey()));
-                        }
-                    }
                 }
             }
         }*/
-        System.out.println("optimized dfa");
+        System.out.println("dfa merged");
     }
 
     public void dump(String path) {

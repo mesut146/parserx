@@ -6,9 +6,7 @@ import gen.Token;
 import org.junit.Test;
 import utils.UnicodeUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 
 public class LexerGenTest {
 
@@ -29,7 +27,9 @@ public class LexerGenTest {
         generator.generate();
     }
 
-    public static void tokenizerTest(Reader reader) throws IOException {
+    @Test
+    public void tokenizerTest() throws IOException {
+        Reader reader = new BufferedReader(new FileReader("/home/mesut/IdeaProjects/parserx/src/test/resources/java/a.java"));
         GeneratedLexer gen = new GeneratedLexer(reader);
         Token token;
         while ((token = gen.next()) != null) {

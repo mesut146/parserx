@@ -10,7 +10,7 @@ public class DfaTest {
 
     @Test
     public void javaLexer() throws Exception {
-        DFA dfa = makeDFA(Env.getFile2("javaLexer.g"));
+        DFA dfa = makeDFA(Env.getFile2("/javaLexer.g"));
         dfa.dump(null);
     }
 
