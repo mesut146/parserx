@@ -19,8 +19,8 @@ public class GroupNode extends Node implements Iterable<Node> {
 
     @Override
     public Iterator<Node> iterator() {
-        if (rhs.isSequence()) {
-            return rhs.asSequence().iterator();
+        if (rhs instanceof NodeList) {
+            return ((NodeList) rhs).iterator();
         }
         return Arrays.asList(rhs).iterator();
     }

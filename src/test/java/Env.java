@@ -15,11 +15,11 @@ public class Env {
 
 
     public static File getJavaLexer() throws Exception {
-        return Env.getResFile("javaLexer.g");
+        return Env.getResFile("/javaLexer.g");
     }
 
     public static File getCalc() throws Exception {
-        return Env.getResFile("calc.g");
+        return Env.getResFile("/calc.g");
     }
 
     public static File getFile2(String name) {
@@ -27,7 +27,10 @@ public class Env {
     }
 
     public static File getResFile(String name) throws Exception {
-        URL url = Env.class.getClassLoader().getResource(name);
+        if (!name.startsWith("/")) {
+            name = "/" + name;
+        }
+        URL url = Env.class.getResource(name);
         if (url == null) {
             throw new Exception(name + " not found");
         }

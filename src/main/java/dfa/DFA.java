@@ -3,14 +3,9 @@ package dfa;
 import nodes.Tree;
 import utils.UnicodeUtils;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class DFA {
     public static boolean debugTransition = false;
@@ -111,8 +106,17 @@ public class DFA {
         System.out.println("dfa merged");
     }
 
-    public void dump(String path) {
-        PrintWriter w = new PrintWriter(System.out);
+    public void dump(File path) {
+        OutputStream os = System.out;
+        if (path != null) {
+            try {
+                os = new FileOutputStream(path);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                return;
+            }
+        }
+        PrintWriter w = new PrintWriter(os);
 
         for (int state = initial; state <= numStates + 1; state++) {
             w.println(printState(state));
@@ -130,6 +134,7 @@ public class DFA {
             w.println();
         }
         w.flush();
+        w.close();
     }
 
     String printState(int st) {

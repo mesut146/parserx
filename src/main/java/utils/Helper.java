@@ -2,17 +2,16 @@ package utils;
 
 import dfa.DFA;
 import dfa.NFA;
-import grammar.ParseException;
 import nodes.Tree;
 
 import java.io.*;
 
 public class Helper {
-    public static NFA makeNFA(File path) throws ParseException {
+    public static NFA makeNFA(File path) {
         return Tree.makeTree(path).makeNFA();
     }
 
-    public static DFA makeDFA(File path) throws ParseException {
+    public static DFA makeDFA(File path) {
         return Tree.makeTree(path).makeNFA().dfa();
     }
 
@@ -24,5 +23,11 @@ public class Helper {
             sb.append(line).append("\n");
         }
         return sb.toString();
+    }
+
+    public static void write(String data, File file) throws IOException {
+        FileWriter wr = new FileWriter(file);
+        wr.write(data);
+        wr.close();
     }
 }

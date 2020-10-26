@@ -2,14 +2,24 @@ import dfa.DFA;
 import dfa.NFA;
 import gen.GeneratedLexer;
 import gen.LexerGenerator;
+import gen.Template;
 import gen.Token;
 import org.junit.Test;
+import utils.Helper;
 import utils.UnicodeUtils;
 
 import java.io.*;
 
 public class LexerGenTest {
 
+    @Test
+    public void template() throws IOException {
+        Template template = new Template("token.java.template", "package", "token_class");
+        template.set("package", "pkg");
+        template.set("token_class", "cls");
+        template.set("asd", "dummy");
+        System.out.println(template);
+    }
 
     public static void generateLexer(File grammar) throws Exception {
         NFA nfa = NfaTest.makeNFA(grammar);
@@ -37,16 +47,19 @@ public class LexerGenTest {
         }
     }
 
+
     @Test
     public void all() throws Exception {
-        NFA nfa = NfaTest.makeNFA(Env.getJavaLexer());
-        DFA dfa = DfaTest.makeDFA(nfa);
+        DFA dfa = Helper.makeDFA(Env.getJavaLexer());
+        //dfa.dump(new File("/home/mesut/IdeaProjects/parserx/src/test/resources/java/javaLexer.txt"));
+        //new Analyze(dfa).analyze();
         String outDir;
         //outDir = Env.testJava + "/gen";
         outDir = "/home/mesut/IdeaProjects/parserx/src/test/resources/java";
         //outDir = Main.javaDir;
         generateTest(dfa, outDir);
     }
+
 
     @Test
     public void escapeTest() {

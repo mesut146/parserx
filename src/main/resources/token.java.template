@@ -12,6 +12,7 @@ public class $token_class${
         this.type = type;
         this.value = value;
     }
+
     public String toString(){
         return value + " type = " + type;
     }

@@ -8,14 +8,13 @@ import utils.Helper;
 import utils.UnicodeUtils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LexerGenerator extends IndentWriter {
+public class LexerGenerator {
     DFA dfa;
     String outDir;
     String className;
@@ -53,17 +52,16 @@ public class LexerGenerator extends IndentWriter {
         else {
             file = new File(outDir, className + ".java");
         }
-        writer = new PrintWriter(file);
 
-        String template = Helper.read(getClass().getResourceAsStream("/lexer.java.template"));
-        template = replace("package", packageName, template);
-        template = replace("lexer_class", className, template);
-        template = replace("next_token", functionName, template);
-        template = makeTables(template);
-        writer.write(template);
-        writer.close();
-        writeTokenClass();
+        Template template = new Template("lexer.java.template", "package", "lexer_class", "next_token", "trans", "cMap", "skip_list", "final_list", "name_list", "id_list", "max");
+        template.set("package", packageName);
+        template.set("lexer_class", className);
+        template.set("next_token", functionName);
+        makeTables(template);
+        Helper.write(template.toString(), file);
         System.out.println("lexer file generated to " + file);
+
+        writeTokenClass();
     }
 
     String replace(String name, String val, String template) {
@@ -71,13 +69,12 @@ public class LexerGenerator extends IndentWriter {
         return template.replace(name, val);
     }
 
-    String makeTables(String template) {
+    void makeTables(Template template) {
         Map<String, Integer> idMap = new HashMap<>();//unique ids for tokens
         int[] idArr = new int[dfa.numStates + 1];
         int idIdx = 1;
 
-        int maxCharId = dfa.tree.alphabet.map.size();
-        template = makeTrans(template);
+        makeTrans(template);
 
         for (int state = dfa.initial; state <= dfa.numStates; state++) {
             //make id for token
@@ -104,11 +101,10 @@ public class LexerGenerator extends IndentWriter {
             cmapWriter.print(UnicodeUtils.escapeUnicode(id));
         }
         cmapWriter.print("\"");
-        template = replace("cMap", cmapWriter.getString(), template);
 
-
-        template = replace("final_list", NodeList.join(makeIntArr(dfa.accepting), ","), template);
-        template = replace("skip_list", NodeList.join(makeIntArr(dfa.isSkip), ","), template);
+        template.set("cMap", cmapWriter.getString());
+        template.set("final_list", NodeList.join(makeIntArr(dfa.accepting), ","));
+        template.set("skip_list", NodeList.join(makeIntArr(dfa.isSkip), ","));
 
         Writer nameWriter = new Writer();
         Writer idWriter = new Writer();
@@ -125,13 +121,11 @@ public class LexerGenerator extends IndentWriter {
                 nameWriter.print(",");
             }
         }
-        template = replace("name_list", nameWriter.getString(), template);
-        template = replace("id_list", idWriter.getString(), template);
-
-        return template;
+        template.set("name_list", nameWriter.getString());
+        template.set("id_list", idWriter.getString());
     }
 
-    String makeTrans(String template) {
+    void makeTrans(Template template) {
         Writer transWriter = new Writer();
         String indent = "        ";
         transWriter.print("\n");
@@ -156,9 +150,9 @@ public class LexerGenerator extends IndentWriter {
             }
         }
 
-        template = replace("trans", transWriter.getString(), template);
-        template = replace("max", String.valueOf(maxId), template);
-        return template;
+
+        template.set("trans", transWriter.getString());
+        template.set("max", String.valueOf(maxId));
     }
 
     Transition getTransition(int id, List<Transition> list) {
@@ -193,30 +187,15 @@ public class LexerGenerator extends IndentWriter {
         return res;
     }
 
-    void writeTokenClass() throws FileNotFoundException {
-        IndentWriter tokenWriter = new IndentWriter();
+    void writeTokenClass() throws IOException {
+        File out = new File(outDir, tokenClassName + ".java");
+        Template template = new Template("token.java.template", "package", "token_class");
 
-        tokenWriter.writer = new PrintWriter(outDir + "/" + tokenClassName + ".java");
-        if (packageName != null)
-            tokenWriter.linef("package %s;\n", packageName);
-        tokenWriter.linef("public class %s{\n", tokenClassName);
-        tokenWriter.calcIndent();
-        tokenWriter.lineln("public int type;");
-        tokenWriter.lineln("public String value;");
-        tokenWriter.lineln("public int offset;");
-        tokenWriter.lineln("public String name;//token name that's declared in grammar");
-        tokenWriter.lineln();
+        template.set("package", packageName);
+        template.set("token_class", tokenClassName);
 
-        tokenWriter.linef("public %s(){}\n\n", tokenClassName);
-        tokenWriter.linef("public %s(int type,String value){\n", tokenClassName);
-        tokenWriter.calcIndent();
-        tokenWriter.lineln("this.type=type;");
-        tokenWriter.lineln("this.value=value;");
-        tokenWriter.unindent();
-        tokenWriter.lineln("}");
-        tokenWriter.lineln("public String toString(){return value+\" type=\"+type;}");
-        tokenWriter.unindent();
-        tokenWriter.lineln("}");
-        tokenWriter.flush();
+        Helper.write(template.toString(), out);
+
+        System.out.println("token class generated to " + out);
     }
 }

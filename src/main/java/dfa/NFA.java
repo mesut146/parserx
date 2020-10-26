@@ -101,7 +101,10 @@ public class NFA {
         Pair p = new Pair(start + 1, start + 1);
         if (node.isString()) {
             StringNode sn = (StringNode) node;
-            if (sn.isDot) {
+            if (sn.isDot) {//never
+                if (sn.bracket == null) {
+                    throw new RuntimeException("dot node not normalized");
+                }
                 p = insert(sn.toBracket(), start);
             }
             else {

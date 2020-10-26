@@ -12,7 +12,6 @@ import java.io.StringReader;
 
 public class NfaTest {
 
-
     @Test
     public void splitRanges() throws ParseException {
         Tree tree = new Tree();
