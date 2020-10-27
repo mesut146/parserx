@@ -4,8 +4,7 @@ import nodes.NameNode;
 import nodes.Node;
 import nodes.NodeList;
 import nodes.Tree;
-import rule.RuleDecl;
-import utils.Helper;
+import nodes.RuleDecl;
 
 import java.util.*;
 

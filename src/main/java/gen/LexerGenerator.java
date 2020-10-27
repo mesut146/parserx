@@ -9,7 +9,6 @@ import utils.UnicodeUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Reader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,9 +52,10 @@ public class LexerGenerator {
             file = new File(outDir, className + ".java");
         }
 
-        Template template = new Template("lexer.java.template", "package", "lexer_class", "next_token", "trans", "cMap", "skip_list", "final_list", "name_list", "id_list", "max");
+        Template template = new Template("lexer.java.template", "package", "lexer_class", "token_class", "next_token", "trans", "cMap", "skip_list", "final_list", "name_list", "id_list", "max");
         template.set("package", packageName);
         template.set("lexer_class", className);
+        template.set("token_class", tokenClassName);
         template.set("next_token", functionName);
         makeTables(template);
         Helper.write(template.toString(), file);
@@ -64,10 +64,6 @@ public class LexerGenerator {
         writeTokenClass();
     }
 
-    String replace(String name, String val, String template) {
-        name = "$" + name + "$";
-        return template.replace(name, val);
-    }
 
     void makeTables(Template template) {
         Map<String, Integer> idMap = new HashMap<>();//unique ids for tokens
@@ -92,7 +88,7 @@ public class LexerGenerator {
         Writer cmapWriter = new Writer();
         cmapWriter.print("\"");
 
-        for (Map.Entry<RangeNode, Integer> entry : dfa.tree.alphabet.map.entrySet()) {
+        for (Map.Entry<RangeNode, Integer> entry : dfa.getAlphabet().getMap().entrySet()) {
             int left = entry.getKey().start;
             int right = entry.getKey().end;
             int id = entry.getValue();
@@ -129,7 +125,7 @@ public class LexerGenerator {
         Writer transWriter = new Writer();
         String indent = "        ";
         transWriter.print("\n");
-        int maxId = dfa.getAlphabet().map.size();
+        int maxId = dfa.getAlphabet().getMap().size();
         for (int state = 0; state <= dfa.numStates; state++) {
             List<Transition> list = dfa.trans[state];
             transWriter.print(indent);

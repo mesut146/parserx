@@ -10,7 +10,6 @@ PARSER_BEGIN(GParser)
 package grammar;
 
 import nodes.*;
-import rule.*;
 import utils.*;
 import java.io.*;
 

@@ -52,7 +52,7 @@ public class StringNode extends Node {
             return ".";
         }
         if (string_quote) {
-            return "\"" + value + "\"";
+            return "\"" + UnicodeUtils.escapeString(value) + "\"";
         }
         return value;
     }

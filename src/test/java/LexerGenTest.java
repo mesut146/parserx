@@ -51,7 +51,8 @@ public class LexerGenTest {
     @Test
     public void all() throws Exception {
         DFA dfa = Helper.makeDFA(Env.getJavaLexer());
-        //dfa.dump(new File("/home/mesut/IdeaProjects/parserx/src/test/resources/java/javaLexer.txt"));
+        dfa.dump(new File("/home/mesut/IdeaProjects/parserx/src/test/resources/java/javaLexer.txt"));
+        dfa.getAlphabet().dump(new File("/home/mesut/IdeaProjects/parserx/src/test/resources/java/javaLexer-alphabet.txt"));
         //new Analyze(dfa).analyze();
         String outDir;
         //outDir = Env.testJava + "/gen";

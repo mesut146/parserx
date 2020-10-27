@@ -3,7 +3,7 @@
 package grammar;
 
 import nodes.*;
-import rule.RuleDecl;
+import nodes.RuleDecl;
 import utils.UnicodeUtils;
 
 import java.io.File;

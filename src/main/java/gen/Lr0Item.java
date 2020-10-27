@@ -3,7 +3,7 @@ package gen;
 import nodes.NameNode;
 import nodes.Node;
 import nodes.Sequence;
-import rule.RuleDecl;
+import nodes.RuleDecl;
 
 import java.util.Objects;
 

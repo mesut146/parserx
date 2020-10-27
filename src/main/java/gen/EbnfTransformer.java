@@ -1,7 +1,7 @@
 package gen;
 
 import nodes.*;
-import rule.RuleDecl;
+import nodes.RuleDecl;
 
 import java.util.HashMap;
 import java.util.Map;

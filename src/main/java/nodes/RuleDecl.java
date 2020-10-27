@@ -1,6 +1,4 @@
-package rule;
-
-import nodes.Node;
+package nodes;
 
 import java.util.Objects;
 

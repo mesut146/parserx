@@ -3,10 +3,7 @@ package dfa;
 import nodes.*;
 import utils.UnicodeUtils;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.*;
 
 @SuppressWarnings("unchecked")
@@ -73,7 +70,7 @@ public class NFA {
 
     public void addTransitionRange(int state, int target, int left, int right) {
         if (debugTransition)
-            System.out.printf("st:%d (%s-%s) to st:%d\n", state, CharClass.printChar(left), CharClass.printChar(right), target);
+            System.out.printf("st:%d (%s-%s) to st:%d\n", state, UnicodeUtils.printChar(left), UnicodeUtils.printChar(right), target);
         addTransition(state, target, tree.alphabet.getId(RangeNode.of(left, right)));
     }
 
@@ -215,8 +212,16 @@ public class NFA {
         isSkip[p.end] = decl.isSkip;
     }
 
-    public void dump(String path) {
+    public void dump(File path) {
         PrintWriter w = new PrintWriter(System.out);
+        if (path != null) {
+            try {
+                w = new PrintWriter(new FileWriter(path));
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
+        }
 
         for (int state = initial; state <= numStates + 1; state++) {
             w.println(printState(state));
@@ -226,7 +231,7 @@ public class NFA {
                 for (Transition tr : arr) {
                     w.print("  ");
                     //int seg = getSegment(tr.symbol);
-                    w.print(CharClass.seg2str(tr.input));
+                    w.print(tree.alphabet.getRange(tr.input));
 
                     w.print(" -> ");
                     w.print(printState(tr.target));

@@ -2,7 +2,7 @@ package gen;
 
 import nodes.Node;
 import nodes.Tree;
-import rule.RuleDecl;
+import nodes.RuleDecl;
 
 import java.util.HashMap;
 import java.util.HashSet;

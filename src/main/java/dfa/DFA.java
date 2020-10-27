@@ -5,6 +5,8 @@ import utils.UnicodeUtils;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class DFA {
@@ -123,6 +125,12 @@ public class DFA {
 
             List<Transition> arr = trans[state];
             if (arr != null) {
+                Collections.sort(arr, new Comparator<Transition>() {
+                    @Override
+                    public int compare(Transition o1, Transition o2) {
+                        return getAlphabet().getRange(o1.input).compareTo(getAlphabet().getRange(o2.input));
+                    }
+                });
                 for (Transition tr : arr) {
                     w.print("  ");
                     w.print(tree.alphabet.getRange(tr.input));

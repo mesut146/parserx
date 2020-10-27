@@ -2,7 +2,7 @@ package nodes;
 
 public class RegexNode extends Node {
 
-    public Node node;//lexer node or parser rule
+    public Node node;//lexer or parser rule
     String type;
 
     public RegexNode() {
@@ -26,6 +26,9 @@ public class RegexNode extends Node {
     }
 
     public void setType(String type) {
+        if (!"+*?".contains(type)) {
+            throw new RuntimeException("invalid regex type: " + type);
+        }
         this.type = type;
     }
 

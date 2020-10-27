@@ -86,8 +86,8 @@ token{
     LBRACKET = "[";
     RBRACKET = "]";
     BANG = "!";
-    SINGLE_QUOTE = "'";
-    DOUBLE_QUOTE = "\"";
+    //SINGLE_QUOTE = "'";
+    //DOUBLE_QUOTE = "\"";
     UNDERSCORE = "_";
     QUESTION = "?";
     EQ = "=";

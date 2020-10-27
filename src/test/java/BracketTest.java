@@ -16,14 +16,5 @@ public class BracketTest {
         System.out.println("negated=" + b.negateAll());
     }
 
-    @Test
-    public void segmentTest() {
-        int l = 'a';
-        int r = 'z';
-        int seg = CharClass.segment(l, r);
-        int[] arr = CharClass.desegment(seg);
-        assert l == arr[0];
-        assert r == arr[1];
-    }
 
 }

@@ -25,6 +25,7 @@ public class $lexer_class$ {
     int yypos = 0;
     int yychar;
     int bufSize = 10000;
+    int bufEnd;
     char[] yybuf = new char[bufSize];
     int bufStart = 0;
     int bufPos = bufSize;
@@ -76,7 +77,11 @@ public class $lexer_class$ {
       if(bufPos == bufSize){
         char[] newBuf = new char[bufSize];
         System.arraycopy(yybuf, bufStart, newBuf, 0, bufPos - bufStart);
-        int read = reader.read(newBuf, bufPos - bufStart, );
+        int read = reader.read(newBuf, bufPos - bufStart, bufSize - bufPos + bufStart);
+        if(read == -1){
+          //fill rest with EOF
+          Arrays.fill(newBuf, , , EOF);
+        }
         yybuf = newBuf;
         bufPos = bufPos - bufStart;
         bufStart = 0;
@@ -104,29 +109,29 @@ public class $lexer_class$ {
       return new String(yybuf, bufStart, bufPos - bufStart);
     }
 
-    public Token $next_token$() throws IOException {
+    public $token_class$ $next_token$() throws IOException {
+        fill();
         curState = INITIAL;
         lastState = -1;
         int startPos = yypos;
-        read();
+        yychar = yybuf[bufPos];
         if (yychar == EOF) return null;
         while (true) {
-            read();
-            int st = getState();
-            if (st == -1) {
+            yychar = yybuf[bufPos];
+            curState = getState();
+            if (curState == -1) {
                 if (lastState != -1) {
-                    Token token = null;
                     if (!getBit(skip, lastState)) {
-                        token = new Token(ids[lastState], getText());
+                        Token token = new Token(ids[lastState], getText());
                         token.offset = startPos;
                         token.name = names[lastState];
                         lastState = -1;
+                        bufStart = bufPos;
+                        return token;
                     }
-                    curState = 0;
                     bufStart = bufPos;
-                    if (token != null) return token;
-                    if (yychar == -1) break;
-                    if (getBit(skip, lastState)) return next();
+                    if (yychar == EOF) break;
+                    if (getBit(skip, lastState)) return $next_token$();
                 }
                 else {
                     throw new IOException("invalid input=" + yychar + " yybuf= " + getText());
@@ -134,7 +139,6 @@ public class $lexer_class$ {
             }
             else {
                 bufPos++;
-                curState = st;
                 if (getBit(accepting, curState)) lastState = curState;
             }
         }

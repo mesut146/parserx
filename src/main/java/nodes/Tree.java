@@ -1,10 +1,10 @@
 package nodes;
 
 import dfa.Alphabet;
+import dfa.CharClass;
 import dfa.NFA;
 import grammar.GParser;
 import grammar.ParseException;
-import rule.RuleDecl;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -58,7 +58,6 @@ public class Tree {
         }
         return -1;
     }
-
 
     //merge two grammar files(lexer,parser)
     void mergeWith(Tree other) {
@@ -129,7 +128,7 @@ public class Tree {
 
     //construct NFA from this grammar file
     public NFA makeNFA() {
-        makeDistinctRanges();
+        CharClass.makeDistinctRanges(this);
         NFA nfa = new NFA(100);
         nfa.tree = this;
         for (TokenDecl decl : tokens) {
@@ -180,98 +179,7 @@ public class Tree {
 
         return sb.toString();
     }
-
-    //find all intersecting inputs and split them so that all of them becomes unique
-    private void makeDistinctRanges() {
-        Set<RangeNode> ranges = new HashSet<>();//whole input set as ranges nodes
-        List<Bracket> brackets = new ArrayList<>();
-        for (TokenDecl decl : tokens) {
-            walkNodes(decl.regex, ranges, brackets);
-        }
-        //find intersecting ranges and split them
-        outer:
-        while (true) {
-            for (Bracket b : brackets) {
-                for (RangeNode rangeNode : b.rangeNodes) {
-                    //if this range intersect other ranges
-                    for (RangeNode otherRange : ranges) {
-                        if (rangeNode.isSingle() && rangeNode.intersect(otherRange) && !rangeNode.same(otherRange)) {
-                            RangeNode inter = RangeNode.intersect(rangeNode, otherRange);
-                            RangeNode me1 = RangeNode.of(rangeNode.start, inter.start - 1);
-                            RangeNode me2 = RangeNode.of(inter.end + 1, rangeNode.end);
-                            RangeNode he1 = RangeNode.of(otherRange.start, inter.start - 1);
-                            RangeNode he2 = RangeNode.of(inter.end + 1, otherRange.end);
-                            b.rangeNodes.remove(rangeNode);
-                            ranges.remove(rangeNode);
-                            if (me1.isValid()) {
-                                b.rangeNodes.add(me1);
-                                ranges.add(me1);
-                            }
-                            if (me2.isValid()) {
-                                b.rangeNodes.add(me2);
-                                ranges.add(me2);
-                            }
-                            ranges.remove(otherRange);
-                            if (he1.isValid()) ranges.add(he1);
-                            if (he2.isValid()) ranges.add(he2);
-
-                            b.rangeNodes.add(inter);
-                            ranges.add(inter);
-                            b.clear();
-                            b.addAll(b.rangeNodes);
-                            //start from zero to check if newly added ranges breaks existing ones
-                            continue outer;
-                        }//for ranges
-                    }//for ranges
-                }//for bracket
-            }
-            break;//found none break while
-        }//while
-        for (RangeNode rangeNode : ranges) {
-            alphabet.add(rangeNode);
-        }
-    }
-
-    static void walkNodes(Node node, Set<RangeNode> ranges, List<Bracket> brackets) {
-        //find all ranges and store them
-        if (node.isBracket()) {
-            Bracket b = node.asBracket();
-            ranges.addAll(b.normalize().rangeNodes);
-            brackets.add(b);
-        }
-        else if (node.isSequence()) {
-            for (Node c : node.asSequence()) {
-                walkNodes(c, ranges, brackets);
-            }
-        }
-        else if (node.isString()) {
-            StringNode stringNode = node.asString();
-            if (stringNode.isDot) {
-                Bracket b = stringNode.toBracket().normalize();
-                ranges.addAll(b.rangeNodes);
-                brackets.add(b);
-            }
-            else {
-                //make range for each char in string
-                String str = node.asString().value;
-                for (char c : str.toCharArray()) {
-                    ranges.add(RangeNode.of(c, c));
-                }
-            }
-
-        }
-        else if (node.isGroup()) {
-            walkNodes(node.asGroup().rhs, ranges, brackets);
-        }
-        else if (node.isRegex()) {
-            walkNodes(node.asRegex().node, ranges, brackets);
-        }
-        else if (node.isOr()) {
-            for (Node c : node.asOr()) {
-                walkNodes(c, ranges, brackets);
-            }
-        }
-    }
+    
 
     public RuleDecl getRule(String name) {
         List<RuleDecl> list = getRules(name);
@@ -289,5 +197,9 @@ public class Tree {
             }
         }
         return list;
+    }
+
+    public List<TokenDecl> getTokens() {
+        return tokens;
     }
 }

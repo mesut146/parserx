@@ -102,4 +102,18 @@ public class UnicodeUtils {
         }
         return sb.toString();
     }
+
+    public static String printChar(int chr) {
+        if (Character.isAlphabetic(chr) || Character.isDigit(chr) || isPrintableChar((char) chr)) {
+            return Character.toString((char) chr);
+        }
+        return String.format("\\u%04x", chr);//unicode style
+    }
+
+    public static boolean isPrintableChar(char c) {
+        Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
+        return (!Character.isISOControl(c)) &&
+                block != null &&
+                block != Character.UnicodeBlock.SPECIALS;
+    }
 }

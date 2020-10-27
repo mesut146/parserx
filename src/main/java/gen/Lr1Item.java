@@ -1,7 +1,7 @@
 package gen;
 
 import nodes.NameNode;
-import rule.RuleDecl;
+import nodes.RuleDecl;
 
 import java.util.ArrayList;
 import java.util.List;
