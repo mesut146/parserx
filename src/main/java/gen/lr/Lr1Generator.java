@@ -1,5 +1,9 @@
-package gen;
+package gen.lr;
 
+import gen.EbnfTransformer;
+import gen.IndentWriter;
+import gen.LexerGenerator;
+import gen.PrepareTree;
 import nodes.NameNode;
 import nodes.Node;
 import nodes.Sequence;

@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class Template {
-    public List<String> list = new ArrayList<>();
+    private final List<String> list;
 
     public Template(String fileName, String... names) throws IOException {
         if (!fileName.startsWith("/")) {
@@ -26,6 +26,7 @@ public class Template {
             }
         });
         int pos = 0;
+        list = new ArrayList<>();
         for (part part : indexes) {
             String prev = str.substring(pos, part.index);
             if (!prev.isEmpty()) {
@@ -37,6 +38,7 @@ public class Template {
         list.add(str.substring(pos));
     }
 
+    //mark positions of variable #name
     void mark(String str, String name, List<part> parts) {
         int pos = 0;
         while (pos < str.length()) {

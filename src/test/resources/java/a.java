@@ -52,5 +52,3 @@ class outer {
         System.out.println("outer_norm");
     }
 }
-
-

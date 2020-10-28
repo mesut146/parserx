@@ -1,5 +1,5 @@
-import gen.Lr0Generator;
-import gen.Lr1Generator;
+import gen.lr.Lr0Generator;
+import gen.lr.Lr1Generator;
 import nodes.Tree;
 import org.junit.Test;
 

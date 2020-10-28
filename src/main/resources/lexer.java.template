@@ -1,15 +1,10 @@
 package $package$;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Arrays;
+import java.io.*;
+import java.util.*;
 
 public class $lexer_class$ {
-    static int[][] trans = unpackTrans(trans_packed, $max$);
+
     static int[] cMap = unpackCMap($cMap$);
     int[] skip = {$skip_list$};
     int[] accepting = {$final_list$};
@@ -20,15 +15,13 @@ public class $lexer_class$ {
     static final int INITIAL = 0;
     static final int EOF = -1;
     Reader reader;
-    int curState;
-    int lastState = -1;
-    int yypos = 0;
+    int yypos = 0;//pos in file
     int yychar;
     int bufSize = 10000;
+    int bufPos = bufSize;//pos in buffer
+    int bufStart = bufSize;
     int bufEnd;
     char[] yybuf = new char[bufSize];
-    int bufStart = 0;
-    int bufPos = bufSize;
 
     public $lexer_class$(Reader reader) {
         this.reader = reader;
@@ -49,8 +42,8 @@ public class $lexer_class$ {
             int size = str.charAt(pos++);
             int[] arr = new int[max];
             Arrays.fill(arr, -1);
-            //i is input id
-            for (int i = 0; i < size; i++) {
+            for (int input = 0; input < size; input++) {
+                //input -> target state
                 arr[str.charAt(pos++)] = str.charAt(pos++);
             }
             list.add(arr);
@@ -80,7 +73,7 @@ public class $lexer_class$ {
         int read = reader.read(newBuf, bufPos - bufStart, bufSize - bufPos + bufStart);
         if(read == -1){
           //fill rest with EOF
-          Arrays.fill(newBuf, , , EOF);
+          //Arrays.fill(newBuf, , , (char)EOF);
         }
         yybuf = newBuf;
         bufPos = bufPos - bufStart;
@@ -89,21 +82,17 @@ public class $lexer_class$ {
 
     }
 
-    int read() throws IOException {
+    /*int read() throws IOException {
         if (!backup) {
             yychar = reader.read();
             yypos++;
         }
         return yychar;
-    }
+    }*/
 
-    void expected(){
-        //trans[curState]
-    }
-
-    int getState() {
-        return trans[curState][cMap[yychar]];
-    }
+    /*void expected(){
+        trans[curState]
+    }*/
 
     String getText(){
       return new String(yybuf, bufStart, bufPos - bufStart);
@@ -111,21 +100,20 @@ public class $lexer_class$ {
 
     public $token_class$ $next_token$() throws IOException {
         fill();
-        curState = INITIAL;
-        lastState = -1;
+        int curState = INITIAL;
+        int lastState = -1;
         int startPos = yypos;
         yychar = yybuf[bufPos];
         if (yychar == EOF) return null;
         while (true) {
             yychar = yybuf[bufPos];
-            curState = getState();
+            curState = trans[curState][cMap[yychar]];
             if (curState == -1) {
                 if (lastState != -1) {
                     if (!getBit(skip, lastState)) {
                         Token token = new Token(ids[lastState], getText());
                         token.offset = startPos;
                         token.name = names[lastState];
-                        lastState = -1;
                         bufStart = bufPos;
                         return token;
                     }
@@ -139,6 +127,7 @@ public class $lexer_class$ {
             }
             else {
                 bufPos++;
+                yypos++;
                 if (getBit(accepting, curState)) lastState = curState;
             }
         }
@@ -147,4 +136,5 @@ public class $lexer_class$ {
 
 
     static String trans_packed = $trans$;
+    static int[][] trans = unpackTrans(trans_packed, $max$);
 }

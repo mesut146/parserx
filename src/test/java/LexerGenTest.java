@@ -56,7 +56,8 @@ public class LexerGenTest {
         //new Analyze(dfa).analyze();
         String outDir;
         //outDir = Env.testJava + "/gen";
-        outDir = "/home/mesut/IdeaProjects/parserx/src/test/resources/java";
+        //outDir = "/home/mesut/IdeaProjects/parserx/src/test/resources/java";
+        outDir = "/home/mesut/IdeaProjects/parserx/src/test/java/gen";
         //outDir = Main.javaDir;
         generateTest(dfa, outDir);
     }

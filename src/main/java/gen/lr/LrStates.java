@@ -1,4 +1,4 @@
-package gen;
+package gen.lr;
 
 import java.util.ArrayList;
 import java.util.List;

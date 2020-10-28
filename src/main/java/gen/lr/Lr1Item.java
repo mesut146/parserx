@@ -1,4 +1,4 @@
-package gen;
+package gen.lr;
 
 import nodes.NameNode;
 import nodes.RuleDecl;

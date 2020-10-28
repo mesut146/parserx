@@ -21,6 +21,7 @@ public class LexerGenerator {
     String tokenClassName = "Token";
     String functionName = "next";
     boolean outDirAuto;
+    Map<String, Integer> idMap = new HashMap<>();//name -> id
 
     public LexerGenerator(DFA dfa, String outDir) {
         this.dfa = dfa;
@@ -66,11 +67,18 @@ public class LexerGenerator {
 
 
     void makeTables(Template template) {
-        Map<String, Integer> idMap = new HashMap<>();//unique ids for tokens
+        makeTrans(template);
+        nameAndId(template);
+        template.set("final_list", NodeList.join(makeIntArr(dfa.accepting), ","));
+        template.set("skip_list", NodeList.join(makeIntArr(dfa.isSkip), ","));
+
+        cmap(template);
+    }
+
+    private void nameAndId(Template template) {
+        //generate name and id list
         int[] idArr = new int[dfa.numStates + 1];
         int idIdx = 1;
-
-        makeTrans(template);
 
         for (int state = dfa.initial; state <= dfa.numStates; state++) {
             //make id for token
@@ -83,25 +91,7 @@ public class LexerGenerator {
                 idArr[state] = idMap.get(name);
             }
         }
-
-        //write inputMap
-        Writer cmapWriter = new Writer();
-        cmapWriter.print("\"");
-
-        for (Map.Entry<RangeNode, Integer> entry : dfa.getAlphabet().getMap().entrySet()) {
-            int left = entry.getKey().start;
-            int right = entry.getKey().end;
-            int id = entry.getValue();
-            cmapWriter.print(UnicodeUtils.escapeUnicode(left));
-            cmapWriter.print(UnicodeUtils.escapeUnicode(right));
-            cmapWriter.print(UnicodeUtils.escapeUnicode(id));
-        }
-        cmapWriter.print("\"");
-
-        template.set("cMap", cmapWriter.getString());
-        template.set("final_list", NodeList.join(makeIntArr(dfa.accepting), ","));
-        template.set("skip_list", NodeList.join(makeIntArr(dfa.isSkip), ","));
-
+        //write name and id list
         Writer nameWriter = new Writer();
         Writer idWriter = new Writer();
         idIdx = 0;
@@ -119,6 +109,22 @@ public class LexerGenerator {
         }
         template.set("name_list", nameWriter.getString());
         template.set("id_list", idWriter.getString());
+    }
+
+    private void cmap(Template template) {
+        Writer cmapWriter = new Writer();
+        cmapWriter.print("\"");
+        for (Map.Entry<RangeNode, Integer> entry : dfa.getAlphabet().getMap().entrySet()) {
+            int left = entry.getKey().start;
+            int right = entry.getKey().end;
+            int id = entry.getValue();
+            cmapWriter.print(UnicodeUtils.escapeUnicode(left));
+            cmapWriter.print(UnicodeUtils.escapeUnicode(right));
+            cmapWriter.print(UnicodeUtils.escapeUnicode(id));
+        }
+        cmapWriter.print("\"");
+
+        template.set("cMap", cmapWriter.getString());
     }
 
     void makeTrans(Template template) {
