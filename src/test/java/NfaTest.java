@@ -1,5 +1,6 @@
 import dfa.DFA;
 import dfa.NFA;
+import dfa.RegexBuilder;
 import grammar.GParser;
 import grammar.ParseException;
 import nodes.Node;
@@ -40,6 +41,14 @@ public class NfaTest {
 
         nfa.dot(Env.testRes + "/test-nfa.dot");
         dfa.dot(Env.testRes + "/test-dfa.dot");
+    }
+
+    @Test
+    public void reader() throws Exception {
+        File file = Env.getResFile("fsm/test2.nfa");
+        NFA nfa = NfaReader.read(file);
+        //nfa.dump(null);
+        System.out.println(new RegexBuilder(nfa).buildRegex());
     }
 
     @Test

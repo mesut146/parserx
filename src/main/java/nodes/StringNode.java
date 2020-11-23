@@ -63,7 +63,6 @@ public class StringNode extends Node {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
         StringNode node = (StringNode) o;
         return isDot == node.isDot &&
                 Objects.equals(value, node.value);

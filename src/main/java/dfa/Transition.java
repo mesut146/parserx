@@ -4,14 +4,21 @@ import java.util.Objects;
 
 //a single arrow
 public class Transition {
+    public int state;//from
     public int target;
     public int input;
-    public int state;//from
+    public boolean epsilon;
 
     public Transition(int state, int input, int target) {
         this.state = state;
         this.target = target;
         this.input = input;
+    }
+
+    public Transition(int state, int target, boolean epsilon) {
+        this.state = state;
+        this.target = target;
+        this.epsilon = epsilon;
     }
 
     public static Transition from(int from) {

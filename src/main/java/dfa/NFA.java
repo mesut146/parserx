@@ -11,7 +11,6 @@ public class NFA {
     public static boolean debugTransition = false;
     public static boolean debugDFA = false;
     public Tree tree;//grammar file
-    StateSet[] epsilon;//[state]=set of next states with epsilon moves
     public List<Transition>[] trans;
     public boolean[] accepting;
     public boolean[] isSkip;
@@ -19,12 +18,16 @@ public class NFA {
     public int initial = 0;
     public int lastState = 0;
 
-    public NFA(int maxStates) {
+    public NFA(int maxStates, Tree tree) {
         trans = new List[maxStates];
         accepting = new boolean[maxStates];
         isSkip = new boolean[maxStates];
         names = new String[maxStates];
-        epsilon = new StateSet[maxStates];
+        this.tree = tree;
+    }
+
+    public NFA(int maxStates) {
+        this(maxStates, new Tree());
     }
 
     public void expand(int state) {
@@ -40,7 +43,6 @@ public class NFA {
         List<Transition>[] newTrans = new List[max];
         String[] newNames = new String[max];
         accepting = expand(accepting, newAccepting, len);
-        epsilon = expand(epsilon, newEpsilon, len);
         trans = expand(trans, newTrans, len);
         isSkip = expand(isSkip, newSkip, len);
         names = expand(names, newNames, len);
@@ -51,30 +53,44 @@ public class NFA {
         return (T) target;
     }
 
+    StateSet getEps(int state) {
+        StateSet stateSet = new StateSet();
+        for (Transition tr : trans[state]) {
+            if (tr.epsilon) {
+                stateSet.addState(tr.target);
+            }
+        }
+        return stateSet;
+    }
+
     public Alphabet getAlphabet() {
         return tree.alphabet;
     }
 
     //state,input index,target state
     public void addTransition(int state, int target, int input) {
-        expand(Math.max(state, target));
         if (debugTransition) {
-            System.out.printf("st:%d to st:%d with:%s\n", state, target, tree.alphabet.getRange(input));
+            System.out.printf("st:%d to st:%d with:%s\n", state, target, getAlphabet().getRange(input));
         }
+        add(new Transition(state, input, target));
+        lastState = Math.max(lastState, Math.max(state, target));
+    }
+
+    private void add(Transition tr) {
+        expand(Math.max(tr.state, tr.target));
         List<Transition> arr;
-        arr = trans[state];
+        arr = trans[tr.state];
         if (arr == null) {
             arr = new ArrayList<>();
-            trans[state] = arr;
+            trans[tr.state] = arr;
         }
-        arr.add(new Transition(state, input, target));
-        lastState = Math.max(lastState, Math.max(state, target));
+        arr.add(tr);
     }
 
     public void addTransitionRange(int state, int target, int left, int right) {
         if (debugTransition)
             System.out.printf("st:%d (%s-%s) to st:%d\n", state, UnicodeUtils.printChar(left), UnicodeUtils.printChar(right), target);
-        addTransition(state, target, tree.alphabet.getId(RangeNode.of(left, right)));
+        addTransition(state, target, getAlphabet().getId(RangeNode.of(left, right)));
     }
 
     public void setAccepting(int state, boolean val) {
@@ -87,12 +103,9 @@ public class NFA {
     }
 
     public void addEpsilon(int state, int target) {
-        expand(state);
-        StateSet set = epsilon[state];
-        if (set == null) {
-            set = epsilon[state] = new StateSet();
+        if (!getEps(state).contains(target)) {
+            add(new Transition(state, target, true));
         }
-        set.addState(target);
     }
 
     //add regex to @start
@@ -241,7 +254,7 @@ public class NFA {
                     w.println();
                 }
             }
-            StateSet eps = epsilon[state];
+            StateSet eps = getEps(state);
             if (eps != null) {
                 w.print("  E -> ");
                 for (int e : eps.states) {
@@ -324,7 +337,6 @@ public class NFA {
                 System.out.printf("map(%s)=%s\n", state, map);
             //make transition for each input
             for (int input : map.keySet()) {
-                //String seg = CharClass.seg2escaped(input);
                 StateSet targets = map.get(input);
                 if (!openStates.contains(targets) && !processed.contains(targets)) {
                     openStates.add(targets);
@@ -333,7 +345,7 @@ public class NFA {
                 if (debugDFA)
                     System.out.printf("targets=%s dfa=%d\n", targets, target_state);
                 dfa.setAccepting(target_state, isAccepting(targets));
-                dfa.addTransition(dfaState, target_state,input);
+                dfa.addTransition(dfaState, target_state, input);
                 dfa.isSkip[target_state] = isSkip(targets);
                 dfa.names[target_state] = getName(targets);
             }
@@ -389,7 +401,7 @@ public class NFA {
     public StateSet closure(int state) {
         StateSet res = new StateSet();
         res.addState(state);//itself
-        StateSet eps = epsilon[state];
+        StateSet eps = getEps(state);
         if (eps == null || eps.states.size() == 0) {
             return res;
         }
@@ -428,7 +440,7 @@ public class NFA {
 
             for (int state = 0; state <= lastState; state++) {
                 List<Transition> list = trans[state];
-                StateSet eps = epsilon[state];
+                StateSet eps = getEps(state);
                 if (list != null) {
                     for (Transition tr : list) {
                         w.printf("%s -> %s [label=\"[%s]\"]\n", state, tr.target, UnicodeUtils.escapeString(getAlphabet().getRange(tr.input).toString()));

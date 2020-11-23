@@ -13,37 +13,51 @@ public class NfaReader {
         BufferedReader reader = new BufferedReader(new FileReader(file));
         NFA nfa = new NFA(100);
         String line;
-        boolean inState = false;
-        int state = -1;
         Alphabet alphabet = new Alphabet();
+        nfa.tree.alphabet = alphabet;
         while ((line = reader.readLine()) != null) {
             if (line.trim().isEmpty()) {
                 continue;
             }
-            if (inState) {
-                String[] arr = line.split("->");
-                int target = getState(arr[1]);
-                nfa.addTransition(state, target, getId(alphabet, arr[0].trim()));
-            }
-            else {
-                state = getState(line);
-                inState = true;
+            int arrow = line.indexOf("->");
+            int comma = line.indexOf(",");
+            int[] state = getState(line.substring(0, arrow));
+            int[] target = getState(line.substring(arrow + 2, comma));
+
+            nfa.addTransition(state[0], target[0], getId(alphabet, line.substring(comma + 1)));
+            if (state[1] == 1) nfa.setAccepting(state[0], true);
+            if (target[1] == 1) nfa.setAccepting(target[0], true);
+            if (state[2] == 1) {
+                nfa.initial = state[0];
             }
         }
         return nfa;
     }
 
-    static int getState(String line) throws IOException {
-        if (line.startsWith("s") || line.startsWith("S")) {
-            return Integer.parseInt(line.substring(1));
+    static int[] getState(String str) {
+        str = str.trim();
+        int isFinal = 0;
+        int isInitial = 0;
+        if (str.startsWith("(")) {
+            isFinal = 1;
+            str = str.substring(1, str.length() - 1);
         }
-        else {
-            throw new IOException("invalid line:" + line);
+        else if (str.startsWith("i") || str.startsWith("I")) {
+            isInitial = 1;
+            str = str.substring(1);
         }
+        if (str.startsWith("s") || str.startsWith("S")) {
+            str = str.substring(1);
+        }
+        return new int[]{Integer.parseInt(str), isFinal, isInitial};
     }
 
     static int getId(Alphabet alphabet, String input) {
-        StringNode node = new StringNode(input);
+        //todo epsipn
+        if (input.equals("eps")) {
+            return -1;
+        }
+        StringNode node = new StringNode(input.trim());
         return alphabet.addRegex(node);
     }
 }

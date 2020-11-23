@@ -31,7 +31,7 @@ public class RegexBuilder {
         mergeFinals();
         //makeRegexAlphabet();
 
-        for (int state = 0; state < nfa.lastState; state++) {
+        for (int state = 0; state <= nfa.lastState; state++) {
             if (!nfa.isAccepting(state) && nfa.initial != state) {
                 eliminate(state);
             }
@@ -115,10 +115,14 @@ public class RegexBuilder {
     //actual regex builder
     Node path(Transition in, Transition out) {
         Sequence path = new Sequence();
-        path.add(idToNode(in.input));
+        path.add(idToNode(in.input));//eps
         Transition loop = getLooping(in.target);
         if (loop != null) {
-            path.add(new RegexNode(idToNode(loop.input), "*"));
+            Node node = idToNode(loop.input);
+            if (node.isSequence()) {
+                node = new GroupNode(node);
+            }
+            path.add(new RegexNode(node, "*"));
         }
         path.add(idToNode(out.input));
         return path.normal();
@@ -146,17 +150,15 @@ public class RegexBuilder {
     }*/
 
     int mergeFinals() {
-        int newFinal = 0;
+        int newFinal = nfa.newState();
+        nfa.setAccepting(newFinal, true);
         for (int state = 0; state < nfa.lastState; state++) {
             if (nfa.isAccepting(state)) {
                 List<Transition> list = nfa.trans[state];
                 if (list != null) {
-                    if (newFinal == 0) {
-                        newFinal = nfa.newState();
-                        nfa.setAccepting(newFinal, true);
-                    }
                     nfa.addEpsilon(state, newFinal);
                 }
+                nfa.setAccepting(state, false);
             }
         }
         return newFinal;
@@ -179,7 +181,7 @@ public class RegexBuilder {
     List<Transition> findIncoming(int to) {
         List<Transition> all = new ArrayList<>();
 
-        for (int state = 0; state < nfa.lastState; state++) {
+        for (int state = 0; state <= nfa.lastState; state++) {
             List<Transition> list = nfa.trans[state];
             if (list != null) {
                 for (Transition transition : list) {
