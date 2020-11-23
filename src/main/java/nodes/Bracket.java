@@ -23,6 +23,14 @@ public class Bracket extends NodeList {
         add(new CharNode(chr));
     }
 
+    public Bracket(String str) throws ParseException {
+        parse(str);
+    }
+
+    public Bracket() {
+
+    }
+
     public void parse(String str) throws ParseException {
         //System.out.println(str);
         pos = 0;

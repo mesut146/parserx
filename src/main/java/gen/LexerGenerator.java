@@ -10,6 +10,7 @@ import utils.UnicodeUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -77,10 +78,10 @@ public class LexerGenerator {
 
     private void nameAndId(Template template) {
         //generate name and id list
-        int[] idArr = new int[dfa.numStates + 1];
+        int[] idArr = new int[dfa.lastState + 1];
         int idIdx = 1;
 
-        for (int state = dfa.initial; state <= dfa.numStates; state++) {
+        for (int state = dfa.initial; state <= dfa.lastState; state++) {
             //make id for token
             String name = dfa.names[state];
             if (name != null && dfa.isAccepting(state)) {
@@ -95,7 +96,7 @@ public class LexerGenerator {
         Writer nameWriter = new Writer();
         Writer idWriter = new Writer();
         idIdx = 0;
-        for (int state = dfa.initial; state <= dfa.numStates; state++) {
+        for (int state = dfa.initial; state <= dfa.lastState; state++) {
             if (idIdx > 0) {
                 idWriter.print(",");
             }
@@ -103,7 +104,7 @@ public class LexerGenerator {
             idIdx++;
 
             nameWriter.print("\"" + (dfa.names[state] == null ? "" : dfa.names[state]) + "\"");
-            if (state <= dfa.numStates - 1) {
+            if (state <= dfa.lastState - 1) {
                 nameWriter.print(",");
             }
         }
@@ -114,13 +115,15 @@ public class LexerGenerator {
     private void cmap(Template template) {
         Writer cmapWriter = new Writer();
         cmapWriter.print("\"");
-        for (Map.Entry<RangeNode, Integer> entry : dfa.getAlphabet().getMap().entrySet()) {
-            int left = entry.getKey().start;
-            int right = entry.getKey().end;
-            int id = entry.getValue();
+        for (Iterator<RangeNode> it = dfa.getAlphabet().getRanges(); it.hasNext(); ) {
+            RangeNode rangeNode = it.next();
+            int left = rangeNode.start;
+            int right = rangeNode.end;
+            int id = dfa.getAlphabet().getId(rangeNode);
             cmapWriter.print(UnicodeUtils.escapeUnicode(left));
             cmapWriter.print(UnicodeUtils.escapeUnicode(right));
             cmapWriter.print(UnicodeUtils.escapeUnicode(id));
+
         }
         cmapWriter.print("\"");
 
@@ -131,8 +134,8 @@ public class LexerGenerator {
         Writer transWriter = new Writer();
         String indent = "        ";
         transWriter.print("\n");
-        int maxId = dfa.getAlphabet().getMap().size();
-        for (int state = 0; state <= dfa.numStates; state++) {
+        int maxId = dfa.getAlphabet().size();
+        for (int state = 0; state <= dfa.lastState; state++) {
             List<Transition> list = dfa.trans[state];
             transWriter.print(indent);
             transWriter.print("\"");
@@ -147,7 +150,7 @@ public class LexerGenerator {
                 }
             }
             transWriter.print("\"");
-            if (state <= dfa.numStates - 1) {
+            if (state <= dfa.lastState - 1) {
                 transWriter.print(" +\n");
             }
         }

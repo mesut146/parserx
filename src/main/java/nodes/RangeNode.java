@@ -18,6 +18,10 @@ public class RangeNode extends Node implements Comparable<RangeNode> {
         return new RangeNode(start, end);
     }
 
+    public static RangeNode of(int start) {
+        return new RangeNode(start, start);
+    }
+
     @Override
     public String toString() {
         if (start == end) {

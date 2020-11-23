@@ -21,13 +21,25 @@ public class NfaTest {
     }
 
     static Node makeRegex(String regex) throws ParseException {
-        return new GParser(new StringReader(regex)).regex();
+        return new GParser(new StringReader(regex)).rhs();
     }
 
     static Tree makeTree(String regex) throws ParseException {
         Tree tree = new Tree();
         tree.addToken(new TokenDecl("test", makeRegex(regex)));
         return tree;
+    }
+
+    @Test
+    public void comment() throws ParseException {
+        //String regex = "\"/*\" \"x\"* \"*\" (\"yx*\")* \"/\"";
+        String regex = "\"/*\" (\"x\" | \"*y\")* \"*/\"";
+        Tree tree = makeTree(regex);
+        NFA nfa = tree.makeNFA();
+        DFA dfa = nfa.dfa();
+
+        nfa.dot(Env.testRes + "/test-nfa.dot");
+        dfa.dot(Env.testRes + "/test-dfa.dot");
     }
 
     @Test
@@ -45,7 +57,7 @@ public class NfaTest {
     static NFA makeNFA(File grammar) {
         Tree tree = Tree.makeTree(grammar);
         NFA nfa = tree.makeNFA();
-        System.out.println("total nfa states=" + nfa.numStates);
+        System.out.println("total nfa states=" + nfa.lastState);
         //nfa.dump("");
         return nfa;
     }

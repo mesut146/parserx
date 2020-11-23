@@ -7,7 +7,6 @@ import java.util.Map;
 
 public class UnicodeUtils {
     public static Map<Character, Character> escapeMap = new HashMap<>();
-
     public static Map<Character, Character> escapeMapSimple = new HashMap<>();
 
     static {
@@ -20,10 +19,17 @@ public class UnicodeUtils {
         escapeMap.put('"', '\"');
         escapeMap.put('\\', '\\');
         escapeMap.put('s', ' ');//space
+        //meta chars
+        escapeMap.put('*', '*');
+        escapeMap.put('+', '+');
+        escapeMap.put('?', '?');
         escapeMapSimple.putAll(escapeMap);
         escapeMapSimple.remove('s');
         //escapeMapSimple.remove('\\');
         escapeMapSimple.remove('\'');
+        escapeMapSimple.remove('*');
+        escapeMapSimple.remove('+');
+        escapeMapSimple.remove('?');
     }
 
     //get escaped char to real char

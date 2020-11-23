@@ -80,4 +80,13 @@ public class Node {
         return this instanceof EmptyNode;
     }
 
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj);
+    }
 }

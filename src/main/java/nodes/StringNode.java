@@ -3,6 +3,8 @@ package nodes;
 import grammar.ParseException;
 import utils.UnicodeUtils;
 
+import java.util.Objects;
+
 //lexer rule without regex
 //can be in lexer or parser part
 public class StringNode extends Node {
@@ -57,5 +59,18 @@ public class StringNode extends Node {
         return value;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        StringNode node = (StringNode) o;
+        return isDot == node.isDot &&
+                Objects.equals(value, node.value);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(value, isDot);
+    }
 }

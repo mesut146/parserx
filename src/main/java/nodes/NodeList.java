@@ -17,6 +17,9 @@ public class NodeList extends Node implements Iterable<Node> {
         this.list = new ArrayList<>(Arrays.asList(list));
     }
 
+    public NodeList() {
+    }
+
     public static <T> String join(List<T> list, String del) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < list.size(); i++) {

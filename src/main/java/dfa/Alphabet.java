@@ -1,18 +1,20 @@
 package dfa;
 
+import nodes.Node;
 import nodes.RangeNode;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class Alphabet {
-    public Map<RangeNode, Integer> map = new HashMap<>();
+    public Map<Node, Integer> map = new HashMap<>();
     int lastId = 0;
 
-    public Map<RangeNode, Integer> getMap() {
-        return map;
+    public int size() {
+        return map.size();
     }
 
     public void add(RangeNode rangeNode) {
@@ -22,6 +24,21 @@ public class Alphabet {
         }
     }
 
+    public int addRegex(Node node) {
+        //check(node);
+        if (!map.containsKey(node)) {
+            map.put(node, lastId++);
+        }
+        return map.get(node);
+    }
+
+    public void add(List<RangeNode> rangeNodes) {
+        for (RangeNode rangeNode : rangeNodes) {
+            add(rangeNode);
+        }
+    }
+
+    //check if range conflicts with existing ranges
     private void check(RangeNode rangeNode) {
         RangeNode r = findRange(rangeNode);
         if (r != null && !r.equals(rangeNode)) {
@@ -29,7 +46,8 @@ public class Alphabet {
         }
     }
 
-    public int getId(RangeNode rangeNode) {
+
+    public int getId(Node rangeNode) {
         if (!map.containsKey(rangeNode)) {
             throw new RuntimeException("invalid range " + rangeNode);
         }
@@ -45,7 +63,11 @@ public class Alphabet {
     }
 
     public RangeNode getRange(int id) {
-        for (Map.Entry<RangeNode, Integer> entry : map.entrySet()) {
+        return getRegex(id).asRange();
+    }
+
+    public Node getRegex(int id) {
+        for (Map.Entry<Node, Integer> entry : map.entrySet()) {
             if (entry.getValue() == id) {
                 return entry.getKey();
             }
@@ -53,23 +75,36 @@ public class Alphabet {
         throw new RuntimeException("invalid range id: " + id);
     }
 
+    public void update(int id, Node node) {
+        map.remove(getRegex(id));
+        map.put(node, id);
+    }
+
     public Iterator<RangeNode> getRanges() {
-        return map.keySet().iterator();
-    }
-
-    public RangeNode findRange(int ch) {
-        for (Map.Entry<RangeNode, Integer> entry : map.entrySet()) {
-            if (entry.getKey().start <= ch && entry.getKey().end >= ch) {
-                return entry.getKey();
+        final Iterator<Node> iterator = map.keySet().iterator();
+        return new Iterator<RangeNode>() {
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
             }
-        }
-        return null;
+
+            @Override
+            public RangeNode next() {
+                return iterator.next().asRange();
+            }
+
+            @Override
+            public void remove() {
+                iterator.remove();
+            }
+        };
     }
 
+    //find intersecting range
     public RangeNode findRange(RangeNode range) {
-        for (Map.Entry<RangeNode, Integer> entry : map.entrySet()) {
-            if (entry.getKey().intersect(range)) {
-                return entry.getKey();
+        for (Map.Entry<Node, Integer> entry : map.entrySet()) {
+            if (entry.getKey().asRange().intersect(range)) {
+                return entry.getKey().asRange();
             }
         }
         return null;

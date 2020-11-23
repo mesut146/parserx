@@ -1,5 +1,7 @@
 package dfa;
 
+import java.util.Objects;
+
 //a single arrow
 public class Transition {
     public int target;
@@ -24,6 +26,21 @@ public class Transition {
     public Transition by(int by) {
         this.input = by;
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Transition that = (Transition) o;
+        return target == that.target &&
+                input == that.input &&
+                state == that.state;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(target, input, state);
     }
 
     @Override

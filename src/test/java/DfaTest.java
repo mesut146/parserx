@@ -15,7 +15,7 @@ public class DfaTest {
     static DFA makeDFA(NFA nfa) {
         System.out.println("-----DFA-----");
         DFA dfa = nfa.dfa();
-        System.out.println("total dfa states=" + dfa.numStates);
+        System.out.println("total dfa states=" + dfa.lastState);
         //dfa.dump("");
         return dfa;
     }
