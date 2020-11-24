@@ -5,8 +5,9 @@ import nodes.*;
 import utils.UnicodeUtils;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 //build regex from dfa
 public class RegexBuilder {
@@ -22,6 +23,7 @@ public class RegexBuilder {
     }
 
     public Node buildRegex() {
+        Transition.alphabet = alphabet;
         //make initial not incoming
         if (hasIncoming()) {
             int newInit = nfa.newState();
@@ -33,7 +35,10 @@ public class RegexBuilder {
 
         for (int state = 0; state <= nfa.lastState; state++) {
             if (!nfa.isAccepting(state) && nfa.initial != state) {
+                //mergeAll(state);
                 eliminate(state);
+                //System.out.println(state + " eliminated");
+                //nfa.dump(null);
             }
         }
         OrNode orNode = new OrNode();
@@ -44,17 +49,12 @@ public class RegexBuilder {
         return orNode.normal();
     }
 
-    private void makeRegexAlphabet() {
-        for (Iterator<RangeNode> it = alphabet.getRanges(); it.hasNext(); ) {
-            RangeNode rangeNode = it.next();
-            int id = alphabet.getId(rangeNode);
-            Node node = idToNode(id);
-            regexAlphabet.addRegex(node);
-        }
-    }
 
-    Node idToNode(int id) {
-        Node node = alphabet.getRegex(id);
+    Node idToNode(Transition transition) {
+        if (transition.epsilon) {
+            return new EmptyNode();
+        }
+        Node node = alphabet.getRegex(transition.input);
         if (!node.isRange()) {
             return node;
         }
@@ -73,6 +73,7 @@ public class RegexBuilder {
     void eliminate(int state) {
         List<Transition> list = nfa.trans[state];
         if (list != null) {
+            mergeAll(state);
             //eliminate state
             List<Transition> incomings = findIncoming(state);
 
@@ -84,17 +85,18 @@ public class RegexBuilder {
                     Node node;
                     node = path(in, out);
                     //System.out.println(node);
-                    nfa.addTransition(in.state, out.target, alphabet.addRegex(node));
+                    if (node.isEmpty()) {
+                        nfa.addEpsilon(in.state, out.target);
+                    }
+                    else {
+                        nfa.addTransition(in.state, out.target, alphabet.addRegex(node));
+                    }
                 }
             }
             for (Transition incoming : incomings) {
                 remove(incoming);
             }
             list.clear();
-        }
-        else {
-            //already dead
-            throw new RuntimeException("state=" + state);
         }
     }
 
@@ -115,39 +117,49 @@ public class RegexBuilder {
     //actual regex builder
     Node path(Transition in, Transition out) {
         Sequence path = new Sequence();
-        path.add(idToNode(in.input));//eps
+        if (!in.epsilon)
+            path.add(idToNode(in));
         Transition loop = getLooping(in.target);
         if (loop != null) {
-            Node node = idToNode(loop.input);
+            Node node = idToNode(loop);
             if (node.isSequence()) {
                 node = new GroupNode(node);
             }
             path.add(new RegexNode(node, "*"));
         }
-        path.add(idToNode(out.input));
+        if (!out.epsilon)
+            path.add(idToNode(out));
+        if (path.size() == 0) {
+            return new EmptyNode();
+        }
         return path.normal();
     }
 
 
-    /*void mergeAll(int st) {
-        for (int state = 0; state <= nfa.lastState; state++) {
-            List<Transition> list = nfa.trans[state];
-            if (list != null && !list.isEmpty()) {
-                Map<Integer, List<Node>> map = new HashMap<>();
-                for (Transition tr : list) {
-                    List<Node> arr = map.get(tr.target);
-                    if (arr == null) {
-                        arr = new ArrayList<>();
-                        map.put(tr.target, arr);
-                    }
-                    arr.add(tr.input);
+    void mergeAll(int st) {
+        List<Transition> list = nfa.trans[st];
+        if (list != null && !list.isEmpty()) {
+            Map<Integer, OrNode> map = new HashMap<>();
+            for (Transition tr : list) {
+                OrNode arr = map.get(tr.target);
+                if (arr == null) {
+                    arr = new OrNode();
+                    map.put(tr.target, arr);
+                }
+                arr.add(idToNode(tr));
+            }
+            list.clear();
+            for (int target : map.keySet()) {
+                Node or = map.get(target).normal();
+                if (or.isEmpty()) {
+                    list.add(Transition.epsilon(st, target));
+                }
+                else {
+                    list.add(new Transition(st, target, alphabet.addRegex(or)));
                 }
             }
         }
-        for(int id:){
-
-        }
-    }*/
+    }
 
     int mergeFinals() {
         int newFinal = nfa.newState();

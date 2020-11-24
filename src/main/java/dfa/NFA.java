@@ -55,9 +55,11 @@ public class NFA {
 
     StateSet getEps(int state) {
         StateSet stateSet = new StateSet();
-        for (Transition tr : trans[state]) {
-            if (tr.epsilon) {
-                stateSet.addState(tr.target);
+        if (trans[state] != null) {
+            for (Transition tr : trans[state]) {
+                if (tr.epsilon) {
+                    stateSet.addState(tr.target);
+                }
             }
         }
         return stateSet;
@@ -72,7 +74,7 @@ public class NFA {
         if (debugTransition) {
             System.out.printf("st:%d to st:%d with:%s\n", state, target, getAlphabet().getRange(input));
         }
-        add(new Transition(state, input, target));
+        add(new Transition(state, target, input));
         lastState = Math.max(lastState, Math.max(state, target));
     }
 
@@ -104,7 +106,7 @@ public class NFA {
 
     public void addEpsilon(int state, int target) {
         if (!getEps(state).contains(target)) {
-            add(new Transition(state, target, true));
+            add(Transition.epsilon(state,target));
         }
     }
 
@@ -240,26 +242,22 @@ public class NFA {
         }
 
         for (int state = 0; state <= lastState; state++) {
-            w.println(printState(state));
-
             List<Transition> arr = trans[state];
-            if (arr != null) {
+            if (arr != null && !arr.isEmpty()) {
+                w.println(printState(state));
                 sort(arr);
                 for (Transition tr : arr) {
                     w.print("  ");
-                    w.print(getAlphabet().getRegex(tr.input));
+                    if (tr.epsilon) {
+                        w.print("E");
+                    }
+                    else {
+                        w.print(getAlphabet().getRegex(tr.input));
+                    }
 
                     w.print(" -> ");
                     w.print(printState(tr.target));
                     w.println();
-                }
-            }
-            StateSet eps = getEps(state);
-            if (eps != null) {
-                w.print("  E -> ");
-                for (int e : eps.states) {
-                    w.print(printState(e));
-                    w.print(" ");
                 }
             }
             w.println();
@@ -283,7 +281,7 @@ public class NFA {
 
     String printState(int st) {
         if (isAccepting(st)) {
-            return "(S" + st + ", " + names[st] + ")";
+            return "(S" + st + (names[st] == null ? "" : ", " + names[st]) + ")";
         }
         return "S" + st;
     }

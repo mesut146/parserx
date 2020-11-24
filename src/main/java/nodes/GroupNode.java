@@ -14,6 +14,9 @@ public class GroupNode extends Node implements Iterable<Node> {
         this.rhs = rhs;
     }
 
+    public GroupNode() {
+    }
+
     public String toString() {
         return "(" + rhs + ")";
     }

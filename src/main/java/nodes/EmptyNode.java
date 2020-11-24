@@ -1,5 +1,6 @@
 package nodes;
 
+//epsilon
 public class EmptyNode extends Node {
 
     @Override

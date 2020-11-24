@@ -1,43 +1,57 @@
-import dfa.Alphabet;
 import dfa.NFA;
 import dfa.RegexBuilder;
-import grammar.ParseException;
-import nodes.Node;
-import nodes.RangeNode;
-import nodes.StringNode;
-import nodes.Tree;
+import nodes.*;
 import org.junit.Test;
+
+import java.io.File;
 
 public class RegexBuilderTest {
 
     //  /* (^*)* * (^/ (^*)* *)* /
 
+
     @Test
-    public void build() throws ParseException {
-        StringNode.string_quote = true;
-        Node starNot = new StringNode("*'");
-        Node divNot = new StringNode("/'");
-
-        Alphabet alphabet = new Alphabet();
-        alphabet.add(RangeNode.of('/'));
-        alphabet.add(RangeNode.of('*'));
-        alphabet.addRegex(starNot);//not star
-        alphabet.addRegex(divNot);//not div
-
-        Tree tree = new Tree();
-        tree.alphabet = alphabet;
-
-        NFA nfa = new NFA(100);
-        nfa.tree = tree;
-        nfa.setAccepting(4, true);
-        nfa.addTransition(0, 1, alphabet.getId('/'));
-        nfa.addTransition(1, 2, alphabet.getId('*'));
-        nfa.addTransition(2, 2, alphabet.getId(starNot));
-        nfa.addTransition(2, 3, alphabet.getId('*'));
-        nfa.addTransition(3, 2, alphabet.getId(divNot));
-        nfa.addTransition(3, 4, alphabet.getId('/'));
+    public void fromGrammar() throws Exception {
+        File file = Env.getResFile("javaLexer.g");
+        NFA nfa = NfaTest.makeNFA(file);
         //nfa.dump(null);
+        Node node = new RegexBuilder(nfa).buildRegex();
+        Transformer transformer = new Transformer() {
+            @Override
+            public Node transformOr(OrNode node) {
+                OrNode newNode = new OrNode();
+                Bracket bracket = new Bracket();
+                for (Node ch : node) {
+                    ch = transform(ch);
+                    if (ch.isString() && ch.asString().value.length() == 1) {
+                        bracket.add(new Bracket.CharNode(ch.asString().value.charAt(0)));
+                    }
+                    else if (ch.isRange()) {
+                        RangeNode rangeNode = ch.asRange();
+                        if (rangeNode.isSingle()) {
+                            bracket.add(new Bracket.CharNode((char) rangeNode.start));
+                        }
+                        else {
+                            bracket.add(ch);
+                        }
+                    }
+                    else {
+                        newNode.add(ch);
+                    }
+                }
+                bracket.normalize();
+                newNode.add(bracket);
+                return newNode;
+            }
+        };
+        node = transformer.transform(node);
+        System.out.println(node);
+    }
 
+    @Test
+    public void build() throws Exception {
+        StringNode.string_quote = true;
+        NFA nfa = NfaReader.read(Env.getResFile("fsm/string.nfa"));
         System.out.println(new RegexBuilder(nfa).buildRegex());
     }
 }

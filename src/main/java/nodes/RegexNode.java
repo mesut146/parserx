@@ -34,6 +34,9 @@ public class RegexNode extends Node {
 
     @Override
     public String toString() {
+        if (node.isSequence() || node.isOr()) {
+            return "(" + node + ")" + type;
+        }
         return node + type;
     }
 }

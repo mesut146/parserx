@@ -45,10 +45,9 @@ public class NfaTest {
 
     @Test
     public void reader() throws Exception {
-        File file = Env.getResFile("fsm/test2.nfa");
+        File file = Env.getResFile("fsm/test.nfa");
         NFA nfa = NfaReader.read(file);
         //nfa.dump(null);
-        System.out.println(new RegexBuilder(nfa).buildRegex());
     }
 
     @Test
@@ -63,10 +62,10 @@ public class NfaTest {
         dfa.dot(Env.testRes + "/test-dfa.dot");
     }
 
-    static NFA makeNFA(File grammar) {
+    public static NFA makeNFA(File grammar) {
         Tree tree = Tree.makeTree(grammar);
         NFA nfa = tree.makeNFA();
-        System.out.println("total nfa states=" + nfa.lastState);
+        //System.out.println("total nfa states=" + nfa.lastState);
         //nfa.dump("");
         return nfa;
     }

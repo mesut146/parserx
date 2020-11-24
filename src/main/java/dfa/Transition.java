@@ -8,17 +8,22 @@ public class Transition {
     public int target;
     public int input;
     public boolean epsilon;
+    public static Alphabet alphabet;
 
-    public Transition(int state, int input, int target) {
+    public Transition(int state, int target, int input) {
         this.state = state;
         this.target = target;
         this.input = input;
     }
 
-    public Transition(int state, int target, boolean epsilon) {
+    private Transition(int state, int target, boolean epsilon) {
         this.state = state;
         this.target = target;
         this.epsilon = epsilon;
+    }
+
+    public static Transition epsilon(int state, int target) {
+        return new Transition(state, target, true);
     }
 
     public static Transition from(int from) {
@@ -42,12 +47,13 @@ public class Transition {
         Transition that = (Transition) o;
         return target == that.target &&
                 input == that.input &&
-                state == that.state;
+                state == that.state &&
+                epsilon == that.epsilon;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(target, input, state);
+        return Objects.hash(target, input, state, epsilon);
     }
 
     @Override
@@ -55,7 +61,7 @@ public class Transition {
         return "Transition{" +
                 "state=" + state +
                 ", target=" + target +
-                ", symbol=" + input +
+                ", symbol=" + (epsilon ? "E" : (alphabet != null ? alphabet.getRegex(input) : input)) +
                 '}';
     }
 }
