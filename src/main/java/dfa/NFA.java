@@ -55,7 +55,7 @@ public class NFA {
 
     StateSet getEps(int state) {
         StateSet stateSet = new StateSet();
-        if (trans[state] != null) {
+        if (hasTransitions(state)) {
             for (Transition tr : trans[state]) {
                 if (tr.epsilon) {
                     stateSet.addState(tr.target);
@@ -63,6 +63,23 @@ public class NFA {
             }
         }
         return stateSet;
+    }
+
+    public boolean hasTransitions(int state) {
+        return trans[state] != null && !trans[state].isEmpty();
+    }
+
+    //todo
+    public void removeDead() {
+        int count = 0;
+        for (int state = 0; state <= lastState; state++) {
+            if (initial != state) {
+
+            }
+        }
+        if (count > 0) {
+            System.out.println("removed " + count + " dead transitions");
+        }
     }
 
     public Alphabet getAlphabet() {
@@ -106,7 +123,7 @@ public class NFA {
 
     public void addEpsilon(int state, int target) {
         if (!getEps(state).contains(target)) {
-            add(Transition.epsilon(state,target));
+            add(Transition.epsilon(state, target));
         }
     }
 
@@ -242,8 +259,8 @@ public class NFA {
         }
 
         for (int state = 0; state <= lastState; state++) {
-            List<Transition> arr = trans[state];
-            if (arr != null && !arr.isEmpty()) {
+            if (hasTransitions(state)) {
+                List<Transition> arr = trans[state];
                 w.println(printState(state));
                 sort(arr);
                 for (Transition tr : arr) {

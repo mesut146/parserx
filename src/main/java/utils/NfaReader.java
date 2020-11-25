@@ -1,3 +1,5 @@
+package utils;
+
 import dfa.Alphabet;
 import dfa.NFA;
 import nodes.StringNode;
@@ -24,7 +26,13 @@ public class NfaReader {
             int[] state = getState(line.substring(0, arrow));
             int[] target = getState(line.substring(arrow + 2, comma));
 
-            nfa.addTransition(state[0], target[0], getId(alphabet, line.substring(comma + 1)));
+            int id = getId(alphabet, line.substring(comma + 1));
+            if (id == -1) {
+                nfa.addEpsilon(state[0], target[0]);
+            }
+            else {
+                nfa.addTransition(state[0], target[0], id);
+            }
             if (state[1] == 1) nfa.setAccepting(state[0], true);
             if (target[1] == 1) nfa.setAccepting(target[0], true);
             if (state[2] == 1) {
@@ -53,8 +61,8 @@ public class NfaReader {
     }
 
     static int getId(Alphabet alphabet, String input) {
-        //todo epsipn
-        if (input.equals("eps")) {
+        //todo epsilon
+        if (input.equalsIgnoreCase("eps") || input.equalsIgnoreCase("epsilon")) {
             return -1;
         }
         StringNode node = new StringNode(input.trim());

@@ -2,6 +2,7 @@ package nodes;
 
 public class Repetition extends Node {
     Node node;
+    int min;
     int num;
 
     public Repetition(Node node, int num) {

@@ -2,10 +2,6 @@ package nodes;
 
 public abstract class Transformer {
 
-    public static Node transform(Node node, Transformer transformer) {
-        return transformer.transform(node);
-    }
-
     public Node transform(Node node) {
         if (node.isGroup()) {
             return transformGroup(node.asGroup());
@@ -18,6 +14,9 @@ public abstract class Transformer {
         }
         else if (node.isOr()) {
             return transformOr(node.asOr());
+        }
+        else if (node.isBracket()) {
+            return transformBracket(node.asBracket());
         }
         return node;
     }
@@ -41,4 +40,9 @@ public abstract class Transformer {
     public Node transformOr(OrNode node) {
         return node;
     }
+
+    public Node transformBracket(Bracket node) {
+        return node.normalize().optimize();
+    }
+
 }

@@ -1,12 +1,12 @@
 import dfa.DFA;
 import dfa.NFA;
-import dfa.RegexBuilder;
 import grammar.GParser;
 import grammar.ParseException;
 import nodes.Node;
 import nodes.TokenDecl;
 import nodes.Tree;
 import org.junit.Test;
+import utils.NfaReader;
 
 import java.io.File;
 import java.io.StringReader;

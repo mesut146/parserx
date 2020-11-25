@@ -1,4 +1,3 @@
-import dfa.CharClass;
 import nodes.Bracket;
 import nodes.RangeNode;
 import org.junit.Test;

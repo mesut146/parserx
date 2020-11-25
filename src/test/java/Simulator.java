@@ -51,8 +51,8 @@ public class Simulator {
     }
 
     private int getState(int curState, char input, DFA dfa) {
-        List<Transition> list = dfa.trans[curState];
-        if (list != null) {
+        if (dfa.hasTransitions(curState)) {
+            List<Transition> list = dfa.trans[curState];
             for (Transition transition : list) {
                 RangeNode rangeNode = dfa.getAlphabet().getRange(transition.input);
                 if (input >= rangeNode.start && input <= rangeNode.end) {

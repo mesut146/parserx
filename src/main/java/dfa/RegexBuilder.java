@@ -15,6 +15,7 @@ public class RegexBuilder {
     NFA nfa;
     Alphabet alphabet;
     Alphabet regexAlphabet;
+    List<Integer> stateOrder = new ArrayList<>();
 
     public RegexBuilder(NFA nfa) {
         this.nfa = nfa;
@@ -31,9 +32,12 @@ public class RegexBuilder {
             nfa.initial = newInit;
         }
         mergeFinals();
-        //makeRegexAlphabet();
 
-        for (int state = 0; state <= nfa.lastState; state++) {
+        if (stateOrder.isEmpty()) {
+            autoOrder();
+        }
+
+        for (int state : stateOrder) {
             if (!nfa.isAccepting(state) && nfa.initial != state) {
                 //mergeAll(state);
                 eliminate(state);
@@ -41,6 +45,7 @@ public class RegexBuilder {
                 //nfa.dump(null);
             }
         }
+
         OrNode orNode = new OrNode();
         for (Transition transition : nfa.trans[nfa.initial]) {
             orNode.add(alphabet.getRegex(transition.input));
@@ -71,8 +76,8 @@ public class RegexBuilder {
     }
 
     void eliminate(int state) {
-        List<Transition> list = nfa.trans[state];
-        if (list != null) {
+        if (nfa.hasTransitions(state)) {
+            List<Transition> list = nfa.trans[state];
             mergeAll(state);
             //eliminate state
             List<Transition> incomings = findIncoming(state);
@@ -101,10 +106,12 @@ public class RegexBuilder {
     }
 
     Transition getLooping(int state) {
-        List<Transition> list = nfa.trans[state];
-        for (Transition transition : list) {
-            if (transition.target == state) {
-                return transition;
+        if (nfa.hasTransitions(state)) {
+            List<Transition> list = nfa.trans[state];
+            for (Transition transition : list) {
+                if (transition.target == state) {
+                    return transition;
+                }
             }
         }
         return null;
@@ -136,9 +143,10 @@ public class RegexBuilder {
     }
 
 
-    void mergeAll(int st) {
-        List<Transition> list = nfa.trans[st];
-        if (list != null && !list.isEmpty()) {
+    //merge same targeted outgoing transitions with OrNode
+    void mergeAll(int state) {
+        if (nfa.hasTransitions(state)) {
+            List<Transition> list = nfa.trans[state];
             Map<Integer, OrNode> map = new HashMap<>();
             for (Transition tr : list) {
                 OrNode arr = map.get(tr.target);
@@ -152,22 +160,22 @@ public class RegexBuilder {
             for (int target : map.keySet()) {
                 Node or = map.get(target).normal();
                 if (or.isEmpty()) {
-                    list.add(Transition.epsilon(st, target));
+                    list.add(Transition.epsilon(state, target));
                 }
                 else {
-                    list.add(new Transition(st, target, alphabet.addRegex(or)));
+                    list.add(new Transition(state, target, alphabet.addRegex(or)));
                 }
             }
         }
     }
 
+    //make sure we have only one final state
     int mergeFinals() {
         int newFinal = nfa.newState();
         nfa.setAccepting(newFinal, true);
-        for (int state = 0; state < nfa.lastState; state++) {
+        for (int state = 0; state <= nfa.lastState; state++) {
             if (nfa.isAccepting(state)) {
-                List<Transition> list = nfa.trans[state];
-                if (list != null) {
+                if (nfa.hasTransitions(state)) {
                     nfa.addEpsilon(state, newFinal);
                 }
                 nfa.setAccepting(state, false);
@@ -177,9 +185,9 @@ public class RegexBuilder {
     }
 
     boolean hasIncoming() {
-        for (int state = nfa.initial + 1; state < nfa.lastState; state++) {
-            List<Transition> list = nfa.trans[state];
-            if (list != null) {
+        for (int state = 0; state <= nfa.lastState; state++) {
+            if (nfa.hasTransitions(state)) {
+                List<Transition> list = nfa.trans[state];
                 for (Transition transition : list) {
                     if (transition.target == nfa.initial) {
                         return true;
@@ -192,10 +200,9 @@ public class RegexBuilder {
 
     List<Transition> findIncoming(int to) {
         List<Transition> all = new ArrayList<>();
-
         for (int state = 0; state <= nfa.lastState; state++) {
-            List<Transition> list = nfa.trans[state];
-            if (list != null) {
+            if (nfa.hasTransitions(state)) {
+                List<Transition> list = nfa.trans[state];
                 for (Transition transition : list) {
                     if (transition.target == to) {
                         all.add(transition);
@@ -206,4 +213,24 @@ public class RegexBuilder {
         return all;
     }
 
+    public void setOrder(int... arr) {
+        for (int state : arr) {
+            stateOrder.add(state);
+        }
+    }
+
+    public void autoOrder() {
+        List<Integer> looping = new ArrayList<>();
+        for (int state = 0; state <= nfa.lastState; state++) {
+            if (!nfa.isAccepting(state) && nfa.initial != state) {
+                if (getLooping(state) != null) {
+                    looping.add(state);
+                }
+                else {
+                    stateOrder.add(state);
+                }
+            }
+        }
+        stateOrder.addAll(looping);
+    }
 }

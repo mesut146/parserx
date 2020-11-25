@@ -113,19 +113,9 @@ public class Bracket extends NodeList {
 
     public List<RangeNode> negateAll() {
         if (debug) System.out.println("negating " + this);
-        List<RangeNode> res = new ArrayList<>();
-        List<RangeNode> ranges = new ArrayList<>();
-        //negate all ranges
-        for (Node node : this) {
-            RangeNode range;
-            if (node instanceof CharNode) {
-                range = new RangeNode(node.asChar().chr, node.asChar().chr);
-            }
-            else {
-                range = node.asRange();
-            }
-            ranges.add(range);
-        }
+        List<RangeNode> res;
+        List<RangeNode> ranges;
+        ranges = getRanges();
         sort(ranges);
         if (debug) System.out.println("sorted=" + ranges);
         res = mergeRanges(ranges);
@@ -133,7 +123,7 @@ public class Bracket extends NodeList {
         ranges.clear();
         ranges.addAll(res);
         res.clear();
-        //negate distinc ranges
+        //negate distinct ranges
         int last = CharClass.min;
         for (int i = 0; i < ranges.size(); i++) {
             RangeNode range = ranges.get(i);
@@ -176,6 +166,12 @@ public class Bracket extends NodeList {
         return res;
     }
 
+    public Bracket optimize() {
+        rangeNodes = mergeRanges(getRanges());
+        list.clear();
+        list.addAll(rangeNodes);
+        return this;
+    }
 
     void err() throws ParseException {
         throw new ParseException("Invalid character list");
@@ -221,10 +217,11 @@ public class Bracket extends NodeList {
     }
 
     //single char
-    public static class CharNode extends Node {
+    public static class CharNode extends RangeNode {
         public char chr;
 
         public CharNode(char chr) {
+            super(chr, chr);
             this.chr = chr;
         }
 

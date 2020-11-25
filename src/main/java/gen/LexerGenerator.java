@@ -139,7 +139,7 @@ public class LexerGenerator {
             List<Transition> list = dfa.trans[state];
             transWriter.print(indent);
             transWriter.print("\"");
-            if (list == null) {
+            if (list == null || list.isEmpty()) {
                 transWriter.print(makeOctal(0));
             }
             else {
