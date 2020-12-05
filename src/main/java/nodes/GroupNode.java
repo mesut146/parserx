@@ -1,6 +1,5 @@
 package nodes;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -27,5 +26,12 @@ public class GroupNode extends Node implements Iterable<Node> {
             return ((NodeList) rhs).iterator();
         }
         return Collections.singletonList(rhs).iterator();
+    }
+
+    public Node normal() {
+        if (rhs.isString() || rhs.isBracket() || rhs.isName() || rhs.isRegex()) {
+            return rhs;
+        }
+        return this;
     }
 }

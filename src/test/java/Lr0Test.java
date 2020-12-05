@@ -1,6 +1,7 @@
 import gen.lr.Lr0Generator;
 import gen.lr.Lr1Generator;
 import nodes.Tree;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -9,6 +10,7 @@ import java.io.PrintWriter;
 public class Lr0Test {
 
 
+    @Ignore
     @Test
     public void lr0() throws Exception {
         File file;
@@ -23,6 +25,7 @@ public class Lr0Test {
     }
 
     @Test
+    @Ignore
     public void lr1() throws Exception {
         File file;
         file = Env.getCalc();

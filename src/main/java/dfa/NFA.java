@@ -235,7 +235,7 @@ public class NFA {
         return p;
     }
 
-    int newState() {
+    public int newState() {
         return ++lastState;
     }
 

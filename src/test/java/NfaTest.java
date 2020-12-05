@@ -5,6 +5,7 @@ import grammar.ParseException;
 import nodes.Node;
 import nodes.TokenDecl;
 import nodes.Tree;
+import org.junit.Ignore;
 import org.junit.Test;
 import utils.NfaReader;
 
@@ -43,6 +44,7 @@ public class NfaTest {
         dfa.dot(Env.testRes + "/test-dfa.dot");
     }
 
+    @Ignore
     @Test
     public void reader() throws Exception {
         File file = Env.getResFile("fsm/test.nfa");
@@ -50,6 +52,7 @@ public class NfaTest {
         //nfa.dump(null);
     }
 
+    @Ignore
     @Test
     public void test() throws ParseException {
         String regex = "(\"a\" \"b\"?)+";

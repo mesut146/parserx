@@ -31,6 +31,14 @@ public class Bracket extends NodeList {
 
     }
 
+    public Bracket(Node... args) {
+        super(args);
+    }
+
+    public Bracket(List<Node> args) {
+        super(args);
+    }
+
     public void parse(String str) throws ParseException {
         //System.out.println(str);
         pos = 0;

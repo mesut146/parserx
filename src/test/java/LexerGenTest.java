@@ -4,12 +4,14 @@ import gen.GeneratedLexer;
 import gen.LexerGenerator;
 import gen.Template;
 import gen.Token;
+import org.junit.Ignore;
 import org.junit.Test;
 import utils.Helper;
 import utils.UnicodeUtils;
 
 import java.io.*;
 
+@Ignore
 public class LexerGenTest {
 
     @Test
@@ -49,6 +51,7 @@ public class LexerGenTest {
 
 
     @Test
+    @Ignore
     public void all() throws Exception {
         DFA dfa = Helper.makeDFA(Env.getJavaLexer());
         dfa.dump(new File("/home/mesut/IdeaProjects/parserx/src/test/resources/java/javaLexer.txt"));
@@ -64,6 +67,7 @@ public class LexerGenTest {
 
 
     @Test
+    @Ignore
     public void escapeTest() {
         char[] chars = {'\n', '\r', '\t', ' ', '\0'};
         String[] strArr = {"\\n", "\\r", "\\t", "\\u0020", "\\u0000"};

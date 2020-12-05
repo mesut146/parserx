@@ -15,3 +15,6 @@ trans[state] = {}
 \D	[^\d]
 \W	[^\w]
 \S	[^\s]
+
+cmap: maps input ids to range ids
+trans: maps current state & range id to target state

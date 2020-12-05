@@ -1,12 +1,17 @@
 package nodes;
 
 import java.util.Iterator;
+import java.util.List;
 
 //list of rules
 //rhs
 public class Sequence extends NodeList {
 
     public Sequence(Node... arr) {
+        super(arr);
+    }
+
+    public Sequence(List<Node> arr) {
         super(arr);
     }
 

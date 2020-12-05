@@ -1,9 +1,11 @@
 import dfa.NFA;
-import dfa.RegexBuilder;
-import nodes.*;
+import regex.RegexBuilder;
+import nodes.Node;
+import nodes.StringNode;
+import org.junit.Ignore;
 import org.junit.Test;
 import utils.NfaReader;
-import utils.RegexOptimizer;
+import regex.RegexOptimizer;
 
 import java.io.File;
 
@@ -13,6 +15,7 @@ public class RegexBuilderTest {
 
 
     @Test
+    @Ignore
     public void fromGrammar() throws Exception {
         File file = Env.getResFile("javaLexer.g");
         NFA nfa = NfaTest.makeNFA(file);
@@ -23,6 +26,7 @@ public class RegexBuilderTest {
     }
 
     @Test
+    @Ignore
     public void build() throws Exception {
         StringNode.string_quote = false;
         NFA nfa = NfaReader.read(Env.getResFile("fsm/tilde.nfa"));

@@ -2,6 +2,7 @@ import gen.ClosureHelper;
 import gen.EbnfTransformer;
 import gen.PrepareTree;
 import nodes.Tree;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -15,6 +16,7 @@ public class ParserGenTest {
     }
 
     @Test
+    @Ignore
     public void recursiveTest() throws Exception {
         String input = "1+2*3.1415/(66-33)";
         File grammar = Env.getCalc();

@@ -12,9 +12,4 @@ public class UntilNode extends Node {
         return "~" + node;
     }
 
-    public Node transform() {
-        //make normal regex
-
-        return null;
-    }
 }

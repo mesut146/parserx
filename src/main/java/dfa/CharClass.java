@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Set;
 
 public class CharClass {
-    public static int min = 0;
-    public static int max = 0xffff;
+    public static int min = Character.MIN_VALUE;
+    public static int max = Character.MAX_VALUE;
 
     //find all intersecting inputs and split them so that all of them becomes unique
     public static void makeDistinctRanges(Tree tree) {

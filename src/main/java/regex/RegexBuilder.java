@@ -1,6 +1,9 @@
-package dfa;
+package regex;
 
 
+import dfa.Alphabet;
+import dfa.NFA;
+import dfa.Transition;
 import nodes.*;
 import utils.UnicodeUtils;
 
