@@ -170,6 +170,7 @@ public class Lr0Generator extends IndentWriter {
         }
     }
 
+    //is final state
     boolean isFinal(Lr0ItemSet set) {
         //has epsilon
         for (Lr0Item item : set.all) {
@@ -185,10 +186,12 @@ public class Lr0Generator extends IndentWriter {
         return true;
     }
 
+    //true if rhs has epsilon
     boolean hasEpsilon(Node node) {
         if (node.isEmpty()) {
             return true;
         }
+        //never happens
         if (node.isSequence()) {
             for (Node c : node.asSequence()) {
                 if (c.isEmpty()) {

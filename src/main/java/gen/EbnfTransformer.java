@@ -1,7 +1,6 @@
 package gen;
 
 import nodes.*;
-import nodes.RuleDecl;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,13 +13,10 @@ public class EbnfTransformer {
     Map<String, Integer> countMap = new HashMap<>();
     public static boolean leftRecursive = true;
     public static boolean expand_or = true;
+    public static boolean rhsSequence = true;
 
     public EbnfTransformer(Tree tree) {
         this.tree = tree;
-    }
-
-    public Tree getRes() {
-        return res;
     }
 
     int getCount(String name) {
@@ -48,12 +44,11 @@ public class EbnfTransformer {
         for (RuleDecl decl : tree.rules) {
             RuleDecl newDecl = new RuleDecl(decl.name);
             Node rhs = decl.rhs;
-            if (rhs.isGroup()) {//unnecessary group
-                newDecl.rhs = rhs.asGroup().rhs;
+            rhs = transform(rhs, decl);
+            if (rhsSequence && rhs.isSequence()) {
+                rhs = new Sequence(rhs);
             }
-            else {
-                newDecl.rhs = transform(rhs, decl);
-            }
+            newDecl.rhs = rhs;
             addRule(newDecl);
         }
         return res;

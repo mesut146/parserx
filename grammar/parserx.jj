@@ -160,7 +160,7 @@ void tokenDecl(Tree tree,boolean skip):
   Node rhs;
 }
 {
-  ("#"{frag=true;})? name = name() "=" rhs = rhs() ";"
+  ("#"{frag=true;})? name = name() declSeparator() rhs = rhs() ";"
   {
     decl=new TokenDecl(name);
     decl.fragment=frag;

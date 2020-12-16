@@ -22,9 +22,7 @@ public class Lr0ItemSet {
     }
 
     public Lr0ItemSet(Lr0Item first, Tree tree) {
-        this.first = new ArrayList<>(Collections.singletonList(first));
-        this.tree = tree;
-        all.addAll(this.first);
+        this(new ArrayList<>(Collections.singletonList(first)),tree);
     }
 
     //get first item that can transit

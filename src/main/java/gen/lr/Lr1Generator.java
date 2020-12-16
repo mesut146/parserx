@@ -6,9 +6,8 @@ import gen.LexerGenerator;
 import gen.PrepareTree;
 import nodes.NameNode;
 import nodes.Node;
-import nodes.Sequence;
-import nodes.Tree;
 import nodes.RuleDecl;
+import nodes.Tree;
 
 import java.io.PrintWriter;
 import java.util.*;
@@ -23,6 +22,7 @@ public class Lr1Generator extends IndentWriter {
     public PrintWriter dotWriter;
     Map<Lr1ItemSet, Integer> idMap = new HashMap<>();
     int lastId = -1;
+    RuleDecl start;
 
     public Lr1Generator(LexerGenerator lexerGenerator, String dir, Tree tree) {
         this.lexerGenerator = lexerGenerator;
@@ -39,7 +39,8 @@ public class Lr1Generator extends IndentWriter {
         transitions = new ArrayList<>();
         Queue<Lr1ItemSet> queue = new LinkedList<>();
 
-        RuleDecl start = new RuleDecl("s'", tree.start);
+        //make start rule
+        start = new RuleDecl("s'", tree.start);
         Lr1Item first = new Lr1Item(start, 0);
         Lr1ItemSet firstSet = new Lr1ItemSet(Collections.singletonList(first), tree);
         idMap.put(firstSet, ++lastId);
@@ -205,65 +206,10 @@ public class Lr1Generator extends IndentWriter {
         return new NameNode("$");
     }
 
-    //first terminals of rule
-    public Set<NameNode> first(NameNode nameNode) {
-        Set<NameNode> list = new HashSet<>();
-        for (RuleDecl decl : tree.getRules(nameNode.name)) {
-            Node node = decl.rhs;
-            if (node.isSequence()) {
-                first(node.asSequence().get(0), list);
-            }
-            else if (node.isName()) {
-                first(node.asName(), list);
-            }
-        }
-        return list;
-    }
-
-    void first(Node node, Set<NameNode> list) {
-        if (node.isName()) {
-            if (node.asName().isToken) {
-                list.add(node.asName());
-            }
-            else {
-                list.addAll(first(node.asName()));
-            }
-        }
-    }
-
-    //get tokens after the symbol can appear anywhere in grammar
-    public Set<NameNode> follow(NameNode nameNode) {
-        Set<NameNode> list = new HashSet<>();
-        for (RuleDecl decl : tree.rules) {
-            Node node = decl.rhs;
-            if (node.isName() && node.equals(nameNode)) {//rightmost so add $
-                list.add(dollar());
-            }
-            else if (node.isSequence()) {
-                Sequence sequence = node.asSequence();
-                for (int i = 0; i < sequence.size(); i++) {
-                    if (sequence.get(i).equals(nameNode)) {
-                        if (i < sequence.size() - 1) {
-                            NameNode next = (NameNode) sequence.get(i + 1);
-                            if (next.isToken) {
-                                list.add(next);
-                            }
-                            else {
-                                list.addAll(first(next));
-                            }
-                        }
-                        else {//rightmost
-                            list.add(dollar());
-                        }
-                    }
-                }
-            }
-        }
-        return list;
-    }
 
     private void check() {
         PrepareTree.checkReferences(tree);
+        EbnfTransformer.rhsSequence = true;
         EbnfTransformer transformer = new EbnfTransformer(tree);
         tree = transformer.transform(tree);
         PrepareTree.checkReferences(tree);

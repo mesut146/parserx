@@ -84,7 +84,6 @@ public class Lr0Item {
         }
         else if (node.isSequence()) {
             Sequence sequence = node.asSequence();
-
             if (dotPos2 == sequence.size()) {
                 return null;
             }

@@ -2,6 +2,8 @@
   <dictionary name="mesut">
     <words>
       <w>ebnf</w>
+      <w>lparen</w>
+      <w>rparen</w>
       <w>yybuf</w>
       <w>yychar</w>
     </words>
