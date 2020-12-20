@@ -44,7 +44,7 @@ public class Lr0ItemSet {
             return;
         }
         for (Lr0Item item : first) {
-            if (item.isDotTerminal()) {
+            if (item.isDotNonTerminal()) {
                 closure(item.getDotNode());
             }
         }
@@ -58,7 +58,7 @@ public class Lr0ItemSet {
                 Lr0Item item = new Lr0Item(decl, 0);
                 if (!all.contains(item)) {
                     all.add(item);
-                    if (item.isDotTerminal()) {
+                    if (item.isDotNonTerminal()) {
                         closure(item.getDotNode());
                     }
                 }

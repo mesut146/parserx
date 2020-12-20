@@ -2,7 +2,11 @@ package nodes;
 
 public abstract class Transformer {
 
-    public Node transform(Node node) {
+    public RuleDecl transformRule(RuleDecl decl) {
+        return new RuleDecl(decl.name, transformNode(decl.rhs));
+    }
+
+    public Node transformNode(Node node) {
         if (node.isGroup()) {
             return transformGroup(node.asGroup());
         }
@@ -22,19 +26,19 @@ public abstract class Transformer {
     }
 
     public Node transformGroup(GroupNode node) {
-        return new GroupNode(transform(node.rhs));
+        return new GroupNode(transformNode(node.rhs));
     }
 
     public Node transformSequence(Sequence node) {
         Sequence newNode = new Sequence();
         for (Node ch : node) {
-            newNode.add(transform(ch));
+            newNode.add(transformNode(ch));
         }
         return newNode;
     }
 
     public Node transformRegex(RegexNode node) {
-        return new RegexNode(transform(node.node), node.type);
+        return new RegexNode(transformNode(node.node), node.type);
     }
 
     public Node transformOr(OrNode node) {

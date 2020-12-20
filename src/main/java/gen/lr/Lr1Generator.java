@@ -4,10 +4,7 @@ import gen.EbnfTransformer;
 import gen.IndentWriter;
 import gen.LexerGenerator;
 import gen.PrepareTree;
-import nodes.NameNode;
-import nodes.Node;
-import nodes.RuleDecl;
-import nodes.Tree;
+import nodes.*;
 
 import java.io.PrintWriter;
 import java.util.*;
@@ -18,11 +15,12 @@ public class Lr1Generator extends IndentWriter {
     String dir;
     LexerGenerator lexerGenerator;
     List<Lr1Transition> transitions;
-    List<Lr1ItemSet> itemSets = new ArrayList<>();
+    List<Lr1ItemSet> itemSets;
     public PrintWriter dotWriter;
     Map<Lr1ItemSet, Integer> idMap = new HashMap<>();
     int lastId = -1;
     RuleDecl start;
+    NameNode dollar=new NameNode("$");
 
     public Lr1Generator(LexerGenerator lexerGenerator, String dir, Tree tree) {
         this.lexerGenerator = lexerGenerator;
@@ -31,19 +29,23 @@ public class Lr1Generator extends IndentWriter {
     }
 
     public void generate() {
-        EbnfTransformer.expand_or = true;
         check();
         //System.out.println(tree);
         dotBegin();
 
         transitions = new ArrayList<>();
+        itemSets = new ArrayList<>();
         Queue<Lr1ItemSet> queue = new LinkedList<>();
 
         //make start rule
         start = new RuleDecl("s'", tree.start);
+        if (!start.rhs.isSequence()) {
+            start.rhs = new Sequence(start.rhs);
+        }
         Lr1Item first = new Lr1Item(start, 0);
-        Lr1ItemSet firstSet = new Lr1ItemSet(Collections.singletonList(first), tree);
-        idMap.put(firstSet, ++lastId);
+        first.lookAhead.add(dollar);
+        Lr1ItemSet firstSet = new Lr1ItemSet(first, tree);
+        addId(firstSet);
         itemSets.add(firstSet);
         firstSet.closure();
         //System.out.println("\nset = " + firstSet);
@@ -55,7 +57,7 @@ public class Lr1Generator extends IndentWriter {
             Lr1Item from = curSet.findTransitable();
             if (from != null) {
                 NameNode symbol = from.getDotNode();
-                Lr1Item toFirst = new Lr1Item(from.ruleDecl, from.dotPos2 + 1);
+                Lr1Item toFirst = new Lr1Item(from, from.dotPos2 + 1);
                 curSet.curIndex++;
                 Lr1ItemSet targetSet;
                 targetSet = getSet(toFirst);
@@ -63,21 +65,21 @@ public class Lr1Generator extends IndentWriter {
                     targetSet = getTransition(curSet, symbol);
                     if (targetSet == null) {//new transition
                         targetSet = new Lr1ItemSet(toFirst, tree);
-                        idMap.put(targetSet, ++lastId);
+                        addId(targetSet);
                         itemSets.add(targetSet);
                         targetSet.closure();
-                        System.out.printf("transition(%d) by %s (%s)%s to (%s)%s\n", transitions.size(), symbol, getId(curSet), curSet.first, getId(targetSet), targetSet.first);
+                        System.out.printf("transition(%d) by %s (%s)%s to (%s)%s\n", transitions.size(), symbol, getId(curSet), curSet.kernel, getId(targetSet), targetSet.kernel);
                         transitions.add(new Lr1Transition(curSet, targetSet, symbol));
                     }
                     else {
                         //merge and update transition
-                        if (!targetSet.first.contains(toFirst)) {
-                            targetSet.first.add(toFirst);
+                        if (!targetSet.kernel.contains(toFirst)) {
+                            targetSet.kernel.add(toFirst);
                             targetSet.all.clear();
-                            targetSet.all.addAll(targetSet.first);
+                            targetSet.all.addAll(targetSet.kernel);
                             targetSet.closure();
 
-                            targetSet.curIndex = targetSet.first.size() - 1;
+                            targetSet.curIndex = targetSet.kernel.size() - 1;
                         }
                     }
                     queue.add(targetSet);
@@ -95,10 +97,14 @@ public class Lr1Generator extends IndentWriter {
         dotEnd();
     }
 
+    void addId(Lr1ItemSet item) {
+        idMap.put(item, ++lastId);
+    }
+
     //get itemSet that contains item
     Lr1ItemSet getSet(Lr1Item first) {
         for (Lr1ItemSet itemSet : itemSets) {
-            if (itemSet.first.equals(first)) {
+            if (itemSet.kernel.contains(first)) {
                 return itemSet;
             }
         }
@@ -140,7 +146,7 @@ public class Lr1Generator extends IndentWriter {
     }
 
     int getId(Lr1ItemSet itemSet) {
-        for (Lr1Item kernel : itemSet.first) {
+        for (Lr1Item kernel : itemSet.kernel) {
             int id = getId(kernel);
             if (id != -1) {
                 return id;
@@ -151,7 +157,7 @@ public class Lr1Generator extends IndentWriter {
 
     int getId(Lr1Item item) {
         for (Map.Entry<Lr1ItemSet, Integer> entry : idMap.entrySet()) {
-            if (entry.getKey().first.contains(item)) {
+            if (entry.getKey().kernel.contains(item)) {
                 return entry.getValue();
             }
         }
@@ -201,14 +207,10 @@ public class Lr1Generator extends IndentWriter {
         return false;
     }
 
-    //endmarker
-    public static NameNode dollar() {
-        return new NameNode("$");
-    }
-
 
     private void check() {
         PrepareTree.checkReferences(tree);
+        EbnfTransformer.expand_or = true;
         EbnfTransformer.rhsSequence = true;
         EbnfTransformer transformer = new EbnfTransformer(tree);
         tree = transformer.transform(tree);

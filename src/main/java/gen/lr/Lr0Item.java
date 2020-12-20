@@ -1,9 +1,8 @@
 package gen.lr;
 
 import nodes.NameNode;
-import nodes.Node;
-import nodes.Sequence;
 import nodes.RuleDecl;
+import nodes.Sequence;
 
 import java.util.Objects;
 
@@ -18,7 +17,29 @@ public class Lr0Item {
         this.dotPos2 = dotPos;
     }
 
-    public boolean isDotTerminal() {
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(ruleDecl.name);
+        sb.append(" -> ");
+        Sequence rhs = ruleDecl.rhs.asSequence();
+        for (int i = 0; i < rhs.size(); i++) {
+            if (i == dotPos) {
+                sb.append(". ");
+            }
+            sb.append(rhs.get(i));
+            if (i < rhs.size() - 1) {
+                sb.append(" ");
+            }
+        }
+        if (rhs.size() == dotPos) {
+            sb.append(".");
+        }
+        return sb.toString();
+    }
+
+    //if dot follows a terminal
+    public boolean isDotNonTerminal() {
         NameNode nameNode = getDotNode();
         if (nameNode == null) {
             return false;
@@ -26,75 +47,22 @@ public class Lr0Item {
         return !nameNode.isToken;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(ruleDecl.name);
-        sb.append(" -> ");
-        Node rhs = ruleDecl.rhs;
-        if (rhs.isName()) {
-            if (dotPos == 0) {
-                sb.append(". ");
-            }
-            sb.append(rhs);
-            if (dotPos == 1) {
-                sb.append(".");
-            }
-        }
-        else if (rhs.isSequence()) {
-            Sequence sequence = rhs.asSequence();
-            for (int i = 0; i < sequence.size(); i++) {
-                if (i == dotPos) {
-                    sb.append(". ");
-                }
-                sb.append(sequence.get(i));
-                if (i < sequence.size() - 1) {
-                    sb.append(" ");
-                }
-            }
-            if (sequence.size() == dotPos) {
-                sb.append(".");
-            }
-        }
-        else if (rhs.isEmpty()) {
-            if (dotPos == 0) {
-                sb.append(". ");
-            }
-            sb.append(rhs);
-            if (dotPos == 1) {
-                sb.append(".");
-            }
-        }
-        else {
-            throw new RuntimeException("invalid node type: " + rhs);
-        }
-        return sb.toString();
-    }
-
+    //node after dot
     public NameNode getDotNode() {
-        return getDotNode(ruleDecl.rhs);
+        Sequence rhs = ruleDecl.rhs.asSequence();
+        if (dotPos2 < rhs.size()) {
+            return rhs.get(dotPos2).asName();
+        }
+        return null;
     }
 
-    NameNode getDotNode(Node node) {
-        if (node.isName()) {
-            if (dotPos2 == 0) {
-                return node.asName();
-            }
-            return null;
+    //node 2after dot
+    public NameNode getDotNode2() {
+        Sequence rhs = ruleDecl.rhs.asSequence();
+        if (dotPos2 < rhs.size() - 1) {
+            return rhs.get(dotPos2 + 1).asName();
         }
-        else if (node.isSequence()) {
-            Sequence sequence = node.asSequence();
-            if (dotPos2 == sequence.size()) {
-                return null;
-            }
-            return sequence.get(dotPos2).asName();
-        }
-        else if (node.isEmpty()) {
-            return null;
-        }
-        else {
-            throw new RuntimeException("invalid node: " + node);
-        }
+        return null;
     }
 
     @Override

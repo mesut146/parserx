@@ -15,6 +15,11 @@ public class Lr1Item extends Lr0Item {
         super(ruleDecl, dotPos);
     }
 
+    public Lr1Item(Lr1Item item, int dotPos) {
+        super(item.ruleDecl, dotPos);
+        lookAhead = item.lookAhead;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

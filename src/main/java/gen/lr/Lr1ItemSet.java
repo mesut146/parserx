@@ -4,28 +4,29 @@ import nodes.*;
 
 import java.util.*;
 
-import static gen.lr.Lr1Generator.dollar;
 
 public class Lr1ItemSet {
-    List<Lr1Item> first;
+    List<Lr1Item> kernel;
     List<Lr1Item> all = new ArrayList<>();
     int curIndex = 0;//rule index
     Set<Lr1Item> done = new LinkedHashSet<>();
     Tree tree;
 
-    public Lr1ItemSet(List<Lr1Item> first, Tree tree) {
-        this.first = first;
+    public Lr1ItemSet(List<Lr1Item> kernel, Tree tree) {
+        this.kernel = kernel;
         this.tree = tree;
-        all.addAll(this.first);
     }
 
-    public Lr1ItemSet(Lr1Item first, Tree tree) {
-        this(new ArrayList<>(Collections.singletonList(first)), tree);
+    public Lr1ItemSet(Lr1Item kernel, Tree tree) {
+        this(new ArrayList<>(Collections.singletonList(kernel)), tree);
     }
 
     @Override
     public String toString() {
         //sort();
+        if (all.isEmpty()) {//not processed yet
+            return NodeList.join(kernel, "\n");
+        }
         return NodeList.join(all, "\n");
     }
 
@@ -34,36 +35,44 @@ public class Lr1ItemSet {
         for (int i = curIndex; i < all.size(); i++) {
             Lr1Item item = all.get(i);
             if (!done.contains(item)) {
-                Node token = item.getDotNode();
+                NameNode token = item.getDotNode();
                 if (token != null) {
                     return item;
                 }
+                //todo add item to done,
             }
         }
         return null;
     }
 
     public void closure() {
-        if (all.size() > 1) {
-            return;
-        }
-        for (Lr1Item item : first) {
-            if (item.isDotTerminal()) {
-                closure(item.getDotNode());
+        if (all.isEmpty()) {
+            all.addAll(kernel);
+            for (Lr1Item item : kernel) {
+                if (item.isDotNonTerminal()) {
+                    closure(item.getDotNode(), item);
+                }
             }
         }
-
     }
 
-    void closure(NameNode node) {
+    void closure(NameNode node, Lr1Item it) {
         if (!node.isToken) {
             List<RuleDecl> ruleDecl = tree.getRules(node.name);
             for (RuleDecl decl : ruleDecl) {
                 Lr1Item item = new Lr1Item(decl, 0);
                 if (!all.contains(item)) {
                     all.add(item);
-                    if (item.isDotTerminal()) {
-                        closure(item.getDotNode());
+                    //la
+                    NameNode after = it.getDotNode2();
+                    if (after != null) {
+                        Set<NameNode> la = first(after);
+                        item.lookAhead.addAll(la);
+                    }else {
+                        item.lookAhead.add(it.lookAhead.get(0));
+                    }
+                    if (item.isDotNonTerminal()) {
+                        closure(item.getDotNode(), item);
                     }
                 }
             }
@@ -74,22 +83,17 @@ public class Lr1ItemSet {
         }
     }
 
-    public void lookaheads() {
-        for (Lr1Item item : all) {
-            NameNode node = item.getDotNode();
-
-        }
-    }
-
     //first terminals of rule
     public Set<NameNode> first(NameNode nameNode) {
         //todo if first has epsilon look next
         Set<NameNode> list = new HashSet<>();
         for (RuleDecl decl : tree.getRules(nameNode.name)) {
-            Node node = decl.rhs;
-            if (node.isSequence()) {
+            Sequence node = decl.rhs.asSequence();
+            handleFirst(node.get(0).asName(), list);
+
+            /*if (node.isSequence()) {
                 //NameNode n = (NameNode) node.asSequence().get(0);
-                handleFirst(node.asSequence().get(0), list);
+
             }
             else if (node.isName()) {
                 if (node.isEmpty()) {
@@ -99,41 +103,18 @@ public class Lr1ItemSet {
                 else {
                     handleFirst(node.asName(), list);
                 }
-            }
+            }*/
         }
         return list;
     }
 
-    Set<NameNode> first(Node rhs) {
-        Set<NameNode> list = new HashSet<>();
-        if (rhs.isEmpty()) {
-            list.add(dollar());
-        }
-        else if (rhs.isName()) {
-            if (rhs.asName().isToken) {
-                list.add(rhs.asName());
-            }
-            else {
-                list.addAll(first(rhs.asName()));
-            }
+    void handleFirst(NameNode node, Set<NameNode> list) {
+        if (node.asName().isToken) {
+            list.add(node);
         }
         else {
-            Sequence sequence = rhs.asSequence();
-            for (int i = 0; i < sequence.size(); i++) {
-                Node n = sequence.get(i);
-            }
-        }
-        return list;
-    }
-
-    void handleFirst(Node node, Set<NameNode> list) {
-        if (node.isName()) {
-            if (node.asName().isToken) {
-                list.add(node.asName());
-            }
-            else {
-                list.addAll(first(node.asName()));
-            }
+            //todo prevent left recursion
+            list.addAll(first(node));
         }
     }
 
@@ -144,7 +125,7 @@ public class Lr1ItemSet {
             Node rhs = item.ruleDecl.rhs;
             if (rhs.isName() && rhs.equals(nameNode)) {
                 //rightmost so add $
-                followSet.add(dollar());
+                //followSet.add(dollar());
             }
             else if (rhs.isSequence()) {
                 Sequence sequence = rhs.asSequence();
@@ -161,7 +142,7 @@ public class Lr1ItemSet {
                         }
                         else {
                             //rightmost
-                            followSet.add(dollar());
+                            //followSet.add(dollar());
                         }
                     }
                 }

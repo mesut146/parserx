@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 //transform ebnf to bnf
-public class EbnfTransformer {
+public class EbnfTransformer{
 
     Tree tree;//in ebnf
     Tree res;//out bnf
@@ -43,9 +43,8 @@ public class EbnfTransformer {
 
         for (RuleDecl decl : tree.rules) {
             RuleDecl newDecl = new RuleDecl(decl.name);
-            Node rhs = decl.rhs;
-            rhs = transform(rhs, decl);
-            if (rhsSequence && rhs.isSequence()) {
+            Node rhs = transform(decl.rhs, decl);
+            if (rhsSequence && !rhs.isSequence()) {
                 rhs = new Sequence(rhs);
             }
             newDecl.rhs = rhs;

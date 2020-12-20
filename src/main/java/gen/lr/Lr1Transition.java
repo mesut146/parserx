@@ -15,6 +15,6 @@ public class Lr1Transition {
 
     @Override
     public String toString() {
-        return from.first + " by " + symbol;
+        return from.kernel + " by " + symbol;
     }
 }

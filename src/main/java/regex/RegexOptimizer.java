@@ -10,18 +10,18 @@ public class RegexOptimizer extends Transformer {
     }
 
     public Node optimize() {
-        return transform(regex);
+        return transformNode(regex);
     }
 
     @Override
-    public Node transform(Node node) {
+    public Node transformNode(Node node) {
         if (node.isSequence()) {
             node = transformSequence2(node.asSequence());
         }
         else if (node.isOr()) {
             node = transformOr2(node.asOr());
         }
-        return super.transform(node);
+        return super.transformNode(node);
     }
 
     @Override
@@ -29,7 +29,7 @@ public class RegexOptimizer extends Transformer {
         OrNode newNode = new OrNode();
         Bracket bracket = new Bracket();
         for (Node ch : node) {
-            ch = transform(ch);
+            ch = transformNode(ch);
             if (ch.isString() && ch.asString().value.length() == 1) {
                 bracket.add(new Bracket.CharNode(ch.asString().value.charAt(0)));
             }
@@ -52,7 +52,7 @@ public class RegexOptimizer extends Transformer {
         StringBuilder sb = new StringBuilder();
         Sequence newNode = new Sequence();
         for (int i = 0; i < node.size(); i++) {
-            Node n = transform(node.get(i));
+            Node n = transformNode(node.get(i));
             if (n.isString()) {
                 sb.append(n.asString().value);
             }
@@ -73,7 +73,7 @@ public class RegexOptimizer extends Transformer {
     public Node transformSequence2(Sequence node) {
         Sequence newNode = new Sequence();
         for (int i = 0; i < node.size(); i++) {
-            Node n = transform(node.get(i));
+            Node n = transformNode(node.get(i));
             if (n.isSequence()) {
                 newNode.addAll(n.asSequence().list);
             }
@@ -87,7 +87,7 @@ public class RegexOptimizer extends Transformer {
     public Node transformOr2(OrNode node) {
         OrNode newNode = new OrNode();
         for (int i = 0; i < node.size(); i++) {
-            Node n = transform(node.get(i));
+            Node n = transformNode(node.get(i));
             if (n.isOr()) {
                 newNode.addAll(n.asOr().list);
             }

@@ -204,6 +204,7 @@ public class Lr0Generator extends IndentWriter {
 
     private void check() {
         PrepareTree.checkReferences(tree);
+        EbnfTransformer.rhsSequence = true;
         EbnfTransformer transformer = new EbnfTransformer(tree);
         tree = transformer.transform(tree);
         PrepareTree.checkReferences(tree);
