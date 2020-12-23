@@ -7,6 +7,8 @@ import java.util.*;
 
 public class Lr1ItemSet extends Lr0ItemSet<Lr1Item> {
 
+    Set<Lr1Item> done = new HashSet<>();
+
     public Lr1ItemSet(List<Lr1Item> kernel, Tree tree) {
         this.kernel.addAll(kernel);
         this.tree = tree;
@@ -14,6 +16,17 @@ public class Lr1ItemSet extends Lr0ItemSet<Lr1Item> {
 
     public Lr1ItemSet(Lr1Item kernel, Tree tree) {
         this(new ArrayList<>(Collections.singletonList(kernel)), tree);
+    }
+
+
+    public List<Lr1Item> getAll() {
+        List<Lr1Item> list = new ArrayList<>();
+        for (Lr1Item item : all) {
+            if (!done.contains(item)) {
+                list.add(item);
+            }
+        }
+        return list;
     }
 
     @Override
@@ -47,10 +60,14 @@ public class Lr1ItemSet extends Lr0ItemSet<Lr1Item> {
         if (all.isEmpty()) {
             all.addAll(kernel);
             for (LrItem item : kernel) {
-                if (item.isDotNonTerminal()) {
-                    closure(item.getDotNode(), (Lr1Item) item);
-                }
+                closure((Lr1Item) item);
             }
+        }
+    }
+
+    public void closure(Lr1Item it) {
+        if (it.isDotNonTerminal()) {
+            closure(it.getDotNode(), it);
         }
     }
 
@@ -58,28 +75,36 @@ public class Lr1ItemSet extends Lr0ItemSet<Lr1Item> {
         if (!node.isToken) {
             List<RuleDecl> ruleDecl = tree.getRules(node.name);
             for (RuleDecl decl : ruleDecl) {
-                Lr1Item item = new Lr1Item(decl, 0);
-                if (!all.contains(item)) {
-                    all.add(item);
+                Lr1Item newItem = new Lr1Item(decl, 0);
+                if (!all.contains(newItem)) {
+                    all.add(newItem);
                     //lookahead
                     for (Lr1Item k : kernel) {
                         if (k.ruleDecl.name.equals(node.name)) {
-                            item.lookAhead.addAll(k.lookAhead);
+                            newItem.lookAhead.addAll(k.lookAhead);
                         }
                     }
-                    if (item.lookAhead.isEmpty()) {
-                        NameNode after = it.getDotNode2();
+                    if (newItem.lookAhead.isEmpty()) {
+                        for (Lr1Item i : all) {
+                            if (i.getDotNode() != null && i.getDotNode().equals(node) && i.getDotNode2() != null) {
+                                newItem.lookAhead.add(i.getDotNode2());
+                            }
+                        }
+                        if (newItem.lookAhead.isEmpty()) {
+                            newItem.lookAhead.add(it.lookAhead.get(0));
+                        }
+                        /*NameNode after = it.getDotNode2();
                         if (after != null) {
                             Set<NameNode> la = first(after);
-                            item.lookAhead.addAll(la);
+                            newItem.lookAhead.addAll(la);
                         }
                         else {
-                            item.lookAhead.add(it.lookAhead.get(0));
-                        }
+                            newItem.lookAhead.add(it.lookAhead.get(0));
+                        }*/
                     }
 
-                    if (item.isDotNonTerminal() && !item.getDotNode().equals(node)) {
-                        closure(item.getDotNode(), item);
+                    if (newItem.isDotNonTerminal() && !newItem.getDotNode().equals(node)) {
+                        closure(newItem);
                     }
                 }
             }
@@ -110,6 +135,5 @@ public class Lr1ItemSet extends Lr0ItemSet<Lr1Item> {
             list.addAll(first(node));
         }
     }
-
 
 }

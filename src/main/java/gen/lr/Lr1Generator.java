@@ -20,7 +20,7 @@ public class Lr1Generator extends IndentWriter {
     LexerGenerator lexerGenerator;
     LrTable<Lr1Item, Lr1ItemSet> table = new LrTable<>();
     RuleDecl start;
-    NameNode dollar = new NameNode("$");
+    public static NameNode dollar = new NameNode("$");
 
     public Lr1Generator(LexerGenerator lexerGenerator, String dir, Tree tree) {
         this.lexerGenerator = lexerGenerator;
@@ -46,7 +46,8 @@ public class Lr1Generator extends IndentWriter {
 
         while (!queue.isEmpty()) {
             Lr1ItemSet curSet = queue.poll();
-            for (LrItem from : curSet.all) {
+            for (Lr1Item from : curSet.getAll()) {
+                curSet.done.add(from);
                 NameNode symbol = from.getDotNode();
                 if (symbol != null) {
                     //goto
@@ -58,17 +59,18 @@ public class Lr1Generator extends IndentWriter {
                             targetSet = new Lr1ItemSet(toFirst, tree);
                             table.addId(targetSet);
                             queue.add(targetSet);
+                            table.addTransition(curSet, targetSet, symbol);
                         }
                         else {
                             //merge
                             targetSet.all.add(toFirst);
-                            targetSet.closure(toFirst.getDotNode(),toFirst);
+                            targetSet.kernel.add(toFirst);
+                            targetSet.closure(toFirst);
                             /*targetSet = new Lr1ItemSet(toFirst, tree);
                             table.addId(targetSet);*/
                             queue.add(targetSet);
                         }
                         System.out.printf("%s %s to %s\n", symbol, printSet(curSet), printSet(targetSet));
-                        table.addTransition(curSet, targetSet, symbol);
                     }
                     else {
                         table.addTransition(curSet, targetSet, symbol);
