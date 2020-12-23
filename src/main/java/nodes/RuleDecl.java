@@ -7,7 +7,7 @@ import java.util.Objects;
 public class RuleDecl extends Node {
 
     public String name;
-    public Node rhs;//sequence,or rules,simple rule
+    public Node rhs;//sequence,or,simple rule
     public int index;
 
     public RuleDecl() {

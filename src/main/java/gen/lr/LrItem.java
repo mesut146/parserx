@@ -6,15 +6,13 @@ import nodes.Sequence;
 
 import java.util.Objects;
 
-public class Lr0Item {
+public class LrItem {
     RuleDecl ruleDecl;
-    int dotPos;//orig
-    int dotPos2;//current
+    int dotPos;
 
-    public Lr0Item(RuleDecl ruleDecl, int dotPos) {
+    public LrItem(RuleDecl ruleDecl, int dotPos) {
         this.ruleDecl = ruleDecl;
         this.dotPos = dotPos;
-        this.dotPos2 = dotPos;
     }
 
     @Override
@@ -50,17 +48,17 @@ public class Lr0Item {
     //node after dot
     public NameNode getDotNode() {
         Sequence rhs = ruleDecl.rhs.asSequence();
-        if (dotPos2 < rhs.size()) {
-            return rhs.get(dotPos2).asName();
+        if (dotPos < rhs.size()) {
+            return rhs.get(dotPos).asName();
         }
         return null;
     }
 
-    //node 2after dot
+    //2 node after dot
     public NameNode getDotNode2() {
         Sequence rhs = ruleDecl.rhs.asSequence();
-        if (dotPos2 < rhs.size() - 1) {
-            return rhs.get(dotPos2 + 1).asName();
+        if (dotPos < rhs.size() - 1) {
+            return rhs.get(dotPos + 1).asName();
         }
         return null;
     }
@@ -70,7 +68,7 @@ public class Lr0Item {
         if (this == other) return true;
         if (other == null || getClass() != other.getClass()) return false;
 
-        Lr0Item item = (Lr0Item) other;
+        LrItem item = (LrItem) other;
 
         if (dotPos != item.dotPos) return false;
         return Objects.equals(ruleDecl, item.ruleDecl);

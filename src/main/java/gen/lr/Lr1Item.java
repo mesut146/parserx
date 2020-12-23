@@ -6,8 +6,9 @@ import nodes.RuleDecl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-public class Lr1Item extends Lr0Item {
+public class Lr1Item extends LrItem {
 
     public List<NameNode> lookAhead = new ArrayList<>();
 
@@ -21,6 +22,22 @@ public class Lr1Item extends Lr0Item {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Lr1Item item = (Lr1Item) o;
+        return super.equals(item) && Objects.equals(lookAhead, item.lookAhead);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (lookAhead != null ? lookAhead.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(super.toString());
@@ -28,4 +45,5 @@ public class Lr1Item extends Lr0Item {
         sb.append(NodeList.join(lookAhead, "/"));
         return sb.toString();
     }
+
 }

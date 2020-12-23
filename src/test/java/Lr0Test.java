@@ -28,11 +28,11 @@ public class Lr0Test {
     @Ignore
     public void lr1() throws Exception {
         File file;
-        //file = Env.getResFile("lr1/calc.g");
-        file = Env.getResFile("lr1/simple.g");
+        //file = Env.getFile2("lr1/calc2.g");
+        file = Env.getFile2("lr1/calc3.g");
+        //file = Env.getFile2("lr1/simple.g");
         Tree tree = Tree.makeTree(file);
-        Lr1Generator generator = new Lr1Generator(null, null, tree);
-        generator.dotWriter = new PrintWriter(Env.getFile2("lr1/lr1.dot"));
+        Lr1Generator generator = new Lr1Generator(null, file.getParent(), tree);
         generator.generate();
     }
 }

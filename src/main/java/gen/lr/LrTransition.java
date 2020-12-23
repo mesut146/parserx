@@ -2,12 +2,12 @@ package gen.lr;
 
 import nodes.NameNode;
 
-public class LrTransition {
-    Lr0ItemSet from;
-    Lr0ItemSet to;
+public class LrTransition<T extends Lr0ItemSet> {
+    T from;
+    T to;
     NameNode symbol;
 
-    public LrTransition(Lr0ItemSet from, Lr0ItemSet to, NameNode symbol) {
+    public LrTransition(T from, T to, NameNode symbol) {
         this.from = from;
         this.to = to;
         this.symbol = symbol;
@@ -15,6 +15,6 @@ public class LrTransition {
 
     @Override
     public String toString() {
-        return from.first + " by " + symbol;
+        return from.kernel + " by " + symbol + " to " + to.kernel;
     }
 }

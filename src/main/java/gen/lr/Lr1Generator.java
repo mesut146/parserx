@@ -6,21 +6,21 @@ import gen.LexerGenerator;
 import gen.PrepareTree;
 import nodes.*;
 
+import java.io.File;
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
 
 
 public class Lr1Generator extends IndentWriter {
     Tree tree;
     String dir;
     LexerGenerator lexerGenerator;
-    List<Lr1Transition> transitions;
-    List<Lr1ItemSet> itemSets;
-    public PrintWriter dotWriter;
-    Map<Lr1ItemSet, Integer> idMap = new HashMap<>();
-    int lastId = -1;
+    LrTable<Lr1Item, Lr1ItemSet> table = new LrTable<>();
     RuleDecl start;
-    NameNode dollar=new NameNode("$");
+    NameNode dollar = new NameNode("$");
 
     public Lr1Generator(LexerGenerator lexerGenerator, String dir, Tree tree) {
         this.lexerGenerator = lexerGenerator;
@@ -29,91 +29,142 @@ public class Lr1Generator extends IndentWriter {
     }
 
     public void generate() {
-        check();
-        //System.out.println(tree);
-        dotBegin();
-
-        transitions = new ArrayList<>();
-        itemSets = new ArrayList<>();
-        Queue<Lr1ItemSet> queue = new LinkedList<>();
-
         //make start rule
         start = new RuleDecl("s'", tree.start);
-        if (!start.rhs.isSequence()) {
-            start.rhs = new Sequence(start.rhs);
-        }
+        tree.addRule(start);
+
+        check();
+        start = tree.getRule("s'");
+
+        Queue<Lr1ItemSet> queue = new LinkedList<>();
+
         Lr1Item first = new Lr1Item(start, 0);
         first.lookAhead.add(dollar);
         Lr1ItemSet firstSet = new Lr1ItemSet(first, tree);
-        addId(firstSet);
-        itemSets.add(firstSet);
-        firstSet.closure();
-        //System.out.println("\nset = " + firstSet);
-
+        table.addId(firstSet);
         queue.add(firstSet);
 
         while (!queue.isEmpty()) {
-            Lr1ItemSet curSet = queue.peek();
-            Lr1Item from = curSet.findTransitable();
-            if (from != null) {
+            Lr1ItemSet curSet = queue.poll();
+            for (LrItem from : curSet.all) {
                 NameNode symbol = from.getDotNode();
-                Lr1Item toFirst = new Lr1Item(from, from.dotPos2 + 1);
-                curSet.curIndex++;
-                Lr1ItemSet targetSet;
-                targetSet = getSet(toFirst);
-                if (targetSet == null) {
-                    targetSet = getTransition(curSet, symbol);
-                    if (targetSet == null) {//new transition
-                        targetSet = new Lr1ItemSet(toFirst, tree);
-                        addId(targetSet);
-                        itemSets.add(targetSet);
-                        targetSet.closure();
-                        System.out.printf("transition(%d) by %s (%s)%s to (%s)%s\n", transitions.size(), symbol, getId(curSet), curSet.kernel, getId(targetSet), targetSet.kernel);
-                        transitions.add(new Lr1Transition(curSet, targetSet, symbol));
+                if (symbol != null) {
+                    //goto
+                    Lr1Item toFirst = new Lr1Item((Lr1Item) from, from.dotPos + 1);
+                    Lr1ItemSet targetSet = getSet(toFirst);
+                    if (targetSet == null) {
+                        targetSet = getOldSet(curSet, symbol);
+                        if (targetSet == null) {
+                            targetSet = new Lr1ItemSet(toFirst, tree);
+                            table.addId(targetSet);
+                            queue.add(targetSet);
+                        }
+                        else {
+                            //merge
+                            targetSet.all.add(toFirst);
+                            targetSet.closure(toFirst.getDotNode(),toFirst);
+                            /*targetSet = new Lr1ItemSet(toFirst, tree);
+                            table.addId(targetSet);*/
+                            queue.add(targetSet);
+                        }
+                        System.out.printf("%s %s to %s\n", symbol, printSet(curSet), printSet(targetSet));
+                        table.addTransition(curSet, targetSet, symbol);
                     }
                     else {
-                        //merge and update transition
-                        if (!targetSet.kernel.contains(toFirst)) {
-                            targetSet.kernel.add(toFirst);
-                            targetSet.all.clear();
-                            targetSet.all.addAll(targetSet.kernel);
-                            targetSet.closure();
-
-                            targetSet.curIndex = targetSet.kernel.size() - 1;
-                        }
+                        table.addTransition(curSet, targetSet, symbol);
                     }
-                    queue.add(targetSet);
+                    //throw new RuntimeException();
                 }
-            }
-            else {
-                queue.poll();
-            }
-            curSet.done.add(from);
+            }//for
         }
-        dotLabels();
-        for (Lr1Transition transition : transitions) {
-            dot(transition.from, transition.to, transition.symbol);
-        }
-        dotEnd();
+
+        //merge and update transition
+        /*if (!targetSet.kernel.contains(toFirst)) {
+            targetSet.kernel.add(toFirst);
+            targetSet.all.clear();
+            targetSet.all.addAll(targetSet.kernel);
+            targetSet.closure();
+
+            targetSet.curIndex = targetSet.kernel.size() - 1;
+        }*/
+        //merge();
+        writeDot();
     }
 
-    void addId(Lr1ItemSet item) {
-        idMap.put(item, ++lastId);
+    //merge same kernel states with different lookaheads
+    void merge() {
+        LrTable<Lr1Item, Lr1ItemSet> table2 = new LrTable<>();
+        Map<Integer, Map<NameNode, Lr1ItemSet>> map = new HashMap<>();
+        for (Lr1ItemSet from : table.itemSets) {
+            int id = table.getId(from);
+            Map<NameNode, Lr1ItemSet> m = map.get(id);
+            if (m == null) {
+                m = new HashMap<>();
+                map.put(id, m);
+            }
+
+            for (LrTransition<Lr1ItemSet> t : table.getTrans(from)) {
+                /** if(table2.getTrans(from,t.symbol)){
+                 }*/
+
+                if (m.containsKey(t.symbol)) {
+                    //merge
+                    m.get(t.symbol).all.addAll(t.to.all);
+                    //remove t
+                    table2.addTransition(from, t.to, t.symbol);
+                    table.getTrans(from).remove(t);
+                }
+                else {
+                    m.put(t.symbol, t.to);
+                }
+            }
+        }
+
+    }
+
+    private void writeDot() {
+        try {
+            PrintWriter dotWriter = new PrintWriter(new File(dir, tree.file.getName() + ".dot"));
+            dotWriter.println("digraph G{");
+            //dotWriter.println("rankdir = LR");
+            dotWriter.println("rankdir = TD");
+            dotWriter.println("size=\"100,100\";");
+            //dotWriter.println("ratio=\"fill\";");
+
+            //labels
+            for (Lr1ItemSet set : table.itemSets) {
+                dotWriter.printf("%s [shape=box xlabel=\"%s\" %s label=\"%s\"]\n", table.getId(set), table.getId(set), isFinal(set) ? "color=red " : "", set.toString().replace("\n", "\\l") + "\\l");
+            }
+
+            for (int i = 0; i <= table.lastId; i++) {
+                for (LrTransition<Lr1ItemSet> t : table.map[i]) {
+                    dotWriter.printf("%s -> %s [label=\"%s\"]\n",
+                            table.getId(t.from), table.getId(t.to), t.symbol.name);
+                }
+            }
+
+            dotWriter.println("}");
+            dotWriter.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     //get itemSet that contains item
-    Lr1ItemSet getSet(Lr1Item first) {
-        for (Lr1ItemSet itemSet : itemSets) {
-            if (itemSet.kernel.contains(first)) {
-                return itemSet;
+    Lr1ItemSet getSet(Lr1Item kernel) {
+        for (Lr1ItemSet itemSet : table.itemSets) {
+            for (LrItem item : itemSet.kernel) {
+                if (item.equals(kernel)) {
+                    return itemSet;
+                }
             }
         }
         return null;
     }
 
     //if there exist another transition from this
-    Lr1ItemSet getTransition(Lr1ItemSet from, Node symbol) {
-        for (Lr1Transition transition : transitions) {
+    Lr1ItemSet getOldSet(Lr1ItemSet from, NameNode symbol) {
+        for (LrTransition<Lr1ItemSet> transition : table.getTrans(from)) {
             if (transition.from.equals(from) && transition.symbol.equals(symbol)) {
                 return transition.to;
             }
@@ -121,87 +172,24 @@ public class Lr1Generator extends IndentWriter {
         return null;
     }
 
-    private void dotBegin() {
-        if (dotWriter != null) {
-            dotWriter.println("digraph G{");
-            //dotWriter.println("rankdir = LR");
-            dotWriter.println("rankdir = TD");
-            dotWriter.println("size=\"100,100\";");
-            //dotWriter.println("ratio=\"fill\";");
-        }
-    }
-
-    void dotEnd() {
-        if (dotWriter != null) {
-            dotWriter.println("}");
-            dotWriter.flush();
-            dotWriter.close();
-        }
-    }
-
-    private void dot(Lr1ItemSet curSet, Lr1ItemSet toSet, NameNode symbol) {
-        if (dotWriter != null) {
-            dotWriter.printf("%s -> %s [label=\"%s\"]\n", getId(curSet), getId(toSet), symbol.name);
-        }
-    }
-
-    int getId(Lr1ItemSet itemSet) {
-        for (Lr1Item kernel : itemSet.kernel) {
-            int id = getId(kernel);
-            if (id != -1) {
-                return id;
-            }
-        }
-        return -1;
-    }
-
-    int getId(Lr1Item item) {
-        for (Map.Entry<Lr1ItemSet, Integer> entry : idMap.entrySet()) {
-            if (entry.getKey().kernel.contains(item)) {
-                return entry.getValue();
-            }
-        }
-        return -1;
-    }
-
-    void dotLabels() {
-        if (dotWriter != null) {
-            for (Lr1ItemSet set : itemSets) {
-                if (isFinal(set)) {
-                    dotWriter.printf("%s [color=red shape=box xlabel=\"%s\" label=\"%s\"]\n", getId(set), getId(set), set.toString().replace("\n", "\\n"));
-                }
-                else {
-                    dotWriter.printf("%s [shape=box xlabel=\"%s\" label=\"%s\"]\n", getId(set), getId(set), set.toString().replace("\n", "\\n"));
-                }
-
-            }
-        }
+    String printSet(Lr1ItemSet set) {
+        return String.format("(%d)%s", table.getId(set), set.kernel);
     }
 
     boolean isFinal(Lr1ItemSet set) {
         //has epsilon
-        for (Lr1Item item : set.all) {
-            if (hasEpsilon(item.ruleDecl.rhs)) {
+        for (LrItem item : set.all) {
+            if (hasEpsilon(item.ruleDecl.rhs.asSequence())) {
                 return true;
             }
         }
-        for (Lr1Transition transition : transitions) {
-            if (set.equals(transition.from)) {
-                return false;
-            }
-        }
-        return true;
+        return table.getTrans(set).isEmpty();
     }
 
-    boolean hasEpsilon(Node node) {
-        if (node.isEmpty()) {
-            return true;
-        }
-        if (node.isSequence()) {
-            for (Node c : node.asSequence()) {
-                if (c.isEmpty()) {
-                    return true;
-                }
+    boolean hasEpsilon(Sequence node) {
+        for (Node c : node) {
+            if (c.isEmpty()) {
+                return true;
             }
         }
         return false;

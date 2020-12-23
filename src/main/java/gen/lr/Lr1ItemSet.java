@@ -5,15 +5,10 @@ import nodes.*;
 import java.util.*;
 
 
-public class Lr1ItemSet {
-    List<Lr1Item> kernel;
-    List<Lr1Item> all = new ArrayList<>();
-    int curIndex = 0;//rule index
-    Set<Lr1Item> done = new LinkedHashSet<>();
-    Tree tree;
+public class Lr1ItemSet extends Lr0ItemSet<Lr1Item> {
 
     public Lr1ItemSet(List<Lr1Item> kernel, Tree tree) {
-        this.kernel = kernel;
+        this.kernel.addAll(kernel);
         this.tree = tree;
     }
 
@@ -30,48 +25,60 @@ public class Lr1ItemSet {
         return NodeList.join(all, "\n");
     }
 
-    //get first item that can transit
-    public Lr1Item findTransitable() {
-        for (int i = curIndex; i < all.size(); i++) {
-            Lr1Item item = all.get(i);
-            if (!done.contains(item)) {
-                NameNode token = item.getDotNode();
-                if (token != null) {
-                    return item;
-                }
-                //todo add item to done,
-            }
-        }
-        return null;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Lr1ItemSet that = (Lr1ItemSet) o;
+        if (kernel.size() != that.kernel.size()) return false;
+
+        ArrayList<Lr1Item> k1 = new ArrayList<>(kernel);
+        k1.removeAll(that.kernel);
+        return k1.isEmpty();
+    }
+
+    @Override
+    public int hashCode() {
+        return kernel.hashCode();
     }
 
     public void closure() {
         if (all.isEmpty()) {
             all.addAll(kernel);
-            for (Lr1Item item : kernel) {
+            for (LrItem item : kernel) {
                 if (item.isDotNonTerminal()) {
-                    closure(item.getDotNode(), item);
+                    closure(item.getDotNode(), (Lr1Item) item);
                 }
             }
         }
     }
 
-    void closure(NameNode node, Lr1Item it) {
+    public void closure(NameNode node, Lr1Item it) {
         if (!node.isToken) {
             List<RuleDecl> ruleDecl = tree.getRules(node.name);
             for (RuleDecl decl : ruleDecl) {
                 Lr1Item item = new Lr1Item(decl, 0);
                 if (!all.contains(item)) {
                     all.add(item);
-                    //la
-                    NameNode after = it.getDotNode2();
-                    if (after != null) {
-                        Set<NameNode> la = first(after);
-                        item.lookAhead.addAll(la);
-                    }else {
-                        item.lookAhead.add(it.lookAhead.get(0));
+                    //lookahead
+                    for (Lr1Item k : kernel) {
+                        if (k.ruleDecl.name.equals(node.name)) {
+                            item.lookAhead.addAll(k.lookAhead);
+                        }
                     }
-                    if (item.isDotNonTerminal()) {
+                    if (item.lookAhead.isEmpty()) {
+                        NameNode after = it.getDotNode2();
+                        if (after != null) {
+                            Set<NameNode> la = first(after);
+                            item.lookAhead.addAll(la);
+                        }
+                        else {
+                            item.lookAhead.add(it.lookAhead.get(0));
+                        }
+                    }
+
+                    if (item.isDotNonTerminal() && !item.getDotNode().equals(node)) {
                         closure(item.getDotNode(), item);
                     }
                 }
@@ -90,20 +97,6 @@ public class Lr1ItemSet {
         for (RuleDecl decl : tree.getRules(nameNode.name)) {
             Sequence node = decl.rhs.asSequence();
             handleFirst(node.get(0).asName(), list);
-
-            /*if (node.isSequence()) {
-                //NameNode n = (NameNode) node.asSequence().get(0);
-
-            }
-            else if (node.isName()) {
-                if (node.isEmpty()) {
-                    //look after
-                    throw new RuntimeException("first epsilon");
-                }
-                else {
-                    handleFirst(node.asName(), list);
-                }
-            }*/
         }
         return list;
     }
@@ -118,37 +111,5 @@ public class Lr1ItemSet {
         }
     }
 
-    //get tokens after the symbol can appear in itemset
-    public Set<NameNode> follow(NameNode nameNode, Lr1ItemSet itemSet) {
-        Set<NameNode> followSet = new HashSet<>();
-        for (Lr1Item item : itemSet.all) {
-            Node rhs = item.ruleDecl.rhs;
-            if (rhs.isName() && rhs.equals(nameNode)) {
-                //rightmost so add $
-                //followSet.add(dollar());
-            }
-            else if (rhs.isSequence()) {
-                Sequence sequence = rhs.asSequence();
-                for (int i = 0; i < sequence.size(); i++) {
-                    if (sequence.get(i).equals(nameNode)) {
-                        if (i < sequence.size() - 1) {
-                            NameNode next = (NameNode) sequence.get(i + 1);
-                            if (next.isToken) {
-                                followSet.add(next);
-                            }
-                            else {
-                                followSet.addAll(first(next));
-                            }
-                        }
-                        else {
-                            //rightmost
-                            //followSet.add(dollar());
-                        }
-                    }
-                }
-            }
-        }
-        return followSet;
-    }
 
 }

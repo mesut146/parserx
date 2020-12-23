@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 //transform ebnf to bnf
-public class EbnfTransformer{
+public class EbnfTransformer {
 
     Tree tree;//in ebnf
     Tree res;//out bnf
@@ -42,32 +42,36 @@ public class EbnfTransformer{
         res = new Tree(tree);//result tree
 
         for (RuleDecl decl : tree.rules) {
-            RuleDecl newDecl = new RuleDecl(decl.name);
-            Node rhs = transform(decl.rhs, decl);
+            transformRhs(decl);
+        }
+        return res;
+    }
+
+    public void transformRhs(RuleDecl decl) {
+        RuleDecl newDecl = new RuleDecl(decl.name);
+        Node rhs = transform(decl.rhs, decl);
+        if (rhs != null) {
             if (rhsSequence && !rhs.isSequence()) {
                 rhs = new Sequence(rhs);
             }
             newDecl.rhs = rhs;
             addRule(newDecl);
         }
-        return res;
     }
 
     Node transform(Node node, RuleDecl decl) {
+        if (node == null) return null;
         if (node.isGroup()) {
-            return transform(node.asGroup(), decl);
-        }
-        else if (node.isName()) {
-            return node;
+            node = transform(node.asGroup(), decl);
         }
         else if (node.isSequence()) {
-            return transform(node.asSequence(), decl);
+            node = transform(node.asSequence(), decl);
         }
         else if (node.isRegex()) {
-            return transform(node.asRegex(), decl);
+            node = transform(node.asRegex(), decl);
         }
         else if (node.isOr()) {
-            return transform(node.asOr(), decl);
+            node = transform(node.asOr(), decl);
         }
         return node;
     }
@@ -77,7 +81,7 @@ public class EbnfTransformer{
         //r = pre r_g end;
         //r_g = e1 e2;
         Node rhs = groupNode.rhs;
-        if (!rhs.isOr() && !rhs.isSequence()) {
+        if (!rhs.isOr() && !rhs.isSequence()) {//simplify
             return rhs;
         }
         String nname = decl.name + "_g" + getCount(decl.name);
@@ -93,7 +97,8 @@ public class EbnfTransformer{
                 RuleDecl newDecl = new RuleDecl();
                 newDecl.name = decl.name;
                 newDecl.rhs = transform(node, newDecl);
-                addRule(newDecl);
+                transformRhs(newDecl);
+                //addRule(newDecl);
             }
         }
         else {
@@ -112,10 +117,7 @@ public class EbnfTransformer{
         for (Node node : sequence) {
             res.add(transform(node, decl));
         }
-        if (res.size() == 1) {
-            return res.get(0);
-        }
-        return res;
+        return res.normal();
     }
 
     Node transform(RegexNode regexNode, RuleDecl decl) {
