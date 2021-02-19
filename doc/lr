@@ -24,4 +24,4 @@ while entry.action != accept do
     error
   entry = T[state, symbol]
 end while
-if symbol 6= $ then error
+if symbol == $ then error

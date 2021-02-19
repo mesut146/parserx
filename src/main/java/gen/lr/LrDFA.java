@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LrTable<V extends LrItem, T extends Lr0ItemSet<V>> {
+public class LrDFA<V extends LrItem, T extends Lr0ItemSet<V>> {
     public List<LrTransition<T>>[] map = new List[100];
     int lastId = -1;
     List<T> itemSets = new ArrayList<>();

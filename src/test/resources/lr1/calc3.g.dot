@@ -1,0 +1,15 @@
+digraph G{
+rankdir = TD
+size="100,100";
+0 [shape=box xlabel="0"  label="s' -> . S, $\lS -> . A {c}, $\lA -> . {a} {b}, {c}\lA -> . {a}, {c}\l"]
+1 [shape=box xlabel="1" color=red  label="s' -> S., $\l"]
+2 [shape=box xlabel="2"  label="S -> A . {c}, $\l"]
+3 [shape=box xlabel="3"  label="A -> {a} . {b}, {c}\lA -> {a}., {c}\l"]
+4 [shape=box xlabel="4" color=red  label="S -> A {c}., $\l"]
+5 [shape=box xlabel="5" color=red  label="A -> {a} {b}., {c}\l"]
+0 -> 1 [label="S"]
+0 -> 2 [label="A"]
+0 -> 3 [label="a"]
+2 -> 4 [label="c"]
+3 -> 5 [label="b"]
+}
