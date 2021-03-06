@@ -12,6 +12,6 @@ public class LeftRecursion {
         Tree tree = Tree.makeTree(file);
         LeftRecursive leftRecursive = new LeftRecursive(tree);
         leftRecursive.transform();
-        System.out.println(tree);
+        System.out.println(leftRecursive.resTree);
     }
 }

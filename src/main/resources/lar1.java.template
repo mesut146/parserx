@@ -1,0 +1,53 @@
+import java.util.*;
+
+public class $parser_class${
+    Stack<Symbol> stack=new Stack<>();
+    $lexer_class$ lexer;
+    static int ACCEPT = 0;
+    static int SHIFT = 1;
+    static int REDUCE = 2;
+
+    public $parser_class$($lexer_class$ lexer){
+        this.lexer = lexer;
+    }
+
+    void push(int st){
+
+    }
+
+    void error(){
+
+    }
+
+    public void parse(){
+        int state = 0;
+        push(state);
+        Symbol symbol = lexer.$lexer_method$();
+        entry = T[state, symbol];
+
+        while(entry.action != ACCEPT){
+            if(entry.action == SHIFT){
+                push(symbol);
+                state = entry.state
+                push(state)
+                read(symbol)
+            }
+            else if(entry.action == REDUCE){
+                do 2∗size rhs times {pop()}
+                state = top-of-stack()
+                push(entry.rule.lhs)
+                state = T[state, entry.rule.lhs]
+                push(state)
+            }
+            else if(entry.action == blank){
+                error();
+            }
+            entry = T[state, symbol]
+        }
+    }
+}
+
+public class Symbol{
+    $token_class$ token;
+    String name;
+}

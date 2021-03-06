@@ -18,7 +18,7 @@ public class Lr1Generator extends IndentWriter {
     Tree tree;
     String dir;
     LexerGenerator lexerGenerator;
-    LrTable<Lr1Item, Lr1ItemSet> table = new LrTable<>();
+    LrDFA<Lr1Item, Lr1ItemSet> table = new LrDFA<>();
     RuleDecl start;
     public static NameNode dollar = new NameNode("$");
 
@@ -80,22 +80,13 @@ public class Lr1Generator extends IndentWriter {
             }//for
         }
 
-        //merge and update transition
-        /*if (!targetSet.kernel.contains(toFirst)) {
-            targetSet.kernel.add(toFirst);
-            targetSet.all.clear();
-            targetSet.all.addAll(targetSet.kernel);
-            targetSet.closure();
-
-            targetSet.curIndex = targetSet.kernel.size() - 1;
-        }*/
         //merge();
         writeDot();
     }
 
     //merge same kernel states with different lookaheads
     void merge() {
-        LrTable<Lr1Item, Lr1ItemSet> table2 = new LrTable<>();
+        LrDFA<Lr1Item, Lr1ItemSet> table2 = new LrDFA<>();
         Map<Integer, Map<NameNode, Lr1ItemSet>> map = new HashMap<>();
         for (Lr1ItemSet from : table.itemSets) {
             int id = table.getId(from);

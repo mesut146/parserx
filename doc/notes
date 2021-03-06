@@ -1,0 +1,20 @@
+page 214 left factoring
+
+trans[rowMap[curState] + cMap[input]] = nextState
+
+trans[state][input] = nextState
+trans[state] = {}
+
+
+
+
+
+\d	[0-9]
+\w	[A-Za-z0-9_]
+\s	[ \t\r\n\f]
+\D	[^\d]
+\W	[^\w]
+\S	[^\s]
+
+cmap: maps input ids to range ids
+trans: maps current state & range id to target state

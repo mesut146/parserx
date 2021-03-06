@@ -1,16 +1,16 @@
-A = A a | b;
+A = A a | A b | c;
 B = B b | B c | d;
 
-D = E s1 | F s2;
+/*D = E s1 | F s2;
 E = F F;
-F = D D | x;
+F = D D | x;*/
+
 /*
-D = D D D D s1 | D D | x;
-D = x D';
-D' = | D D D s1 D' | D D';
+D = F F s1 | D D s2;
+ D = D D F s1 | D D s2;
+ D = x F s1 | D D s2;
+
+D = F F s1 D'
+D'= D s2 D' | E
 
 */
-
-
-//B = d B'?
-//B' = b B' | c B'

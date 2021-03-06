@@ -8,6 +8,7 @@ public class NameNode extends Node {
 
     public String name;
     public boolean isToken;//if we reference to a token
+    public String label;
 
     public NameNode(String name) {
         this.name = name;
@@ -20,10 +21,14 @@ public class NameNode extends Node {
 
     @Override
     public String toString() {
+        String s;
         if (isToken) {
-            return "{" + name + "}";
+            s = "{" + name + "}";
         }
-        return name;
+        else {
+            s = name;
+        }
+        return label == null ? s : s + ":" + label;
     }
 
     @Override
