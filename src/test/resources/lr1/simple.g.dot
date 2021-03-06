@@ -1,0 +1,27 @@
+digraph G{
+rankdir = TD
+size="100,100";
+0 [shape=box xlabel="0"  label="s' -> . S, $\lS -> . A A, $\lA -> . {a} A, {b}/{a}\lA -> . {b}, {b}/{a}\l"]
+1 [shape=box xlabel="1" color=red  label="s' -> S., $\l"]
+2 [shape=box xlabel="2"  label="S -> A . A, $\lA -> . {a} A, $\lA -> . {b}, $\l"]
+3 [shape=box xlabel="3"  label="A -> {a} . A, {b}/{a}\lA -> . {a} A, {b}/{a}\lA -> . {b}, {b}/{a}\l"]
+4 [shape=box xlabel="4" color=red  label="A -> {b}., {b}/{a}\l"]
+5 [shape=box xlabel="5" color=red  label="S -> A A., $\l"]
+6 [shape=box xlabel="6"  label="A -> {a} . A, $\lA -> . {a} A, $\lA -> . {b}, $\l"]
+7 [shape=box xlabel="7" color=red  label="A -> {b}., $\l"]
+8 [shape=box xlabel="8" color=red  label="A -> {a} A., {b}/{a}\l"]
+9 [shape=box xlabel="9" color=red  label="A -> {a} A., $\l"]
+0 -> 1 [label="S"]
+0 -> 2 [label="A"]
+0 -> 3 [label="a"]
+0 -> 4 [label="b"]
+2 -> 5 [label="A"]
+2 -> 6 [label="a"]
+2 -> 7 [label="b"]
+3 -> 8 [label="A"]
+3 -> 3 [label="a"]
+3 -> 4 [label="b"]
+6 -> 9 [label="A"]
+6 -> 6 [label="a"]
+6 -> 7 [label="b"]
+}
