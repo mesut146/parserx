@@ -5,158 +5,199 @@ import nodes.*;
 import java.util.HashMap;
 import java.util.Map;
 
-//transform ebnf to bnf
-public class EbnfTransformer {
-
-    Tree tree;//in ebnf
-    Tree res;//out bnf
-    Map<String, Integer> countMap = new HashMap<>();
-    public static boolean leftRecursive = true;
-    public static boolean expand_or = true;
-    public static boolean rhsSequence = true;
+//bnf to ebnf
+public class EbnfTransformer extends Transformer {
+    Tree tree;
+    Tree res;
+    boolean modified = false;
 
     public EbnfTransformer(Tree tree) {
         this.tree = tree;
     }
 
-    int getCount(String name) {
-        int cnt;
-        if (countMap.containsKey(name)) {
-            cnt = countMap.get(name);
-            cnt++;
-        }
-        else {
-            cnt = 0;
-        }
-        countMap.put(name, cnt);
-        return cnt;
-    }
-
-    private void addRule(RuleDecl newDecl) {
-        if (newDecl.rhs != null) {
-            res.addRule(newDecl);
-        }
-    }
-
-    public Tree transform(Tree tree) {
-        res = new Tree(tree);//result tree
-
-        for (RuleDecl decl : tree.rules) {
-            transformRhs(decl);
-        }
-        return res;
-    }
-
-    public void transformRhs(RuleDecl decl) {
-        RuleDecl newDecl = new RuleDecl(decl.name);
-        Node rhs = transform(decl.rhs, decl);
-        if (rhs != null) {
-            if (rhsSequence && !rhs.isSequence()) {
-                rhs = new Sequence(rhs);
-            }
-            newDecl.rhs = rhs;
-            addRule(newDecl);
-        }
-    }
-
-    Node transform(Node node, RuleDecl decl) {
-        if (node == null) return null;
-        if (node.isGroup()) {
-            node = transform(node.asGroup(), decl);
-        }
-        else if (node.isSequence()) {
-            node = transform(node.asSequence(), decl);
-        }
-        else if (node.isRegex()) {
-            node = transform(node.asRegex(), decl);
-        }
-        else if (node.isOr()) {
-            node = transform(node.asOr(), decl);
-        }
-        return node;
-    }
-
-    Node transform(GroupNode groupNode, RuleDecl decl) {
-        //r = pre (e1 e2) end;
-        //r = pre r_g end;
-        //r_g = e1 e2;
-        Node rhs = groupNode.rhs;
-        if (!rhs.isOr() && !rhs.isSequence()) {//simplify
-            return rhs;
-        }
-        String nname = decl.name + "_g" + getCount(decl.name);
-        RuleDecl newDecl = new RuleDecl(nname);
-        newDecl.rhs = transform(rhs, newDecl);
-        addRule(newDecl);
-        return new NameNode(nname);
-    }
-
-    Node transform(OrNode orNode, RuleDecl decl) {
-        if (expand_or) {
-            for (Node node : orNode) {
-                RuleDecl newDecl = new RuleDecl();
-                newDecl.name = decl.name;
-                newDecl.rhs = transform(node, newDecl);
-                transformRhs(newDecl);
-                //addRule(newDecl);
+    static Node hasEps(OrNode or) {
+        OrNode res = new OrNode();
+        for (Node node : or) {
+            if (!node.isEmpty()) {
+                res.add(node);
             }
         }
-        else {
-            OrNode or = new OrNode();
-            for (Node node : orNode) {
-                or.add(transform(node, decl));
-            }
-            return or;
-        }
-
-        return null;
-    }
-
-    Node transform(Sequence sequence, RuleDecl decl) {
-        Sequence res = new Sequence();
-        for (Node node : sequence) {
-            res.add(transform(node, decl));
+        if (res.size() == or.size()) {
+            return null;
         }
         return res.normal();
     }
 
-    Node transform(RegexNode regexNode, RuleDecl decl) {
-        regexNode.node = transform(regexNode.node, decl);
-        if (regexNode.isStar()) {
-            //r = a b*
-            //b* = E | b* b;
-            NameNode nameNode = new NameNode(decl.name + "_" + getCount(decl.name) + "*");
-            //declare
-            RuleDecl d1 = new RuleDecl(nameNode.name);
-            if (leftRecursive) {
-                d1.rhs = transform(new OrNode(new EmptyNode(), new Sequence(nameNode, regexNode.node)), d1);
-            }
-            else {
-                d1.rhs = transform(new OrNode(new EmptyNode(), new Sequence(regexNode.node, nameNode)), d1);
-            }
-            addRule(d1);
-            return nameNode;
-        }
-        else if (regexNode.isPlus()) {
-            //b+ = b b*;
-            NameNode nameNode = new NameNode(decl.name + "_" + getCount(decl.name) + "+");
-            RegexNode star = new RegexNode();
-            star.setType("*");
-            star.node = regexNode.node;
-
-            RuleDecl expansion = new RuleDecl(nameNode.name);
-            expansion.rhs = transform(new Sequence(regexNode.node, transform(star, expansion)), expansion);
-            addRule(expansion);
-            return nameNode;
-        }
-        else if (regexNode.isOptional()) {
-            //r = a?;
-            //r = E | a;
-            NameNode nameNode = new NameNode(decl.name + "_" + getCount(decl.name) + "?");
-            addRule(new RuleDecl(nameNode.name, new OrNode(new EmptyNode(), regexNode.node)));
-            return nameNode;
-        }
-        throw new RuntimeException("invalid regex: " + regexNode);
+    public Tree transform() {
+        //res = new Tree(tree);
+        tree = new EpsilonHandler(tree).handleEps();
+        handleRec();
+        return res;
     }
 
+    private void transformRhs(RuleDecl rule) {
+        Node node = rule.rhs;
+        if (node.isOr()) {
+            OrNode or = node.asOr();
+            //rec
+            for (int i = 0; i < or.size(); i++) {
+                Node ch = or.get(i);
+                if (ch.isSequence()) {
+                    Sequence seq = ch.asSequence();
+                    if (seq.first().asName().name.equals(rule.name)) {
+                        modified = true;
+                        //left
+                        OrNode restOr = new OrNode();
+                        //normal nodes
+                        for (int j = 0; j < or.size(); j++) {
+                            if (j == i) continue;
+                            restOr.add(or.get(j));
+                        }
+                        Node tail = new Sequence();
+                        for (int j = 1; j < seq.size(); j++) {
+                            tail.asSequence().add(seq.get(j));
+                        }
+                        Node rest2 = new GroupNode(restOr.normal()).normal();
+                        RegexNode regexNode = new RegexNode(tail.asSequence().normal(), "*");
+                        Node rr = new Sequence(rest2, regexNode).normal();
+                        res.addRule(new RuleDecl(rule.name, rr));
+                        break;
+                    }
+                    else if (ch.asSequence().last().asName().name.equals(rule.name)) {
+                        //right
+                    }
+                }
+            }
+        }
+    }
+
+    //merge ors
+    void handleOrs() {
+        Map<String, OrNode> map = new HashMap<>();
+        for (RuleDecl decl : tree.rules) {
+            OrNode or = map.get(decl.name);
+            if (or == null) {
+                or = new OrNode();
+                map.put(decl.name, or);
+            }
+            or.add(decl.rhs);
+        }
+        for (String key : map.keySet()) {
+            res.addRule(new RuleDecl(key, map.get(key)));
+        }
+    }
+
+    void handleRec() {
+        modified = false;
+        res = new Tree(tree);
+        for (RuleDecl decl : tree.rules) {
+            if (decl.rhs.isOr()) {
+                transformRhs(decl);
+            }
+            else if (decl.rhs.isSequence()) {
+                Sequence s = decl.rhs.asSequence();
+                Node first = s.get(0);
+                if (first.isGroup()) {
+                    first = first.asGroup().rhs;
+                }
+                if (first.isOr()) {
+                    if (Helper.first(first, tree).contains(decl.ref())) {
+                        for (Node ch : first.asOr()) {
+
+                        }
+                        //need to expand
+                        modified = true;
+                        Sequence noa = new Sequence();
+                        Node rest = new Sequence(s.list.subList(1, s.size())).normal();
+                        OrNode or = first.asOr();
+                    }
+                    else {
+                        res.addRule(decl);
+                    }
+                }
+                else {
+                    res.addRule(decl);
+                }
+            }
+            else {
+                res.addRule(decl);
+            }
+        }
+        if (modified) {
+            //repeat
+            tree = res;
+            handleRec();
+        }
+    }
+
+
+    static class EpsilonHandler extends Transformer {
+        Tree tree, res;
+        Map<String, Node> map = new HashMap<>();
+
+        public EpsilonHandler(Tree tree) {
+            this.tree = tree;
+            this.res = new Tree(tree);
+        }
+
+        //convert epsilons to '?'
+        Tree handleEps() {
+            //collect epslions
+            for (RuleDecl decl : tree.rules) {
+                Node node = decl.rhs;
+                if (node.isOr()) {
+                    OrNode or = node.asOr();
+                    Node or2 = hasEps(or);
+                    if (or2 != null) {
+                        //can be optional
+                        //replace references with 'e?'
+                        if (or2.isSequence() || or2.isOr()) {
+                            or2 = new GroupNode(or2);
+                        }
+                        map.put(decl.name, new RegexNode(or2, "?"));
+                    }
+                }
+            }
+            replace();
+            return res;
+        }
+
+        void replace() {
+            for (RuleDecl rule : tree.rules) {
+                rule = transformRule(rule);
+                if (rule != null) {
+                    res.addRule(rule);
+                }
+            }
+        }
+
+        @Override
+        public RuleDecl transformRule(RuleDecl decl) {
+            if (!map.containsKey(decl.name)) {
+                return super.transformRule(decl);
+            }
+            return null;
+        }
+
+        @Override
+        public Node transformName(NameNode node) {
+            return mapNode(node);
+        }
+
+        Node mapNode(NameNode nameNode) {
+            if (map.containsKey(nameNode.name)) {
+                return map.get(nameNode.name);
+            }
+            return nameNode;
+        }
+    }
+
+    class Normalizer extends Transformer {
+        public void process() {
+            for (RuleDecl decl : tree.rules) {
+                transformRule(decl);
+            }
+        }
+
+    }
 }

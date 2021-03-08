@@ -1,5 +1,5 @@
 import gen.ClosureHelper;
-import gen.EbnfTransformer;
+import gen.BnfTransformer;
 import gen.PrepareTree;
 import nodes.Tree;
 import org.junit.Ignore;
@@ -27,8 +27,8 @@ public class ParserGenTest {
 
         Tree tree = Tree.makeTree(grammar);
         PrepareTree.checkReferences(tree);
-        EbnfTransformer transformer = new EbnfTransformer(tree);
-        tree = transformer.transform(tree);
+        BnfTransformer transformer = new BnfTransformer(tree);
+        tree = transformer.transform();
         PrepareTree.checkReferences(tree);
         System.out.println(tree);
 

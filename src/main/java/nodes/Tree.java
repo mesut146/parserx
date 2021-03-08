@@ -20,9 +20,9 @@ public class Tree {
     public List<RuleDecl> rules;
     public NameNode start;
     public File file = null;
+    public Alphabet alphabet = new Alphabet();
     List<TokenDecl> tokens;
     List<File> includes;
-    public Alphabet alphabet = new Alphabet();
 
     public Tree() {
         tokens = new ArrayList<>();
@@ -91,6 +91,7 @@ public class Tree {
 
     public void addRule(RuleDecl rule) {
         rule.index = rules.size();
+        rule.tree = this;
         rules.add(rule);
     }
 
@@ -179,7 +180,7 @@ public class Tree {
 
         return sb.toString();
     }
-    
+
 
     public RuleDecl getRule(String name) {
         List<RuleDecl> list = getRules(name);

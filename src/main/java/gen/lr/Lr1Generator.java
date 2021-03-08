@@ -1,6 +1,6 @@
 package gen.lr;
 
-import gen.EbnfTransformer;
+import gen.BnfTransformer;
 import gen.IndentWriter;
 import gen.LexerGenerator;
 import gen.PrepareTree;
@@ -191,10 +191,10 @@ public class Lr1Generator extends IndentWriter {
 
     private void check() {
         PrepareTree.checkReferences(tree);
-        EbnfTransformer.expand_or = true;
-        EbnfTransformer.rhsSequence = true;
-        EbnfTransformer transformer = new EbnfTransformer(tree);
-        tree = transformer.transform(tree);
+        BnfTransformer.expand_or = true;
+        BnfTransformer.rhsSequence = true;
+        BnfTransformer transformer = new BnfTransformer(tree);
+        tree = transformer.transform();
         PrepareTree.checkReferences(tree);
     }
 }

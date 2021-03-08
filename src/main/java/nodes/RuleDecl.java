@@ -1,5 +1,6 @@
 package nodes;
 
+import javax.naming.NamingEnumeration;
 import java.util.Objects;
 
 //rule decl in grammar
@@ -9,6 +10,7 @@ public class RuleDecl extends Node {
     public String name;
     public Node rhs;//sequence,or,simple rule
     public int index;
+    public Tree tree;
 
     public RuleDecl() {
     }
@@ -20,6 +22,14 @@ public class RuleDecl extends Node {
     public RuleDecl(String name, Node rhs) {
         this.name = name;
         this.rhs = rhs;
+    }
+
+    public NameNode ref() {
+        return new NameNode(name, false);
+    }
+
+    public boolean is(NameNode node) {
+        return name.equals(node.name);
     }
 
     @Override

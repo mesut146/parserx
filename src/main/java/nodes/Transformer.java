@@ -1,5 +1,6 @@
 package nodes;
 
+//transform ast without modifying original
 public abstract class Transformer {
 
     public RuleDecl transformRule(RuleDecl decl) {
@@ -22,6 +23,12 @@ public abstract class Transformer {
         else if (node.isBracket()) {
             return transformBracket(node.asBracket());
         }
+        else if (node.isName()) {
+            return transformName(node.asName());
+        }
+        else {
+            System.out.println("no transform:" + node.getClass() + " =" + node);
+        }
         return node;
     }
 
@@ -30,11 +37,11 @@ public abstract class Transformer {
     }
 
     public Node transformSequence(Sequence node) {
-        Sequence newNode = new Sequence();
+        Sequence res = new Sequence();
         for (Node ch : node) {
-            newNode.add(transformNode(ch));
+            res.add(transformNode(ch));
         }
-        return newNode;
+        return res;
     }
 
     public Node transformRegex(RegexNode node) {
@@ -42,11 +49,19 @@ public abstract class Transformer {
     }
 
     public Node transformOr(OrNode node) {
-        return node;
+        OrNode res = new OrNode();
+        for (Node ch : node) {
+            res.add(transformNode(ch));
+        }
+        return res;
     }
 
     public Node transformBracket(Bracket node) {
         return node.normalize().optimize();
+    }
+
+    public Node transformName(NameNode node) {
+        return node;
     }
 
 }

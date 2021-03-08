@@ -19,6 +19,10 @@ public class NameNode extends Node {
         this.isToken = isToken;
     }
 
+    public boolean isRule(){
+        return !isToken;
+    }
+
     @Override
     public String toString() {
         String s;

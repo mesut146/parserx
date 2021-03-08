@@ -19,10 +19,6 @@ public class Bracket extends NodeList {
     public boolean debug = false;
     private int pos;
 
-    public void add(char chr) {
-        add(new CharNode(chr));
-    }
-
     public Bracket(String str) throws ParseException {
         parse(str);
     }
@@ -37,6 +33,10 @@ public class Bracket extends NodeList {
 
     public Bracket(List<Node> args) {
         super(args);
+    }
+
+    public void add(char chr) {
+        add(new CharNode(chr));
     }
 
     public void parse(String str) throws ParseException {
@@ -65,6 +65,9 @@ public class Bracket extends NodeList {
                 char end = str.charAt(pos++);
                 if (end == '\\') {
                     end = readUnicode(str);
+                }
+                if (pos > end) {
+                    throw new RuntimeException(String.format("invalid range %s-%s in: %s", c, end, str));
                 }
                 add(new RangeNode(c, end));
             }

@@ -2,29 +2,39 @@ package gen;
 
 import nodes.*;
 
-import java.io.SequenceInputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeMap;
 
 //remove left recursions
 public class LeftRecursive {
-    Tree tree;//must be bnf grammar
     public Tree resTree;
+    Tree tree;//must be bnf grammar
 
     public LeftRecursive(Tree tree) {
         this.tree = tree;
         this.resTree = new Tree(tree);
     }
 
-    public void transform() {
+    public void process() {
         for (RuleDecl rule : tree.rules) {
-            transform(rule);
+            if (Helper.startWith(rule, rule.name)) {
+                //direct
+                direct(rule);
+            }
+            else {
+                //subs
+                if (rule.rhs.isOr()) {
+                    for (Node ch : rule.rhs.asOr()) {
+                        /*if (startWith()) {
+
+                        }*/
+                    }
+                }
+            }
         }
     }
 
-    private void transform(RuleDecl rule) {
+    private void direct(RuleDecl rule) {
         //handle direct
         Node rhs = rule.rhs;
 
@@ -65,16 +75,10 @@ public class LeftRecursive {
             resTree.addRule(new RuleDecl(rule.name, res));
             resTree.addRule(new RuleDecl(tail.name, tailOr));
         }
-    }
-
-    /*boolean canBeEmpty(NameNode node) {
-        for (RuleDecl decl : tree.getRules(node.name)) {
-            if (first(decl.rhs)) {
-
-            }
+        else {
+            throw new RuntimeException("invalid left rec on: " + rule);
         }
-        return false;
-    }*/
+    }
 
     NameNode first(Node node) {
         if (node.isName()) {
@@ -89,44 +93,4 @@ public class LeftRecursive {
         throw new RuntimeException("first: " + node);
     }
 
-    NameNode makeName(NameNode node) {
-        return new NameNode(node.name + "'");
-    }
-
-    List<Node> firstSequence(Node rhs) {
-        List<Node> list = new ArrayList<>();
-        if (rhs.isName()) {
-            list.add(rhs);
-            RuleDecl decl = tree.getRule(rhs.asName().name);
-            list.addAll(firstSequence(decl.rhs));
-        }
-        else if (rhs.isSequence()) {
-
-        }
-
-        return list;
-    }
-
-    Node getFirst(RuleDecl decl, Node rhs) {
-        if (rhs.isName() && !rhs.asName().isToken) {
-            return rhs;
-        }
-        else if (rhs.isSequence()) {
-            return getFirst(decl, rhs.asSequence().get(0));
-        }
-        else if (rhs.isOr()) {
-            for (Node or : rhs.asOr()) {
-                Node first = getFirst(decl, or);
-                if (first != null) {
-                    return first;
-                }
-            }
-
-        }
-        else if (rhs.isGroup()) {
-            return getFirst(decl, rhs.asGroup().rhs);
-        }
-
-        return null;
-    }
 }

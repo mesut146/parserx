@@ -24,6 +24,7 @@ public class RegexOptimizer extends Transformer {
         return super.transformNode(node);
     }
 
+    //shrink or to bracket
     @Override
     public Node transformOr(OrNode node) {
         OrNode newNode = new OrNode();
@@ -47,10 +48,11 @@ public class RegexOptimizer extends Transformer {
         return newNode.normal();
     }
 
+    //shrink sequence
     @Override
     public Node transformSequence(Sequence node) {
         StringBuilder sb = new StringBuilder();
-        Sequence newNode = new Sequence();
+        Sequence res = new Sequence();
         for (int i = 0; i < node.size(); i++) {
             Node n = transformNode(node.get(i));
             if (n.isString()) {
@@ -58,18 +60,19 @@ public class RegexOptimizer extends Transformer {
             }
             else {
                 if (sb.length() != 0) {
-                    newNode.add(new StringNode(sb.toString()));
+                    res.add(new StringNode(sb.toString()));
                     sb.setLength(0);
                 }
-                newNode.add(n);
+                res.add(n);
             }
         }
         if (sb.length() != 0) {
-            newNode.add(new StringNode(sb.toString()));
+            res.add(new StringNode(sb.toString()));
         }
-        return newNode.normal();
+        return res.normal();
     }
 
+    //merge sequences
     public Node transformSequence2(Sequence node) {
         Sequence newNode = new Sequence();
         for (int i = 0; i < node.size(); i++) {
@@ -84,6 +87,7 @@ public class RegexOptimizer extends Transformer {
         return newNode.normal();
     }
 
+    //merge ors
     public Node transformOr2(OrNode node) {
         OrNode newNode = new OrNode();
         for (int i = 0; i < node.size(); i++) {

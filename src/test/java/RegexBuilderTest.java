@@ -13,7 +13,6 @@ public class RegexBuilderTest {
 
     //  /* (^*)* * (^/ (^*)* *)* /
 
-
     @Test
     @Ignore
     public void fromGrammar() throws Exception {

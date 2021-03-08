@@ -1,11 +1,9 @@
 package gen.lr;
 
-import gen.EbnfTransformer;
+import gen.BnfTransformer;
 import gen.IndentWriter;
 import gen.LexerGenerator;
 import gen.PrepareTree;
-import nodes.NameNode;
-import nodes.Node;
 import nodes.Tree;
 
 import java.io.PrintWriter;
@@ -36,9 +34,9 @@ public class Lr0Generator extends IndentWriter {
 
     private void check() {
         PrepareTree.checkReferences(tree);
-        EbnfTransformer.rhsSequence = true;
-        EbnfTransformer transformer = new EbnfTransformer(tree);
-        tree = transformer.transform(tree);
+        BnfTransformer.rhsSequence = true;
+        BnfTransformer transformer = new BnfTransformer(tree);
+        tree = transformer.transform();
         PrepareTree.checkReferences(tree);
     }
 }

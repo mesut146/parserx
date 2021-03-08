@@ -11,7 +11,16 @@ public class LeftRecursion {
         File file = Env.getResFile("leftRec.g");
         Tree tree = Tree.makeTree(file);
         LeftRecursive leftRecursive = new LeftRecursive(tree);
-        leftRecursive.transform();
+        leftRecursive.process();
+        System.out.println(leftRecursive.resTree);
+    }
+
+    @Test
+    public void remove2() throws Exception {
+        File file = Env.getResFile("leftRec2.g");
+        Tree tree = Tree.makeTree(file);
+        LeftRecursive leftRecursive = new LeftRecursive(tree);
+        leftRecursive.process();
         System.out.println(leftRecursive.resTree);
     }
 }

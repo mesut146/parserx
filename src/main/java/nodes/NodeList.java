@@ -59,13 +59,18 @@ public class NodeList extends Node implements Iterable<Node> {
         return sb.toString();
     }
 
+    public Node last() {
+        return list.get(size() - 1);
+    }
+
+    public Node first() {
+        return list.get(0);
+    }
+
     public void add(Node node) {
         list.add(node);
     }
 
-    /*public void addAll(List<Node> other) {
-        list.addAll(other);
-    }*/
 
     public <T extends Node> void addAll(List<T> other) {
         list.addAll(other);
