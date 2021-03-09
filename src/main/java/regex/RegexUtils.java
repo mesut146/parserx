@@ -34,7 +34,7 @@ public class RegexUtils {
             return negate(seq);
         }
         else if (regex.isGroup()) {
-            return new GroupNode(negate(regex.asGroup().rhs));
+            return new GroupNode(negate(regex.asGroup().node));
         }
         else if (regex.isBracket()) {
             Bracket bracket = regex.asBracket();

@@ -48,7 +48,7 @@ public class NodeList extends Node implements Iterable<Node> {
         return sb.toString();
     }
 
-    public static String join(String[] list, String del) {
+    public static <T> String join(T[] list, String del) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < list.length; i++) {
             sb.append(list[i]);

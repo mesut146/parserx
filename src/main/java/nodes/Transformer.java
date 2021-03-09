@@ -27,13 +27,13 @@ public abstract class Transformer {
             return transformName(node.asName());
         }
         else {
-            System.out.println("no transform:" + node.getClass() + " =" + node);
+            System.out.println("no transform for:" + node.getClass() + " =" + node);
         }
         return node;
     }
 
     public Node transformGroup(GroupNode node) {
-        return new GroupNode(transformNode(node.rhs));
+        return new GroupNode(transformNode(node.node));
     }
 
     public Node transformSequence(Sequence node) {

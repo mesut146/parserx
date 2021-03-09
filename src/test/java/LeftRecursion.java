@@ -10,9 +10,10 @@ public class LeftRecursion {
     public void remove() throws Exception {
         File file = Env.getResFile("leftRec.g");
         Tree tree = Tree.makeTree(file);
+
         LeftRecursive leftRecursive = new LeftRecursive(tree);
         leftRecursive.process();
-        System.out.println(leftRecursive.resTree);
+        System.out.println(leftRecursive.res);
     }
 
     @Test
@@ -21,6 +22,6 @@ public class LeftRecursion {
         Tree tree = Tree.makeTree(file);
         LeftRecursive leftRecursive = new LeftRecursive(tree);
         leftRecursive.process();
-        System.out.println(leftRecursive.resTree);
+        System.out.println(leftRecursive.res);
     }
 }

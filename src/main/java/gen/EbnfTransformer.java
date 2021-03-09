@@ -35,37 +35,37 @@ public class EbnfTransformer extends Transformer {
         return res;
     }
 
-    private void transformRhs(RuleDecl rule) {
+    private void forOr(RuleDecl rule) {
         Node node = rule.rhs;
-        if (node.isOr()) {
-            OrNode or = node.asOr();
-            //rec
-            for (int i = 0; i < or.size(); i++) {
-                Node ch = or.get(i);
-                if (ch.isSequence()) {
-                    Sequence seq = ch.asSequence();
-                    if (seq.first().asName().name.equals(rule.name)) {
-                        modified = true;
-                        //left
-                        OrNode restOr = new OrNode();
-                        //normal nodes
-                        for (int j = 0; j < or.size(); j++) {
-                            if (j == i) continue;
-                            restOr.add(or.get(j));
-                        }
-                        Node tail = new Sequence();
-                        for (int j = 1; j < seq.size(); j++) {
-                            tail.asSequence().add(seq.get(j));
-                        }
-                        Node rest2 = new GroupNode(restOr.normal()).normal();
-                        RegexNode regexNode = new RegexNode(tail.asSequence().normal(), "*");
-                        Node rr = new Sequence(rest2, regexNode).normal();
-                        res.addRule(new RuleDecl(rule.name, rr));
-                        break;
+        if (!node.isOr()) return;
+
+        OrNode or = node.asOr();
+        //rec
+        for (int i = 0; i < or.size(); i++) {
+            Node ch = or.get(i);
+            if (ch.isSequence()) {
+                Sequence seq = ch.asSequence();
+                if (seq.first().asName().name.equals(rule.name)) {
+                    modified = true;
+                    //left
+                    OrNode restOr = new OrNode();
+                    //normal nodes
+                    for (int j = 0; j < or.size(); j++) {
+                        if (j == i) continue;
+                        restOr.add(or.get(j));
                     }
-                    else if (ch.asSequence().last().asName().name.equals(rule.name)) {
-                        //right
+                    Node tail = new Sequence();
+                    for (int j = 1; j < seq.size(); j++) {
+                        tail.asSequence().add(seq.get(j));
                     }
+                    Node rest2 = new GroupNode(restOr.normal()).normal();
+                    RegexNode regexNode = new RegexNode(tail.asSequence().normal(), "*");
+                    Node rr = new Sequence(rest2, regexNode).normal();
+                    res.addRule(new RuleDecl(rule.name, rr));
+                    break;
+                }
+                else if (ch.asSequence().last().asName().name.equals(rule.name)) {
+                    //right
                 }
             }
         }
@@ -87,33 +87,27 @@ public class EbnfTransformer extends Transformer {
         }
     }
 
-    void handleRec() {
-        modified = false;
-        res = new Tree(tree);
-        for (RuleDecl decl : tree.rules) {
-            if (decl.rhs.isOr()) {
-                transformRhs(decl);
+    void handle(RuleDecl decl) {
+        if (decl.rhs.isOr()) {
+            forOr(decl);
+        }
+        else if (decl.rhs.isGroup()) {
+            decl.rhs = decl.rhs.asGroup().node;
+            handle(decl);
+        }
+        else if (decl.rhs.isSequence()) {
+            Sequence s = decl.rhs.asSequence();
+            Node first = s.get(0);
+            if (first.isGroup()) {
+                first = first.asGroup().node;
             }
-            else if (decl.rhs.isSequence()) {
-                Sequence s = decl.rhs.asSequence();
-                Node first = s.get(0);
-                if (first.isGroup()) {
-                    first = first.asGroup().rhs;
-                }
-                if (first.isOr()) {
-                    if (Helper.first(first, tree).contains(decl.ref())) {
-                        for (Node ch : first.asOr()) {
-
-                        }
-                        //need to expand
-                        modified = true;
-                        Sequence noa = new Sequence();
-                        Node rest = new Sequence(s.list.subList(1, s.size())).normal();
-                        OrNode or = first.asOr();
-                    }
-                    else {
-                        res.addRule(decl);
-                    }
+            if (first.isOr()) {
+                if (Helper.first(first, tree).contains(decl.ref())) {
+                    modified = true;
+                    info i = parseOr(first.asOr(), decl.ref());
+                    Node rem = new Sequence(s.list.subList(1, s.size())).normal();
+                    Node n = Sequence.of(i.rest, rem, new RegexNode(Sequence.of(i.tail, rem), "*"));
+                    res.addRule(new RuleDecl(decl.name, n));
                 }
                 else {
                     res.addRule(decl);
@@ -123,6 +117,38 @@ public class EbnfTransformer extends Transformer {
                 res.addRule(decl);
             }
         }
+        else {
+            res.addRule(decl);
+        }
+    }
+
+    info parseOr(OrNode or, NameNode name) {
+        info info = new info();
+        OrNode rest = new OrNode();
+        for (Node ch : or) {
+            if (ch.isSequence()) {
+                Sequence s = ch.asSequence();
+                if (s.get(0).equals(name)) {
+                    if (info.tail == null) {
+                        info.tail = new Sequence(s.list.subList(1, s.size())).normal();
+                    }
+                }
+            }
+            else {
+                rest.add(ch);
+            }
+        }
+        info.rest = rest.normal();
+        return info;
+    }
+
+    void handleRec() {
+        System.out.println(tree);
+        modified = false;
+        res = new Tree(tree);
+        for (RuleDecl decl : tree.rules) {
+            handle(decl);
+        }
         if (modified) {
             //repeat
             tree = res;
@@ -130,6 +156,9 @@ public class EbnfTransformer extends Transformer {
         }
     }
 
+    static class info {
+        Node tail, rest;
+    }
 
     static class EpsilonHandler extends Transformer {
         Tree tree, res;
@@ -190,14 +219,5 @@ public class EbnfTransformer extends Transformer {
             }
             return nameNode;
         }
-    }
-
-    class Normalizer extends Transformer {
-        public void process() {
-            for (RuleDecl decl : tree.rules) {
-                transformRule(decl);
-            }
-        }
-
     }
 }

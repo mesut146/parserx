@@ -36,10 +36,56 @@ public class Helper {
         }
         else if (node.isSequence()) {
             Sequence seq = node.asSequence();
-            Set<NameNode> ss = first(seq.get(0), tree);
-            set.addAll(ss);
-            //epsilon
+            for (Node ch : seq) {
+                set.addAll(first(ch, tree));
+                if (!canBeEmpty(ch, tree)) {
+                    break;
+                }
+            }
+        }
+        else if (node.isGroup()) {
+            set.addAll(first(node.asGroup().node, tree));
+        }
+        else if (node.isRegex()) {
+            set.addAll(first(node.asRegex().node, tree));
         }
         return set;
+    }
+
+    public static boolean canBeEmpty(Node node, Tree tree) {
+        if (node.isEmpty()) {
+            return true;
+        }
+        else if (node.isName()) {
+            if (node.asName().isRule()) {
+                return canBeEmpty(tree.getRule(node.asName().name), tree);
+            }
+        }
+        else if (node.isGroup()) {
+            return canBeEmpty(node.asGroup().node, tree);
+        }
+        else if (node.isRegex()) {
+            RegexNode regexNode = node.asRegex();
+            if (regexNode.isOptional() || regexNode.isStar()) {
+                return true;
+            }
+            return canBeEmpty(regexNode.node, tree);
+        }
+        else if (node.isOr()) {
+            for (Node ch : node.asOr()) {
+                if (canBeEmpty(ch, tree)) {
+                    return true;
+                }
+            }
+        }
+        else if (node.isSequence()) {
+            Sequence sequence = node.asSequence();
+            for (int i = 0; i < sequence.size(); i++) {
+                if (canBeEmpty(sequence.get(i), tree)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

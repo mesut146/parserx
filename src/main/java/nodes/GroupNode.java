@@ -7,30 +7,27 @@ import java.util.Iterator;
 //(rule1 rule2)
 public class GroupNode extends Node implements Iterable<Node> {
 
-    public Node rhs;
+    public Node node;
 
     public GroupNode(Node rhs) {
-        this.rhs = rhs;
-    }
-
-    public GroupNode() {
+        this.node = rhs;
     }
 
     public String toString() {
-        return "(" + rhs + ")";
+        return "(" + node + ")";
     }
 
     @Override
     public Iterator<Node> iterator() {
-        if (rhs instanceof NodeList) {
-            return ((NodeList) rhs).iterator();
+        if (node instanceof NodeList) {
+            return ((NodeList) node).iterator();
         }
-        return Collections.singletonList(rhs).iterator();
+        return Collections.singletonList(node).iterator();
     }
 
     public Node normal() {
-        if (rhs.isString() || rhs.isBracket() || rhs.isName() || rhs.isRegex()) {
-            return rhs;
+        if (node.isString() || node.isBracket() || node.isName() || node.isRegex()) {
+            return node;
         }
         return this;
     }

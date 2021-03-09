@@ -84,9 +84,4 @@ public class Node {
     public int hashCode() {
         return toString().hashCode();
     }
-
-    @Override
-    public boolean equals(Object obj) {
-        return super.equals(obj);
-    }
 }

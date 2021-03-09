@@ -2,82 +2,109 @@ package gen;
 
 import nodes.*;
 
-import java.util.ArrayList;
-import java.util.List;
-
 //remove left recursions
 public class LeftRecursive {
-    public Tree resTree;
-    Tree tree;//must be bnf grammar
+    public Tree res;
+    public Tree tree;
+    boolean modified;
 
     public LeftRecursive(Tree tree) {
         this.tree = tree;
-        this.resTree = new Tree(tree);
     }
 
     public void process() {
+        this.res = new Tree(tree);
+        System.out.println("pass");
+        System.out.println(NodeList.join(tree.rules, "\n"));
+        modified = false;
         for (RuleDecl rule : tree.rules) {
-            if (Helper.startWith(rule, rule.name)) {
-                //direct
-                direct(rule);
-            }
-            else {
-                //subs
-                if (rule.rhs.isOr()) {
-                    for (Node ch : rule.rhs.asOr()) {
-                        /*if (startWith()) {
-
-                        }*/
-                    }
-                }
-            }
+            res.addRule(handleRule(rule));
+        }
+        if (modified) {
+            tree = res;
+            process();
         }
     }
 
-    private void direct(RuleDecl rule) {
-        //handle direct
-        Node rhs = rule.rhs;
-
-        if (rhs.isOr()) {
-            //A = A a | A b | c | d | E
-            OrNode or = rhs.asOr();
-            List<Node> normals = new ArrayList<>();
-            List<Node> tails = new ArrayList<>();
-            for (Node ch : or) {
-                if (ch.isName()) {
-                    normals.add(ch.asName());
-                }
-                else if (ch.isEmpty()) {
-
-                }
-                else {//seq
-                    Sequence seq = ch.asSequence();
-                    if (!first(ch).isToken && first(ch).name.equals(rule.name)) {
-                        Node tail = new Sequence(seq.list.subList(1, seq.size())).normal();
-                        tails.add(tail);
-                    }
-                    else {
-                        normals.add(ch);
-                    }
-                }
-            }
-            OrNode res = new OrNode();
-            NameNode tail = new NameNode(rule.name + "'");
-            OrNode tailOr = new OrNode();
-
-            for (Node normal : normals) {
-                res.add(new Sequence(normal, tail));
-            }
-            for (Node t : tails) {
-                tailOr.add(new Sequence(t, tail));
-            }
-            tailOr.add(new EmptyNode());
-            resTree.addRule(new RuleDecl(rule.name, res));
-            resTree.addRule(new RuleDecl(tail.name, tailOr));
+    RuleDecl handleRule(RuleDecl rule) {
+        if (Helper.startWith(rule, rule.name)) {
+            //direct
+            modified = true;
+            rule = direct(rule);
         }
         else {
-            throw new RuntimeException("invalid left rec on: " + rule);
+            //subs
         }
+        return rule;
+    }
+
+
+    info parseOr(OrNode or, NameNode name) {
+        info info = new info();
+        OrNode rest = new OrNode();
+        for (Node ch : or) {
+            if (ch.isSequence()) {
+                if (info.tail != null) {
+
+                }
+                Sequence s = ch.asSequence();
+                int idx = find(s, name);
+                if (idx != -1) {
+                    if (idx > 0) {
+                        info.prefix = new Sequence(s.list.subList(0, idx)).normal();
+                    }
+                    if (info.tail == null) {
+                        info.tail = new Sequence(s.list.subList(idx + 1, s.size())).normal();
+                    }
+                }
+            }
+            else {
+                rest.add(ch);
+            }
+        }
+        info.rest = rest.normal();
+        return info;
+    }
+
+    int find(Sequence s, NameNode name) {
+        for (int i = 0; i < s.size(); i++) {
+            if (Helper.first(s.get(i), tree).contains(name)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private RuleDecl direct(RuleDecl rule) {
+        //handle direct
+        Node rhs = rule.rhs;
+        if (rhs.isGroup()) {
+            return direct(new RuleDecl(rule.name, rhs.asGroup().node));
+        }
+        else if (rhs.isOr()) {
+            info i = parseOr(rhs.asOr(), rule.ref());
+            if (i != null) {
+                modified = true;
+                rule = new RuleDecl(rule.name, Sequence.of(i.rest, new RegexNode(i.tail, "*")));
+            }
+        }
+        else if (rhs.isSequence()) {
+            Sequence s = rhs.asSequence();
+            Node first = s.get(0);
+            if (first.isGroup()) {
+                first = first.asGroup().node;
+            }
+            if (first.isOr()) {
+                if (Helper.first(first, tree).contains(rule.ref())) {
+                    modified = true;
+                    info i = parseOr(first.asOr(), rule.ref());
+                    Node rem = new Sequence(s.list.subList(1, s.size())).normal();
+                    Node n = Sequence.of(i.rest, rem, new RegexNode(Sequence.of(i.tail, rem), "*"));
+                    rule = new RuleDecl(rule.name, n);
+                }
+            }
+        }
+        return rule;
     }
 
     NameNode first(Node node) {
@@ -91,6 +118,10 @@ public class LeftRecursive {
             return first(node.asOr().get(0));
         }
         throw new RuntimeException("first: " + node);
+    }
+
+    static class info {
+        Node tail, rest, prefix;
     }
 
 }

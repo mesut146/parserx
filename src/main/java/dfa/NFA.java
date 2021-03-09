@@ -224,7 +224,7 @@ public class NFA {
         }
         else if (node.isGroup()) {
             GroupNode group = node.asGroup();
-            Node rhs = group.rhs;
+            Node rhs = group.node;
             p.end = insert(rhs, start).end;
         }
         else if (node.isName()) {//?

@@ -80,7 +80,7 @@ public class BnfTransformer {
         //r = pre (e1 e2) end;
         //r = pre r_g end;
         //r_g = e1 e2;
-        Node rhs = groupNode.rhs;
+        Node rhs = groupNode.node;
         if (!rhs.isOr() && !rhs.isSequence()) {//simplify
             return rhs;
         }

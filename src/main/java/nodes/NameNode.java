@@ -6,6 +6,7 @@ import java.util.Objects;
 //can refer to rule or token
 public class NameNode extends Node {
 
+    public static boolean tokenBrace = false;
     public String name;
     public boolean isToken;//if we reference to a token
     public String label;
@@ -19,14 +20,14 @@ public class NameNode extends Node {
         this.isToken = isToken;
     }
 
-    public boolean isRule(){
+    public boolean isRule() {
         return !isToken;
     }
 
     @Override
     public String toString() {
         String s;
-        if (isToken) {
+        if (isToken && tokenBrace) {
             s = "{" + name + "}";
         }
         else {

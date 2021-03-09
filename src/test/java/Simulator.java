@@ -13,7 +13,7 @@ public class Simulator {
     @Test
     public void dfa() {
         try {
-            DFA dfa = Helper.makeDFA(Env.getJavaLexer());
+            DFA dfa = DFA.makeDFA(Env.getJavaLexer());
 
             char[] input = Helper.read(new FileInputStream(Env.getFile2("/java/a.java"))).toCharArray();
             pos = 0;

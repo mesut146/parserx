@@ -28,7 +28,7 @@ public class PrepareTree {
         }
         else if (node.isGroup()) {
             GroupNode orNode = node.asGroup();
-            orNode.rhs = check(orNode.rhs, tree);
+            orNode.node = check(orNode.node, tree);
         }
         else if (node.isName()) {
             NameNode nameNode = node.asName();
@@ -46,7 +46,7 @@ public class PrepareTree {
             }
         }
         else if (node.isRegex()) {
-            return check(node.asRegex().node, tree);
+            node.asRegex().node = check(node.asRegex().node, tree);
         }
         else if (node.isString()) {
             String val = node.asString().value;

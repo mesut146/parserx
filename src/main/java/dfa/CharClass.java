@@ -107,7 +107,7 @@ public class CharClass {
             }
         }
         else if (node.isGroup()) {
-            walkNodes(node.asGroup().rhs, ranges, brackets);
+            walkNodes(node.asGroup().node, ranges, brackets);
         }
         else if (node.isRegex()) {
             walkNodes(node.asRegex().node, ranges, brackets);

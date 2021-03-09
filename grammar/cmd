@@ -2,27 +2,8 @@
 
 dir=$(dirname $0)
 
-flex="/storage/extSdCard/lib/jflex-full-1.8.1.jar"
 #cc="/storage/extSdCard/lib/javacc-7.0.5.jar"
 cc="/home/mesut/Desktop/lib/javacc-7.0.5.jar"
-#cup="/storage/emulated/0/AppProjects/parserx/lib/java-cup-11b.jar"
-cup="/storage/extSdCard/lib/parsing/jh-javacup-1.1.jar"
-
-cup()
-{
-  dest="$dir/../src/grammar"
-  parser="$dir/parserx.cup"
-
-  java8 -jar $cup -destdir $dest $parser
-}
-
-lexer()
-{
-  pkg="com/mesut/psi/java/flex"
-  dest="$dir/../src/$pkg"
-  lexer="$dir/CupLexer.flex"
-  java8 -jar $flex -d $dest $lexer
-}
 
 javacc()
 {
@@ -35,14 +16,6 @@ javacc()
 
 }
 
-flex()
-{
-  pkg="com/mesut/psi/java/flex"
-  out="../src/main/java/${pkg}"
 
-  java8 -jar $flex -d $out $dir/_JavaLexer.flex
-}
-
-
-$1
+javacc
 

@@ -3,16 +3,14 @@ package nodes;
 import dfa.Alphabet;
 import dfa.CharClass;
 import dfa.NFA;
+import gen.PrepareTree;
 import grammar.GParser;
 import grammar.ParseException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 //the grammar file for both lexer and parser
 public class Tree {
@@ -41,11 +39,15 @@ public class Tree {
     public static Tree makeTree(File path) {
         try {
             GParser parser = new GParser(new FileReader(path));
-            return parser.tree(path);
+            return parser.tree(path).prepare();
         } catch (FileNotFoundException | ParseException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+    public Tree prepare(){
+        return PrepareTree.checkReferences(this);
     }
 
     static int indexOf(List<TokenDecl> list, String name) {

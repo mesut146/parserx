@@ -53,7 +53,7 @@ public class LexerGenTest {
     @Test
     @Ignore
     public void all() throws Exception {
-        DFA dfa = Helper.makeDFA(Env.getJavaLexer());
+        DFA dfa = DFA.makeDFA(Env.getJavaLexer());
         dfa.dump(new File("/home/mesut/IdeaProjects/parserx/src/test/resources/java/javaLexer.txt"));
         dfa.getAlphabet().dump(new File("/home/mesut/IdeaProjects/parserx/src/test/resources/java/javaLexer-alphabet.txt"));
         //new Analyze(dfa).analyze();

@@ -209,19 +209,17 @@ Node rhs():
 {
   Node rule;
   OrNode or = new OrNode();
-  boolean more=false;
 }
 {
-  rule = orNode() { or.add(rule); }
-   ("|" rule = orNode()
+  rule = orContent() { or.add(rule); }
+   ("|" rule = orContent()
     {
       or.add(rule);
-      more = true;
     })*
-   { return more ? or : rule; }
+   { return or.normal(); }
 }
 
-Node orNode():
+Node orContent():
 {
   Node node = new EmptyNode();
 }
@@ -245,22 +243,17 @@ Node sequence():
 Node regex():
 {
   Node rule;
-  String type;
 }
 {
-  (rule = simple() | LOOKAHEAD(repetition()) rule = repetition())
-   [type = regexType()
-   {
-     return new RegexNode(rule, type);
-   }]
+  rule = simple() [rule = repetition(rule) | rule = regexType(rule)]
   { return rule; }
 }
 
-String regexType():{}
+Node regexType(Node node):{}
 {
  ("*" | "+" | "?")
   {
-    return getToken(0).image;
+    return new RegexNode(node,getToken(0).image);
   }
 }
 
@@ -367,15 +360,14 @@ String name():
   token = <IDENT>{return token.image;}
 }
 
-Node repetition():
+Node repetition(Node node):
 {
-  Node node;
   Token num;
 }
 {
-  node = simple() "{" num = <INTEGER> "}"
+  "{" num = <INTEGER> "}"
   {
-    return new Repetition(node, Integer.valueOf(num.toString()));
+    return new Repetition(node, Integer.parseInt(num.toString()));
   }
 }
 

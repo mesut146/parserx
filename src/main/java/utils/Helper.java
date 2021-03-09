@@ -7,13 +7,6 @@ import nodes.Tree;
 import java.io.*;
 
 public class Helper {
-    public static NFA makeNFA(File path) {
-        return Tree.makeTree(path).makeNFA();
-    }
-
-    public static DFA makeDFA(File path) {
-        return Tree.makeTree(path).makeNFA().dfa();
-    }
 
     public static String read(InputStream inputStream) throws IOException {
         StringBuilder sb = new StringBuilder();
