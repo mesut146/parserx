@@ -8,12 +8,13 @@ import java.util.Map;
 //transform ebnf to bnf
 public class BnfTransformer {
 
-    Tree tree;//in ebnf
-    Tree res;//out bnf
-    Map<String, Integer> countMap = new HashMap<>();
     public static boolean leftRecursive = true;//make repetitions left recursive
     public static boolean expand_or = true;//separate rules for each or content
     public static boolean rhsSequence = true;//make sure rhs always sequence
+    public static boolean expand_group = false;//expand group in place instead of separate rule
+    Tree tree;//in ebnf
+    Tree res;//out bnf
+    Map<String, Integer> countMap = new HashMap<>();
 
     public BnfTransformer(Tree tree) {
         this.tree = tree;
@@ -32,9 +33,9 @@ public class BnfTransformer {
         return cnt;
     }
 
-    private void addRule(RuleDecl newDecl) {
-        if (newDecl.rhs != null) {
-            res.addRule(newDecl);
+    private void addRule(RuleDecl decl) {
+        if (decl.rhs != null) {
+            res.addRule(decl);
         }
     }
 
@@ -48,14 +49,12 @@ public class BnfTransformer {
     }
 
     public void transformRhs(RuleDecl decl) {
-        RuleDecl newDecl = new RuleDecl(decl.name);
         Node rhs = transform(decl.rhs, decl);
         if (rhs != null) {
             if (rhsSequence && !rhs.isSequence()) {
                 rhs = new Sequence(rhs);
             }
-            newDecl.rhs = rhs;
-            addRule(newDecl);
+            addRule(new RuleDecl(decl.name, rhs));
         }
     }
 
@@ -82,6 +81,7 @@ public class BnfTransformer {
         //r_g = e1 e2;
         Node rhs = groupNode.node;
         if (!rhs.isOr() && !rhs.isSequence()) {//simplify
+            //todo remove this,normal() already does it
             return rhs;
         }
         String nname = decl.name + "_g" + getCount(decl.name);

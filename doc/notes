@@ -9,4 +9,27 @@ trans[state] = {}
 cmap: maps input ids to range ids
 trans: maps current state & range id to target state
 
+//left recursion base cases
+A: A x | y
+A: y x*
 
+A: A? a | b
+A: (b | a) a*
+
+A: A+ a | b
+A: b (A* a)*
+
+A: P? A+ a | b
+A: (P A+ a | b) (A* a)*
+
+A: A* a | b
+A: (b | a) (A* a)*
+
+A: P? A+ a | b
+A: (P A* a | b | a) (A* a)*
+
+//P can start with A
+A: P T | R
+P: P0 | P1
+P: P0 | A Q
+A: (P0 T | R) (Q T)*
