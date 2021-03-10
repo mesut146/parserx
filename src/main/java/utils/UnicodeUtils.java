@@ -33,11 +33,11 @@ public class UnicodeUtils {
     }
 
     //get escaped char to real char
-    public static char get(char c) throws ParseException {
+    public static char get(char c){
         if (escapeMap.containsKey(c)) {
             return escapeMap.get(c);
         }
-        throw new ParseException("invalid escape character = " + c);
+        throw new RuntimeException("invalid escape character = " + c);
     }
 
     //make escaped(slash) form

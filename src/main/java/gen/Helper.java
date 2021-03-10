@@ -8,7 +8,7 @@ import java.util.Set;
 public class Helper {
 
     public static boolean startWith(RuleDecl rule, String name) {
-        return first(rule.rhs, rule.tree).contains(new NameNode(name, false));
+        return first(rule.rhs, rule.tree, false).contains(new NameNode(name, false));
     }
 
     public static Node hasEps(OrNode or) {
@@ -24,32 +24,42 @@ public class Helper {
         return res.normal();
     }
 
-    public static Set<NameNode> first(Node node, Tree tree) {
+    public static Set<NameNode> first(Node node, Tree tree, boolean rec) {
         Set<NameNode> set = new HashSet<>();
+        first(node, tree, rec, set);
+        return set;
+    }
+
+    //direct first set
+    public static void first(Node node, Tree tree, boolean rec, Set<NameNode> set) {
         if (node.isName()) {
-            set.add(node.asName());
+            NameNode name = node.asName();
+            if (set.add(node.asName())) {
+                if (rec && name.isRule()) {
+                    first(tree.getRule(name.name).rhs, tree, rec, set);
+                }
+            }
         }
         else if (node.isOr()) {
             for (Node ch : node.asOr()) {
-                set.addAll(first(ch, tree));
+                first(ch, tree, rec, set);
             }
         }
         else if (node.isSequence()) {
             Sequence seq = node.asSequence();
             for (Node ch : seq) {
-                set.addAll(first(ch, tree));
+                first(ch, tree, rec, set);
                 if (!canBeEmpty(ch, tree)) {
                     break;
                 }
             }
         }
         else if (node.isGroup()) {
-            set.addAll(first(node.asGroup().node, tree));
+            first(node.asGroup().node, tree, rec, set);
         }
         else if (node.isRegex()) {
-            set.addAll(first(node.asRegex().node, tree));
+            first(node.asRegex().node, tree, rec, set);
         }
-        return set;
     }
 
     public static boolean canBeEmpty(Node node, Tree tree) {
@@ -81,8 +91,8 @@ public class Helper {
         else if (node.isSequence()) {
             Sequence sequence = node.asSequence();
             for (int i = 0; i < sequence.size(); i++) {
-                if (canBeEmpty(sequence.get(i), tree)) {
-                    return true;
+                if (!canBeEmpty(sequence.get(i), tree)) {
+                    return false;
                 }
             }
         }

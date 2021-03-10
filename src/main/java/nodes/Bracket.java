@@ -19,7 +19,7 @@ public class Bracket extends NodeList {
     public boolean debug = false;
     private int pos;
 
-    public Bracket(String str) throws ParseException {
+    public Bracket(String str){
         parse(str);
     }
 
@@ -39,7 +39,7 @@ public class Bracket extends NodeList {
         add(new CharNode(chr));
     }
 
-    public void parse(String str) throws ParseException {
+    public void parse(String str) {
         //System.out.println(str);
         pos = 0;
         if (str.charAt(pos) != '[') {
@@ -77,7 +77,7 @@ public class Bracket extends NodeList {
         }
     }
 
-    char readUnicode(String str) throws ParseException {
+    char readUnicode(String str) {
         char c = str.charAt(pos++);
         if (c == 'u') {//unicode
             char c1 = str.charAt(pos++);
@@ -184,8 +184,8 @@ public class Bracket extends NodeList {
         return this;
     }
 
-    void err() throws ParseException {
-        throw new ParseException("Invalid character list");
+    void err(){
+        throw new RuntimeException("Invalid character list");
     }
 
     @Override

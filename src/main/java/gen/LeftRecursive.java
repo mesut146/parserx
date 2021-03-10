@@ -27,7 +27,7 @@ public class LeftRecursive {
     }
 
     RuleDecl handleRule(RuleDecl rule) {
-        if (Helper.startWith(rule, rule.name)) {
+        if (Helper.first(rule.rhs, tree, true).contains(rule.ref())) {
             //direct
             modified = true;
             rule = direct(rule);
@@ -68,7 +68,7 @@ public class LeftRecursive {
 
     int find(Sequence s, NameNode name) {
         for (int i = 0; i < s.size(); i++) {
-            if (Helper.first(s.get(i), tree).contains(name)) {
+            if (Helper.first(s.get(i), tree, false).contains(name)) {
                 return i;
             }
         }
@@ -95,7 +95,7 @@ public class LeftRecursive {
                 first = first.asGroup().node;
             }
             if (first.isOr()) {
-                if (Helper.first(first, tree).contains(rule.ref())) {
+                if (Helper.first(first, tree, false).contains(rule.ref())) {
                     modified = true;
                     info i = parseOr(first.asOr(), rule.ref());
                     Node rem = new Sequence(s.list.subList(1, s.size())).normal();

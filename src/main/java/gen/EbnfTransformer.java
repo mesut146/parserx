@@ -51,7 +51,7 @@ public class EbnfTransformer extends Transformer {
                 first = first.asGroup().node;
             }
             if (first.isOr()) {
-                if (Helper.first(first, tree).contains(decl.ref())) {
+                if (Helper.first(first, tree,false).contains(decl.ref())) {
                     modified = true;
                     info i = parseOr(first.asOr(), decl.ref());
                     Node rem = new Sequence(s.list.subList(1, s.size())).normal();
