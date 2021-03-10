@@ -15,24 +15,60 @@ public class EbnfTransformer extends Transformer {
         this.tree = tree;
     }
 
-    static Node hasEps(OrNode or) {
-        OrNode res = new OrNode();
-        for (Node node : or) {
-            if (!node.isEmpty()) {
-                res.add(node);
-            }
-        }
-        if (res.size() == or.size()) {
-            return null;
-        }
-        return res.normal();
-    }
 
     public Tree transform() {
-        //res = new Tree(tree);
-        tree = new EpsilonHandler(tree).handleEps();
+        tree = new EpsilonTrimmer(tree).trim();
         handleRec();
         return res;
+    }
+
+    void handleRec() {
+        System.out.println(tree);
+        modified = false;
+        res = new Tree(tree);
+        for (RuleDecl decl : tree.rules) {
+            handle(decl);
+        }
+        if (modified) {
+            //repeat
+            tree = res;
+            handleRec();
+        }
+    }
+
+    void handle(RuleDecl decl) {
+        if (decl.rhs.isOr()) {
+            forOr(decl);
+        }
+        else if (decl.rhs.isGroup()) {
+            decl.rhs = decl.rhs.asGroup().node;
+            handle(decl);
+        }
+        else if (decl.rhs.isSequence()) {
+            Sequence s = decl.rhs.asSequence();
+            Node first = s.get(0);
+            if (first.isGroup()) {
+                first = first.asGroup().node;
+            }
+            if (first.isOr()) {
+                if (Helper.first(first, tree).contains(decl.ref())) {
+                    modified = true;
+                    info i = parseOr(first.asOr(), decl.ref());
+                    Node rem = new Sequence(s.list.subList(1, s.size())).normal();
+                    Node n = Sequence.of(i.rest, rem, new RegexNode(Sequence.of(i.tail, rem), "*"));
+                    res.addRule(new RuleDecl(decl.name, n));
+                }
+                else {
+                    res.addRule(decl);
+                }
+            }
+            else {
+                res.addRule(decl);
+            }
+        }
+        else {
+            res.addRule(decl);
+        }
     }
 
     private void forOr(RuleDecl rule) {
@@ -87,41 +123,6 @@ public class EbnfTransformer extends Transformer {
         }
     }
 
-    void handle(RuleDecl decl) {
-        if (decl.rhs.isOr()) {
-            forOr(decl);
-        }
-        else if (decl.rhs.isGroup()) {
-            decl.rhs = decl.rhs.asGroup().node;
-            handle(decl);
-        }
-        else if (decl.rhs.isSequence()) {
-            Sequence s = decl.rhs.asSequence();
-            Node first = s.get(0);
-            if (first.isGroup()) {
-                first = first.asGroup().node;
-            }
-            if (first.isOr()) {
-                if (Helper.first(first, tree).contains(decl.ref())) {
-                    modified = true;
-                    info i = parseOr(first.asOr(), decl.ref());
-                    Node rem = new Sequence(s.list.subList(1, s.size())).normal();
-                    Node n = Sequence.of(i.rest, rem, new RegexNode(Sequence.of(i.tail, rem), "*"));
-                    res.addRule(new RuleDecl(decl.name, n));
-                }
-                else {
-                    res.addRule(decl);
-                }
-            }
-            else {
-                res.addRule(decl);
-            }
-        }
-        else {
-            res.addRule(decl);
-        }
-    }
-
     info parseOr(OrNode or, NameNode name) {
         info info = new info();
         OrNode rest = new OrNode();
@@ -142,82 +143,8 @@ public class EbnfTransformer extends Transformer {
         return info;
     }
 
-    void handleRec() {
-        System.out.println(tree);
-        modified = false;
-        res = new Tree(tree);
-        for (RuleDecl decl : tree.rules) {
-            handle(decl);
-        }
-        if (modified) {
-            //repeat
-            tree = res;
-            handleRec();
-        }
-    }
-
     static class info {
         Node tail, rest;
     }
 
-    static class EpsilonHandler extends Transformer {
-        Tree tree, res;
-        Map<String, Node> map = new HashMap<>();
-
-        public EpsilonHandler(Tree tree) {
-            this.tree = tree;
-            this.res = new Tree(tree);
-        }
-
-        //convert epsilons to '?'
-        Tree handleEps() {
-            //collect epslions
-            for (RuleDecl decl : tree.rules) {
-                Node node = decl.rhs;
-                if (node.isOr()) {
-                    OrNode or = node.asOr();
-                    Node or2 = hasEps(or);
-                    if (or2 != null) {
-                        //can be optional
-                        //replace references with 'e?'
-                        if (or2.isSequence() || or2.isOr()) {
-                            or2 = new GroupNode(or2);
-                        }
-                        map.put(decl.name, new RegexNode(or2, "?"));
-                    }
-                }
-            }
-            replace();
-            return res;
-        }
-
-        void replace() {
-            for (RuleDecl rule : tree.rules) {
-                rule = transformRule(rule);
-                if (rule != null) {
-                    res.addRule(rule);
-                }
-            }
-        }
-
-        @Override
-        public RuleDecl transformRule(RuleDecl decl) {
-            if (!map.containsKey(decl.name)) {
-                return super.transformRule(decl);
-            }
-            return null;
-        }
-
-        @Override
-        public Node transformName(NameNode node) {
-            return mapNode(node);
-        }
-
-        Node mapNode(NameNode nameNode) {
-            if (map.containsKey(nameNode.name)) {
-                return map.get(nameNode.name);
-            }
-            return nameNode;
-        }
-    }
 }

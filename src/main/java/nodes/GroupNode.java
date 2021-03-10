@@ -26,7 +26,7 @@ public class GroupNode extends Node implements Iterable<Node> {
     }
 
     public Node normal() {
-        if (node.isString() || node.isBracket() || node.isName() || node.isRegex()) {
+        if (node.isString() || node.isBracket() || node.isName() || node.isRegex() || node.isGroup()) {
             return node;
         }
         return this;
