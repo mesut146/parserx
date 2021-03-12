@@ -4,22 +4,19 @@ token{
  a : "";
  b : "";
  c : "";
- t: "";r="";
+ t: "";
+ r="";
 }
 //direct
 //A = A x | y;
 //A = A a | A b | c;
-//A = x? A a | c;
+//A = x A a;//0=x A | c a 1=A a
+A: (x? y?) A;
 //A = A? A a | c;
 
 //indirect
-A = P t | r;
-P = a? c | b* (c? A)+;
-/*
-P = a? c;
-P = b* (c? A)+;
-P =
-*/
+//A = a? c | b* (c? A)+;
+//A:
 
 
 

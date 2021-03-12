@@ -1,5 +1,6 @@
-package gen;
+package gen.parser;
 
+import gen.Helper;
 import nodes.*;
 
 import java.util.HashMap;

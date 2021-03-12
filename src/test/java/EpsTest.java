@@ -1,4 +1,4 @@
-import gen.EpsilonTrimmer;
+import gen.parser.EpsilonTrimmer;
 import nodes.Tree;
 import org.junit.Test;
 

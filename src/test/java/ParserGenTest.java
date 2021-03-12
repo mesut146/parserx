@@ -1,5 +1,5 @@
-import gen.ClosureHelper;
-import gen.BnfTransformer;
+import gen.parser.ClosureHelper;
+import gen.parser.BnfTransformer;
 import gen.PrepareTree;
 import nodes.Tree;
 import org.junit.Ignore;

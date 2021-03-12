@@ -1,4 +1,4 @@
-import gen.EbnfTransformer;
+import gen.parser.EbnfTransformer;
 import nodes.Tree;
 import org.junit.Test;
 

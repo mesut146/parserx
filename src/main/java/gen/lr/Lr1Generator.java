@@ -1,6 +1,6 @@
 package gen.lr;
 
-import gen.BnfTransformer;
+import gen.parser.BnfTransformer;
 import gen.IndentWriter;
 import gen.LexerGenerator;
 import gen.PrepareTree;

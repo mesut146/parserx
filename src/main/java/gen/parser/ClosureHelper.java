@@ -1,4 +1,4 @@
-package gen;
+package gen.parser;
 
 import nodes.Node;
 import nodes.Tree;
