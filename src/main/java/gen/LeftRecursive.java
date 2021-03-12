@@ -167,13 +167,18 @@ public class LeftRecursive {
             SplitInfo s1 = split(left, name);
             SplitInfo s2 = split(right, name);
             if (start(left, name)) {
-
                 info.one = new Sequence(s1.one, right);
                 info.zero = new Sequence(s1.zero, right);
             }
             else {
+                if (start(right, name)) {
+
+                }
+                else {
+
+                }
                 if (Helper.canBeEmpty(left, tree)) {
-                    //info.zero = new Sequence(left, s2.zero);
+                    info.zero = new Sequence(s1.zero, s2.zero);
                 }
                 else {
 
