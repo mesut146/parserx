@@ -1,21 +1,7 @@
 #!/bin/sh
 
 dir=$(dirname $0)
-
-#cc="/storage/extSdCard/lib/javacc-7.0.5.jar"
-cc="/home/mesut/Desktop/lib/javacc-7.0.5.jar"
-
-javacc()
-{
-  grammar="${dir}/parserx.jj"
-  out="${dir}/../src/main/java/grammar"
-  #-FORCE_LA_CHECK=true
-  
-  java -cp $cc javacc -OUTPUT_DIRECTORY=${out} -FORCE_LA_CHECK=true $grammar
-  #java -cp $cc javacc
-
-}
-
-
-javacc
-
+cc="${dir}/javacc-7.0.5.jar"
+grammar="${dir}/parserx.jj"
+out="${dir}/../src/main/java/grammar"
+java -cp $cc javacc -OUTPUT_DIRECTORY=${out} -FORCE_LA_CHECK=true $grammar

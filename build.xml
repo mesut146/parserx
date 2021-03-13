@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="parserx" default="all">
+  
+  
+  <property file="build.properties"/>
+  <!-- Uncomment the following property if no tests compilation is needed -->
+  <!-- 
+  <property name="skip.tests" value="true"/>
+   -->
+  
+  <!-- Compiler options -->
+  
+  <property name="compiler.debug" value="on"/>
+  <property name="compiler.generate.no.warnings" value="off"/>
+  <property name="compiler.args" value=""/>
+  <property name="compiler.max.memory" value="700m"/>
+  <patternset id="ignored.files">
+    <exclude name="**/*.pyc/**"/>
+    <exclude name="**/*.pyo/**"/>
+    <exclude name="**/*.rbc/**"/>
+    <exclude name="**/*.yarb/**"/>
+    <exclude name="**/*~/**"/>
+    <exclude name="**/.DS_Store/**"/>
+    <exclude name="**/.git/**"/>
+    <exclude name="**/.hg/**"/>
+    <exclude name="**/.svn/**"/>
+    <exclude name="**/CVS/**"/>
+    <exclude name="**/__pycache__/**"/>
+    <exclude name="**/_svn/**"/>
+    <exclude name="**/vssver.scc/**"/>
+    <exclude name="**/vssver2.scc/**"/>
+  </patternset>
+  <patternset id="library.patterns">
+    <include name="*.apk"/>
+    <include name="*.egg"/>
+    <include name="*.zip"/>
+    <include name="*.war"/>
+    <include name="*.swc"/>
+    <include name="*.ear"/>
+    <include name="*.jar"/>
+    <include name="*.klib"/>
+    <include name="*.ane"/>
+  </patternset>
+  <patternset id="compiler.resources">
+    <exclude name="**/?*.java"/>
+    <exclude name="**/?*.form"/>
+    <exclude name="**/?*.class"/>
+    <exclude name="**/?*.groovy"/>
+    <exclude name="**/?*.scala"/>
+    <exclude name="**/?*.flex"/>
+    <exclude name="**/?*.kt"/>
+    <exclude name="**/?*.clj"/>
+    <exclude name="**/?*.aj"/>
+  </patternset>
+
+
+  
+  <dirname property="module.parserx.basedir" file="${ant.file}"/>
+
+  <property name="compiler.args.parserx" value="-encoding UTF-8 -source 7 -target 1.7 ${compiler.args}"/>
+  
+  <property name="parserx.output.dir" value="${module.parserx.basedir}/target/classes"/>
+  <property name="parserx.testoutput.dir" value="${module.parserx.basedir}/target/test-classes"/>
+  
+  <path id="parserx.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="parserx.module.production.classpath"/>
+  
+  <path id="parserx.runtime.production.module.classpath">
+    <pathelement location="${parserx.output.dir}"/>
+  </path>
+  
+  <path id="parserx.module.classpath">
+    <pathelement location="${parserx.output.dir}"/>
+  </path>
+  
+  <path id="parserx.runtime.module.classpath">
+    <pathelement location="${parserx.output.dir}"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.parserx">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.parserx">
+    <patternset refid="excluded.from.module.parserx"/>
+  </patternset>
+  
+  <path id="parserx.module.sourcepath">
+    <dirset dir="${module.parserx.basedir}">
+      <include name="src/main/resources"/>
+      <include name="src/main/java"/>
+    </dirset>
+  </path>
+  
+  <path id="parserx.module.test.sourcepath">
+    <dirset dir="${module.parserx.basedir}">
+      <include name="src/test/java"/>
+      <include name="src/test/resources"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.parserx" depends="compile.module.parserx.production" description="Compile module parserx"/>
+  
+  <target name="compile.module.parserx.production" description="Compile module parserx; production classes">
+    <mkdir dir="${parserx.output.dir}"/>
+    <javac destdir="${parserx.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true">
+      <compilerarg line="${compiler.args.parserx}"/>
+      <bootclasspath refid="parserx.module.bootclasspath"/>
+      <classpath refid="parserx.module.production.classpath"/>
+      <src refid="parserx.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.parserx"/>
+    </javac>
+    
+    <copy todir="${parserx.output.dir}">
+      <fileset dir="${module.parserx.basedir}/src/main/resources">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+      <fileset dir="${module.parserx.basedir}/src/main/java">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="clean.module.parserx" description="cleanup module">
+    <delete dir="${parserx.output.dir}"/>
+  </target>
+  
+  <target name="init" description="Build initialization">
+    <!-- Perform any build initialization in this target -->
+  </target>
+  
+  <target name="clean" depends="clean.module.parserx" description="cleanup all"/>
+  
+  <target name="build" depends="init, clean, compile.module.parserx" description="build all modules"/>
+  
+  <target name="all" depends="build" description="build all"/>
+
+  <target name="gen">
+    <exec executable="${module.parserx.basedir}/grammar/cmd">
+    </exec>
+  </target>
+</project>

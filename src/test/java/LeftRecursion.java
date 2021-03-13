@@ -24,8 +24,8 @@ public class LeftRecursion {
         LeftRecursive leftRecursive = new LeftRecursive(tree);
         Node node = tree.getRule("A").rhs;
         LeftRecursive.SplitInfo info = leftRecursive.split(node, new NameNode("A", false));
-        System.out.println("zero=" + info.zero);
-        System.out.println("one=" + info.one);
+        System.out.println("zero = " + info.zero);
+        System.out.println("one = " + info.one);
     }
 
     @Test
