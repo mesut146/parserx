@@ -2,7 +2,6 @@ package gen;
 
 import nodes.*;
 
-import java.rmi.registry.Registry;
 
 //remove left recursions
 public class LeftRecursive {
@@ -172,19 +171,29 @@ public class LeftRecursive {
             }
             else {
                 if (start(right, name)) {
-
+                    if (Helper.canBeEmpty(left, tree)) {
+                        if(s2.zero==null){
+                            info.zero = new Sequence(s1.zero, right);
+                        }else{
+                            OrNode o=new OrNode();
+                            o.add(new Sequence(s1.zero,right));
+                            o.add(new Sequence(left,s2.zero));
+                            info.zero = o;
+                        }
+                        info.one = s2.one;
+                    }
+                    else {
+                        info.one=s2.one;
+                        throw new RuntimeException("");
+                    }
                 }
                 else {
-
+                    OrNode o=new OrNode();
+                    o.add(new Sequence(s1.zero,right));
+                    o.add(new Sequence(left,s2.zero));
+                    info.zero = o;
+                    //b b* (c? A)+ | a? c
                 }
-                if (Helper.canBeEmpty(left, tree)) {
-                    info.zero = new Sequence(s1.zero, s2.zero);
-                }
-                else {
-
-                }
-                info.one = s2.one;
-                info.zero = new Sequence(left, s2.zero);
             }
         }
         else {
@@ -195,6 +204,35 @@ public class LeftRecursive {
 
     boolean start(Node node, NameNode name) {
         return Helper.first(node, tree, false).contains(name);
+    }
+    
+    boolean willStart(Node node, NameNode name){
+        if(node.isGroup()){
+            return willStart(node.asGroup().node,name);
+        }
+        else if(node.isName()){
+            return node.equals(name);
+        }
+        else if(node.isRegex()){
+            RegexNode r=node.asRegex();
+            if(r.isPlus()){
+                return willStart(r.node,name);
+            }
+        }
+        else if(node.isSequence()){
+            Sequence s=node.asSequence();
+            return willStart(s.first(),name);
+        }
+        else if(node.isOr()){
+            OrNode or=node.asOr();
+            for(Node n:or){
+                if(!willStart(n,name)){
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     static class info {

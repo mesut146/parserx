@@ -95,6 +95,7 @@ public class Helper {
                     return false;
                 }
             }
+            return true;
         }
         return false;
     }
