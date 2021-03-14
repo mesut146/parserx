@@ -6,20 +6,17 @@ token{
 }
 
 
-expr: fieldAccess | name | methodCall;
+//expr: fieldAccess | qname | methodCall;
 name: ident;
 qname: ident ("." ident)*;
-methodCall: (expr ".")? name "(" ")";
-fieldAccess: expr "." name;
+//methodCall: (expr ".")? name "(" ")";
+//fieldAccess: expr "." name;
 
-/*
-expr: expr "." name | name | methodCall;
+//expr: (qname | (expr ".")? name "(" ")") ("." name)*;
 
-expr: name expr' | methodCall expr';
-expr': "." name expr' | E;
+//expr: expr "." name | qname | methodCall;
+//methodCall: "(" ")";
 
-expr: name expr' | (expr ".")? name "(" ")" expr';
-expr: name expr' expr''
-expr'':
-
-*/
+//expr: (qname | methodCall) ("." name)*;
+//expr: (qname | (expr ".")? name "(" ")") ("." name)*;
+expr: (name "(" ")" | qname) ("." name)* ("." name "(" ")" ("." name)*)*;

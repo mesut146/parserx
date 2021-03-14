@@ -1,6 +1,11 @@
 # parserx
 lexer &amp; parser generator for java
 
+## Features
+- accepts regex as grammar
+- removes direct left recursion
+- ebnf to bnf and vice versa
+
 ## todo
 
 - [X] nfa construction
@@ -10,4 +15,3 @@ lexer &amp; parser generator for java
 - [ ] lr(k) parser generator
 - [ ] ll(k) parser generator
 - [ ] recursive descent parser generator
-- [ ] c++, python implementations

@@ -29,16 +29,35 @@ public class LeftRecursive {
         if (Helper.first(rule.rhs, tree, true).contains(rule.ref())) {
             if (start(rule.rhs, rule.ref())) {
                 //direct
+                System.out.println(rule);
                 removeDirect(rule);
                 modified = true;
             }
             else {
                 //indirect
+                System.err.println("indirect left recursion on " + rule);
             }
         }
         return rule;
     }
 
+    public void indirect(RuleDecl rule) {
+        Node node = rule.rhs;
+        if (node.isOr()) {
+
+        }
+        else if (node.isSequence()) {
+
+        }
+    }
+
+    Node trim(Sequence s) {
+        return new Sequence(s.list.subList(1, s.size())).normal();
+    }
+
+    Node trim(OrNode s) {
+        return new OrNode(s.list.subList(1, s.size())).normal();
+    }
 
     public void removeDirect(RuleDecl rule) {
         if (!start(rule.rhs, rule.ref())) {
@@ -49,14 +68,15 @@ public class LeftRecursive {
         //extract tail
         if (info.one.isSequence()) {
             Sequence s = info.one.asSequence();
-            tail = new Sequence(s.list.subList(1, s.size())).normal();
+            tail = trim(s);
         }
         else if (info.one.isOr()) {
             //multiple ones, extract all
             OrNode or = info.one.asOr();
             OrNode or0 = new OrNode();
             for (Node ch : or) {
-                or0.add(new Sequence(ch.asSequence().list.subList(1, ch.asSequence().size())).normal());
+                //or0.add(new Sequence(ch.asSequence().list.subList(1, ch.asSequence().size())).normal());
+                or0.add(trim(ch.asSequence()));
             }
             tail = or0.normal();
         }
@@ -108,7 +128,7 @@ public class LeftRecursive {
         else if (r.isOr()) {
             OrNode or = r.asOr();
             Node left = or.get(0);
-            Node right = new OrNode(or.list.subList(1, or.size())).normal();
+            Node right = trim(or);
             if (start(left, name)) {
                 SplitInfo s = split(left, name);
                 info.one = s.one;
@@ -134,7 +154,7 @@ public class LeftRecursive {
         else if (r.isSequence()) {
             Sequence seq = r.asSequence();
             Node left = seq.get(0);
-            Node right = new Sequence(seq.list.subList(1, seq.size())).normal();
+            Node right = trim(seq);
             SplitInfo s1 = split(left, name);
             if (start(left, name)) {
                 info.one = new Sequence(s1.one, right).normal();
@@ -143,7 +163,9 @@ public class LeftRecursive {
                     info.one = new OrNode(info.one, split(right, name).one);
                 }
                 if (s1.zero == null) {
-                    //info.zero=s2.zero;
+                    if (Helper.canBeEmpty(left, tree)) {
+                        info.zero = right;
+                    }
                 }
                 else {
                     info.zero = new Sequence(s1.zero, right).normal();
