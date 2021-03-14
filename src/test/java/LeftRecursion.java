@@ -1,6 +1,7 @@
 import gen.LeftRecursive;
 import nodes.NameNode;
 import nodes.Node;
+import nodes.RuleDecl;
 import nodes.Tree;
 import org.junit.Test;
 
@@ -13,17 +14,20 @@ public class LeftRecursion {
         File file = Env.getResFile("leftRec.g");
         Tree tree = Tree.makeTree(file);
         LeftRecursive leftRecursive = new LeftRecursive(tree);
+        RuleDecl rule = tree.getRule("A");
         leftRecursive.process();
-        System.out.println(leftRecursive.res);
+        System.out.println(rule);
+        /*leftRecursive.removeDirect(rule);
+        System.out.println(rule);*/
     }
 
     @Test
     public void split() throws Exception {
         File file = Env.getResFile("leftRec.g");
         Tree tree = Tree.makeTree(file);
+        RuleDecl rule = tree.getRule("A");
         LeftRecursive leftRecursive = new LeftRecursive(tree);
-        Node node = tree.getRule("A").rhs;
-        LeftRecursive.SplitInfo info = leftRecursive.split(node, new NameNode("A", false));
+        LeftRecursive.SplitInfo info = leftRecursive.split(rule.rhs, rule.ref());
         System.out.println("zero = " + info.zero);
         System.out.println("one = " + info.one);
     }

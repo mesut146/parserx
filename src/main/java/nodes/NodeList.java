@@ -94,7 +94,7 @@ public class NodeList extends Node implements Iterable<Node> {
 
     public Node normal() {
         if (list.size() == 1) {
-            return list.get(0);
+            return first();
         }
         return this;
     }

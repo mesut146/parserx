@@ -15,13 +15,29 @@ public class Sequence extends NodeList {
         super(arr);
     }
 
-    public static Node of(Node... a) {
+    public static Sequence of(Node... a) {
         return new Sequence(a);
     }
 
     @Override
     public String toString() {
         return NodeList.join(list, " ");
+    }
+
+    public Node normal() {
+        if (size() == 1) {
+            return first();
+        }
+        Sequence s = new Sequence();
+        for (Node ch : this) {
+            if (ch.isSequence()) {
+                s.addAll(ch.asSequence().list);
+            }
+            else {
+                s.add(ch);
+            }
+        }
+        return s;
     }
 
 }
