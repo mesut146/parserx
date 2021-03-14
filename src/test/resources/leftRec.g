@@ -9,17 +9,18 @@ token{
 }
 
 //direct
-//A = A x;
-A = A a | A b | c;
+//A = A x | y;
+//A: b? A x | y; // b A x | A x | y===(b A x | y) x*
+//A: b* A x | y; //same
+A = A a | A b | c; // A=(A b | c) a*, A b a* | c a* == c a* (b a*)*
 //A = x A a;//0=x A | c a 1=A a
-//A: (x? y?) A b;
-//A: (x? y? a?) A;
-//A = A? b a;
+//A: (x? y? t?) A a | b;
+//A = A? A a | c;
 
 //indirect
-//A = a? c | b* (c? A)+;   //1=A (c? A)* 0 = a? c | b b* (c? A)+ | b* c (c? A)*
-//A: b* (c? A)+; //b b* (c? A)+ | b* (c A) (c? A)*
-//A: (c? A)+; //(c A) (c? A)*
+//A = a? c | b* (c? A)+;   //(b b* (c? A)+ | b* c A (c? A)*) | a? c
+//A: b* (c? A); //b b* (c? A) | b* (c A)
+//A: (c? A); //(c A) (c? A)*
 
 
 
