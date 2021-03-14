@@ -8,19 +8,18 @@ import gen.*;public class Main
     public static void main(String[] args) {
         String path="/storage/emulated/0/AppProjects/parserx/src/test/resources/leftRec.g";
         Tree tree=Tree.makeTree(new File(path));
-        String r;
-        //r="a? c | b* (c? A)+";
-        //r="(A|b) a? b";//E|A a? b
-        //r="(b|c)? A";//A|b A
-        r="(a+ | A)*";
-        //r="(a* A b)+";
-        
-        Node n=tree.getRule("A").rhs;
-        
+        RuleDecl rule=tree.getRule("A");
+        LeftRecursive l=new LeftRecursive(tree);
+        l.removeDirect(rule);
+        System.out.println(rule);
+        l.removeDirect(rule);
+        System.out.println(rule);
+        /*
+        Node n = rule.rhs;
         //System.out.println(n);
-        LeftRecursive.SplitInfo s =new LeftRecursive(tree).split(n,new NameNode("A",false));
+        LeftRecursive.SplitInfo s =l.split(n,rule.ref());
         System.out.println("1="+s.one);
-        System.out.println("0="+s.zero);
+        System.out.println("0="+s.zero);*/
     }
     
 }

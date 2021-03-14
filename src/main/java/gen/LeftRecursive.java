@@ -107,6 +107,20 @@ public class LeftRecursive {
         }
         return rule;
     }
+    
+    public void removeDirect(RuleDecl rule){
+        SplitInfo info=split(rule.rhs,rule.ref());
+        Node tail=null;
+        if(info.one.isSequence()){
+            Sequence s=info.one.asSequence();
+            tail=new Sequence(s.list.subList(1,s.size())).normal();
+        }
+        else{
+            System.out.println("tail="+info.one);
+        }
+        //a0 | A t,   a0 t*
+        rule.rhs=new Sequence(info.zero,new RegexNode(tail,"*"));
+    }
 
     public SplitInfo split(Node r, NameNode name) {
         SplitInfo info = new SplitInfo();
@@ -151,12 +165,21 @@ public class LeftRecursive {
             if (start(left, name)) {
                 SplitInfo s = split(left, name);
                 info.one = s.one;
-                info.zero = new OrNode(s.zero, right);
+                if(s.zero==null){
+                    info.zero=right;
+                }else{
+                    info.zero = new OrNode(s.zero, right);
+                }         
             }
             else {
                 SplitInfo s = split(right, name);
-                info.one = s.one;
-                info.zero = new OrNode(s.zero, left);
+                if(start(right,name)){
+                    info.one = s.one;
+                    info.zero = new OrNode(s.zero, left);
+                }else{
+                    info.zero = new OrNode(s.zero, split(left,name).zero);
+                }
+                
             }
         }
         else if (r.isSequence()) {
@@ -167,33 +190,21 @@ public class LeftRecursive {
             SplitInfo s2 = split(right, name);
             if (start(left, name)) {
                 info.one = new Sequence(s1.one, right);
-                info.zero = new Sequence(s1.zero, right);
+                if(s1.zero==null){
+                    //info.zero=s2.zero;
+                }else{
+                    info.zero = new Sequence(s1.zero, right);
+                }              
             }
             else {
-                if (start(right, name)) {
-                    if (Helper.canBeEmpty(left, tree)) {
-                        if(s2.zero==null){
-                            info.zero = new Sequence(s1.zero, right);
-                        }else{
-                            OrNode o=new OrNode();
-                            o.add(new Sequence(s1.zero,right));
-                            o.add(new Sequence(left,s2.zero));
-                            info.zero = o;
-                        }
-                        info.one = s2.one;
-                    }
-                    else {
-                        info.one=s2.one;
-                        throw new RuntimeException("");
-                    }
+                if(Helper.canBeEmpty(left,tree)){
+                    info.one=s2.one;
                 }
-                else {
-                    OrNode o=new OrNode();
-                    o.add(new Sequence(s1.zero,right));
-                    o.add(new Sequence(left,s2.zero));
-                    info.zero = o;
-                    //b b* (c? A)+ | a? c
-                }
+                OrNode o=new OrNode();
+                o.add(new Sequence(s1.zero,right));
+                if(s2.zero!=null)
+                  o.add(new Sequence(left,s2.zero));
+                info.zero = o.normal();
             }
         }
         else {
