@@ -67,20 +67,7 @@
   </path>
   
   <path id="parserx.module.production.classpath"/>
-  
-  <path id="parserx.runtime.production.module.classpath">
-    <pathelement location="${parserx.output.dir}"/>
-  </path>
-  
-  <path id="parserx.module.classpath">
-    <pathelement location="${parserx.output.dir}"/>
-  </path>
-  
-  <path id="parserx.runtime.module.classpath">
-    <pathelement location="${parserx.output.dir}"/>
-  </path>
-  
-  
+
   <patternset id="excluded.from.module.parserx">
     <patternset refid="ignored.files"/>
   </patternset>
@@ -102,11 +89,9 @@
       <include name="src/test/resources"/>
     </dirset>
   </path>
+
   
-  
-  <target name="compile.module.parserx" depends="compile.module.parserx.production" description="Compile module parserx"/>
-  
-  <target name="compile.module.parserx.production" description="Compile module parserx; production classes">
+  <target name="compile">
     <mkdir dir="${parserx.output.dir}"/>
     <javac destdir="${parserx.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true">
       <compilerarg line="${compiler.args.parserx}"/>
@@ -128,17 +113,12 @@
     </copy>
   </target>
   
-  <target name="clean.module.parserx" description="cleanup module">
+  <target name="clean" description="cleanup module">
     <delete dir="${parserx.output.dir}"/>
   </target>
+
   
-  <target name="init" description="Build initialization">
-    <!-- Perform any build initialization in this target -->
-  </target>
-  
-  <target name="clean" depends="clean.module.parserx" description="cleanup all"/>
-  
-  <target name="build" depends="init, clean, compile.module.parserx" description="build all modules"/>
+  <target name="build" depends="clean, gen, compile" description="build all modules"/>
   
   <target name="all" depends="build" description="build all"/>
 

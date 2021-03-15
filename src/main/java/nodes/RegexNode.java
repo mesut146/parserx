@@ -39,5 +39,12 @@ public class RegexNode extends Node {
         }
         return node + type;
     }
+
+    public Node normal() {
+        if (isOptional() && node.isRegex() && node.asRegex().isPlus()) {
+            return new RegexNode(node.asRegex().node, "*");
+        }
+        return this;
+    }
 }
 

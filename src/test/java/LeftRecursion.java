@@ -16,7 +16,7 @@ public class LeftRecursion {
         LeftRecursive leftRecursive = new LeftRecursive(tree);
         RuleDecl rule = tree.getRule("E");
         leftRecursive.process();
-        System.out.println(rule);
+        //System.out.println(tree);
     }
 
     @Test
