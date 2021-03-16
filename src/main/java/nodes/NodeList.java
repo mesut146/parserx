@@ -10,11 +10,11 @@ public class NodeList extends Node implements Iterable<Node> {
     public List<Node> list = new ArrayList<>();
 
     public NodeList(List<Node> list) {
-        this.list = list;
+        this.list = new ArrayList<>(list);
     }
 
     public NodeList(Node... list) {
-        this.list = new ArrayList<>(Arrays.asList(list));
+        this(new ArrayList<>(Arrays.asList(list)));
     }
 
     public NodeList() {
