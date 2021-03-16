@@ -8,7 +8,6 @@ import java.io.SequenceInputStream;
 public class LeftRecursive {
     public Tree res;
     public Tree tree;
-    boolean modified;
 
     public LeftRecursive(Tree tree) {
         this.tree = tree;
@@ -31,7 +30,7 @@ public class LeftRecursive {
                 //indirect
                 indirect(rule);
             }
-            System.out.println(rule);
+            System.out.println("removed\n" + rule);
         }
         return rule;
     }
@@ -144,12 +143,16 @@ public class LeftRecursive {
                 }
             }
             else if (regexNode.isStar()) {
-                info.zero = makeSeq(s.zero, regexNode);
+                if (s.zero != null) {
+                    info.zero = makeSeq(s.zero, regexNode);
+                }
                 info.one = makeSeq(s.one, regexNode);
             }
             else if (regexNode.isPlus()) {
                 RegexNode star = new RegexNode(regexNode.node, "*");
-                info.zero = makeSeq(s.zero, star);
+                if (s.zero != null) {
+                    info.zero = makeSeq(s.zero, star);
+                }
                 info.one = makeSeq(s.one, star);
             }
         }

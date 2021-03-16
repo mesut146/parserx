@@ -21,9 +21,9 @@ public class LeftRecursion {
 
     @Test
     public void split() throws Exception {
-        File file = Env.getResFile("leftRec2.g");
+        File file = Env.getResFile("leftRec3.g");
         Tree tree = Tree.makeTree(file);
-        RuleDecl rule = tree.getRule("expr");
+        RuleDecl rule = tree.getRule("E");
         LeftRecursive left = new LeftRecursive(tree);
         LeftRecursive.SplitInfo info = left.split(rule.rhs, rule.ref());
         System.out.println("zero = " + info.zero);
