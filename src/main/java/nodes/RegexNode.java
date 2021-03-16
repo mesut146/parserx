@@ -3,7 +3,7 @@ package nodes;
 public class RegexNode extends Node {
 
     public Node node;//lexer or parser rule
-    String type;
+    public String type;
 
     public RegexNode() {
     }
@@ -45,6 +45,11 @@ public class RegexNode extends Node {
             return new RegexNode(node.asRegex().node, "*");
         }
         return this;
+    }
+
+    @Override
+    public Node copy() {
+        return new RegexNode(node, type);
     }
 }
 

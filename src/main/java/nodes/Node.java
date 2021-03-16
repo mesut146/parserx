@@ -84,4 +84,8 @@ public class Node {
     public int hashCode() {
         return toString().hashCode();
     }
+
+    public Node copy(){
+        return this;
+    }
 }

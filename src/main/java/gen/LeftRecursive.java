@@ -2,11 +2,8 @@ package gen;
 
 import nodes.*;
 
-import java.io.SequenceInputStream;
-
 //remove left recursions
 public class LeftRecursive {
-    public Tree res;
     public Tree tree;
 
     public LeftRecursive(Tree tree) {
@@ -14,66 +11,68 @@ public class LeftRecursive {
     }
 
     public void process() {
-        this.res = new Tree(tree);
         for (RuleDecl rule : tree.rules) {
-            res.addRule(handleRule(rule));
+            handleRule(rule);
         }
     }
 
-    RuleDecl handleRule(RuleDecl rule) {
-        while (startr(rule.rhs, rule.ref())) {
+    void handleRule(RuleDecl rule) {
+        if (startr(rule.rhs, rule.ref())) {
             if (start(rule.rhs, rule.ref())) {
                 //direct
-                removeDirect(rule);
+                rule.rhs = removeDirect(rule);
             }
             else {
                 //indirect
-                indirect(rule);
+                rule.rhs = indirect(rule);
             }
             System.out.println("removed\n" + rule);
         }
-        return rule;
     }
 
-    public void indirect(RuleDecl rule) {
-        rule.rhs = replace(rule.rhs, rule.ref());
+    public Node indirect(RuleDecl rule) {
+        Node node = rule.rhs.copy();
+        RuleDecl tmp = new RuleDecl(rule.name, replace(node, rule.ref()));
         //now it is in direct recursive form
-        removeDirect(rule);
+        return removeDirect(tmp);
     }
 
     //substitute references that can start with name don't touch rest
     Node replace(Node node, final NameNode name) {
         if (node.isOr()) {
-            OrNode or = node.asOr();
-            for (int i = 0; i < or.size(); i++) {
-                if (startr(or.get(i), name)) {
-                    or.set(i, replace(or.get(i), name));
+            OrNode res = new OrNode();
+            for (Node ch : node.asOr()) {
+                if (startr(ch, name)) {
+                    ch = replace(ch, name);
                 }
+                res.add(ch);
             }
+            return res;
         }
         else if (node.isSequence()) {
-            Sequence s = node.asSequence();
-            for (int i = 0; i < s.size(); i++) {
-                if (startr(s.get(i), name)) {
-                    s.set(i, replace(s.get(i), name));
-                    if (!Helper.canBeEmpty(s.get(i), tree)) {
+            Sequence res = new Sequence(node.asSequence().list);
+            for (int i = 0; i < node.asSequence().size(); i++) {
+                Node ch = res.get(i);
+                if (startr(ch, name)) {
+                    res.set(i, replace(ch, name));
+                    if (!Helper.canBeEmpty(ch, tree)) {
                         break;
                     }
                 }
             }
+            return res;
         }
         else if (node.isName()) {
             if (!node.equals(name) && node.asName().isRule() && startr(node, name)) {
-                //expand
-                Node rr = tree.getRule(node.asName().name).rhs;//rec
-                return replace(rr, name);
+                //find rule and substitute rhs
+                return replace(tree.getRule(node.asName().name).rhs.copy(), name);
             }
         }
         else if (node.isGroup()) {
             return new GroupNode(replace(node.asGroup().node, name)).normal();
         }
         else if (node.isRegex()) {
-            node.asRegex().node = replace(node.asRegex().node, name);
+            return new RegexNode(replace(node.asRegex().node, name), node.asRegex().type);
         }
         return node;
     }
@@ -86,9 +85,9 @@ public class LeftRecursive {
         return new OrNode(s.list.subList(1, s.size())).normal();
     }
 
-    public void removeDirect(RuleDecl rule) {
+    public Node removeDirect(RuleDecl rule) {
         if (!start(rule.rhs, rule.ref())) {
-            return;
+            return rule.rhs;
         }
         SplitInfo info = split(rule.rhs, rule.ref());
         Node tail = null;
@@ -111,7 +110,7 @@ public class LeftRecursive {
             System.out.println("tail=" + info.one);
         }
         //a0 | A t,   a0 t*
-        rule.rhs = new Sequence(info.zero, new RegexNode(tail, "*"));
+        return new Sequence(info.zero, new RegexNode(tail, "*"));
     }
 
     //split regex into proper left recursive version

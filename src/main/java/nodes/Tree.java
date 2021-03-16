@@ -46,10 +46,6 @@ public class Tree {
         }
     }
 
-    public Tree prepare(){
-        return PrepareTree.checkReferences(this);
-    }
-
     static int indexOf(List<TokenDecl> list, String name) {
         int i = 0;
         for (TokenDecl decl : list) {
@@ -59,6 +55,10 @@ public class Tree {
             i++;
         }
         return -1;
+    }
+
+    public Tree prepare() {
+        return PrepareTree.checkReferences(this);
     }
 
     //merge two grammar files(lexer,parser)
@@ -205,4 +205,5 @@ public class Tree {
     public List<TokenDecl> getTokens() {
         return tokens;
     }
+
 }

@@ -49,4 +49,9 @@ public class NameNode extends Node {
     public int hashCode() {
         return Objects.hash(name, isToken);
     }
+
+    @Override
+    public Node copy() {
+        return new NameNode(name, isToken);
+    }
 }

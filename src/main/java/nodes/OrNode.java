@@ -41,4 +41,8 @@ public class OrNode extends NodeList {
         return s;
     }
 
+    @Override
+    public Node copy() {
+        return new OrNode(list);
+    }
 }

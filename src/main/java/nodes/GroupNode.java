@@ -31,4 +31,9 @@ public class GroupNode extends Node implements Iterable<Node> {
         }
         return this;
     }
+
+    @Override
+    public Node copy() {
+        return new GroupNode(node);
+    }
 }

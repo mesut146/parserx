@@ -40,4 +40,8 @@ public class Sequence extends NodeList {
         return s;
     }
 
+    @Override
+    public Node copy() {
+        return new Sequence(list);
+    }
 }

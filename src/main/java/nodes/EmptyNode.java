@@ -7,4 +7,5 @@ public class EmptyNode extends Node {
     public String toString() {
         return "\uD835\uDF74";
     }
+
 }
