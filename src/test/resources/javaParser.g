@@ -7,26 +7,27 @@ generic = "<" (IDENT | generic) ("," IDENT)* ">" ;
 modifiers = ("public" | "static" | "abstract" | "final" | "private" | "volatile" | "protected" | "synchronized")+ ;
 
 
-compilationUnit = packageDecl? imports? typeDecl* ;
+compilationUnit = packageDecl? importStmt* typeDecl* ;
 
 packageDecl = "package" qname ";" ;
-
-imports = importStmt+ ;
 importStmt = "import" "static"? qname ("." "*")? ";" ;
 
 typeDecl= classDecl | enumDecl ;
 classDecl= modifiers? ("class" | "interface") IDENT ("extends" qname)? ("implements" typeList)? "{" classBody "}";
 
-enumDecl = modifiers? "enum" ("extends" qname)? ("implements" typeList)? "{" enumBody "}";
+enumDecl = modifiers? "enum" IDENT ("implements" typeList)? "{" enumBody "}";
+enumBody = enumCons (enumCons)* ";"? member*;
+enumCons = IDENT ("(" anony? ")")?;
 
 classBody = member*;
-member = fieldDecl | methodDecl;
+member = fieldDecl | methodDecl | typeDecl;
 fieldDecl = modifiers? typeName varFrags;
 
-methodDecl = modifiers? generic (typeName | "void") IDENT "(" params? ")" ("throws" typeList)? block;
+methodDecl = modifiers? generic? (typeName | "void") IDENT "(" params? ")" ("throws" typeList)? (block | ";");
 params = param ("," param)*;
 param = "final"? typeName "..."? IDENT;
-enumBody = "enum";//todo
+
+arrayBracket = "[" "]";
 
 block = "{" statement* "}";
 
@@ -42,7 +43,7 @@ statement = varDecl |
             block |
             throwStatement;
 
-ifStatement = "if" "(" expr ")" statement ("else" (ifStatement | statement))?;
+ifStatement = "if" "(" expr ")" statement ("else" statement)?;
 
 whileStatement = "while" "(" expr ")" statement;
 
@@ -52,7 +53,7 @@ forStatement = "for" "(" forInits? ";" expr? ";" updaters? ")" statement;
 forInits = typeName varFrags;
 updaters = expr ("," expr)*;
 
-forEachStatement = "for" "(" typeName IDENT ":" expr ")" statement;
+forEachStatement = "for" "(" "final"? typeName IDENT ":" expr ")" statement;
 
 varDecl = "final"? typeName varFrags ";";
 varFrags = varFrag ("," varFrag)*;
@@ -62,158 +63,70 @@ exprStmt = expr ";";
 
 tryStatement = "try" block (catchStatement | finallyStatement)*;
 tryResourcesStatement = "try" "(" varDecl ")" block;
-catchStatement = "catch" "(" typeName IDENT ")" block;
+catchStatement = "catch" "(" "final" typeName IDENT ")" block;
 finallyStatement = "finally" block;
 
 throwStatement = "throw" expr;
 
 //---------expressions
+prim = "int" | "long" | "short" | "float" |  "double" | "byte" | "char";
 
+expr = ClassInstanceCreationExpression 
+           | MethodCall
+           | FieldAccess
+           | Ternary
+           | ParExpr
+           | ArrayAccess
+           | ArrayCreation
+           | Literal
+           | PostfixExpression
+           | UnaryExpression
+           | CastExpression
+           | InfixExpression
+           | InstanceOf
+           | Assignment;
 
-//Class Instance Creation Expressions
 ClassInstanceCreationExpression:
-    "new" TypeArguments? TypeDeclSpecifier TypeArgumentsOrDiamond?
-                                                            ( ArgumentList? ) ClassBody? |
-    Primary "." new TypeArguments? Identifier TypeArgumentsOrDiamond?
-                                                            ( ArgumentList? ) ClassBody?;
+    "new" TypeName "(" exprList? ")" classBody;
 
-TypeArgumentsOrDiamond:
-    TypeArguments |
-    "<" ">";
+ParExpr = "(" expr ")";
+ArrayAccess = expr "[" expr "]";
+ArrayCreation = "new" ("[" expr? "]")+ ArrayInit;
+ArrayInit = "{" (expr | ArrayInit)* "}";
 
-ArgumentList:
-    Expression|
-    ArgumentList "," Expression;
 
-//Primary Expressions
-Primary:
-    PrimaryNoNewArray|
-    ArrayCreationExpression;
-
-PrimaryNoNewArray:
-    Literal|
-    Type "." "class"|
-    "void" "." "class"|
-    "this"|
-    ClassName "." "this"|
-    "(" Expression ")"|
-    ClassInstanceCreationExpression|
-    FieldAccess|
-    MethodInvocation|
-    ArrayAccess;
-
-//Primary Expressions
 Literal:
-    IntegerLiteral|
-    FloatingPointLiteral|
-    BooleanLiteral|
-    CHAR_LITERAL|
-    STRING_LITERAL|
-    "null";
-BooleanLiteral: "true" | "false";
+      INTEGER_LITERAL
+    | FLOAT_LITERAL
+    | BOOLEAN_LITERAL
+    | CHAR_LITERAL
+    | STRING_LITERAL
+    | "null";
 
-PostfixExpression = Primary | ExpressionName | PostIncrementExpression | PostDecrementExpression;
-
-PostIncrementExpression = PostfixExpression "++";
-PostDecrementExpression = PostfixExpression "--";
+PostfixExpression = expr ("++" | "--");
 
 UnaryExpression:
-    PreIncrementExpression
-    PreDecrementExpression
-    "+" UnaryExpression
-    "-" UnaryExpression
-    UnaryExpressionNotPlusMinus;
-
-PreIncrementExpression:
-    "++" UnaryExpression;
-
-PreDecrementExpression:
-    "--" UnaryExpression;
-
-UnaryExpressionNotPlusMinus:
-    PostfixExpression
-    "~" UnaryExpression
-    "!" UnaryExpression
-    CastExpression;
+    ("++" | "--" | "~" | "!" | "+" | "-") expr;
 
 CastExpression:
-    "(" PrimitiveType ")" UnaryExpression
-    "(" ReferenceType ")" UnaryExpressionNotPlusMinus;
+    "(" (PrimitiveType | ReferenceType) ")" expr;
 
-MultiplicativeExpression:
-    UnaryExpression
-    MultiplicativeExpression "*" UnaryExpression
-    MultiplicativeExpression "/" UnaryExpression
-    MultiplicativeExpression "%" UnaryExpression;
+InfixExpression:
+  expr InfixOp expr;
 
+InfixOp: "+" | "-" | "*" | "/" | "%" | "^" | "&" | "|" | "&&" | "||" | "<<" | ">>" | ">>>" | "<" | ">" | "==" | "!=";
+InstanceOf = expr "instanceof" ReferenceType ;
 
-AdditiveExpression:
-    MultiplicativeExpression
-    AdditiveExpression "+" MultiplicativeExpression
-    AdditiveExpression "-" MultiplicativeExpression;
-
-ShiftExpression:
-    AdditiveExpression
-    ShiftExpression "<<" AdditiveExpression
-    ShiftExpression ">>" AdditiveExpression
-    ShiftExpression ">>>" AdditiveExpression;
-
-RelationalExpression:
-    ShiftExpression
-    RelationalExpression "<" ShiftExpression
-    RelationalExpression ">" ShiftExpression
-    RelationalExpression "<=" ShiftExpression
-    RelationalExpression ">=" ShiftExpression
-    RelationalExpression "instanceof" ReferenceType;
-
-
-EqualityExpression:
-    RelationalExpression
-    EqualityExpression "==" RelationalExpression
-    EqualityExpression "!=" RelationalExpression;
-
-//Bitwise and Logical Operators
-
-AndExpression:
-    EqualityExpression
-    AndExpression "&" EqualityExpression;
-
-ExclusiveOrExpression:
-    AndExpression
-    ExclusiveOrExpression "^" AndExpression;
-
-InclusiveOrExpression:
-    ExclusiveOrExpression
-    InclusiveOrExpression "|" ExclusiveOrExpression;
-
-//Conditional-And Operator &&
-ConditionalAndExpression:
-    InclusiveOrExpression
-    ConditionalAndExpression "&&" InclusiveOrExpression;
-
-//Conditional-Or Operator ||
-ConditionalOrExpression:
-    ConditionalAndExpression
-    ConditionalOrExpression "||" ConditionalAndExpression;
-
-//Conditional Operator ? :
-ConditionalExpression:
-    ConditionalOrExpression
-    ConditionalOrExpression "?" Expression ":" ConditionalExpression;
-
-
-//Assignment Operators
-AssignmentExpression:
-    ConditionalExpression|
-    Assignment;
+Ternary:
+    expr "?" expr ":" expr
 
 Assignment:
     LeftHandSide AssignmentOperator AssignmentExpression;
 
 LeftHandSide:
-    ExpressionName|
-    FieldAccess|
-    ArrayAccess;
+      Name
+    | FieldAccess
+    | ArrayAccess;
 
 AssignmentOperator:
     "=" | "*=" | "/=" | "%=" | "+=" | "-=" "<<=" | ">>=" | ">>>=" | "&=" | "^=" | "|=";
