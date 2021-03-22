@@ -5,8 +5,10 @@ import nodes.*;
 import java.util.*;
 
 
-public class Lr1ItemSet extends Lr0ItemSet<Lr1Item> {
+public class Lr1ItemSet extends Lr0ItemSet {
 
+    List<Lr1Item> kernel = new ArrayList<>();
+    List<Lr1Item> all = new ArrayList<>();
     Set<Lr1Item> done = new HashSet<>();
 
     public Lr1ItemSet(List<Lr1Item> kernel, Tree tree) {
@@ -17,7 +19,6 @@ public class Lr1ItemSet extends Lr0ItemSet<Lr1Item> {
     public Lr1ItemSet(Lr1Item kernel, Tree tree) {
         this(new ArrayList<>(Collections.singletonList(kernel)), tree);
     }
-
 
     public List<Lr1Item> getAll() {
         List<Lr1Item> list = new ArrayList<>();
@@ -59,7 +60,7 @@ public class Lr1ItemSet extends Lr0ItemSet<Lr1Item> {
     public void closure() {
         if (all.isEmpty()) {
             all.addAll(kernel);
-            for (LrItem item : kernel) {
+            for (Lr0Item item : kernel) {
                 closure((Lr1Item) item);
             }
         }

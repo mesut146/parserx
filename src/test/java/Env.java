@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 
 public class Env {
@@ -13,6 +14,16 @@ public class Env {
         testRes = dir + "/src/test/resources";
     }
 
+    public static File dotDir() {
+        return new File(dir + "/dots");
+    }
+
+    public static File dotFile(String name) throws IOException {
+        dotDir().mkdirs();
+        File file= new File(dotDir(), name);
+        file.createNewFile();
+        return file;
+    }
 
     public static File getJavaLexer() throws Exception {
         return Env.getResFile("/javaLexer.g");

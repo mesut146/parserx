@@ -20,7 +20,7 @@ public class Lr0Test {
         //file = Env.getResFile("lr1/calc.g");
         Tree tree = Tree.makeTree(file);
         Lr0Generator generator = new Lr0Generator(null, null, tree);
-        generator.dotWriter = new PrintWriter(Env.getFile2("lr0/lr0.dot"));
+        generator.dotWriter = new PrintWriter(Env.dotFile("lr0.dot"));
         generator.generate();
     }
 

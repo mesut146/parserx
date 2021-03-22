@@ -10,27 +10,27 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class Lr0ItemSet<T extends LrItem> {
-    List<T> kernel = new ArrayList<>();
-    List<T> all = new ArrayList<>();
+public class Lr0ItemSet{
+    List<Lr0Item> kernel = new ArrayList<>();
+    List<Lr0Item> all = new ArrayList<>();
     Tree tree;
 
     public Lr0ItemSet() {
     }
 
-    public Lr0ItemSet(List<T> kernel, Tree tree) {
+    public Lr0ItemSet(List<Lr0Item> kernel, Tree tree) {
         this.kernel = kernel;
         this.tree = tree;
     }
 
-    public Lr0ItemSet(T kernel, Tree tree) {
+    public Lr0ItemSet(Lr0Item kernel, Tree tree) {
         this(new ArrayList<>(Collections.singletonList(kernel)), tree);
     }
 
     public void closure() {
         if (all.isEmpty()) {
             all.addAll(kernel);
-            for (LrItem item : kernel) {
+            for (Lr0Item item : kernel) {
                 if (item.isDotNonTerminal()) {
                     closure(item.getDotNode(), item);
                 }
@@ -38,11 +38,11 @@ public class Lr0ItemSet<T extends LrItem> {
         }
     }
 
-    public void closure(NameNode node, LrItem it) {
+    public void closure(NameNode node, Lr0Item it) {
         if (!node.isToken) {
             List<RuleDecl> ruleDecl = tree.getRules(node.name);
             for (RuleDecl decl : ruleDecl) {
-                T item = (T) new LrItem(decl, 0);
+                Lr0Item item = new Lr0Item(decl, 0);
                 if (!all.contains(item)) {
                     all.add(item);
                     if (kernel.contains(item)) {

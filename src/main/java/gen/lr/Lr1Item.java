@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Lr1Item extends LrItem {
+public class Lr1Item extends Lr0Item {
 
     public List<NameNode> lookAhead = new ArrayList<>();
 
@@ -39,11 +39,9 @@ public class Lr1Item extends LrItem {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(super.toString());
-        sb.append(", ");
-        sb.append(NodeList.join(lookAhead, "/"));
-        return sb.toString();
+        return super.toString() +
+                ", " +
+                NodeList.join(lookAhead, "/");
     }
 
 }

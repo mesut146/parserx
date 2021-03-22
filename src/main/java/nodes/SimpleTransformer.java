@@ -29,9 +29,6 @@ public class SimpleTransformer {
         else if (node.isString()) {
             return transformString(node.asString(), parent);
         }
-        else {
-            System.out.println("no transform for:" + node.getClass() + " =" + node);
-        }
         return node;
     }
 

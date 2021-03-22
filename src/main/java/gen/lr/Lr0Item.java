@@ -6,11 +6,11 @@ import nodes.Sequence;
 
 import java.util.Objects;
 
-public class LrItem {
+public class Lr0Item {
     RuleDecl ruleDecl;
     int dotPos;
 
-    public LrItem(RuleDecl ruleDecl, int dotPos) {
+    public Lr0Item(RuleDecl ruleDecl, int dotPos) {
         this.ruleDecl = ruleDecl;
         this.dotPos = dotPos;
     }
@@ -68,7 +68,7 @@ public class LrItem {
         if (this == other) return true;
         if (other == null || getClass() != other.getClass()) return false;
 
-        LrItem item = (LrItem) other;
+        Lr0Item item = (Lr0Item) other;
 
         if (dotPos != item.dotPos) return false;
         return Objects.equals(ruleDecl, item.ruleDecl);

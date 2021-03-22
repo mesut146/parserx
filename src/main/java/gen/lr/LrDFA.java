@@ -7,12 +7,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LrDFA<V extends LrItem, T extends Lr0ItemSet<V>> {
+public class LrDFA<T extends Lr0ItemSet> {
     public List<LrTransition<T>>[] map = new List[100];
     int lastId = -1;
     List<T> itemSets = new ArrayList<>();
     Map<T, Integer> idMap = new HashMap<>();
-
 
     public void addTransition(T from, T to, NameNode symbol) {
         LrTransition<T> t = new LrTransition<>(from, to, symbol);
@@ -43,7 +42,7 @@ public class LrDFA<V extends LrItem, T extends Lr0ItemSet<V>> {
         set.closure();
     }
 
-    int getId(LrItem item) {
+    int getId(Lr0Item item) {
         for (Map.Entry<T, Integer> entry : idMap.entrySet()) {
             if (entry.getKey().kernel.contains(item)) {
                 return entry.getValue();
@@ -53,7 +52,7 @@ public class LrDFA<V extends LrItem, T extends Lr0ItemSet<V>> {
     }
 
     int getId(T itemSet) {
-        for (LrItem kernel : itemSet.kernel) {
+        for (Lr0Item kernel : itemSet.kernel) {
             int id = getId(kernel);
             if (id != -1) {
                 return id;

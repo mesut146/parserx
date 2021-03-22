@@ -58,7 +58,8 @@ public class Tree {
     }
 
     public Tree prepare() {
-        return PrepareTree.checkReferences(this);
+        PrepareTree.checkReferences(this);
+        return this;
     }
 
     //merge two grammar files(lexer,parser)

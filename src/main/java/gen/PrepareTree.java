@@ -3,8 +3,6 @@ package gen;
 import nodes.*;
 import nodes.RuleDecl;
 
-import java.util.TreeMap;
-
 public class PrepareTree extends SimpleTransformer {
     Tree tree;
 
@@ -13,12 +11,11 @@ public class PrepareTree extends SimpleTransformer {
     }
 
     //check rule , token, string references
-    public static Tree checkReferences(Tree tree) {
+    public static void checkReferences(Tree tree) {
         PrepareTree prepareTree = new PrepareTree(tree);
         for (RuleDecl rule : tree.rules) {
             prepareTree.transformRule(rule);
         }
-        return tree;
     }
 
     @Override

@@ -18,7 +18,7 @@ public class Lr1Generator extends IndentWriter {
     Tree tree;
     String dir;
     LexerGenerator lexerGenerator;
-    LrDFA<Lr1Item, Lr1ItemSet> table = new LrDFA<>();
+    LrDFA<Lr1ItemSet> table = new LrDFA<>();
     RuleDecl start;
     public static NameNode dollar = new NameNode("$");
 
@@ -86,7 +86,7 @@ public class Lr1Generator extends IndentWriter {
 
     //merge same kernel states with different lookaheads
     void merge() {
-        LrDFA<Lr1Item, Lr1ItemSet> table2 = new LrDFA<>();
+        LrDFA<Lr1ItemSet> table2 = new LrDFA<>();
         Map<Integer, Map<NameNode, Lr1ItemSet>> map = new HashMap<>();
         for (Lr1ItemSet from : table.itemSets) {
             int id = table.getId(from);
@@ -146,7 +146,7 @@ public class Lr1Generator extends IndentWriter {
     //get itemSet that contains item
     Lr1ItemSet getSet(Lr1Item kernel) {
         for (Lr1ItemSet itemSet : table.itemSets) {
-            for (LrItem item : itemSet.kernel) {
+            for (Lr0Item item : itemSet.kernel) {
                 if (item.equals(kernel)) {
                     return itemSet;
                 }
@@ -171,7 +171,7 @@ public class Lr1Generator extends IndentWriter {
 
     boolean isFinal(Lr1ItemSet set) {
         //has epsilon
-        for (LrItem item : set.all) {
+        for (Lr0Item item : set.all) {
             if (hasEpsilon(item.ruleDecl.rhs.asSequence())) {
                 return true;
             }
