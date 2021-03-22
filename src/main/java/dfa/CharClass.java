@@ -91,19 +91,16 @@ public class CharClass {
                 walkNodes(c, ranges, brackets);
             }
         }
+        else if (node.isDot()) {
+            Bracket b = DotNode.bracket;
+            ranges.addAll(b.rangeNodes);
+            brackets.add(b);
+        }
         else if (node.isString()) {
-            StringNode stringNode = node.asString();
-            if (stringNode.isDot) {
-                Bracket b = stringNode.toBracket().normalize();
-                ranges.addAll(b.rangeNodes);
-                brackets.add(b);
-            }
-            else {
-                //make range for each char in string
-                String str = node.asString().value;
-                for (char c : str.toCharArray()) {
-                    ranges.add(RangeNode.of(c, c));
-                }
+            //make range for each char in string
+            String str = node.asString().value;
+            for (char c : str.toCharArray()) {
+                ranges.add(RangeNode.of(c, c));
             }
         }
         else if (node.isGroup()) {

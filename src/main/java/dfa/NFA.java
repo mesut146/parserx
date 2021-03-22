@@ -132,25 +132,19 @@ public class NFA {
     public Pair insert(Node node, int start) {
         Pair p = new Pair(start + 1, start + 1);
         if (node.isString()) {
-            StringNode sn = (StringNode) node;
-            if (sn.isDot) {//never
-                if (sn.bracket == null) {
-                    throw new RuntimeException("dot node not normalized");
-                }
-                p = insert(sn.toBracket(), start);
+            String str = node.asString().value;
+            int st = start;
+            int ns = start;
+            p.start = lastState + 1;
+            for (char ch : str.toCharArray()) {
+                ns = newState();
+                addTransitionRange(st, ns, ch, ch);
+                st = ns;
             }
-            else {
-                String str = sn.value;
-                int st = start;
-                int ns = start;
-                p.start = lastState + 1;
-                for (char ch : str.toCharArray()) {
-                    ns = newState();
-                    addTransitionRange(st, ns, ch, ch);
-                    st = ns;
-                }
-                p.end = ns;
-            }
+            p.end = ns;
+        }
+        else if (node.isDot()) {
+            p = insert(DotNode.bracket, start);
         }
         else if (node.isBracket()) {
             Bracket b = node.asBracket();
@@ -161,7 +155,8 @@ public class NFA {
                     addTransitionRange(start, end, n.start, n.end);
                 }
             }
-            else {//normal char range
+            else {
+                //normal char range
                 //in order to have only one end state we add epsilons?
                 for (int i = 0; i < b.size(); i++) {
                     Node n = b.get(i);

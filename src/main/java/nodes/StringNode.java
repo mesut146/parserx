@@ -9,10 +9,8 @@ import java.util.Objects;
 //can be in lexer or parser part
 public class StringNode extends Node {
 
-    public String value;
-    public boolean isDot = false;//[^\n]
     public static boolean string_quote = true;
-    public Bracket bracket;
+    public String value;
 
     public StringNode() {
     }
@@ -25,34 +23,8 @@ public class StringNode extends Node {
         return new StringNode(UnicodeUtils.fromEscaped(UnicodeUtils.trimQuotes(str)));
     }
 
-    //convert dot to bracket node
-    public Bracket toBracket() {
-        if (!isDot) {
-            return null;
-        }
-        if (bracket != null) {
-            return bracket;
-        }
-        Bracket b = new Bracket();
-        b.add('\n');
-        b.negate = true;
-        bracket = b;
-        return b;
-    }
-
-    Bracket dot2() {
-        Bracket b = new Bracket();
-        b.add('\n');
-        b.add('\r');
-        b.negate = true;
-        return b;
-    }
-
     @Override
     public String toString() {
-        if (isDot) {
-            return ".";
-        }
         if (string_quote) {
             return "\"" + UnicodeUtils.escapeString(value) + "\"";
         }
@@ -64,12 +36,11 @@ public class StringNode extends Node {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         StringNode node = (StringNode) o;
-        return isDot == node.isDot &&
-                Objects.equals(value, node.value);
+        return Objects.equals(value, node.value);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(value, isDot);
+        return Objects.hash(value);
     }
 }

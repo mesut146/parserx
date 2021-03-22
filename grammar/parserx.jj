@@ -275,9 +275,7 @@ Node dotNode():
 {}
 {
   <DOT>{
-    StringNode str = new StringNode();
-    str.isDot=true;
-    return str;
+    return DotNode.instance;
   }
 }
 //[a-z]

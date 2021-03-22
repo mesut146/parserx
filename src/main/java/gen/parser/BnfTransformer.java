@@ -12,6 +12,7 @@ public class BnfTransformer {
     public static boolean expand_or = true;//separate rules for each or content
     public static boolean rhsSequence = true;//make sure rhs always sequence
     public static boolean expand_group = false;//expand group in place instead of separate rule
+    static String starSuffix = "*", plusSuffix = "+", optSuffix = "?";
     Tree tree;//in ebnf
     Tree res;//out bnf
     Map<String, Integer> countMap = new HashMap<>();
@@ -76,19 +77,15 @@ public class BnfTransformer {
     }
 
     Node transform(GroupNode groupNode, RuleDecl decl) {
-        //r = pre (e1 e2) end;
-        //r = pre r_g end;
+        //r = a (e1 e2) b;
+        //r = a r_g b;
         //r_g = e1 e2;
         Node rhs = groupNode.node;
-        if (!rhs.isOr() && !rhs.isSequence()) {//simplify
-            //todo remove this,normal() already does it
-            return rhs;
-        }
-        String nname = decl.name + "_g" + getCount(decl.name);
-        RuleDecl newDecl = new RuleDecl(nname);
+        String newName = decl.name + getCount(decl.name);
+        RuleDecl newDecl = new RuleDecl(newName);
         newDecl.rhs = transform(rhs, newDecl);
         addRule(newDecl);
-        return new NameNode(nname);
+        return new NameNode(newName);
     }
 
     Node transform(OrNode orNode, RuleDecl decl) {
@@ -98,7 +95,6 @@ public class BnfTransformer {
                 newDecl.name = decl.name;
                 newDecl.rhs = transform(node, newDecl);
                 transformRhs(newDecl);
-                //addRule(newDecl);
             }
         }
         else {
@@ -121,42 +117,42 @@ public class BnfTransformer {
     }
 
     Node transform(RegexNode regexNode, RuleDecl decl) {
-        regexNode.node = transform(regexNode.node, decl);
+        Node node = transform(regexNode.node, decl);
+        regexNode.node = node;
         if (regexNode.isStar()) {
-            //r = a b*
-            //b* = E | b* b;
-            NameNode nameNode = new NameNode(decl.name + "_" + getCount(decl.name) + "*");
-            //declare
-            RuleDecl d1 = new RuleDecl(nameNode.name);
+            //b* = E | b* b; left
+            //b* = E | b b*; right
+            NameNode ref = new NameNode(decl.name + "_" + getCount(decl.name) + starSuffix);
+            Node newNode;
             if (leftRecursive) {
-                d1.rhs = transform(new OrNode(new EmptyNode(), new Sequence(nameNode, regexNode.node)), d1);
+                newNode = new OrNode(new EmptyNode(), new Sequence(ref, node));
             }
             else {
-                d1.rhs = transform(new OrNode(new EmptyNode(), new Sequence(regexNode.node, nameNode)), d1);
+                newNode = new OrNode(new EmptyNode(), new Sequence(node, ref));
             }
-            addRule(d1);
-            return nameNode;
+            addRule(new RuleDecl(ref.name, newNode));
+            return ref;
         }
         else if (regexNode.isPlus()) {
-            //b+ = b b*;
-            NameNode nameNode = new NameNode(decl.name + "_" + getCount(decl.name) + "+");
-            RegexNode star = new RegexNode();
-            star.setType("*");
-            star.node = regexNode.node;
-
-            RuleDecl expansion = new RuleDecl(nameNode.name);
-            expansion.rhs = transform(new Sequence(regexNode.node, transform(star, expansion)), expansion);
-            addRule(expansion);
-            return nameNode;
+            //b+ = b | b b+; right
+            //b+ = b | b+ b; left
+            NameNode ref = new NameNode(decl.name + "_" + getCount(decl.name) + plusSuffix);
+            Node newNode;
+            if (leftRecursive) {
+                newNode = new OrNode(regexNode.node, Sequence.of(ref, regexNode.node));
+            }
+            else {
+                newNode = new OrNode(regexNode.node, Sequence.of(regexNode.node, ref));
+            }
+            addRule(new RuleDecl(ref.name, newNode));
+            return ref;
         }
-        else if (regexNode.isOptional()) {
-            //r = a?;
+        else {
             //r = E | a;
-            NameNode nameNode = new NameNode(decl.name + "_" + getCount(decl.name) + "?");
-            addRule(new RuleDecl(nameNode.name, new OrNode(new EmptyNode(), regexNode.node)));
-            return nameNode;
+            NameNode ref = new NameNode(decl.name + "_" + getCount(decl.name) + optSuffix);
+            addRule(new RuleDecl(ref.name, new OrNode(new EmptyNode(), node)));
+            return ref;
         }
-        throw new RuntimeException("invalid regex: " + regexNode);
     }
 
 }

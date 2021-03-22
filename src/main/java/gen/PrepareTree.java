@@ -3,66 +3,55 @@ package gen;
 import nodes.*;
 import nodes.RuleDecl;
 
-public class PrepareTree {
+import java.util.TreeMap;
+
+public class PrepareTree extends SimpleTransformer {
+    Tree tree;
+
+    public PrepareTree(Tree tree) {
+        this.tree = tree;
+    }
 
     //check rule , token, string references
     public static Tree checkReferences(Tree tree) {
-        for (RuleDecl decl : tree.rules) {
-            decl.rhs = check(decl.rhs, tree);
+        PrepareTree prepareTree = new PrepareTree(tree);
+        for (RuleDecl rule : tree.rules) {
+            prepareTree.transformRule(rule);
         }
         return tree;
     }
 
-    static Node check(Node node, Tree tree) {
-        if (node.isSequence()) {
-            Sequence sequence = node.asSequence();
-            for (int i = 0; i < sequence.size(); i++) {
-                sequence.set(i, check(sequence.get(i), tree));
+    @Override
+    public Node transformName(NameNode node, Node parent) {
+        if (node.isToken) {
+            if (tree.getToken(node.name) == null) {
+                throw new RuntimeException("invalid token: " + node.name);
             }
-        }
-        else if (node.isOr()) {
-            OrNode orNode = node.asOr();
-            for (int i = 0; i < orNode.size(); i++) {
-                orNode.set(i, check(orNode.get(i), tree));
-            }
-        }
-        else if (node.isGroup()) {
-            GroupNode orNode = node.asGroup();
-            orNode.node = check(orNode.node, tree);
-        }
-        else if (node.isName()) {
-            NameNode nameNode = node.asName();
-            //first look into rules
-            if (tree.hasRule(nameNode.name)) {
-                nameNode.isToken = false;
-            }
-            else {
-                if (tree.getToken(nameNode.name) == null) {
-                    throw new RuntimeException("invalid reference: " + nameNode.name);
-                }
-                else {
-                    nameNode.isToken = true;
-                }
-            }
-        }
-        else if (node.isRegex()) {
-            node.asRegex().node = check(node.asRegex().node, tree);
-        }
-        else if (node.isString()) {
-            String val = node.asString().value;
-            TokenDecl decl = tree.getTokenByValue(val);
-            if (decl == null) {
-                throw new RuntimeException("unknown string token: " + val);
-            }
-            //replace
-            return decl.makeReference();
-        }
-        else if (node instanceof EmptyNode) {
-
         }
         else {
-            throw new RuntimeException("unexpected node: " + node);
+            if (tree.hasRule(node.name)) {
+                node.isToken = false;
+            }
+            else {
+                if (tree.getToken(node.name) == null) {
+                    throw new RuntimeException("invalid reference: " + node.name);
+                }
+                else {
+                    node.isToken = true;
+                }
+            }
         }
         return node;
+    }
+
+    @Override
+    public Node transformString(StringNode node, Node parent) {
+        String val = node.value;
+        TokenDecl decl = tree.getTokenByValue(val);
+        if (decl == null) {
+            throw new RuntimeException("unknown string token: " + val);
+        }
+        //replace
+        return decl.makeReference();
     }
 }

@@ -85,7 +85,15 @@ public class Node {
         return toString().hashCode();
     }
 
-    public Node copy(){
+    public Node copy() {
         return this;
+    }
+
+    public boolean isDot() {
+        return this instanceof DotNode;
+    }
+
+    public DotNode asDot(){
+        return (DotNode) this;
     }
 }

@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+//character classes used by nfa
 public class Alphabet {
     public Map<Node, Integer> map = new HashMap<>();
     int lastId = 0;

@@ -343,9 +343,7 @@ s.add(r);
 
   final public Node dotNode() throws ParseException {
     jj_consume_token(DOT);
-StringNode str = new StringNode();
-    str.isDot=true;
-    {if ("" != null) return str;}
+{if ("" != null) return DotNode.instance;}
     throw new Error("Missing return statement in function");
 }
 
