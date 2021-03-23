@@ -9,17 +9,19 @@ import java.io.PrintWriter;
 
 public class Lr0Test {
 
+    //static String gr="lr0/calc_lr.g";
+    static String gr = "lr0/simple.g";
 
     @Ignore
     @Test
     public void lr0() throws Exception {
         File file;
         file = Env.getCalc();
-        file = Env.getResFile("lr0/calc_lr.g");
+        file = Env.getResFile(gr);
         //file = Env.getResFile("lr0/left.g");
         //file = Env.getResFile("lr1/calc.g");
         Tree tree = Tree.makeTree(file);
-        Lr0Generator generator = new Lr0Generator(null, null, tree);
+        Lr0Generator generator = new Lr0Generator(null, Env.dotDir().getAbsolutePath(), tree);
         generator.dotWriter = new PrintWriter(Env.dotFile("lr0.dot"));
         generator.generate();
     }

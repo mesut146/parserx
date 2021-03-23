@@ -10,9 +10,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class Lr0ItemSet{
-    List<Lr0Item> kernel = new ArrayList<>();
-    List<Lr0Item> all = new ArrayList<>();
+public class Lr0ItemSet {
+    public List<Lr0Item> kernel = new ArrayList<>();
+    public List<Lr0Item> all = new ArrayList<>();
+    public Lr0Item reduce;
     Tree tree;
 
     public Lr0ItemSet() {

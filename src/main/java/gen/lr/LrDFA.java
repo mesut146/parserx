@@ -9,6 +9,8 @@ import java.util.Map;
 
 public class LrDFA<T extends Lr0ItemSet> {
     public List<LrTransition<T>>[] map = new List[100];
+    public List<NameNode> tokens = new ArrayList<>();
+    public List<NameNode> rules = new ArrayList<>();
     int lastId = -1;
     List<T> itemSets = new ArrayList<>();
     Map<T, Integer> idMap = new HashMap<>();
@@ -17,6 +19,12 @@ public class LrDFA<T extends Lr0ItemSet> {
         LrTransition<T> t = new LrTransition<>(from, to, symbol);
         List<LrTransition<T>> list = getTrans(t.from);
         list.add(t);
+        if (symbol.isToken && !tokens.contains(symbol)) {
+            tokens.add(symbol);
+        }
+        if (symbol.isRule() && !rules.contains(symbol)) {
+            rules.add(symbol);
+        }
     }
 
     public List<LrTransition<T>> getTrans(T set) {
@@ -51,7 +59,7 @@ public class LrDFA<T extends Lr0ItemSet> {
         return -1;
     }
 
-    int getId(T itemSet) {
+    public int getId(T itemSet) {
         for (Lr0Item kernel : itemSet.kernel) {
             int id = getId(kernel);
             if (id != -1) {

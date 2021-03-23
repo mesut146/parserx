@@ -7,18 +7,20 @@ import gen.PrepareTree;
 import nodes.*;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.*;
 
 // lr(0)
 public class Lr0Generator extends IndentWriter {
+    public static NameNode dollar = new NameNode("$");
     public PrintWriter dotWriter;
     Tree tree;
     String dir;
     LexerGenerator lexerGenerator;
     LrDFA<Lr0ItemSet> table = new LrDFA<>();
+    Map<RuleDecl, Integer> itemIds = new HashMap<>();
     RuleDecl start;
-    public static NameNode dollar = new NameNode("$");
 
     public Lr0Generator(LexerGenerator lexerGenerator, String dir, Tree tree) {
         this.lexerGenerator = lexerGenerator;
@@ -42,28 +44,27 @@ public class Lr0Generator extends IndentWriter {
 
         while (!queue.isEmpty()) {
             Lr0ItemSet curSet = queue.poll();
-            for (Lr0Item from : curSet.getAll()) {
-                curSet.done.add(from);
+            for (Lr0Item from : curSet.all) {
+                //curSet.done.add(from);
                 NameNode symbol = from.getDotNode();
                 if (symbol != null) {
                     //goto
-                    Lr0Item toFirst = new Lr1Item((Lr1Item) from, from.dotPos + 1);
-                    Lr1ItemSet targetSet = getSet(toFirst);
+                    Lr0Item toFirst = new Lr0Item(from.ruleDecl, from.dotPos + 1);
+                    Lr0ItemSet targetSet = getSet(toFirst);
                     if (targetSet == null) {
                         targetSet = getOldSet(curSet, symbol);
                         if (targetSet == null) {
-                            targetSet = new Lr1ItemSet(toFirst, tree);
+                            targetSet = new Lr0ItemSet(toFirst, tree);
                             table.addId(targetSet);
                             queue.add(targetSet);
                             table.addTransition(curSet, targetSet, symbol);
                         }
                         else {
+                            System.out.println("merge " + curSet);
                             //merge
-                            targetSet.all.add(toFirst);
+                            //targetSet.all.add(toFirst);
                             targetSet.kernel.add(toFirst);
-                            targetSet.closure(toFirst);
-                            /*targetSet = new Lr1ItemSet(toFirst, tree);
-                            table.addId(targetSet);*/
+                            targetSet.closure();
                             queue.add(targetSet);
                         }
                         System.out.printf("%s %s to %s\n", symbol, printSet(curSet), printSet(targetSet));
@@ -71,45 +72,39 @@ public class Lr0Generator extends IndentWriter {
                     else {
                         table.addTransition(curSet, targetSet, symbol);
                     }
+                    if (toFirst.getDotNode() == null) {
+                        targetSet.reduce = toFirst;
+                    }
                     //throw new RuntimeException();
                 }
             }//for
         }
-
-        //merge();
         writeDot();
+        makeTable();
+    }
+
+    void writeSource(){
+
+    }
+
+    void makeTable() {
+        DotWriter.lr0Table(this);
     }
 
     private void writeDot() {
-        try {
-            PrintWriter dotWriter = new PrintWriter(new File(dir, tree.file.getName() + ".dot"));
-            dotWriter.println("digraph G{");
-            //dotWriter.println("rankdir = LR");
-            dotWriter.println("rankdir = TD");
-            dotWriter.println("size=\"100,100\";");
-            //dotWriter.println("ratio=\"fill\";");
-
-            //labels
-            for (Lr0ItemSet set : table.itemSets) {
-                dotWriter.printf("%s [shape=box xlabel=\"%s\" %s label=\"%s\"]\n", table.getId(set), table.getId(set), isFinal(set) ? "color=red " : "", set.toString().replace("\n", "\\l") + "\\l");
+        if (dotWriter == null) {
+            try {
+                dotWriter = new PrintWriter(new File(dir, tree.file.getName() + ".dot"));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                return;
             }
-
-            for (int i = 0; i <= table.lastId; i++) {
-                for (LrTransition<Lr0ItemSet> t : table.map[i]) {
-                    dotWriter.printf("%s -> %s [label=\"%s\"]\n",
-                            table.getId(t.from), table.getId(t.to), t.symbol.name);
-                }
-            }
-
-            dotWriter.println("}");
-            dotWriter.close();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+        DotWriter.writeDot(this, dotWriter);
     }
 
     //get itemSet that contains item
-    Lr0ItemSet getSet(Lr1Item kernel) {
+    Lr0ItemSet getSet(Lr0Item kernel) {
         for (Lr0ItemSet itemSet : table.itemSets) {
             for (Lr0Item item : itemSet.kernel) {
                 if (item.equals(kernel)) {
@@ -134,29 +129,16 @@ public class Lr0Generator extends IndentWriter {
         return String.format("(%d)%s", table.getId(set), set.kernel);
     }
 
-    boolean isFinal(Lr0ItemSet set) {
-        //has epsilon
-        for (Lr0Item item : set.all) {
-            if (hasEpsilon(item.ruleDecl.rhs.asSequence())) {
-                return true;
-            }
-        }
-        return table.getTrans(set).isEmpty();
-    }
-
-    boolean hasEpsilon(Sequence node) {
-        for (Node c : node) {
-            if (c.isEmpty()) {
-                return true;
-            }
-        }
-        return false;
-    }
     private void check() {
         PrepareTree.checkReferences(tree);
         BnfTransformer.rhsSequence = true;
         BnfTransformer transformer = new BnfTransformer(tree);
         tree = transformer.transform();
         PrepareTree.checkReferences(tree);
+
+        int id = 0;
+        for (RuleDecl rule : tree.rules) {
+            itemIds.put(rule, id++);
+        }
     }
 }

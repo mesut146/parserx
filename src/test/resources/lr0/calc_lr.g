@@ -4,10 +4,7 @@ token{
   NUMBER = ["1"-"9"] ["0-"9"]*;
 }
 
-@start = expr;
+@start = E;
 
-expr = mul expr1;
-expr1 = expr1 "+" mul | ;
-mul = term mul1;
-mul1 = mul1 "*" term | ;
-term = NUMBER;
+E:  E "+" E | E1 | NUMBER;
+E1: E1 "*" E1 | NUMBER;
