@@ -10,28 +10,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class Lr0ItemSet {
-    public List<Lr0Item> kernel = new ArrayList<>();
-    public List<Lr0Item> all = new ArrayList<>();
-    public Lr0Item reduce;
-    Tree tree;
+public class Lr0ItemSet extends LrItemSet {
 
     public Lr0ItemSet() {
     }
 
-    public Lr0ItemSet(List<Lr0Item> kernel, Tree tree) {
-        this.kernel = kernel;
-        this.tree = tree;
+    public Lr0ItemSet(List<LrItem> kernel, Tree tree) {
+        super(kernel, tree);
     }
 
-    public Lr0ItemSet(Lr0Item kernel, Tree tree) {
-        this(new ArrayList<>(Collections.singletonList(kernel)), tree);
+    public Lr0ItemSet(LrItem kernel, Tree tree) {
+        super(kernel, tree);
     }
 
     public void closure() {
         if (all.isEmpty()) {
             all.addAll(kernel);
-            for (Lr0Item item : kernel) {
+            for (LrItem item : kernel) {
                 if (item.isDotNonTerminal()) {
                     closure(item.getDotNode(), item);
                 }
@@ -39,11 +34,11 @@ public class Lr0ItemSet {
         }
     }
 
-    public void closure(NameNode node, Lr0Item it) {
+    public void closure(NameNode node, LrItem it) {
         if (!node.isToken) {
             List<RuleDecl> ruleDecl = tree.getRules(node.name);
             for (RuleDecl decl : ruleDecl) {
-                Lr0Item item = new Lr0Item(decl, 0);
+                LrItem item = new LrItem(decl, 0);
                 if (!all.contains(item)) {
                     all.add(item);
                     if (kernel.contains(item)) {
@@ -59,26 +54,6 @@ public class Lr0ItemSet {
         else {
             throw new RuntimeException("closure error on node: " + node);
         }
-    }
-
-    @Override
-    public String toString() {
-        //sort();
-        return NodeList.join(all, "\n");
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Lr0ItemSet itemSet = (Lr0ItemSet) o;
-        return Objects.equals(kernel, itemSet.kernel);
-    }
-
-    @Override
-    public int hashCode() {
-        return kernel.hashCode();
     }
 
 }

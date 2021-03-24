@@ -73,6 +73,7 @@ TOKEN :
 | < EQ: "=">
 | <COLONEQEQ: ":==">
 | <COLONEQ: ":=">
+| <ARROW: "->">
 | < STAR: "*">
 | < PLUS: "+">
 | < QUES: "?">
@@ -180,7 +181,7 @@ void skipBlock(Tree tree):
 void declSeparator():
 {}
 {
-  "=" | ":" | ":==" | ":="
+  "=" | ":" | ":==" | ":=" | "->"
 }
 
 void ruleDecl(Tree tree):
@@ -245,7 +246,7 @@ Node regex():
   Node rule;
 }
 {
-  rule = simple() [rule = repetition(rule) | rule = regexType(rule)]
+  rule = simple() [LOOKAHEAD(regexType() | repetition()) (rule = regexType(rule) | rule = repetition(rule))]
   { return rule; }
 }
 

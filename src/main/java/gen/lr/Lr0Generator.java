@@ -14,7 +14,6 @@ import java.util.*;
 // lr(0)
 public class Lr0Generator extends IndentWriter {
     public static NameNode dollar = new NameNode("$");
-    public PrintWriter dotWriter;
     Tree tree;
     String dir;
     LexerGenerator lexerGenerator;
@@ -28,28 +27,46 @@ public class Lr0Generator extends IndentWriter {
         this.tree = tree;
     }
 
-    public void generate() {
-        start = new RuleDecl("s'", tree.start);
-        tree.addRule(start);
+    public static RuleDecl makeStart(Tree tree) {
+        RuleDecl start = tree.getRule(tree.start.name);
+        Node rhs = start.rhs;
+        if (!rhs.isName()) {
+            if (rhs.isSequence()) {
+                Node r = rhs.asSequence().normal();
+                if (!r.isName()) {
+                    //regex start node,create new one
+                    String name = "s'";
+                    if (tree.start.name.equals(name)) {
+                        name = "s_";
+                    }
+                    start = new RuleDecl(name, Sequence.of(tree.start));
+                    tree.addRule(start);
+                }
+            }
+        }
+        return start;
+    }
 
+    public void generate() {
+        start = makeStart(tree);
         check();
-        start = tree.getRule("s'");
+        //start = tree.getRule("s'");
 
         Queue<Lr0ItemSet> queue = new LinkedList<>();
 
-        Lr0Item first = new Lr0Item(start, 0);
+        LrItem first = new LrItem(start, 0);
         Lr0ItemSet firstSet = new Lr0ItemSet(first, tree);
         table.addId(firstSet);
         queue.add(firstSet);
 
         while (!queue.isEmpty()) {
             Lr0ItemSet curSet = queue.poll();
-            for (Lr0Item from : curSet.all) {
+            for (LrItem from : curSet.all) {
                 //curSet.done.add(from);
                 NameNode symbol = from.getDotNode();
                 if (symbol != null) {
                     //goto
-                    Lr0Item toFirst = new Lr0Item(from.ruleDecl, from.dotPos + 1);
+                    LrItem toFirst = new LrItem(from.ruleDecl, from.dotPos + 1);
                     Lr0ItemSet targetSet = getSet(toFirst);
                     if (targetSet == null) {
                         targetSet = getOldSet(curSet, symbol);
@@ -72,26 +89,21 @@ public class Lr0Generator extends IndentWriter {
                     else {
                         table.addTransition(curSet, targetSet, symbol);
                     }
-                    if (toFirst.getDotNode() == null) {
-                        targetSet.reduce = toFirst;
-                    }
                     //throw new RuntimeException();
                 }
             }//for
         }
-        writeDot();
-        makeTable();
     }
 
-    void writeSource(){
+    void writeSource() {
 
     }
 
-    void makeTable() {
+    public void makeTable() {
         DotWriter.lr0Table(this);
     }
 
-    private void writeDot() {
+    public void writeDot(PrintWriter dotWriter) {
         if (dotWriter == null) {
             try {
                 dotWriter = new PrintWriter(new File(dir, tree.file.getName() + ".dot"));
@@ -100,13 +112,13 @@ public class Lr0Generator extends IndentWriter {
                 return;
             }
         }
-        DotWriter.writeDot(this, dotWriter);
+        DotWriter.writeDot(table, dotWriter);
     }
 
     //get itemSet that contains item
-    Lr0ItemSet getSet(Lr0Item kernel) {
+    Lr0ItemSet getSet(LrItem kernel) {
         for (Lr0ItemSet itemSet : table.itemSets) {
-            for (Lr0Item item : itemSet.kernel) {
+            for (LrItem item : itemSet.kernel) {
                 if (item.equals(kernel)) {
                     return itemSet;
                 }

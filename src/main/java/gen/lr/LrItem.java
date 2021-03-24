@@ -1,18 +1,36 @@
 package gen.lr;
 
 import nodes.NameNode;
+import nodes.NodeList;
 import nodes.RuleDecl;
 import nodes.Sequence;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
-public class Lr0Item {
+public class LrItem {
+    public List<NameNode> lookAhead = new ArrayList<>();
     RuleDecl ruleDecl;
     int dotPos;
 
-    public Lr0Item(RuleDecl ruleDecl, int dotPos) {
+    public LrItem(RuleDecl ruleDecl, int dotPos) {
         this.ruleDecl = ruleDecl;
         this.dotPos = dotPos;
+    }
+
+    public LrItem(LrItem ruleDecl, int dotPos) {
+        this(ruleDecl.ruleDecl, dotPos);
+        this.lookAhead = new ArrayList<>(ruleDecl.lookAhead);
+    }
+
+    public boolean hasReduce() {
+        //if dot at end we are reducing
+        return getDotNode() == null;
+    }
+
+    boolean isLr0() {
+        return lookAhead.isEmpty();
     }
 
     @Override
@@ -32,6 +50,10 @@ public class Lr0Item {
         }
         if (rhs.size() == dotPos) {
             sb.append(".");
+        }
+        if (!isLr0()) {
+            sb.append(" , ");
+            sb.append(NodeList.join(lookAhead, "/"));
         }
         return sb.toString();
     }
@@ -68,16 +90,17 @@ public class Lr0Item {
         if (this == other) return true;
         if (other == null || getClass() != other.getClass()) return false;
 
-        Lr0Item item = (Lr0Item) other;
+        LrItem item = (LrItem) other;
 
         if (dotPos != item.dotPos) return false;
-        return Objects.equals(ruleDecl, item.ruleDecl);
+        return Objects.equals(ruleDecl, item.ruleDecl) && Objects.equals(lookAhead, item.lookAhead);
     }
 
     @Override
     public int hashCode() {
-        int result = ruleDecl != null ? ruleDecl.hashCode() : 0;
+        int result = ruleDecl.hashCode();
         result = 31 * result + dotPos;
+        result = 31 * result + lookAhead.hashCode();
         return result;
     }
 }

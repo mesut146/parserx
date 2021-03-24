@@ -7,13 +7,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LrDFA<T extends Lr0ItemSet> {
+public class LrDFA<T extends LrItemSet> {
     public List<LrTransition<T>>[] map = new List[100];
     public List<NameNode> tokens = new ArrayList<>();
     public List<NameNode> rules = new ArrayList<>();
     int lastId = -1;
-    List<T> itemSets = new ArrayList<>();
-    Map<T, Integer> idMap = new HashMap<>();
+    List<T> itemSets = new ArrayList<>();//todo idMap.keys()
+    Map<T, Integer> idMap = new HashMap<>();//item set to state id
 
     public void addTransition(T from, T to, NameNode symbol) {
         LrTransition<T> t = new LrTransition<>(from, to, symbol);
@@ -50,7 +50,7 @@ public class LrDFA<T extends Lr0ItemSet> {
         set.closure();
     }
 
-    int getId(Lr0Item item) {
+    int getId(LrItem item) {
         for (Map.Entry<T, Integer> entry : idMap.entrySet()) {
             if (entry.getKey().kernel.contains(item)) {
                 return entry.getValue();
@@ -60,7 +60,10 @@ public class LrDFA<T extends Lr0ItemSet> {
     }
 
     public int getId(T itemSet) {
-        for (Lr0Item kernel : itemSet.kernel) {
+        if (idMap.containsKey(itemSet)) {
+            return idMap.get(itemSet);
+        }
+        for (LrItem kernel : itemSet.kernel) {
             int id = getId(kernel);
             if (id != -1) {
                 return id;

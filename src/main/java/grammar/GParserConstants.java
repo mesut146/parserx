@@ -45,53 +45,55 @@ public interface GParserConstants {
   /** RegularExpression Id. */
   int COLONEQ = 25;
   /** RegularExpression Id. */
-  int STAR = 26;
+  int ARROW = 26;
   /** RegularExpression Id. */
-  int PLUS = 27;
+  int STAR = 27;
   /** RegularExpression Id. */
-  int QUES = 28;
+  int PLUS = 28;
   /** RegularExpression Id. */
-  int XOR = 29;
+  int QUES = 29;
   /** RegularExpression Id. */
-  int TILDE = 30;
+  int XOR = 30;
   /** RegularExpression Id. */
-  int HASH = 31;
+  int TILDE = 31;
   /** RegularExpression Id. */
-  int EMPTY = 32;
+  int HASH = 32;
   /** RegularExpression Id. */
-  int KEYWORD_TOKEN = 33;
+  int EMPTY = 33;
   /** RegularExpression Id. */
-  int KEYWORD_TOKENS = 34;
+  int KEYWORD_TOKEN = 34;
   /** RegularExpression Id. */
-  int KEYWORD_SKIP = 35;
+  int KEYWORD_TOKENS = 35;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 36;
+  int KEYWORD_SKIP = 36;
   /** RegularExpression Id. */
-  int INCLUDE_DIRECTIVE = 37;
+  int STRING_LITERAL = 37;
   /** RegularExpression Id. */
-  int START_SIRECTIVE = 38;
+  int INCLUDE_DIRECTIVE = 38;
   /** RegularExpression Id. */
-  int IDENT = 39;
+  int START_SIRECTIVE = 39;
   /** RegularExpression Id. */
-  int CHAR = 40;
+  int IDENT = 40;
   /** RegularExpression Id. */
-  int DIGIT = 41;
+  int CHAR = 41;
   /** RegularExpression Id. */
-  int HEX_DIGIT = 42;
+  int DIGIT = 42;
   /** RegularExpression Id. */
-  int ESCAPED_SPECIAL = 43;
+  int HEX_DIGIT = 43;
   /** RegularExpression Id. */
-  int OCTAL_DIGIT = 44;
+  int ESCAPED_SPECIAL = 44;
   /** RegularExpression Id. */
-  int ESCAPED_HEX = 45;
+  int OCTAL_DIGIT = 45;
   /** RegularExpression Id. */
-  int ESCAPED_OCTAL = 46;
+  int ESCAPED_HEX = 46;
   /** RegularExpression Id. */
-  int UNICODE = 47;
+  int ESCAPED_OCTAL = 47;
   /** RegularExpression Id. */
-  int BRACKET_LIST = 48;
+  int UNICODE = 48;
   /** RegularExpression Id. */
-  int INTEGER = 49;
+  int BRACKET_LIST = 49;
+  /** RegularExpression Id. */
+  int INTEGER = 50;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -130,6 +132,7 @@ public interface GParserConstants {
     "\"=\"",
     "\":==\"",
     "\":=\"",
+    "\"->\"",
     "\"*\"",
     "\"+\"",
     "\"?\"",

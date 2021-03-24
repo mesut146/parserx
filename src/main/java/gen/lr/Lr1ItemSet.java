@@ -5,24 +5,23 @@ import nodes.*;
 import java.util.*;
 
 
-public class Lr1ItemSet extends Lr0ItemSet {
+public class Lr1ItemSet extends LrItemSet {
 
-    List<Lr1Item> kernel = new ArrayList<>();
-    List<Lr1Item> all = new ArrayList<>();
-    Set<Lr1Item> done = new HashSet<>();
+    static boolean mergeLa = true;
+    Set<LrItem> done = new HashSet<>();
 
-    public Lr1ItemSet(List<Lr1Item> kernel, Tree tree) {
+    public Lr1ItemSet(List<LrItem> kernel, Tree tree) {
         this.kernel.addAll(kernel);
         this.tree = tree;
     }
 
-    public Lr1ItemSet(Lr1Item kernel, Tree tree) {
+    public Lr1ItemSet(LrItem kernel, Tree tree) {
         this(new ArrayList<>(Collections.singletonList(kernel)), tree);
     }
 
-    public List<Lr1Item> getAll() {
-        List<Lr1Item> list = new ArrayList<>();
-        for (Lr1Item item : all) {
+    public List<LrItem> getAll() {
+        List<LrItem> list = new ArrayList<>();
+        for (LrItem item : all) {
             if (!done.contains(item)) {
                 list.add(item);
             }
@@ -31,82 +30,55 @@ public class Lr1ItemSet extends Lr0ItemSet {
     }
 
     @Override
-    public String toString() {
-        //sort();
-        if (all.isEmpty()) {//not processed yet
-            return NodeList.join(kernel, "\n");
-        }
-        return NodeList.join(all, "\n");
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Lr1ItemSet that = (Lr1ItemSet) o;
-        if (kernel.size() != that.kernel.size()) return false;
-
-        ArrayList<Lr1Item> k1 = new ArrayList<>(kernel);
-        k1.removeAll(that.kernel);
-        return k1.isEmpty();
-    }
-
-    @Override
-    public int hashCode() {
-        return kernel.hashCode();
-    }
-
     public void closure() {
         if (all.isEmpty()) {
             all.addAll(kernel);
-            for (Lr0Item item : kernel) {
-                closure((Lr1Item) item);
+            for (LrItem item : kernel) {
+                closure(item);
             }
         }
     }
 
-    public void closure(Lr1Item it) {
+    @Override
+    public void closure(LrItem it) {
         if (it.isDotNonTerminal()) {
             closure(it.getDotNode(), it);
         }
     }
 
-    public void closure(NameNode node, Lr1Item it) {
+    public void closure(NameNode node, LrItem sender) {
         if (!node.isToken) {
-            List<RuleDecl> ruleDecl = tree.getRules(node.name);
-            for (RuleDecl decl : ruleDecl) {
-                Lr1Item newItem = new Lr1Item(decl, 0);
-                if (!all.contains(newItem)) {
-                    all.add(newItem);
-                    //lookahead
-                    for (Lr1Item k : kernel) {
-                        if (k.ruleDecl.name.equals(node.name)) {
-                            newItem.lookAhead.addAll(k.lookAhead);
-                        }
+            //get rules
+            List<RuleDecl> rules = tree.getRules(node.name);
+            for (RuleDecl decl : rules) {
+                List<NameNode> laList = new ArrayList<>();
+                LrItem newItem = new LrItem(decl, 0);
+                if (all.contains(newItem)) {
+                    continue;
+                }
+                all.add(newItem);
+                //page 261
+                //lookahead
+                //first(follow(node),sender la)
+                NameNode la = sender.getDotNode2();
+                if (la != null) {
+                    if (la.isToken) {
+                        laList.add(la);
                     }
-                    if (newItem.lookAhead.isEmpty()) {
-                        for (Lr1Item i : all) {
-                            if (i.getDotNode() != null && i.getDotNode().equals(node) && i.getDotNode2() != null) {
-                                newItem.lookAhead.add(i.getDotNode2());
-                            }
-                        }
-                        if (newItem.lookAhead.isEmpty()) {
-                            newItem.lookAhead.add(it.lookAhead.get(0));
-                        }
-                        /*NameNode after = it.getDotNode2();
-                        if (after != null) {
-                            Set<NameNode> la = first(after);
-                            newItem.lookAhead.addAll(la);
-                        }
-                        else {
-                            newItem.lookAhead.add(it.lookAhead.get(0));
-                        }*/
+                    else {
+                        //first of la becomes follow
+                        laList.addAll(first(la));
                     }
+                }
 
-                    if (newItem.isDotNonTerminal() && !newItem.getDotNode().equals(node)) {
-                        closure(newItem);
-                    }
+                if (laList.isEmpty()) {
+                    //first of sender
+                    laList.add(sender.lookAhead.get(0));
+                }
+                newItem.lookAhead = laList;
+
+                if (newItem.isDotNonTerminal() && !newItem.getDotNode().equals(node)) {
+                    closure(newItem);
                 }
             }
 

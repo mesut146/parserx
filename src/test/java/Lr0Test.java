@@ -22,19 +22,23 @@ public class Lr0Test {
         //file = Env.getResFile("lr1/calc.g");
         Tree tree = Tree.makeTree(file);
         Lr0Generator generator = new Lr0Generator(null, Env.dotDir().getAbsolutePath(), tree);
-        generator.dotWriter = new PrintWriter(Env.dotFile("lr0.dot"));
         generator.generate();
+        generator.writeDot(new PrintWriter(Env.dotFile("lr0.dot")));
+        generator.makeTable();
     }
 
     @Test
     @Ignore
     public void lr1() throws Exception {
         File file;
-        file = Env.getFile2("lr1/calc2.g");
+        //file = Env.getFile2("lr1/calc2.g");
         //file = Env.getFile2("lr1/calc3.g");
-        //file = Env.getFile2("lr1/simple.g");
+        file = Env.getFile2("lr1/simple2.g");
         Tree tree = Tree.makeTree(file);
-        Lr1Generator generator = new Lr1Generator(null, file.getParent(), tree);
+        Lr1Generator generator = new Lr1Generator(null, Env.dotDir().getAbsolutePath(), tree);
         generator.generate();
+        generator.writeDot(new PrintWriter(Env.dotFile("lr1.dot")));
+        generator.makeTable();
+        //generator.merge();
     }
 }

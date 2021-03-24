@@ -2,7 +2,7 @@ package gen.lr;
 
 import nodes.NameNode;
 
-public class LrTransition<T extends Lr0ItemSet> {
+public class LrTransition<T extends LrItemSet> {
     T from;
     T to;
     NameNode symbol;
