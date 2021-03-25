@@ -1,8 +1,10 @@
 include "javaLexer.g"//token definitions
 
+@start: compilationUnit;
+
 qname = IDENT ("." IDENT)* ;
-typeList = typeName ("," typeName)* ;
-typeName = qname generic? ;
+typeList = TypeName ("," TypeName)* ;
+TypeName = qname generic? ;
 generic = "<" (IDENT | generic) ("," IDENT)* ">" ;
 modifiers = ("public" | "static" | "abstract" | "final" | "private" | "volatile" | "protected" | "synchronized")+ ;
 
@@ -18,14 +20,15 @@ classDecl= modifiers? ("class" | "interface") IDENT ("extends" qname)? ("impleme
 enumDecl = modifiers? "enum" IDENT ("implements" typeList)? "{" enumBody "}";
 enumBody = enumCons (enumCons)* ";"? member*;
 enumCons = IDENT ("(" anony? ")")?;
+anony: "{" classBody "}";
 
 classBody = member*;
 member = fieldDecl | methodDecl | typeDecl;
-fieldDecl = modifiers? typeName varFrags;
+fieldDecl = modifiers? TypeName varFrags;
 
-methodDecl = modifiers? generic? (typeName | "void") IDENT "(" params? ")" ("throws" typeList)? (block | ";");
+methodDecl = modifiers? generic? (TypeName | "void") IDENT "(" params? ")" ("throws" typeList)? (block | ";");
 params = param ("," param)*;
-param = "final"? typeName "..."? IDENT;
+param = "final"? TypeName "..."? IDENT;
 
 arrayBracket = "[" "]";
 
@@ -50,12 +53,12 @@ whileStatement = "while" "(" expr ")" statement;
 doWhileStatement = "do" block "while" "(" expr ")" ";";
 
 forStatement = "for" "(" forInits? ";" expr? ";" updaters? ")" statement;
-forInits = typeName varFrags;
+forInits = TypeName varFrags;
 updaters = expr ("," expr)*;
 
-forEachStatement = "for" "(" "final"? typeName IDENT ":" expr ")" statement;
+forEachStatement = "for" "(" "final"? TypeName IDENT ":" expr ")" statement;
 
-varDecl = "final"? typeName varFrags ";";
+varDecl = "final"? TypeName varFrags ";";
 varFrags = varFrag ("," varFrag)*;
 varFrag = IDENT ("=" expr)?;
 
@@ -63,13 +66,13 @@ exprStmt = expr ";";
 
 tryStatement = "try" block (catchStatement | finallyStatement)*;
 tryResourcesStatement = "try" "(" varDecl ")" block;
-catchStatement = "catch" "(" "final" typeName IDENT ")" block;
+catchStatement = "catch" "(" "final" TypeName IDENT ")" block;
 finallyStatement = "finally" block;
 
 throwStatement = "throw" expr;
 
 //---------expressions
-prim = "int" | "long" | "short" | "float" |  "double" | "byte" | "char";
+PrimitiveType = "int" | "long" | "short" | "float" |  "double" | "byte" | "char";
 
 expr = ClassInstanceCreationExpression 
            | MethodCall
@@ -85,6 +88,11 @@ expr = ClassInstanceCreationExpression
            | InfixExpression
            | InstanceOf
            | Assignment;
+
+MethodCall: (expr ".")? IDENT "(" arg* ")";
+arg: "final"? TypeName "..."? IDENT;
+
+FieldAccess: expr "." IDENT;
 
 ClassInstanceCreationExpression:
     "new" TypeName "(" exprList? ")" classBody;
@@ -110,6 +118,7 @@ UnaryExpression:
 
 CastExpression:
     "(" (PrimitiveType | ReferenceType) ")" expr;
+ReferenceType: TypeName;
 
 InfixExpression:
   expr InfixOp expr;
@@ -118,13 +127,14 @@ InfixOp: "+" | "-" | "*" | "/" | "%" | "^" | "&" | "|" | "&&" | "||" | "<<" | ">
 InstanceOf = expr "instanceof" ReferenceType ;
 
 Ternary:
-    expr "?" expr ":" expr
+    expr "?" expr ":" expr;
+
 
 Assignment:
-    LeftHandSide AssignmentOperator AssignmentExpression;
+    LeftHandSide AssignmentOperator Assignment;
 
 LeftHandSide:
-      Name
+      qname
     | FieldAccess
     | ArrayAccess;
 

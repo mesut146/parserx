@@ -12,10 +12,12 @@ token{
 
     INTEGER_LITERAL = {DIGITS} | {HEX_INTEGER_LITERAL} | {BIN_INTEGER_LITERAL} | {OCTAL};
     LONG_LITERAL = {INTEGER_LITERAL} [Ll];
+    FLOAT_LITERAL = {INTEGER_LITERAL} "." {INTEGER_LITERAL} [fFdD]?;
     //INT_OR_LONG = {INTEGER_LITERAL} [Ll]?;
     #HEX_INTEGER_LITERAL = "0" [Xx] {HEX_DIGIT_OR_UNDERSCORE}+;
     #BIN_INTEGER_LITERAL = "0" [Bb] [01_]+;
     #OCTAL= "0" [0-7]+;
+    BOOLEAN_LITERAL = "true" | "false";
 
     NULL_LITERAL = "null";
 
@@ -116,6 +118,7 @@ token{
     ANDEQ = "&=";
     OREQ = "|=";
     PERCENTEQ = "%=";
+    POWEQ = "^=";
 
     //relational operators
     EQEQ = "==";

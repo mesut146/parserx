@@ -1,10 +1,11 @@
 package gen.lr;
 
-import gen.parser.BnfTransformer;
-import gen.IndentWriter;
 import gen.LexerGenerator;
 import gen.PrepareTree;
-import nodes.*;
+import gen.parser.BnfTransformer;
+import nodes.NameNode;
+import nodes.RuleDecl;
+import nodes.Tree;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,8 +15,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 
-
-public class Lr1Generator extends IndentWriter {
+public class Clr {
     public static NameNode dollar = Lr0Generator.dollar;
     Tree tree;
     String dir;
@@ -23,7 +23,7 @@ public class Lr1Generator extends IndentWriter {
     LrDFA<Lr1ItemSet> table = new LrDFA<>();
     RuleDecl start;
 
-    public Lr1Generator(LexerGenerator lexerGenerator, String dir, Tree tree) {
+    public Clr(LexerGenerator lexerGenerator, String dir, Tree tree) {
         this.lexerGenerator = lexerGenerator;
         this.dir = dir;
         this.tree = tree;
@@ -60,10 +60,9 @@ public class Lr1Generator extends IndentWriter {
                     else {
                         System.out.println("merge");
                         //merge
-                        targetSet.addItem(toFirst);
-                        /*targetSet.all.add(toFirst);
+                        targetSet.all.add(toFirst);
                         targetSet.kernel.add(toFirst);
-                        targetSet.closure(toFirst);*/
+                        targetSet.closure(toFirst);
                             /*targetSet = new Lr1ItemSet(toFirst, tree);
                             table.addId(targetSet);*/
                         queue.add(targetSet);
@@ -124,7 +123,7 @@ public class Lr1Generator extends IndentWriter {
     }
 
     public void makeTable() {
-        DotWriter.lr1Table(this);
+        //DotWriter.lr1Table(this);
     }
 
     //get itemSet that contains item

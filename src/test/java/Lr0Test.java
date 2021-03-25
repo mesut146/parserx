@@ -19,7 +19,9 @@ public class Lr0Test {
         file = Env.getCalc();
         file = Env.getResFile(gr);
         //file = Env.getResFile("lr0/left.g");
-        //file = Env.getResFile("lr1/calc.g");
+        //file = Env.getResFile("lr1/calc2.g");
+        //file = Env.getFile2("lr1/simple.g");
+        file = Env.getFile2("javaParser.g");
         Tree tree = Tree.makeTree(file);
         Lr0Generator generator = new Lr0Generator(null, Env.dotDir().getAbsolutePath(), tree);
         generator.generate();
@@ -33,8 +35,8 @@ public class Lr0Test {
         File file;
         //file = Env.getFile2("lr1/calc2.g");
         //file = Env.getFile2("lr1/calc3.g");
-        file = Env.getFile2("lr1/simple2.g");
-        file = Env.getFile2("lr1/rr.g");
+        file = Env.getFile2("lr1/simple.g");
+        //file = Env.getFile2("lr1/rr.g");
         Tree tree = Tree.makeTree(file);
         Lr1Generator generator = new Lr1Generator(null, Env.dotDir().getAbsolutePath(), tree);
         generator.generate();

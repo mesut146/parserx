@@ -7,7 +7,7 @@ import java.util.*;
 
 public class Lr1ItemSet extends LrItemSet {
 
-    static boolean mergeLa = true;
+    public static boolean lalr = false;
     Set<LrItem> done = new HashSet<>();
 
     public Lr1ItemSet(List<LrItem> kernel, Tree tree) {
@@ -52,16 +52,11 @@ public class Lr1ItemSet extends LrItemSet {
             List<RuleDecl> rules = tree.getRules(node.name);
             for (RuleDecl decl : rules) {
                 List<NameNode> laList = new ArrayList<>();
-                LrItem newItem = new LrItem(decl, 0);
-                if (all.contains(newItem)) {
-                    continue;
-                }
-                all.add(newItem);
                 //page 261
                 //lookahead
                 //first(follow(node),sender la)
-                NameNode la = sender.getDotNode2();
-                if (la != null) {
+                if (sender.getDotNode2() != null) {
+                    NameNode la = sender.getDotNode2();
                     if (la.isToken) {
                         laList.add(la);
                     }
@@ -75,16 +70,32 @@ public class Lr1ItemSet extends LrItemSet {
                     //first of sender
                     laList.add(sender.lookAhead.get(0));
                 }
-                newItem.lookAhead = laList;
-
-                if (newItem.isDotNonTerminal() && !newItem.getDotNode().equals(node)) {
-                    closure(newItem);
+                if (lalr) {
+                    LrItem newItem = new LrItem(decl, 0);
+                    newItem.lookAhead = laList;
+                    addItem(newItem, node);
+                }
+                else {
+                    for (NameNode la : laList) {
+                        LrItem newItem = new LrItem(decl, 0);
+                        newItem.lookAhead.add(la);
+                        addItem(newItem, node);
+                    }
                 }
             }
-
         }
         else {
             throw new RuntimeException("closure error on node: " + node);
+        }
+    }
+
+    void addItem(LrItem item, NameNode node) {
+        if (all.contains(item)) {
+            return;
+        }
+        all.add(item);
+        if (item.isDotNonTerminal() && !item.getDotNode().equals(node)) {
+            closure(item);
         }
     }
 

@@ -130,7 +130,9 @@ public class BnfTransformer {
             else {
                 newNode = new OrNode(new EmptyNode(), new Sequence(node, ref));
             }
-            addRule(new RuleDecl(ref.name, newNode));
+            RuleDecl r = new RuleDecl(ref.name, newNode);
+            r.rhs = transform(newNode, r);
+            addRule(r);
             return ref;
         }
         else if (regexNode.isPlus()) {

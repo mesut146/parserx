@@ -48,7 +48,6 @@ public class Lr0Generator extends IndentWriter {
     }
 
     public void generate() {
-        start = makeStart(tree);
         check();
         //start = tree.getRule("s'");
 
@@ -81,6 +80,7 @@ public class Lr0Generator extends IndentWriter {
                             //merge
                             //targetSet.all.add(toFirst);
                             targetSet.kernel.add(toFirst);
+                            targetSet.all.clear();
                             targetSet.closure();
                             queue.add(targetSet);
                         }
@@ -127,7 +127,7 @@ public class Lr0Generator extends IndentWriter {
         return null;
     }
 
-    //if there exist another transition from this
+    //if there exist another transition from this set
     Lr0ItemSet getOldSet(Lr0ItemSet from, NameNode symbol) {
         for (LrTransition<Lr0ItemSet> transition : table.getTrans(from)) {
             if (transition.from.equals(from) && transition.symbol.equals(symbol)) {
@@ -152,5 +152,7 @@ public class Lr0Generator extends IndentWriter {
         for (RuleDecl rule : tree.rules) {
             itemIds.put(rule, id++);
         }
+
+        start = Lr0Generator.makeStart(tree);
     }
 }

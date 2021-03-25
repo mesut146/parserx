@@ -24,7 +24,6 @@ public class EbnfTransformer extends Transformer {
     }
 
     void handleRec() {
-        System.out.println(tree);
         modified = false;
         res = new Tree(tree);
         for (RuleDecl decl : tree.rules) {
