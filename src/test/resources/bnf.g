@@ -3,4 +3,4 @@ IDENT: "";
 d: ".";
 }
 
-qname = IDENT ("." IDENT)* ;
+qname = IDENT ("." IDENT)+ ;

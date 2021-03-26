@@ -1,0 +1,44 @@
+A: a+ b* c? | (a d | e)+
+
+la(a)
+
+
+--------------------
+A: R?
+void A(){
+  if(la(R)){
+    prod(R)
+  }
+}
+
+A: R*
+void A(){
+  while(la(R)){
+    prod(R)
+  }
+}
+
+A: R+
+void A(){
+  do{
+    prod(R)
+  }while(la(R));
+}
+
+A: L R
+void A(){
+  prod()
+}
+
+A: L | R | T
+void A(){
+  if(){
+    prod(L);
+  }
+  else if(){
+    prod(R);
+  }
+  else{
+    prod(T);
+  }
+}

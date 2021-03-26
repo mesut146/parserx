@@ -1,7 +1,6 @@
 package gen.lr;
 
-import gen.parser.BnfTransformer;
-import gen.IndentWriter;
+import gen.BnfTransformer;
 import gen.LexerGenerator;
 import gen.PrepareTree;
 import nodes.*;
@@ -12,7 +11,7 @@ import java.io.PrintWriter;
 import java.util.*;
 
 // lr(0)
-public class Lr0Generator extends IndentWriter {
+public class Lr0Generator {
     public static NameNode dollar = new NameNode("$");
     Tree tree;
     String dir;

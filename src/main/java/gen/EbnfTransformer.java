@@ -1,5 +1,6 @@
-package gen.parser;
+package gen;
 
+import gen.EpsilonTrimmer;
 import gen.Helper;
 import nodes.*;
 
@@ -7,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 //bnf to ebnf
+//removes epsilons
 public class EbnfTransformer extends Transformer {
     Tree tree;
     Tree res;

@@ -1,5 +1,4 @@
-import gen.parser.BnfTransformer;
-import gen.parser.EbnfTransformer;
+import gen.BnfTransformer;
 import nodes.Tree;
 import org.junit.Test;
 

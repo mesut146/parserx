@@ -1,4 +1,4 @@
-package gen.parser;
+package gen;
 
 import nodes.*;
 
@@ -104,7 +104,6 @@ public class BnfTransformer {
             }
             return or;
         }
-
         return null;
     }
 
@@ -146,13 +145,18 @@ public class BnfTransformer {
             else {
                 newNode = new OrNode(regexNode.node, Sequence.of(regexNode.node, ref));
             }
-            addRule(new RuleDecl(ref.name, newNode));
+            RuleDecl r = new RuleDecl(ref.name, newNode);
+            r.rhs = transform(newNode, r);
+            addRule(r);
             return ref;
         }
         else {
             //r = E | a;
             NameNode ref = new NameNode(decl.name + "_" + getCount(decl.name) + optSuffix);
-            addRule(new RuleDecl(ref.name, new OrNode(new EmptyNode(), node)));
+            Node newNode = new OrNode(new EmptyNode(), node);
+            RuleDecl r = new RuleDecl(ref.name, newNode);
+            r.rhs = transform(newNode, r);
+            addRule(r);
             return ref;
         }
     }

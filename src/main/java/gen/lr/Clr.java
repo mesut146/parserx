@@ -2,7 +2,7 @@ package gen.lr;
 
 import gen.LexerGenerator;
 import gen.PrepareTree;
-import gen.parser.BnfTransformer;
+import gen.BnfTransformer;
 import nodes.NameNode;
 import nodes.RuleDecl;
 import nodes.Tree;

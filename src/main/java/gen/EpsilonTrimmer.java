@@ -1,10 +1,7 @@
-package gen.parser;
+package gen;
 
-import gen.Helper;
 import nodes.*;
 
-import java.util.HashMap;
-import java.util.Map;
 
 //convert epsilons to '?'
 public class EpsilonTrimmer extends Transformer {
