@@ -16,7 +16,7 @@ public class LexerGenTest {
 
     @Test
     public void template() throws IOException {
-        Template template = new Template("token.java.template", "package", "token_class");
+        Template template = new Template("token.java.template");
         template.set("package", "pkg");
         template.set("token_class", "cls");
         template.set("asd", "dummy");
@@ -48,7 +48,6 @@ public class LexerGenTest {
             System.out.println(token + " pos=" + token.offset + " id=" + token.name);
         }
     }
-
 
     @Test
     @Ignore

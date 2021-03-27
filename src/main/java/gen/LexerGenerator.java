@@ -16,8 +16,8 @@ import java.util.Map;
 
 public class LexerGenerator {
     DFA dfa;
-    String outDir;
-    String className;
+    public String outDir;
+    public String className;
     String packageName;
     String tokenClassName = "Token";
     String functionName = "next";
@@ -54,7 +54,7 @@ public class LexerGenerator {
             file = new File(outDir, className + ".java");
         }
 
-        Template template = new Template("lexer.java.template", "package", "lexer_class", "token_class", "next_token", "trans", "cMap", "skip_list", "final_list", "name_list", "id_list", "max");
+        Template template = new Template("lexer.java.template");
         template.set("package", packageName);
         template.set("lexer_class", className);
         template.set("token_class", tokenClassName);
@@ -194,7 +194,7 @@ public class LexerGenerator {
 
     void writeTokenClass() throws IOException {
         File out = new File(outDir, tokenClassName + ".java");
-        Template template = new Template("token.java.template", "package", "token_class");
+        Template template = new Template("token.java.template");
 
         template.set("package", packageName);
         template.set("token_class", tokenClassName);

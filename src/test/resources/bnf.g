@@ -1,6 +1,8 @@
 token{
-IDENT: "";
-d: ".";
+a: "";
+b:"";
+c:"";
+d: "";
 }
 
-qname = IDENT ("." IDENT)+ ;
+name = a (b c)? | d | c c;

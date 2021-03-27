@@ -1,3 +1,5 @@
+import gen.LexerGenerator;
+import gen.ll.RecGenerator;
 import gen.parser.ClosureHelper;
 import gen.BnfTransformer;
 import gen.PrepareTree;
@@ -18,21 +20,12 @@ public class ParserGenTest {
     @Test
     @Ignore
     public void recursiveTest() throws Exception {
-        String input = "1+2*3.1415/(66-33)";
-        File grammar = Env.getCalc();
-
-
-        //LexerGenTest.generateLexer(grammar);
-        //LexerGenTest.tokenizerTest(new StringReader(input));
-
-        Tree tree = Tree.makeTree(grammar);
-        PrepareTree.checkReferences(tree);
-        BnfTransformer transformer = new BnfTransformer(tree);
-        tree = transformer.transform();
-        PrepareTree.checkReferences(tree);
-        System.out.println(tree);
-
-        new ClosureHelper(tree).all();
+        Tree tree = Tree.makeTree(Env.getResFile("calc.g"));
+        RecGenerator generator = new RecGenerator(tree);
+        generator.className = "Parser";
+        generator.lexerClass = "Lexer";
+        generator.outDir = Env.dotDir().getAbsolutePath();
+        generator.generate();
     }
 
 

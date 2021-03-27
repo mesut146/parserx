@@ -1,5 +1,5 @@
-public class ${parser_class}{
-  ${lexer_class} lexer;
+public class $parser_class${
+  $lexer_class$ lexer;
   List<Token> tokens = new ArrayList<>();
   int laPos = 0;
 
@@ -8,12 +8,22 @@ public class ${parser_class}{
     return tokens.get(pos);
   }
 
+  Token la(){
+    fill(laPos);
+    return tokens.get(laPos++);
+  }
+
+  Token pop(){
+    laPos = 0;
+    return tokens.remove(0);
+  }
+
   void fill(int pos){
     while(tokens.size() < pos){
       tokens.add(lexer.next());
     }
   }
 
-  ${prod_list}
-  ${la_list}
+  $prod_list$
+  $la_list$
 }

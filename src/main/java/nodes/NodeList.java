@@ -1,9 +1,6 @@
 package nodes;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class NodeList extends Node implements Iterable<Node> {
 
@@ -112,5 +109,20 @@ public class NodeList extends Node implements Iterable<Node> {
 
     public void set(int i, Node node) {
         list.set(i, node);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        NodeList nodes = (NodeList) o;
+
+        return Objects.equals(list, nodes.list);
+    }
+
+    @Override
+    public int hashCode() {
+        return list.hashCode();
     }
 }

@@ -7,45 +7,25 @@ import java.io.IOException;
 import java.util.*;
 
 public class Template {
-    private final List<String> list;
+    private final List<String> list = new ArrayList<>();
+    Map<String, String> varMap = new HashMap<>();
+    String content;
 
-    public Template(String fileName, String... names) throws IOException {
+    public Template(String fileName) throws IOException {
         if (!fileName.startsWith("/")) {
             fileName = "/" + fileName;
         }
-        String str = Helper.read(getClass().getResourceAsStream(fileName));
-        List<part> indexes = new ArrayList<>();
-        for (String nm : names) {
-            String dlr = "$" + nm + "$";
-            mark(str, dlr, indexes);
-        }
-        Collections.sort(indexes, new Comparator<part>() {
-            @Override
-            public int compare(part o1, part o2) {
-                return Integer.compare(o1.index, o2.index);
-            }
-        });
-        int pos = 0;
-        list = new ArrayList<>();
-        for (part part : indexes) {
-            String prev = str.substring(pos, part.index);
-            if (!prev.isEmpty()) {
-                list.add(prev);
-            }
-            list.add(part.name);
-            pos = part.index + part.name.length();
-        }
-        list.add(str.substring(pos));
+        content = Helper.read(getClass().getResourceAsStream(fileName));
     }
 
-    //mark positions of variable #name
-    void mark(String str, String name, List<part> parts) {
+    //mark positions of variable
+    void mark(String str, String var, List<part> parts) {
         int pos = 0;
         while (pos < str.length()) {
-            pos = str.indexOf(name, pos);
+            pos = str.indexOf(var, pos);
             if (pos != -1) {
-                parts.add(new part(name, pos));
-                pos = pos + name.length();
+                parts.add(new part(var, pos));
+                pos = pos + var.length();
             }
             else {
                 break;
@@ -54,18 +34,38 @@ public class Template {
     }
 
     public void set(String name, String val) {
-        if (!name.startsWith("$")) {
-            name = "$" + name + "$";
+        varMap.put("$" + name + "$", val);
+    }
+
+    void parts() {
+        List<part> indexes = new ArrayList<>();
+        //partition
+        for (String key : varMap.keySet()) {
+            mark(content, key, indexes);
         }
-        for (ListIterator<String> iterator = list.listIterator(); iterator.hasNext(); ) {
-            if (iterator.next().equals(name)) {
-                iterator.set(val);
+        //sort
+        Collections.sort(indexes, new Comparator<part>() {
+            @Override
+            public int compare(part o1, part o2) {
+                return Integer.compare(o1.index, o2.index);
             }
+        });
+        //replace
+        int pos = 0;
+        for (part part : indexes) {
+            String prev = content.substring(pos, part.index);
+            if (!prev.isEmpty()) {
+                list.add(prev);
+            }
+            list.add(varMap.get(part.name));
+            pos = part.index + part.name.length();
         }
+        list.add(content.substring(pos));
     }
 
     @Override
     public String toString() {
+        parts();
         return NodeList.join(list, "");
     }
 
