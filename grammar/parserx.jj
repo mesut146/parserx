@@ -7,10 +7,10 @@ options
 
 PARSER_BEGIN(GParser)
 
-package grammar;
+package mesut.parserx.grammar;
 
-import nodes.*;
-import utils.*;
+import mesut.parserx.nodes.*;
+import mesut.parserx.utils.*;
 import java.io.*;
 
 public class GParser

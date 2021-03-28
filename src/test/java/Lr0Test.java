@@ -1,6 +1,6 @@
-import gen.lr.Lr0Generator;
-import gen.lr.Lr1Generator;
-import nodes.Tree;
+import mesut.parserx.gen.lr.Lr0Generator;
+import mesut.parserx.gen.lr.Lr1Generator;
+import mesut.parserx.nodes.Tree;
 import org.junit.Ignore;
 import org.junit.Test;
 

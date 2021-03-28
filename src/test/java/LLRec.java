@@ -1,5 +1,5 @@
-import gen.ll.RecGenerator;
-import nodes.Tree;
+import mesut.parserx.gen.ll.RecGenerator;
+import mesut.parserx.nodes.Tree;
 import org.junit.Test;
 
 public class LLRec {

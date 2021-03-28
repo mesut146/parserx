@@ -1,13 +1,8 @@
-import gen.LexerGenerator;
-import gen.ll.RecGenerator;
-import gen.parser.ClosureHelper;
-import gen.BnfTransformer;
-import gen.PrepareTree;
-import nodes.Tree;
+import mesut.parserx.gen.ll.RecGenerator;
+import mesut.parserx.gen.PrepareTree;
+import mesut.parserx.nodes.Tree;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.io.File;
 
 public class ParserGenTest {
 

@@ -1,8 +1,8 @@
-import dfa.DFA;
-import dfa.Transition;
-import nodes.RangeNode;
+import mesut.parserx.dfa.DFA;
+import mesut.parserx.dfa.Transition;
+import mesut.parserx.nodes.RangeNode;
 import org.junit.Test;
-import utils.Helper;
+import mesut.parserx.utils.Helper;
 
 import java.io.FileInputStream;
 import java.util.List;

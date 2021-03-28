@@ -1,27 +1,15 @@
-import dfa.DFA;
-import dfa.NFA;
-import gen.GeneratedLexer;
-import gen.LexerGenerator;
-import gen.Template;
-import gen.Token;
+import mesut.parserx.dfa.DFA;
+import mesut.parserx.dfa.NFA;
+import mesut.parserx.gen.LexerGenerator;
+import mesut.parserx.gen.Template;
 import org.junit.Ignore;
 import org.junit.Test;
-import utils.Helper;
-import utils.UnicodeUtils;
+import mesut.parserx.utils.UnicodeUtils;
 
 import java.io.*;
 
 @Ignore
 public class LexerGenTest {
-
-    @Test
-    public void template() throws IOException {
-        Template template = new Template("token.java.template");
-        template.set("package", "pkg");
-        template.set("token_class", "cls");
-        template.set("asd", "dummy");
-        System.out.println(template);
-    }
 
     public static void generateLexer(File grammar) throws Exception {
         NFA nfa = NfaTest.makeNFA(grammar);
@@ -40,20 +28,20 @@ public class LexerGenTest {
     }
 
     @Test
-    public void tokenizerTest() throws IOException {
-        Reader reader = new BufferedReader(new FileReader("/home/mesut/IdeaProjects/parserx/src/test/resources/java/a.java"));
-        GeneratedLexer gen = new GeneratedLexer(reader);
-        Token token;
-        while ((token = gen.next()) != null) {
-            System.out.println(token + " pos=" + token.offset + " id=" + token.name);
-        }
+    public void template() throws IOException {
+        Template template = new Template("token.java.template");
+        template.set("package", "pkg");
+        template.set("token_class", "cls");
+        template.set("asd", "dummy");
+        System.out.println(template);
     }
 
     @Test
     @Ignore
     public void all() throws Exception {
         DFA dfa = DFA.makeDFA(Env.getJavaLexer());
-        dfa.dump(new File("/home/mesut/IdeaProjects/parserx/src/test/resources/java/javaLexer.txt"));
+        File dump = new File("/home/mesut/IdeaProjects/parserx/src/test/resources/java/javaLexer.txt");
+        dfa.dump(new PrintWriter(dump));
         dfa.getAlphabet().dump(new File("/home/mesut/IdeaProjects/parserx/src/test/resources/java/javaLexer-alphabet.txt"));
         //new Analyze(dfa).analyze();
         String outDir;

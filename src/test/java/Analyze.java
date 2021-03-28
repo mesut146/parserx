@@ -1,6 +1,6 @@
-import dfa.Alphabet;
-import dfa.DFA;
-import dfa.Transition;
+import mesut.parserx.dfa.Alphabet;
+import mesut.parserx.dfa.DFA;
+import mesut.parserx.dfa.Transition;
 
 import java.util.*;
 

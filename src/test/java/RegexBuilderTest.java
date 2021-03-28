@@ -1,11 +1,11 @@
-import dfa.NFA;
-import regex.RegexBuilder;
-import nodes.Node;
-import nodes.StringNode;
+import mesut.parserx.dfa.NFA;
+import mesut.parserx.regex.RegexBuilder;
+import mesut.parserx.nodes.Node;
+import mesut.parserx.nodes.StringNode;
 import org.junit.Ignore;
 import org.junit.Test;
-import utils.NfaReader;
-import regex.RegexOptimizer;
+import mesut.parserx.utils.NfaReader;
+import mesut.parserx.regex.RegexOptimizer;
 
 import java.io.File;
 

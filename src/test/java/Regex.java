@@ -1,10 +1,10 @@
-import nodes.Bracket;
-import nodes.Node;
-import nodes.RangeNode;
-import nodes.StringNode;
+import mesut.parserx.nodes.Bracket;
+import mesut.parserx.nodes.Node;
+import mesut.parserx.nodes.RangeNode;
+import mesut.parserx.nodes.StringNode;
 import org.junit.Test;
-import regex.RegexOptimizer;
-import regex.RegexUtils;
+import mesut.parserx.regex.RegexOptimizer;
+import mesut.parserx.regex.RegexUtils;
 
 public class Regex {
     @Test

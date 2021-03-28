@@ -1,4 +1,4 @@
-package gen;
+package mesut.parserx.gen;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;

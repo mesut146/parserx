@@ -1,4 +1,4 @@
-package gen;
+package mesut.parserx.gen;
 
 public class Token{
     public int type;

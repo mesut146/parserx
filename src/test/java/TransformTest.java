@@ -1,5 +1,5 @@
-import gen.BnfTransformer;
-import nodes.Tree;
+import mesut.parserx.gen.EbnfToBnf;
+import mesut.parserx.nodes.Tree;
 import org.junit.Test;
 
 import java.io.File;
@@ -10,6 +10,6 @@ public class TransformTest {
         //File file = Env.getResFile("javaParser.g");
         File file = Env.getResFile("bnf.g");
         Tree tree = Tree.makeTree(file);
-        System.out.println(new BnfTransformer(tree).transform());
+        System.out.println(new EbnfToBnf(tree).transform());
     }
 }

@@ -1,8 +1,6 @@
-import gen.LeftRecursive;
-import nodes.NameNode;
-import nodes.Node;
-import nodes.RuleDecl;
-import nodes.Tree;
+import mesut.parserx.gen.LeftRecursive;
+import mesut.parserx.nodes.RuleDecl;
+import mesut.parserx.nodes.Tree;
 import org.junit.Test;
 
 import java.io.File;
