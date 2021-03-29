@@ -1,4 +1,3 @@
-import mesut.parserx.dfa.DFA;
 import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.utils.Helper;
@@ -10,17 +9,17 @@ import java.io.*;
 
 public class DfaTest {
 
-    static DFA makeDFA(NFA nfa) {
+    static NFA makeDFA(NFA nfa) {
         System.out.println("-----DFA-----");
-        DFA dfa = nfa.dfa();
+        NFA dfa = nfa.dfa();
         System.out.println("total dfa states=" + dfa.lastState);
         //dfa.dump("");
         return dfa;
     }
 
-    public static DFA makeDFA(File grammar) throws IOException {
+    public static NFA makeDFA(File grammar) throws IOException {
         NFA nfa = NfaTest.makeNFA(grammar);
-        DFA dfa = makeDFA(nfa);
+        NFA dfa = makeDFA(nfa);
 
         nfa.dot(new FileWriter(grammar.getAbsolutePath() + "-nfa.dot"));
         dfa.dot(new FileWriter(grammar.getAbsolutePath() + "-dfa.dot"));
@@ -30,15 +29,26 @@ public class DfaTest {
     @Test
     @Ignore
     public void javaLexer() throws Exception {
-        DFA dfa = makeDFA(Env.getFile2("/javaLexer.g"));
+        NFA dfa = makeDFA(Env.getFile2("/javaLexer.g"));
         dfa.dump(null);
     }
 
     @Test
     public void minimize() throws Exception {
-        DFA dfa = (DFA) NfaReader.read(Helper.read(new FileInputStream(Env.getResFile("fsm/dfa-min.dfa"))));
+        File file = Env.getResFile("fsm/dfa-min.dfa");
+        NFA dfa = NfaReader.read(Helper.read(file));
         new Minimization().removeUnreachable(dfa);
+        dfa = new Minimization().Hopcroft(dfa);
+        dfa.dump(new PrintWriter(System.out));
+    }
+
+    @Test
+    public void minimize2() throws Exception {
+        NFA dfa = NFA.makeDFA(Env.getResFile("javaLexer.g"));
+        new Minimization().removeUnreachable(dfa);
+        dfa = new Minimization().Hopcroft(dfa);
         //dfa.dump(new PrintWriter(System.out));
-        new Minimization().Hopcroft(dfa);
+        dfa = Minimization.combineAlphabet(dfa);
+        dfa.dot(new FileWriter(Env.dotFile("dfa")));
     }
 }

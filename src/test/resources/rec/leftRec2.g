@@ -1,22 +1,16 @@
 token{
-  dot: ".";
-  ident: [a-zA-Z_]+;
-  lp: "(";
-  rp: ")";
+  DOT: ".";
+  IDENT: [a-zA-Z_]+;
+  LP: "(";
+  RP: ")";
 }
 
 
 //expr: fieldAccess | qname | methodCall;
-name: ident;
-qname: ident ("." ident)*;
-//methodCall: (expr ".")? name "(" ")";
-//fieldAccess: expr "." name;
-
+name: IDENT;
+qname: IDENT ("." IDENT)*;
+expr: qname | methodCall | fieldAccess;
+methodCall: (expr ".")? name "(" ")";
+fieldAccess: expr "." name;
+//expr: (expr ".")? name "(" ")" | qname;
 //expr: (qname | (expr ".")? name "(" ")") ("." name)*;
-
-//expr: expr "." name | qname | methodCall;
-//methodCall: "(" ")";
-
-//expr: (qname | methodCall) ("." name)*;
-//expr: (qname | (expr ".")? name "(" ")") ("." name)*;
-expr: (name "(" ")" | qname) ("." name)* ("." name "(" ")" ("." name)*)*;

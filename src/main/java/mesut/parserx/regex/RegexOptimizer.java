@@ -34,7 +34,7 @@ public class RegexOptimizer extends Transformer {
         for (Node ch : node) {
             ch = transformNode(ch);
             if (ch.isString() && ch.asString().value.length() == 1) {
-                bracket.add(new Bracket.CharNode(ch.asString().value.charAt(0)));
+                bracket.add(ch.asString().value.charAt(0));
             }
             else if (ch.isRange()) {
                 bracket.add(ch);

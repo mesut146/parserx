@@ -1,20 +1,54 @@
 package mesut.parserx.dfa;
 
-import mesut.parserx.nodes.Node;
-import mesut.parserx.nodes.RangeNode;
+import mesut.parserx.nodes.Bracket;
+import mesut.parserx.nodes.Tree;
 
-import java.lang.ref.WeakReference;
-import java.sql.Statement;
 import java.util.*;
 
 public class Minimization {
 
-    public void minimize(DFA dfa) {
-
+    public static NFA combineAlphabet(NFA dfa) {
+        Alphabet alphabet = dfa.getAlphabet();
+        Alphabet alp = new Alphabet();
+        NFA d = new NFA(dfa.lastState);
+        Tree tree = new Tree();
+        tree.alphabet = alp;
+        d.tree = tree;
+        d.initial = dfa.initial;
+        for (int i = dfa.initial; i <= dfa.lastState; i++) {
+            Map<Integer, Bracket> map = new HashMap<>();//target -> symbol
+            if (dfa.hasTransitions(i)) {
+                for (Transition tr : dfa.trans[i]) {
+                    Bracket bracket = map.get(tr.target);
+                    if (bracket == null) {
+                        bracket = new Bracket();
+                        map.put(tr.target, bracket);
+                        //alp.addRegex(bracket);
+                    }
+                    bracket.add(alphabet.getRange(tr.input));
+                }
+                for (int target : map.keySet()) {
+                    Bracket b = map.get(target);
+                    int id;
+                    if (alp.map.containsKey(b)) {
+                        id = alp.getId(b);
+                    }
+                    else {
+                        id = alp.addRegex(b);
+                    }
+                    d.addTransition(i, target, id);
+                }
+            }
+            if (dfa.isAccepting(i)) {
+                d.setAccepting(i, true);
+            }
+        }
+        return d;
     }
 
+
     //https://en.wikipedia.org/wiki/DFA_minimization
-    public void removeUnreachable(DFA dfa) {
+    public void removeUnreachable(NFA dfa) {
         StateSet reachable_states = new StateSet();
         StateSet new_states = new StateSet();
         reachable_states.addState(dfa.initial);
@@ -24,6 +58,7 @@ public class Minimization {
             StateSet temp = new StateSet();
             for (int q : new_states) {
                 for (int c : dfa.getAlphabet().map.values()) {
+                    if (!dfa.hasTransitions(q)) continue;
                     for (Transition tr : dfa.trans[q]) {
                         if (tr.input == c) {
                             temp.addState(tr.target);
@@ -31,25 +66,29 @@ public class Minimization {
                     }
                 }
             }
-            new_states = sub(temp,reachable_states);
+            new_states = sub(temp, reachable_states);
             reachable_states.addAll(new_states);
         } while (!new_states.states.isEmpty());
 
-        for (int s = dfa.initial; s < dfa.lastState; s++) {
+        for (int s = dfa.initial; s <= dfa.lastState; s++) {
             if (!reachable_states.contains(s)) {
                 //remove all transitions from dead state
                 dfa.trans[s] = null;
+                dfa.setAccepting(s, false);
             }
         }
     }
 
-    public void Hopcroft(DFA dfa) {
+    public NFA Hopcroft(NFA dfa) {
         List<StateSet> P = new ArrayList<>();
         List<StateSet> W = new ArrayList<>();
         //init P,W
         StateSet acc = new StateSet();
         StateSet noacc = new StateSet();
         for (int s = dfa.initial; s <= dfa.lastState; s++) {
+            if (!dfa.hasTransitions(s)) {
+                continue;
+            }
             if (dfa.isAccepting(s)) {
                 acc.addState(s);
             }
@@ -94,7 +133,63 @@ public class Minimization {
             }
         }
         System.out.println(P);
-        System.out.println(W);
+        //merge states
+        Map<Integer, Integer> map = new HashMap<>();
+        for (StateSet set : P) {
+            Iterator<Integer> iterator = set.iterator();
+            int first = iterator.next();
+            map.put(first, first);
+            while (iterator.hasNext()) {
+                map.put(iterator.next(), first);
+            }
+        }
+        NFA d = new NFA(dfa.lastState);
+        d.initial = dfa.initial;
+        d.tree = dfa.tree;
+        for (int i = dfa.initial; i <= dfa.lastState; i++) {
+            if (dfa.hasTransitions(i)) {
+                if (map.containsKey(i)) {
+                    for (Transition tr : dfa.trans[i]) {
+                        int ns = map.get(i);
+                        int target;
+                        if (map.containsKey(tr.target)) {
+                            target = map.get(tr.target);
+                        }
+                        else {
+                            if (dfa.isAccepting(tr.target)) {
+                                target = tr.target;
+                            }
+                            else {
+                                throw new RuntimeException("no " + tr);
+                            }
+                        }
+                        d.addTransition(ns, target, tr.input);
+                    }
+                }
+                else {
+                    //dead or final
+                    /*if (dfa.isAccepting(i)) {
+                        d.setAccepting(i, true);
+                    }*/
+                }
+            }
+        }
+        System.out.println("before=" + numOfStates(dfa) + " after=" + numOfStates(d));
+        return d;
+    }
+
+    int numOfStates(NFA nfa) {
+        StateSet set = new StateSet();
+        for (int i = nfa.initial; i <= nfa.lastState; i++) {
+            if (nfa.isAccepting(i) || nfa.hasTransitions(i)) {
+                set.addState(i);
+            }
+            else {
+                //dead
+                //throw new RuntimeException("dead " + i);
+            }
+        }
+        return set.states.size();
     }
 
     StateSet inter(StateSet s1, StateSet s2) {
@@ -118,7 +213,7 @@ public class Minimization {
     }
 
     //if c reaches to any in target set
-    StateSet lead(DFA dfa, int c, StateSet target) {
+    StateSet lead(NFA dfa, int c, StateSet target) {
         StateSet x = new StateSet();
         for (int s = dfa.initial; s <= dfa.lastState; s++) {
             if (!dfa.hasTransitions(s)) continue;
@@ -138,7 +233,7 @@ public class Minimization {
         return x;
     }
 
-    StateSet in(DFA dfa, int state, StateSet set) {
+    StateSet in(NFA dfa, int state, StateSet set) {
         if (set.contains(state)) return set;
         set.addState(state);
         for (Transition tr : dfa.findIncoming(state)) {
@@ -151,7 +246,7 @@ public class Minimization {
     }
 
     //all outgoing states from state
-    StateSet out(DFA dfa, int state, StateSet set) {
+    StateSet out(NFA dfa, int state, StateSet set) {
         if (set.contains(state)) return set;
         set.addState(state);
         if (dfa.hasTransitions(state)) {

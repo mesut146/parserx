@@ -35,14 +35,14 @@ public class CharClass {
         }//while
         for (Bracket bracket : brackets) {
             for (RangeNode rangeNode : bracket.getRanges()) {
-                tree.alphabet.add(rangeNode);
+                tree.alphabet.addRegex(rangeNode);
             }
         }
         //add chars in strings that are distinct
         for (RangeNode rangeNode : ranges) {
             RangeNode real = tree.alphabet.findRange(rangeNode);
             if (real == null) {
-                tree.alphabet.add(rangeNode);
+                tree.alphabet.addRegex(rangeNode);
             }
         }
     }

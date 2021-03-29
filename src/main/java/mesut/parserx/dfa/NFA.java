@@ -30,6 +30,10 @@ public class NFA {
         this(maxStates, new Tree());
     }
 
+    public static NFA makeDFA(File path) {
+        return Tree.makeTree(path).makeNFA().dfa();
+    }
+
     public void expand(int state) {
         if (state < trans.length) {
             return;
@@ -91,7 +95,9 @@ public class NFA {
             arr = new ArrayList<>();
             trans[tr.state] = arr;
         }
-        arr.add(tr);
+        if (!arr.contains(tr)) {
+            arr.add(tr);
+        }
     }
 
     public void addTransitionRange(int state, int target, int left, int right) {
@@ -150,32 +156,14 @@ public class NFA {
             p = insert(DotNode.bracket, start);
         }
         else if (node.isBracket()) {
-            Bracket b = node.asBracket();
+            Bracket b = node.asBracket().normalize();
             int end = newState();
-            if (b.negate) {
-                List<RangeNode> ranges = b.negateAll();
-                for (RangeNode n : ranges) {
-                    addTransitionRange(start, end, n.start, n.end);
-                }
-            }
-            else {
-                //normal char range
-                //in order to have only one end state we add epsilons?
-                for (int i = 0; i < b.size(); i++) {
-                    Node n = b.get(i);
-                    //int mid = newState();
-                    int left, right;
-                    if (n instanceof Bracket.CharNode) {
-                        left = right = ((Bracket.CharNode) n).chr;
-                    }
-                    else {//range
-                        RangeNode rn = (RangeNode) n;
-                        left = rn.start;
-                        right = rn.end;
-                    }
-                    addTransitionRange(start, end, left, right);
-                    //addEpsilon(mid, end);
-                }
+            //in order to have only one end state we add epsilons?
+            for (int i = 0; i < b.size(); i++) {
+                RangeNode rn = b.rangeNodes.get(i);
+                int left = rn.start;
+                int right = rn.end;
+                addTransitionRange(start, end, left, right);
             }
             p.end = end;
         }
@@ -227,7 +215,7 @@ public class NFA {
         }
         else if (node.isName()) {//?
             //we have lexer ref just replace with target's regex
-            NameNode name = (NameNode) node;
+            NameNode name = node.asName();
             p.end = insert(tree.getToken(name.name).regex, start).end;
         }
         return p;
@@ -291,10 +279,10 @@ public class NFA {
         return "S" + st;
     }
 
-    public DFA dfa() {
+    public NFA dfa() {
         if (debugDFA)
             System.out.println("dfa conversion started");
-        DFA dfa = new DFA(trans.length * 2);
+        NFA dfa = new NFA(trans.length * 2);
         dfa.tree = tree;
 
         Map<StateSet, Integer> dfaStateMap = new HashMap<>();//state set to dfa state
@@ -323,17 +311,17 @@ public class NFA {
             Map<Integer, StateSet> map = new HashMap<>();//input -> target states from state
             //find inputs and target states from state
             for (int epState : closure) {
-                List<Transition> trList = trans[epState];
-                if (trList != null) {
-                    for (Transition t : trList) {
-                        StateSet targetCLosure = closure(t.target);
-                        StateSet targets = map.get(t.input);//we can cache these
-                        if (targets == null) {
-                            targets = new StateSet();
-                            map.put(t.input, targets);
-                        }
-                        targets.addAll(targetCLosure);
+                if (!hasTransitions(epState)) {
+                    continue;
+                }
+                for (Transition t : trans[epState]) {
+                    StateSet targetCLosure = closure(t.target);
+                    StateSet targets = map.get(t.input);//we can cache these
+                    if (targets == null) {
+                        targets = new StateSet();
+                        map.put(t.input, targets);
                     }
+                    targets.addAll(targetCLosure);
                 }
             }
             if (debugDFA)
@@ -391,7 +379,7 @@ public class NFA {
     }
 
     //make dfa state for nfa state @set
-    int getDfaState(Map<StateSet, Integer> map, StateSet set, DFA dfa) {
+    int getDfaState(Map<StateSet, Integer> map, StateSet set, NFA dfa) {
         Integer state = map.get(set);
         if (state == null) {
             state = dfa.newState();
@@ -444,7 +432,7 @@ public class NFA {
             StateSet eps = getEps(state);
             if (list != null) {
                 for (Transition tr : list) {
-                    w.printf("%s -> %s [label=\"[%s]\"]\n", state, tr.target, UnicodeUtils.escapeString(getAlphabet().getRange(tr.input).toString()));
+                    w.printf("%s -> %s [label=\"[%s]\"]\n", state, tr.target, UnicodeUtils.escapeString(getAlphabet().getRegex(tr.input).toString()));
                 }
             }
             if (eps != null) {

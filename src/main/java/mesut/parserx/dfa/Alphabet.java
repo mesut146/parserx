@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-//character classes used by nfa
+//character classes used by nfa,dfa
 public class Alphabet {
     public Map<Node, Integer> map = new HashMap<>();
     int lastId = 0;
@@ -18,25 +18,14 @@ public class Alphabet {
         return map.size();
     }
 
-    public void add(RangeNode rangeNode) {
-        check(rangeNode);
-        if (!map.containsKey(rangeNode)) {
-            map.put(rangeNode, lastId++);
-        }
-    }
-
     public int addRegex(Node node) {
-        //check(node);
+        if (node.isRange()) {
+            check(node.asRange());
+        }
         if (!map.containsKey(node)) {
             map.put(node, lastId++);
         }
         return map.get(node);
-    }
-
-    public void add(List<RangeNode> rangeNodes) {
-        for (RangeNode rangeNode : rangeNodes) {
-            add(rangeNode);
-        }
     }
 
     //check if range conflicts with existing ranges
@@ -47,12 +36,11 @@ public class Alphabet {
         }
     }
 
-
-    public int getId(Node rangeNode) {
-        if (!map.containsKey(rangeNode)) {
-            throw new RuntimeException("invalid range " + rangeNode);
+    public int getId(Node node) {
+        if (map.containsKey(node)) {
+            return map.get(node);
         }
-        return map.get(rangeNode);
+        throw new RuntimeException("invalid range " + node);
     }
 
     public int getId(int ch) {
@@ -73,7 +61,7 @@ public class Alphabet {
                 return entry.getKey();
             }
         }
-        throw new RuntimeException("invalid range id: " + id);
+        throw new RuntimeException("invalid alphabet id: " + id);
     }
 
     public void update(int id, Node node) {
@@ -126,6 +114,5 @@ public class Alphabet {
             w.printf("%s -> %s\n", getRange(id), id);
         }
         w.close();
-        System.out.println("alphabet dumped to " + file);
     }
 }

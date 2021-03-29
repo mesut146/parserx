@@ -3,10 +3,7 @@ package mesut.parserx.nodes;
 import mesut.parserx.dfa.CharClass;
 import mesut.parserx.utils.UnicodeUtils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 //character set
 //e.g [a-zA-Z0-9_]
@@ -18,7 +15,7 @@ public class Bracket extends NodeList {
     public boolean debug = false;
     private int pos;
 
-    public Bracket(String str){
+    public Bracket(String str) {
         parse(str);
     }
 
@@ -35,7 +32,7 @@ public class Bracket extends NodeList {
     }
 
     public void add(char chr) {
-        add(new CharNode(chr));
+        add(RangeNode.of(chr));
     }
 
     public void parse(String str) {
@@ -71,7 +68,7 @@ public class Bracket extends NodeList {
                 add(new RangeNode(c, end));
             }
             else {
-                add(new CharNode(c));
+                add(c);
             }
         }
     }
@@ -183,7 +180,25 @@ public class Bracket extends NodeList {
         return this;
     }
 
-    void err(){
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        Bracket bracket = (Bracket) o;
+        return negate == bracket.negate;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + super.hashCode();
+        result = 31 * result + Objects.hashCode(negate);
+        return result;
+    }
+
+    void err() {
         throw new RuntimeException("Invalid character list");
     }
 
@@ -203,11 +218,11 @@ public class Bracket extends NodeList {
         if (rangeNodes == null) {
             rangeNodes = new ArrayList<>();
             for (Node node : this) {
-                if (node.isChar()) {
-                    rangeNodes.add(new RangeNode(node.asChar().chr, node.asChar().chr));
+                if (node.isRange()) {
+                    rangeNodes.add(node.asRange());
                 }
                 else {
-                    rangeNodes.add(node.asRange());
+                    throw new RuntimeException();
                 }
             }
         }
@@ -224,20 +239,5 @@ public class Bracket extends NodeList {
             getRanges();
         }
         return this;
-    }
-
-    //single char
-    public static class CharNode extends RangeNode {
-        public char chr;
-
-        public CharNode(char chr) {
-            super(chr, chr);
-            this.chr = chr;
-        }
-
-        @Override
-        public String toString() {
-            return UnicodeUtils.escape(chr);
-        }
     }
 }

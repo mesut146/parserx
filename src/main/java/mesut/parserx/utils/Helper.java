@@ -18,6 +18,10 @@ public class Helper {
         return sb.toString();
     }
 
+    public static String read(File file) throws IOException {
+        return read(new FileInputStream(file));
+    }
+
     public static void write(String data, File file) throws IOException {
         FileWriter wr = new FileWriter(file);
         wr.write(data);

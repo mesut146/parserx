@@ -1,4 +1,4 @@
-import mesut.parserx.dfa.DFA;
+
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.grammar.GParser;
 import mesut.parserx.grammar.ParseException;
@@ -48,7 +48,7 @@ public class NfaTest {
         String regex = "\"/*\" (\"x\" | \"*y\")* \"*/\"";
         Tree tree = makeTree(regex);
         NFA nfa = tree.makeNFA();
-        DFA dfa = nfa.dfa();
+        NFA dfa = nfa.dfa();
 
         nfa.dot(new FileWriter(Env.testRes + "/test-nfa.dot"));
         dfa.dot(new FileWriter(Env.testRes + "/test-dfa.dot"));
@@ -69,7 +69,7 @@ public class NfaTest {
         Tree tree = makeTree(regex);
 
         NFA nfa = tree.makeNFA();
-        DFA dfa = nfa.dfa();
+        NFA dfa = nfa.dfa();
 
         nfa.dot(new FileWriter(Env.testRes + "/test-nfa.dot"));
         dfa.dot(new FileWriter(Env.testRes + "/test-dfa.dot"));

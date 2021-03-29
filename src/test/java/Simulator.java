@@ -1,4 +1,5 @@
-import mesut.parserx.dfa.DFA;
+
+import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
 import mesut.parserx.nodes.RangeNode;
 import org.junit.Test;
@@ -13,7 +14,7 @@ public class Simulator {
     @Test
     public void dfa() {
         try {
-            DFA dfa = DFA.makeDFA(Env.getJavaLexer());
+            NFA dfa = NFA.makeDFA(Env.getJavaLexer());
 
             char[] input = Helper.read(new FileInputStream(Env.getFile2("/java/a.java"))).toCharArray();
             pos = 0;
@@ -25,7 +26,7 @@ public class Simulator {
         }
     }
 
-    void nextToken(DFA dfa, char[] input) {
+    void nextToken(NFA dfa, char[] input) {
         int curState = dfa.initial;
         StringBuilder buffer = new StringBuilder();
         while (true) {
@@ -50,7 +51,7 @@ public class Simulator {
         }
     }
 
-    private int getState(int curState, char input, DFA dfa) {
+    private int getState(int curState, char input, NFA dfa) {
         if (dfa.hasTransitions(curState)) {
             List<Transition> list = dfa.trans[curState];
             for (Transition transition : list) {

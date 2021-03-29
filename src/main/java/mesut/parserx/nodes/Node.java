@@ -60,14 +60,6 @@ public class Node {
         return (RangeNode) this;
     }
 
-    public boolean isChar() {
-        return this instanceof Bracket.CharNode;
-    }
-
-    public Bracket.CharNode asChar() {
-        return (Bracket.CharNode) this;
-    }
-
     public boolean isName() {
         return this instanceof NameNode;
     }

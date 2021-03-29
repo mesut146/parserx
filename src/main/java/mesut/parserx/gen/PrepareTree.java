@@ -18,6 +18,25 @@ public class PrepareTree extends SimpleTransformer {
         }
     }
 
+    //put back terminals as string nodes for good visuals
+    public static void revert(final Tree tree) {
+        final SimpleTransformer transformer = new SimpleTransformer() {
+            @Override
+            public Node transformName(NameNode node, Node parent) {
+                if (node.isToken) {
+                    Node rhs = tree.getToken(node.name).regex;
+                    if (rhs.isString()) {
+                        return rhs;
+                    }
+                }
+                return super.transformName(node, parent);
+            }
+        };
+        for (RuleDecl ruleDecl : tree.rules) {
+            transformer.transformRule(ruleDecl);
+        }
+    }
+
     @Override
     public Node transformName(NameNode node, Node parent) {
         if (node.isToken) {

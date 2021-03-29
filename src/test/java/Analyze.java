@@ -1,13 +1,13 @@
 import mesut.parserx.dfa.Alphabet;
-import mesut.parserx.dfa.DFA;
+import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
 
 import java.util.*;
 
 public class Analyze {
-    DFA dfa;
+    NFA dfa;
 
-    public Analyze(DFA dfa) {
+    public Analyze(NFA dfa) {
         this.dfa = dfa;
     }
 

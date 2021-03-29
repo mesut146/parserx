@@ -1,7 +1,6 @@
 package mesut.parserx.utils;
 
 import mesut.parserx.dfa.Alphabet;
-import mesut.parserx.dfa.DFA;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.nodes.StringNode;
 
@@ -18,7 +17,7 @@ public class NfaReader {
     //symbol type is string without quotes
     public static NFA read(String str) throws IOException {
         BufferedReader reader = new BufferedReader(new StringReader(str));
-        NFA nfa = new DFA(100);
+        NFA nfa = new NFA(100);
         String line;
         Alphabet alphabet = new Alphabet();
         nfa.tree.alphabet = alphabet;

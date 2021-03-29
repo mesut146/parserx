@@ -1,4 +1,4 @@
-import mesut.parserx.dfa.DFA;
+
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Template;
@@ -13,14 +13,14 @@ public class LexerGenTest {
 
     public static void generateLexer(File grammar) throws Exception {
         NFA nfa = NfaTest.makeNFA(grammar);
-        DFA dfa = DfaTest.makeDFA(nfa);
+        NFA dfa = DfaTest.makeDFA(nfa);
         String outDir;
         outDir = Env.testJava + "/gen";
         //outDir = Main.javaDir;
         generateTest(dfa, outDir);
     }
 
-    static void generateTest(DFA dfa, String outDir) throws IOException {
+    static void generateTest(NFA dfa, String outDir) throws IOException {
         LexerGenerator generator = new LexerGenerator(dfa, outDir);
         generator.setClassName("GeneratedLexer");
         generator.setPackageName("gen");
@@ -39,7 +39,7 @@ public class LexerGenTest {
     @Test
     @Ignore
     public void all() throws Exception {
-        DFA dfa = DFA.makeDFA(Env.getJavaLexer());
+        NFA dfa = NFA.makeDFA(Env.getJavaLexer());
         File dump = new File("/home/mesut/IdeaProjects/parserx/src/test/resources/java/javaLexer.txt");
         dfa.dump(new PrintWriter(dump));
         dfa.getAlphabet().dump(new File("/home/mesut/IdeaProjects/parserx/src/test/resources/java/javaLexer-alphabet.txt"));

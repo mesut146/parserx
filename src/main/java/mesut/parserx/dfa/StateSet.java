@@ -7,11 +7,7 @@ import java.util.Set;
 //nfa state set
 public class StateSet implements Iterable<Integer> {
 
-    public Set<Integer> states;
-
-    public StateSet() {
-        states = new HashSet<>();
-    }
+    public Set<Integer> states = new HashSet<>();
 
     public void addState(int state) {
         states.add(state);

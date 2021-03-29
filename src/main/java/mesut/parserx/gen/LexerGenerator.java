@@ -1,6 +1,6 @@
 package mesut.parserx.gen;
 
-import mesut.parserx.dfa.DFA;
+import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.RangeNode;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 public class LexerGenerator {
-    DFA dfa;
+    NFA dfa;
     public String outDir;
     public String className;
     String packageName;
@@ -24,7 +24,7 @@ public class LexerGenerator {
     boolean outDirAuto;
     Map<String, Integer> idMap = new HashMap<>();//name -> id
 
-    public LexerGenerator(DFA dfa, String outDir) {
+    public LexerGenerator(NFA dfa, String outDir) {
         this.dfa = dfa;
         this.outDir = outDir;
     }

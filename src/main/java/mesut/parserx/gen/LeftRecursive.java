@@ -23,7 +23,7 @@ public class LeftRecursive {
     }
 
     void handleRule(RuleDecl rule) {
-        if (startr(rule.rhs, rule.ref())) {
+        while (startr(rule.rhs, rule.ref())) {
             if (start(rule.rhs, rule.ref())) {
                 //direct
                 rule.rhs = removeDirect(rule);
@@ -198,7 +198,8 @@ public class LeftRecursive {
                     info.one = makeOr(info.one, split(right, name).one);
                 }
                 if (s1.zero == null) {
-                    if (Helper.canBeEmpty(left, tree)) {
+                    SplitInfo s2 = split(right, name);
+                    if (Helper.canBeEmpty(left, tree) && s2.zero != null) {
                         info.zero = right;
                     }
                 }
