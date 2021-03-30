@@ -2,6 +2,7 @@ package mesut.parserx.gen;
 
 import mesut.parserx.nodes.*;
 
+import javax.naming.NamingEnumeration;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,7 +31,6 @@ public class Helper {
         return set;
     }
 
-    //direct first set
     public static void first(Node node, Tree tree, boolean rec, Set<NameNode> set) {
         if (node.isName()) {
             NameNode name = node.asName();
@@ -59,6 +59,36 @@ public class Helper {
         }
         else if (node.isRegex()) {
             first(node.asRegex().node, tree, rec, set);
+        }
+    }
+
+    public static void follow(NameNode name, Tree tree, Set<NameNode> set) {
+        if (set.contains(name)) return;
+        for (RuleDecl rule : tree.rules) {
+            Node rhs = rule.rhs;
+            if (rhs.isSequence()) {
+                Sequence s = rhs.asSequence();
+                int i = s.indexOf(name);
+                if (i == -1) continue;
+                if (i < s.size() - 1) {
+                    NameNode next = (NameNode) s.get(i + 1);
+                    if (next.isToken) {
+                        //R: a A b
+                        //FO(A)=b
+                        set.add(next);
+                    }
+                    else {
+                        //R: a A B
+                        //FO(A)=FI(B)
+                        first(next, tree, true, set);
+                    }
+                }
+                else {
+                    //FO(B)=FO(A)
+                    //A: aB
+                    follow(rule.ref(), tree, set);
+                }
+            }
         }
     }
 

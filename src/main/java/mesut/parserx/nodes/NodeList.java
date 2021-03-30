@@ -45,15 +45,13 @@ public class NodeList extends Node implements Iterable<Node> {
         return sb.toString();
     }
 
-    public static <T> String join(T[] list, String del) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < list.length; i++) {
-            sb.append(list[i]);
-            if (i < list.length - 1) {
-                sb.append(del);
+    public int indexOf(Node node) {
+        for (int i = 0; i < size(); i++) {
+            if (get(i).equals(node)) {
+                return i;
             }
         }
-        return sb.toString();
+        return -1;
     }
 
     public Node last() {

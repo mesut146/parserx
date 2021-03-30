@@ -3,6 +3,7 @@ package mesut.parserx.gen;
 import mesut.parserx.nodes.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 //transform ebnf to bnf
@@ -10,8 +11,8 @@ public class EbnfToBnf {
 
     public static boolean leftRecursive = true;//make repetitions left recursive
     public static boolean expand_or = true;//separate rules for each or content
+    public static boolean combine_or = false;//exclusive expand_or
     public static boolean rhsSequence = true;//make sure rhs always sequence
-    public static boolean expand_group = false;//expand group in place instead of separate rule
     static String starSuffix = "*", plusSuffix = "+", optSuffix = "?";
     Tree tree;//in ebnf
     Tree res;//out bnf
@@ -46,9 +47,26 @@ public class EbnfToBnf {
 
     public Tree transform() {
         res = new Tree(tree);//result tree
-
+        if (combine_or && expand_or) {
+            throw new RuntimeException("expand_or and combine_or exclusive");
+        }
         for (RuleDecl decl : tree.rules) {
             transformRhs(decl);
+        }
+        if (combine_or) {
+            Map<String, OrNode> map = new HashMap<>();
+            for (RuleDecl ruleDecl : res.rules) {
+                OrNode or = map.get(ruleDecl.name);
+                if (or == null) {
+                    or = new OrNode();
+                    map.put(ruleDecl.name, or);
+                }
+                or.add(ruleDecl.rhs);
+            }
+            res.rules.clear();
+            for (Map.Entry<String, OrNode> entry : map.entrySet()) {
+                res.addRule(new RuleDecl(entry.getKey(), entry.getValue().normal()));
+            }
         }
         return res;
     }
