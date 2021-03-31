@@ -1,0 +1,29 @@
+public class $parser_class${
+  $lexer_class$ lexer;
+  int[][] table ;
+  Stack<> stack = new Stack<>();
+
+  public void parse(){
+    stack.push(S,$);
+    input = read();
+    while(!stack.isEmpty()){
+      sym = stack.peek()
+      if(sym.is(input)){
+        //write(input,sym);
+        System.out.println("matched: " + input);
+        stack.pop();
+        input = read();
+      }else{
+        System.out.println("rule: " + table[sym][input]);
+        rule = getRule(input, sym);
+        stack.pop();
+        stack.push(rule.rhs);
+      }
+    }
+  }
+
+  static class sym{
+    int id;
+    $token_class$ token;
+  }
+}

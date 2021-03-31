@@ -5,17 +5,14 @@ tree::= includeStatement*
 
 includeStatement::= "include" <STRING_LITERAL>;
 
-tokenBlock::= "token" "{" tokenList "}";
+tokenBlock::= "token" "{" tokenDecl* "}";
+skipBlock::= "skip" "{" tokenDecl* "}";
 
-skipBlock::= "skip" "{" tokenList "}";
-
-tokenList::= tokenDecl*;
-
-declSeparator::= ":" | "=" | ":=" | ":==";
+declSeparator::= ":" | "=" | ":=" | ":==" | "->";
 tokenDecl::= "#"? name declSeparator rhs;
 ruleDecl::= name declSeparator rhs;
 
-rhs::= sequence ("|" sequence)*;//aka or list
+rhs::= sequence ("|" sequence)*;
 sequence::= regex+;
 regex::= simple ("*" | "+" | "?")?
 simple::= group | ref | stringNode | bracketNode | untilNode | dotNode;
