@@ -1,6 +1,9 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.nodes.*;
+import mesut.parserx.nodes.NameNode;
+import mesut.parserx.nodes.RuleDecl;
+import mesut.parserx.nodes.Sequence;
+import mesut.parserx.nodes.Tree;
 
 import java.util.*;
 
@@ -8,7 +11,6 @@ import java.util.*;
 public class Lr1ItemSet extends LrItemSet {
 
     public static boolean lalr = false;
-    Set<LrItem> done = new HashSet<>();
 
     public Lr1ItemSet(List<LrItem> kernel, Tree tree) {
         this.kernel.addAll(kernel);
@@ -17,16 +19,6 @@ public class Lr1ItemSet extends LrItemSet {
 
     public Lr1ItemSet(LrItem kernel, Tree tree) {
         this(new ArrayList<>(Collections.singletonList(kernel)), tree);
-    }
-
-    public List<LrItem> getAll() {
-        List<LrItem> list = new ArrayList<>();
-        for (LrItem item : all) {
-            if (!done.contains(item)) {
-                list.add(item);
-            }
-        }
-        return list;
     }
 
     @Override

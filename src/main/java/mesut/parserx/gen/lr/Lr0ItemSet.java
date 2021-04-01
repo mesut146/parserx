@@ -30,6 +30,11 @@ public class Lr0ItemSet extends LrItemSet {
         }
     }
 
+    @Override
+    public void closure(LrItem it) {
+
+    }
+
     public void closure(NameNode node, LrItem it) {
         if (!node.isToken) {
             List<RuleDecl> ruleDecl = tree.getRules(node.name);

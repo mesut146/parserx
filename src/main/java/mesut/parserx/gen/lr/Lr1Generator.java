@@ -1,26 +1,14 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.gen.EbnfToBnf;
 import mesut.parserx.gen.LexerGenerator;
-import mesut.parserx.gen.PrepareTree;
-import mesut.parserx.nodes.*;
+import mesut.parserx.nodes.NameNode;
+import mesut.parserx.nodes.Tree;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Queue;
 
 
-public class Lr1Generator {
-    public static NameNode dollar = Lr0Generator.dollar;
-    Tree tree;
-    String dir;
-    LexerGenerator lexerGenerator;
-    LrDFA<Lr1ItemSet> table = new LrDFA<>();
-    RuleDecl start;
+public class Lr1Generator extends LRGen<Lr1ItemSet> {
 
     public Lr1Generator(LexerGenerator lexerGenerator, String dir, Tree tree) {
         this.lexerGenerator = lexerGenerator;
@@ -28,55 +16,16 @@ public class Lr1Generator {
         this.tree = tree;
     }
 
-    public void generate() {
-        check();
-
-        Queue<Lr1ItemSet> queue = new LinkedList<>();
-
-        LrItem first = new LrItem(start, 0);
+    @Override
+    void prepare() {
+        super.prepare();
         first.lookAhead.add(dollar);
-        Lr1ItemSet firstSet = new Lr1ItemSet(first, tree);
-        table.addId(firstSet);
-        queue.add(firstSet);
+    }
 
-        while (!queue.isEmpty()) {
-            Lr1ItemSet curSet = queue.poll();
-            for (LrItem from : curSet.getAll()) {
-                curSet.done.add(from);
-                NameNode symbol = from.getDotNode();
-                if (symbol == null) continue;
-                //goto
-                LrItem toFirst = new LrItem(from, from.dotPos + 1);
-                Lr1ItemSet targetSet = getSet(toFirst);
-                if (targetSet == null) {
-                    targetSet = getOldSet(curSet, symbol);
-                    if (targetSet == null) {
-                        targetSet = new Lr1ItemSet(toFirst, tree);
-                        table.addId(targetSet);
-                        queue.add(targetSet);
-                        table.addTransition(curSet, targetSet, symbol);
-                    }
-                    else {
-                        System.out.println("merge");
-                        //merge
-                        targetSet.addItem(toFirst);
-                        /*targetSet.all.add(toFirst);
-                        targetSet.kernel.add(toFirst);
-                        targetSet.closure(toFirst);*/
-                            /*targetSet = new Lr1ItemSet(toFirst, tree);
-                            table.addId(targetSet);*/
-                        queue.add(targetSet);
-                    }
-                    System.out.printf("%s %s to %s\n", symbol, printSet(curSet), printSet(targetSet));
-                }
-                else {
-                    table.addTransition(curSet, targetSet, symbol);
-                }
-                //throw new RuntimeException();
-            }//for
-        }
 
-        //merge();
+    @Override
+    public Lr1ItemSet makeSet(LrItem item) {
+        return new Lr1ItemSet(item, tree);
     }
 
     //merge same kernel states with different lookaheads
@@ -110,56 +59,9 @@ public class Lr1Generator {
 
     }
 
-    public void writeDot(PrintWriter dotWriter) {
-        if (dotWriter == null) {
-            try {
-                dotWriter = new PrintWriter(new File(dir, tree.file.getName() + ".dot"));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                return;
-            }
-        }
-        DotWriter.writeDot(table, dotWriter);
-    }
 
     public void makeTable() {
         DotWriter.lr1Table(this);
     }
 
-    //get itemSet that contains item
-    Lr1ItemSet getSet(LrItem kernel) {
-        for (Lr1ItemSet itemSet : table.itemSets) {
-            for (LrItem item : itemSet.kernel) {
-                if (item.equals(kernel)) {
-                    return itemSet;
-                }
-            }
-        }
-        return null;
-    }
-
-    //if there exist another transition from this
-    Lr1ItemSet getOldSet(Lr1ItemSet from, NameNode symbol) {
-        for (LrTransition<Lr1ItemSet> transition : table.getTrans(from)) {
-            if (transition.from.equals(from) && transition.symbol.equals(symbol)) {
-                return transition.to;
-            }
-        }
-        return null;
-    }
-
-    String printSet(Lr1ItemSet set) {
-        return String.format("(%d)%s", table.getId(set), set.kernel);
-    }
-
-    private void check() {
-        PrepareTree.checkReferences(tree);
-        EbnfToBnf.expand_or = true;
-        EbnfToBnf.rhsSequence = true;
-        EbnfToBnf transformer = new EbnfToBnf(tree);
-        tree = transformer.transform();
-        PrepareTree.checkReferences(tree);
-
-        start = Lr0Generator.makeStart(tree);
-    }
 }

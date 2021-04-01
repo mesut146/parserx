@@ -4,14 +4,12 @@ import mesut.parserx.nodes.NameNode;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Tree;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
-public class LrItemSet {
+public abstract class LrItemSet {
     public List<LrItem> kernel = new ArrayList<>();
     public List<LrItem> all = new ArrayList<>();
+    public Set<LrItem> done = new HashSet<>();
     Tree tree;
 
     public LrItemSet() {
@@ -33,6 +31,16 @@ public class LrItemSet {
         }
     }
 
+    public LrItem getItem() {
+        for (LrItem item : all) {
+            if (!done.contains(item)) {
+                done.add(item);
+                return item;
+            }
+        }
+        return null;
+    }
+
     public boolean hasReduce() {
         return !getReduce().isEmpty();
     }
@@ -47,16 +55,11 @@ public class LrItemSet {
         return list;
     }
 
-    public void closure() {
-    }
+    public abstract void closure();
 
-    public void closure(LrItem it) {
+    public abstract void closure(LrItem it);
 
-    }
-
-    public void closure(NameNode node, LrItem sender) {
-
-    }
+    public abstract void closure(NameNode node, LrItem sender);
 
     @Override
     public String toString() {
