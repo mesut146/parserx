@@ -10,7 +10,7 @@ import java.util.*;
 
 public class Lr1ItemSet extends LrItemSet {
 
-    public static boolean lalr = false;
+    public static boolean lalr = true;
 
     public Lr1ItemSet(List<LrItem> kernel, Tree tree) {
         this.kernel.addAll(kernel);

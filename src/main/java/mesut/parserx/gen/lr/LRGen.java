@@ -21,6 +21,9 @@ public abstract class LRGen<T extends LrItemSet> {
     LrItem first;
 
     public static RuleDecl makeStart(Tree tree) {
+        if (tree.start == null) {
+            throw new RuntimeException("no start rule is defined");
+        }
         RuleDecl start = tree.getRule(tree.start.name);
         Node rhs = start.rhs;
         if (!rhs.isName()) {

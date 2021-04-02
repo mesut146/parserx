@@ -12,6 +12,7 @@ public class Helper {
         return first(rule.rhs, rule.tree, false).contains(new NameNode(name, false));
     }
 
+    //extract epsilon from or
     public static Node hasEps(OrNode or) {
         OrNode res = new OrNode();
         for (Node node : or) {
@@ -20,6 +21,7 @@ public class Helper {
             }
         }
         if (res.size() == or.size()) {
+            //no epsilon
             return null;
         }
         return res.normal();

@@ -3,7 +3,9 @@ package mesut.parserx.dfa;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.UnicodeUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.*;
 
 @SuppressWarnings("unchecked")
@@ -411,6 +413,39 @@ public class NFA {
             res.addAll(closure(state));
         }
         return res;
+    }
+
+    public List<Transition> get(int state){
+        if (hasTransitions(state)){
+            return trans[state];
+        }
+        return new ArrayList<>();
+    }
+
+    public Iterable<Integer> it() {
+        return new Iterable<Integer>() {
+            @Override
+            public Iterator<Integer> iterator() {
+                return new Iterator<Integer>() {
+                    int cur = initial;
+
+                    @Override
+                    public boolean hasNext() {
+                        return cur <= lastState;
+                    }
+
+                    @Override
+                    public Integer next() {
+                        cur++;
+                        return cur - 1;
+                    }
+
+                    @Override
+                    public void remove() {
+                    }
+                };
+            }
+        };
     }
 
     public void dot(Writer writer) {

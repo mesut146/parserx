@@ -8,13 +8,6 @@ import java.util.List;
 
 public class Lr0ItemSet extends LrItemSet {
 
-    public Lr0ItemSet() {
-    }
-
-    public Lr0ItemSet(List<LrItem> kernel, Tree tree) {
-        super(kernel, tree);
-    }
-
     public Lr0ItemSet(LrItem kernel, Tree tree) {
         super(kernel, tree);
     }

@@ -29,6 +29,9 @@ public class SimpleTransformer {
         else if (node.isString()) {
             return transformString(node.asString(), parent);
         }
+        else if (node.isEmpty()) {
+            return transformEmpty((EmptyNode) node, parent);
+        }
         return node;
     }
 
@@ -65,6 +68,10 @@ public class SimpleTransformer {
     }
 
     public Node transformName(NameNode node, Node parent) {
+        return node;
+    }
+
+    public Node transformEmpty(EmptyNode node, Node parent) {
         return node;
     }
 }

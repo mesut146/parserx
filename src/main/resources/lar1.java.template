@@ -1,7 +1,7 @@
 import java.util.*;
 
 public class $parser_class${
-    Stack<Symbol> stack=new Stack<>();
+    Stack<Symbol> stack = new Stack<>();
     $lexer_class$ lexer;
     static int ACCEPT = 0;
     static int SHIFT = 1;

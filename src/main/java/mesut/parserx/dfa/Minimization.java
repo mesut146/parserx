@@ -79,6 +79,28 @@ public class Minimization {
         }
     }
 
+    public void removeDead(NFA dfa) {
+        for (int i = dfa.initial; i <= dfa.lastState; i++) {
+            if (!dfa.isAccepting(i) && !dfa.hasTransitions(i)) {
+                boolean dead = !dfa.hasTransitions(i);
+                if (dfa.hasTransitions(i)) {
+                    for (Transition tr : dfa.get(i)) {
+                        if (tr.target != i) {
+                            dead = false;
+                            break;
+                        }
+                    }
+                }
+                if (dead) {
+                    System.out.println("removed dead state: " + i);
+                    dfa.trans[i] = null;
+                    removeDead(dfa);
+                    return;
+                }
+            }
+        }
+    }
+
     public NFA Hopcroft(NFA dfa) {
         List<StateSet> P = new ArrayList<>();
         List<StateSet> W = new ArrayList<>();
