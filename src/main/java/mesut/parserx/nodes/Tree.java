@@ -1,15 +1,17 @@
 package mesut.parserx.nodes;
 
 import mesut.parserx.dfa.Alphabet;
-import mesut.parserx.dfa.CharClass;
 import mesut.parserx.dfa.NFA;
+import mesut.parserx.dfa.NFABuilder;
 import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.grammar.GParser;
+import mesut.parserx.utils.Helper;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.IOException;
 import java.io.StringReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 //the grammar file for both lexer and parser
 public class Tree {
@@ -18,7 +20,7 @@ public class Tree {
     public NameNode start;
     public File file = null;
     public Alphabet alphabet = new Alphabet();
-    List<TokenDecl> tokens;
+    public List<TokenDecl> tokens;
     List<File> includes;
 
     public Tree() {
@@ -37,14 +39,14 @@ public class Tree {
 
     public static Tree makeTree(File path) {
         try {
-            GParser parser = new GParser(new FileReader(path));
-            return parser.tree(path).prepare();
-        } catch (Exception e) {
+            return makeTree(Helper.read(path));
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static Tree makeTree(String grammar) {
+        grammar += " ";
         try {
             GParser parser = new GParser(new StringReader(grammar));
             return parser.tree(null).prepare();
@@ -139,15 +141,7 @@ public class Tree {
 
     //construct NFA from this grammar file
     public NFA makeNFA() {
-        CharClass.makeDistinctRanges(this);
-        NFA nfa = new NFA(100);
-        nfa.tree = this;
-        for (TokenDecl decl : tokens) {
-            if (!decl.fragment) {
-                nfa.addRegex(decl);
-            }
-        }
-        return nfa;
+        return NFABuilder.build(this);
     }
 
     void printTokens(StringBuilder sb, List<TokenDecl> list, String title) {

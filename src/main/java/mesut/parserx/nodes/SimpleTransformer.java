@@ -7,6 +7,11 @@ public class SimpleTransformer {
         return decl;
     }
 
+    public TokenDecl transformToken(TokenDecl decl) {
+        decl.regex = transformNode(decl.regex, decl);
+        return decl;
+    }
+
     public Node transformNode(Node node, Node parent) {
         if (node.isGroup()) {
             return transformGroup(node.asGroup(), parent);

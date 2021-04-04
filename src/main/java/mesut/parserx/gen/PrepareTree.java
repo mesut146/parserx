@@ -1,10 +1,10 @@
 package mesut.parserx.gen;
 
 import mesut.parserx.nodes.*;
-import mesut.parserx.nodes.RuleDecl;
 
 public class PrepareTree extends SimpleTransformer {
     Tree tree;
+    boolean inToken;
 
     public PrepareTree(Tree tree) {
         this.tree = tree;
@@ -13,6 +13,11 @@ public class PrepareTree extends SimpleTransformer {
     //check rule , token, string references
     public static void checkReferences(Tree tree) {
         PrepareTree prepareTree = new PrepareTree(tree);
+        prepareTree.inToken = true;
+        for (TokenDecl decl : tree.tokens) {
+            prepareTree.transformToken(decl);
+        }
+        prepareTree.inToken = false;
         for (RuleDecl rule : tree.rules) {
             prepareTree.transformRule(rule);
         }
@@ -50,7 +55,7 @@ public class PrepareTree extends SimpleTransformer {
             }
             else {
                 if (tree.getToken(node.name) == null) {
-                    throw new RuntimeException("invalid reference: " + node.name);
+                    throw new RuntimeException("invalid reference: " + node.name + " in " + parent);
                 }
                 else {
                     node.isToken = true;
@@ -66,6 +71,9 @@ public class PrepareTree extends SimpleTransformer {
         TokenDecl decl = tree.getTokenByValue(val);
         if (decl == null) {
             throw new RuntimeException("unknown string token: " + val);
+        }
+        if (inToken) {
+            return node;
         }
         //replace
         return decl.makeReference();

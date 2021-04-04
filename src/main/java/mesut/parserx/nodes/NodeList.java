@@ -65,8 +65,7 @@ public class NodeList extends Node implements Iterable<Node> {
     public void add(Node node) {
         list.add(node);
     }
-
-
+    
     public <T extends Node> void addAll(List<T> other) {
         list.addAll(other);
     }

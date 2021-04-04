@@ -57,7 +57,7 @@ public class NfaReader {
             isFinal = 1;
             str = str.substring(1, str.length() - 1);
         }
-        else if (str.startsWith("%")) {
+        else if ("iI%".indexOf(str.charAt(0)) != -1) {
             isInitial = 1;
             str = str.substring(1);
         }
