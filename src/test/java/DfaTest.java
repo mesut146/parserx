@@ -13,48 +13,26 @@ import java.io.PrintWriter;
 
 public class DfaTest {
 
-    static NFA makeDFA(NFA nfa) {
-        System.out.println("-----DFA-----");
-        NFA dfa = nfa.dfa();
-        System.out.println("total dfa states=" + dfa.lastState);
-        //dfa.dump("");
-        return dfa;
-    }
-
-    public static NFA makeDFA(File grammar) throws IOException {
-        NFA nfa = NfaTest.makeNFA(grammar);
-        NFA dfa = makeDFA(nfa);
-
-        nfa.dot(new FileWriter(grammar.getAbsolutePath() + "-nfa.dot"));
-        dfa.dot(new FileWriter(grammar.getAbsolutePath() + "-dfa.dot"));
-        return dfa;
-    }
-
-    @Test
-    @Ignore
-    public void javaLexer() throws Exception {
-        NFA dfa = makeDFA(Env.getFile2("/javaLexer.g"));
-        dfa.dump(null);
-    }
-
     @Test
     public void hopcroft() throws Exception {
         //File file = Env.getResFile("fsm/dfa-min.dfa");
-        File file = Env.getResFile("fsm/dfa2.dfa");
+        File file = Env.getResFile("min/dfa2.dfa");
         NFA dfa = NfaReader.read(Helper.read(file));
-        Minimization.removeUnreachable(dfa);
-        dfa = new Minimization().Hopcroft(dfa);
+        //Minimization.removeUnreachable(dfa);
+        //dfa = Minimization.optimize(dfa);
+        dfa=Minimization.Hopcroft(dfa);
         dfa.dump(new PrintWriter(System.out));
+        dfa.dot(new FileWriter(Env.dotFile("dfa1")));
     }
 
     @Test
     public void minimizeMy() throws Exception {
-        File file = Env.getResFile("fsm/dfa-min.dfa");
+        File file = Env.getResFile("min/dfa-min.dfa");
         //File file = Env.getResFile("fsm/dfa2.dfa");
         NFA dfa = NfaReader.read(Helper.read(file));
         Minimization.removeUnreachable(dfa);
         Minimization.removeDead(dfa);
-        new Minimization().optimize(dfa);
+        Minimization.optimize(dfa);
         //dfa.dump(new PrintWriter(System.out));
     }
 
@@ -64,10 +42,11 @@ public class DfaTest {
         System.out.println("before " + Minimization.numOfStates(dfa));
         Minimization.removeUnreachable(dfa);
         Minimization.removeDead(dfa);
-        //dfa = new Minimization().Hopcroft(dfa);
-        dfa = new Minimization().optimize(dfa);
+        //dfa = Minimization.Hopcroft(dfa);
+        //dfa = Minimization.optimize(dfa);
         dfa = Minimization.combineAlphabet(dfa);
         System.out.println("after " + Minimization.numOfStates(dfa));
+        dfa.dump();
         dfa.dot(new FileWriter(Env.dotFile("dfa")));
     }
 
@@ -75,7 +54,9 @@ public class DfaTest {
     public void name() throws Exception {
         Tree tree = Tree.makeTree(Env.getResFile("min/a.g"));
         NFA dfa = tree.makeNFA().dfa();
-        dfa.dot(new FileWriter(Env.dotFile("dfa")));
+        //dfa = Minimization.Hopcroft(dfa);
+        dfa = Minimization.optimize(dfa);
+        dfa.dot(new FileWriter(Env.dotFile("dfa1")));
         dfa.dump(new PrintWriter(System.out));
     }
 }

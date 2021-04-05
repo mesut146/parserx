@@ -166,7 +166,7 @@ public class RegexBuilder {
             for (int target : map.keySet()) {
                 Node or = map.get(target).normal();
                 if (or.isEmpty()) {
-                    list.add(Transition.epsilon(state, target));
+                    list.add(new Transition(state, target));
                 }
                 else {
                     list.add(new Transition(state, target, alphabet.addRegex(or)));

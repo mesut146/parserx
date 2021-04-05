@@ -80,7 +80,7 @@ public class UnicodeUtils {
 
     //convert escaped string to unescaped
     //e.g "a\tb\sc" to "a    b c"
-    public static String fromEscaped(String str) throws ParseException {
+    public static String fromEscaped(String str){
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < str.length(); i++) {
             char chr = str.charAt(i);

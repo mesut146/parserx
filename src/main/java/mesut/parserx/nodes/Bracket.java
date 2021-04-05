@@ -148,6 +148,7 @@ public class Bracket extends NodeList {
 
     //merge neighbor ranges
     List<RangeNode> mergeRanges(List<RangeNode> ranges) {
+        sort(ranges);
         List<RangeNode> res = new ArrayList<>();
         RangeNode cur = null;
         RangeNode next;

@@ -1,19 +1,20 @@
-
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Template;
+import mesut.parserx.utils.UnicodeUtils;
 import org.junit.Ignore;
 import org.junit.Test;
-import mesut.parserx.utils.UnicodeUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 @Ignore
 public class LexerGenTest {
 
     public static void generateLexer(File grammar) throws Exception {
-        NFA nfa = NfaTest.makeNFA(grammar);
-        NFA dfa = DfaTest.makeDFA(nfa);
+        NFA nfa = NFA.makeNFA(grammar);
+        NFA dfa = NFA.makeDFA(grammar);
         String outDir;
         outDir = Env.testJava + "/gen";
         //outDir = Main.javaDir;

@@ -67,13 +67,11 @@ public class PrepareTree extends SimpleTransformer {
 
     @Override
     public Node transformString(StringNode node, Node parent) {
+        if (inToken) return node;
         String val = node.value;
         TokenDecl decl = tree.getTokenByValue(val);
         if (decl == null) {
-            throw new RuntimeException("unknown string token: " + val);
-        }
-        if (inToken) {
-            return node;
+            throw new RuntimeException("unknown string token: " + val + " in " + parent);
         }
         //replace
         return decl.makeReference();

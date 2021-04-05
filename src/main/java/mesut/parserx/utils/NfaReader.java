@@ -22,7 +22,8 @@ public class NfaReader {
         Alphabet alphabet = new Alphabet();
         nfa.tree.alphabet = alphabet;
         while ((line = reader.readLine()) != null) {
-            if (line.trim().isEmpty()) {
+            line = line.trim();
+            if (line.isEmpty() || line.startsWith("//")) {
                 continue;
             }
             int arrow = line.indexOf("->");

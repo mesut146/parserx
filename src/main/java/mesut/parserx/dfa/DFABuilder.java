@@ -21,36 +21,39 @@ public class DFABuilder {
         dfa = new NFA(nfa.trans.length * 2);
         dfa.tree = nfa.tree;
 
-        Map<StateSet, Integer> dfaStateMap = new HashMap<>();//state set -> dfa state
+        //nfa state set -> dfa state
+        Map<StateSet, Integer> dfaStateMap = new HashMap<>();
         Queue<StateSet> openStates = new LinkedList<>();
         Set<StateSet> processed = new HashSet<>();
         openStates.add(closure(nfa.initial));
         dfa.lastState = -1;
 
         while (!openStates.isEmpty()) {
-            StateSet state = openStates.poll();//current nfa state set
-            StateSet closure = closure(state);//1,2,3
-            processed.add(state);
+            StateSet curSet = openStates.poll();//current nfa state set
+            StateSet closure = closure(curSet);//1,2,3
+            processed.add(curSet);
 
             //get corresponding dfa state
             int dfaState = getDfaState(dfaStateMap, closure, dfa);
-            if (debugDFA)
-                System.out.printf("Closure(%s)=%s dfa=%d\n", state, closure, dfaState);
-            Map<Integer, StateSet> map = new HashMap<>();//input -> target states from state
-            //find inputs and target states from state
+            if (debugDFA) {
+                System.out.printf("Closure(%s)=%s dfa=%d\n", curSet, closure, dfaState);
+            }
+            //input -> target state set
+            Map<Integer, StateSet> map = new HashMap<>();
+            //find transitions from closure
             for (int epState : closure) {
                 for (Transition t : nfa.get(epState)) {
-                    StateSet targetClosure = closure(t.target);
+                    if (t.epsilon) continue;
                     StateSet targets = map.get(t.input);//we can cache these
                     if (targets == null) {
                         targets = new StateSet();
                         map.put(t.input, targets);
                     }
-                    targets.addAll(targetClosure);
+                    targets.addAll(closure(t.target));
                 }
             }
             if (debugDFA)
-                System.out.printf("map(%s)=%s\n", state, map);
+                System.out.printf("map(%s)=%s\n", curSet, map);
             //make transition for each input
             for (int input : map.keySet()) {
                 StateSet targets = map.get(input);

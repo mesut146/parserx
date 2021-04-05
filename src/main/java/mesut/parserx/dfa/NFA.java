@@ -37,6 +37,10 @@ public class NFA {
         return Tree.makeTree(path).makeNFA().dfa();
     }
 
+    public static NFA makeNFA(File path) {
+        return Tree.makeTree(path).makeNFA();
+    }
+
     public NFA dfa() {
         return new DFABuilder(this).dfa();
     }
@@ -48,14 +52,10 @@ public class NFA {
         int max = state * 2;
         int len = trans.length;
 
-        boolean[] newAccepting = new boolean[max];
-        boolean[] newSkip = new boolean[max];
-        List<Transition>[] newTrans = new List[max];
-        String[] newNames = new String[max];
-        accepting = expand(accepting, newAccepting, len);
-        trans = expand(trans, newTrans, len);
-        isSkip = expand(isSkip, newSkip, len);
-        names = expand(names, newNames, len);
+        accepting = expand(accepting, new boolean[max], len);
+        trans = expand(trans, new List[max], len);
+        isSkip = expand(isSkip, new boolean[max], len);
+        names = expand(names, new String[max], len);
     }
 
     <T> T expand(Object src, Object target, int len) {
@@ -66,11 +66,9 @@ public class NFA {
     //epsilon transitions from a state
     StateSet getEps(int state) {
         StateSet stateSet = new StateSet();
-        if (hasTransitions(state)) {
-            for (Transition tr : trans[state]) {
-                if (tr.epsilon) {
-                    stateSet.addState(tr.target);
-                }
+        for (Transition tr : get(state)) {
+            if (tr.epsilon) {
+                stateSet.addState(tr.target);
             }
         }
         return stateSet;
@@ -99,8 +97,7 @@ public class NFA {
 
     private void add(Transition tr) {
         expand(Math.max(tr.state, tr.target));
-        List<Transition> arr;
-        arr = trans[tr.state];
+        List<Transition> arr = trans[tr.state];
         if (arr == null) {
             arr = new ArrayList<>();
             trans[tr.state] = arr;
@@ -127,7 +124,7 @@ public class NFA {
 
     public void addEpsilon(int state, int target) {
         if (!getEps(state).contains(target)) {
-            add(Transition.epsilon(state, target));
+            add(new Transition(state, target));
         }
     }
 
@@ -148,6 +145,10 @@ public class NFA {
 
     public int newState() {
         return ++lastState;
+    }
+
+    public void dump() {
+        dump(new PrintWriter(System.out));
     }
 
     public void dump(PrintWriter w) {
@@ -195,7 +196,7 @@ public class NFA {
         return "S" + st;
     }
 
-    boolean isAccepting(StateSet set) {
+    public boolean isAccepting(StateSet set) {
         for (int state : set) {
             if (isAccepting(state)) {
                 return true;
@@ -204,7 +205,7 @@ public class NFA {
         return false;
     }
 
-    boolean isSkip(StateSet set) {
+    public boolean isSkip(StateSet set) {
         for (int state : set) {
             if (isSkip[state]) {
                 return true;
@@ -279,6 +280,7 @@ public class NFA {
         w.println("rankdir = LR");
         w.printf("%d [color=%s]\n", initial, initialColor);
         for (int state = 0; state <= lastState; state++) {
+            if (isDead(state)) continue;
             if (isAccepting(state)) {
                 w.printf("%d [shape = doublecircle color=%s xlabel=\"%s\"]\n", state, finalColor, names[state]);
             }
