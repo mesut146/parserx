@@ -9,7 +9,6 @@ public class NameNode extends Node {
     public static boolean tokenBrace = false;
     public String name;
     public boolean isToken;//if we reference to a token
-    public String label;
 
     public NameNode(String name) {
         this.name = name;
@@ -33,7 +32,7 @@ public class NameNode extends Node {
         else {
             s = name;
         }
-        return label == null ? s : s + ":" + label;
+        return varString() + s;
     }
 
     @Override

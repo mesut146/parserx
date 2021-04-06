@@ -1,5 +1,6 @@
 package mesut.parserx.dfa;
 
+import mesut.parserx.gen.PrepareLexer;
 import mesut.parserx.nodes.*;
 
 public class NFABuilder {
@@ -15,6 +16,7 @@ public class NFABuilder {
     }
 
     public NFA build() {
+        tree = new PrepareLexer(tree).prepare();
         CharClass.makeDistinctRanges(tree);
         nfa = new NFA(100);
         nfa.tree = tree;

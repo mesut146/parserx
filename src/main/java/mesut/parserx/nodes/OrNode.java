@@ -1,5 +1,6 @@
 package mesut.parserx.nodes;
 
+import java.util.Iterator;
 import java.util.List;
 
 // rule1 | rule2 | rule3...
@@ -13,14 +14,20 @@ public class OrNode extends NodeList {
         super(args);
     }
 
-    //print with bars
-    String printNormal() {
-        return NodeList.join(list, " | ");
-    }
-
     @Override
     public String toString() {
-        return printNormal();
+        StringBuilder sb = new StringBuilder();
+        for (Iterator<Node> it = list.iterator(); it.hasNext(); ) {
+            Node node = it.next();
+            sb.append(node);
+            if (node.label != null) {
+                sb.append(" #").append(node.label);
+            }
+            if (it.hasNext()) {
+                sb.append(" | ");
+            }
+        }
+        return sb.toString();
     }
 
     public Node normal() {

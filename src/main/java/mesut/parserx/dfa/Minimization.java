@@ -125,19 +125,28 @@ public class Minimization {
     }
 
     static List<StateSet> group(NFA dfa) {
-        StateSet acc = new StateSet();
+        List<StateSet> list = new ArrayList<>();
         StateSet noacc = new StateSet();
+        Map<String, StateSet> names = new HashMap<>();
         for (int s = dfa.initial; s <= dfa.lastState; s++) {
             if (dfa.isDead(s)) continue;
             if (dfa.isAccepting(s)) {
-                acc.addState(s);
+                if (names.containsKey(dfa.names[s])) {
+                    //group same token states
+                    names.get(dfa.names[s]).addState(s);
+                }
+                else {
+                    //each final state represents a different token so they can't be merged
+                    StateSet acc = new StateSet();
+                    acc.addState(s);
+                    list.add(acc);
+                    names.put(dfa.names[s], acc);
+                }
             }
             else {
                 noacc.addState(s);
             }
         }
-        List<StateSet> list = new ArrayList<>();
-        list.add(acc);
         list.add(noacc);
         return list;
     }
@@ -145,23 +154,26 @@ public class Minimization {
     public static NFA optimize(NFA dfa) {
         List<StateSet> P = group(dfa);
         List<StateSet> done = new ArrayList<>();
+        List<StateSet> all = new ArrayList<>(P);
         while (!P.isEmpty()) {
             StateSet set = P.get(0);
             List<Integer> list = new ArrayList<>(set.states);
             //get a pair
             boolean changed = false;
             main:
+            //if any state pair is distinguishable then split
             for (int i = 0; i < list.size(); i++) {
                 for (int j = i + 1; j < list.size(); j++) {
                     int q1 = list.get(i);
                     int q2 = list.get(j);
-                    if (dist(q1, q2, P, dfa)) {
+                    if (dist(q1, q2, all, dfa)) {
                         //split
                         StateSet s = new StateSet();
                         s.addState(q2);
                         set.remove(q2);
                         P.add(s);
-                        System.out.println(q1 + " " + q2);
+                        all.add(s);
+                        //System.out.println(q1 + " " + q2);
                         changed = true;
                         break main;
                     }

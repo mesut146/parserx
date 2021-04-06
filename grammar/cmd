@@ -3,5 +3,5 @@
 dir=$(dirname $0)
 cc="${dir}/javacc-7.0.5.jar"
 grammar="${dir}/parserx.jj"
-out="${dir}/../src/main/java/grammar"
+out="${dir}/../src/main/java/mesut/parserx/grammar"
 java -cp $cc javacc -OUTPUT_DIRECTORY=${out} -FORCE_LA_CHECK=true $grammar

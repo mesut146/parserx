@@ -26,9 +26,9 @@ public class StringNode extends Node {
     @Override
     public String toString() {
         if (string_quote) {
-            return "\"" + UnicodeUtils.escapeString(value) + "\"";
+            return varString() + "\"" + UnicodeUtils.escapeString(value) + "\"";
         }
-        return value;
+        return varString() + value;
     }
 
     @Override

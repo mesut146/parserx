@@ -1,7 +1,5 @@
 package mesut.parserx.utils;
 
-import mesut.parserx.grammar.ParseException;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,7 +16,7 @@ public class UnicodeUtils {
         escapeMap.put('\'', '\'');
         escapeMap.put('"', '\"');
         escapeMap.put('\\', '\\');
-        escapeMap.put('s', ' ');//space
+        escapeMap.put('s', ' ');
         //meta chars
         escapeMap.put('*', '*');
         escapeMap.put('+', '+');
@@ -33,7 +31,7 @@ public class UnicodeUtils {
     }
 
     //get escaped char to real char
-    public static char get(char c){
+    public static char get(char c) {
         if (escapeMap.containsKey(c)) {
             return escapeMap.get(c);
         }
@@ -80,7 +78,7 @@ public class UnicodeUtils {
 
     //convert escaped string to unescaped
     //e.g "a\tb\sc" to "a    b c"
-    public static String fromEscaped(String str){
+    public static String fromEscaped(String str) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < str.length(); i++) {
             char chr = str.charAt(i);
@@ -117,6 +115,7 @@ public class UnicodeUtils {
     }
 
     public static boolean isPrintableChar(char c) {
+        if (Character.isWhitespace(c)) return false;
         Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
         return (!Character.isISOControl(c)) &&
                 block != null &&

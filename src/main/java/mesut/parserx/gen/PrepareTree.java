@@ -4,7 +4,6 @@ import mesut.parserx.nodes.*;
 
 public class PrepareTree extends SimpleTransformer {
     Tree tree;
-    boolean inToken;
 
     public PrepareTree(Tree tree) {
         this.tree = tree;
@@ -13,11 +12,6 @@ public class PrepareTree extends SimpleTransformer {
     //check rule , token, string references
     public static void checkReferences(Tree tree) {
         PrepareTree prepareTree = new PrepareTree(tree);
-        prepareTree.inToken = true;
-        for (TokenDecl decl : tree.tokens) {
-            prepareTree.transformToken(decl);
-        }
-        prepareTree.inToken = false;
         for (RuleDecl rule : tree.rules) {
             prepareTree.transformRule(rule);
         }
@@ -44,30 +38,23 @@ public class PrepareTree extends SimpleTransformer {
 
     @Override
     public Node transformName(NameNode node, Node parent) {
-        if (node.isToken) {
-            if (tree.getToken(node.name) == null) {
-                throw new RuntimeException("invalid token: " + node.name);
-            }
+        if (tree.hasRule(node.name)) {
+            node.isToken = false;
         }
         else {
-            if (tree.hasRule(node.name)) {
-                node.isToken = false;
+            if (tree.getToken(node.name) == null) {
+                throw new RuntimeException("invalid reference: " + node.name + " in " + parent);
             }
             else {
-                if (tree.getToken(node.name) == null) {
-                    throw new RuntimeException("invalid reference: " + node.name + " in " + parent);
-                }
-                else {
-                    node.isToken = true;
-                }
+                node.isToken = true;
             }
         }
+
         return node;
     }
 
     @Override
     public Node transformString(StringNode node, Node parent) {
-        if (inToken) return node;
         String val = node.value;
         TokenDecl decl = tree.getTokenByValue(val);
         if (decl == null) {

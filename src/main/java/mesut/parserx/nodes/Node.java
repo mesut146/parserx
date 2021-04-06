@@ -3,6 +3,9 @@ package mesut.parserx.nodes;
 //base class used in grammar file
 public class Node {
 
+    public String name;//variable name
+    public String label;//name in alternation
+
     public boolean isSequence() {
         return this instanceof Sequence;
     }
@@ -85,7 +88,12 @@ public class Node {
         return this instanceof DotNode;
     }
 
-    public DotNode asDot(){
+    public DotNode asDot() {
         return (DotNode) this;
+    }
+
+    protected String varString() {
+        if (name != null) return name + " = ";
+        return "";
     }
 }

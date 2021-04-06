@@ -95,7 +95,7 @@ TOKEN:
 
 TOKEN:
 {
-  <IDENT: <CHAR> ( <CHAR> | ["0"-"9","_"])* >
+  <IDENT: (<CHAR> | "_") ( <CHAR> | ["0"-"9","_"])* >
 | <#CHAR: ["a"-"z","A"-"Z"]>
 | <#DIGIT: ["0"-"9"]>
 | <#HEX_DIGIT: ["a"-"f","A"-"f","0"-"9"]>
@@ -191,7 +191,7 @@ void ruleDecl(Tree tree):
   Node rhs;
 }
 {
-  name=name() declSeparator() rhs = rhs() ";"
+  name = name() declSeparator() rhs = rhs() ";"
   {
     decl.name=name;
     decl.rhs=rhs;
@@ -223,9 +223,10 @@ Node rhs():
 Node orContent():
 {
   Node node = new EmptyNode();
+  Token label;
 }
 {
-  (node = sequence())?
+  (node = sequence())? ["#" label = <IDENT>{node.label = label.image;}]
   {
     return node;
   }
@@ -246,7 +247,7 @@ Node regex():
   Node rule;
 }
 {
-  rule = simple() [LOOKAHEAD(regexType() | repetition()) (rule = regexType(rule) | rule = repetition(rule))]
+  rule = named() [LOOKAHEAD(regexType()) (rule = regexType(rule))]
   { return rule; }
 }
 
@@ -255,6 +256,19 @@ Node regexType(Node node):{}
  ("*" | "+" | "?")
   {
     return new RegexNode(node,getToken(0).image);
+  }
+}
+
+Node named():
+{
+ String name = null;
+ Node node;
+}
+{
+  (name = name() "=")? node = simple()
+  {
+    if(name != null) node.name = name;
+    return node;
   }
 }
 
@@ -359,16 +373,6 @@ String name():
   token = <IDENT>{return token.image;}
 }
 
-Node repetition(Node node):
-{
-  Token num;
-}
-{
-  "{" num = <INTEGER> "}"
-  {
-    return new Repetition(node, Integer.parseInt(num.toString()));
-  }
-}
 
 EmptyNode empty():
 {}

@@ -3,12 +3,10 @@ import mesut.parserx.dfa.NFA;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Helper;
 import mesut.parserx.utils.NfaReader;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.PrintWriter;
 
 public class DfaTest {
@@ -20,7 +18,7 @@ public class DfaTest {
         NFA dfa = NfaReader.read(Helper.read(file));
         //Minimization.removeUnreachable(dfa);
         //dfa = Minimization.optimize(dfa);
-        dfa=Minimization.Hopcroft(dfa);
+        dfa = Minimization.Hopcroft(dfa);
         dfa.dump(new PrintWriter(System.out));
         dfa.dot(new FileWriter(Env.dotFile("dfa1")));
     }
@@ -40,14 +38,14 @@ public class DfaTest {
     public void minimize2() throws Exception {
         NFA dfa = NFA.makeDFA(Env.getResFile("javaLexer.g"));
         System.out.println("before " + Minimization.numOfStates(dfa));
-        Minimization.removeUnreachable(dfa);
-        Minimization.removeDead(dfa);
+        //Minimization.removeUnreachable(dfa);
+        //Minimization.removeDead(dfa);
         //dfa = Minimization.Hopcroft(dfa);
-        //dfa = Minimization.optimize(dfa);
+        dfa = Minimization.optimize(dfa);
         dfa = Minimization.combineAlphabet(dfa);
         System.out.println("after " + Minimization.numOfStates(dfa));
-        dfa.dump();
-        dfa.dot(new FileWriter(Env.dotFile("dfa")));
+        //dfa.dump();
+        dfa.dot(new FileWriter(Env.dotFile("dfa1")));
     }
 
     @Test

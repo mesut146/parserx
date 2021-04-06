@@ -3,6 +3,7 @@ package mesut.parserx.nodes;
 import mesut.parserx.dfa.Alphabet;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.NFABuilder;
+import mesut.parserx.gen.PrepareLexer;
 import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.grammar.GParser;
 import mesut.parserx.utils.Helper;

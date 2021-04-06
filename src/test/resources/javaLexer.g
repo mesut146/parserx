@@ -1,28 +1,23 @@
 token{
-    //#reg = [^\n];
     #LETTER = [a-zA-Z]; //todo need unicode
     #DIGIT = [0-9];
     #DIGIT_OR_UNDERSCORE = [0-9_];
     #DIGITS = {DIGIT} {DIGIT_OR_UNDERSCORE}*;
     #HEX_DIGIT_OR_UNDERSCORE = [_0-9A-Fa-f];
-    #string_content = [^\r\n\"];
 
+    #string_content = [^\r\n\"];
     STRING_LITERAL = "\"" {string_content}* "\"";
     CHAR_LITERAL = "'" .+ "'";
 
     INTEGER_LITERAL = {DIGITS} | {HEX_INTEGER_LITERAL} | {BIN_INTEGER_LITERAL} | {OCTAL};
     LONG_LITERAL = {INTEGER_LITERAL} [Ll];
     FLOAT_LITERAL = {INTEGER_LITERAL} "." {INTEGER_LITERAL} [fFdD]?;
-    //INT_OR_LONG = {INTEGER_LITERAL} [Ll]?;
     #HEX_INTEGER_LITERAL = "0" [Xx] {HEX_DIGIT_OR_UNDERSCORE}+;
     #BIN_INTEGER_LITERAL = "0" [Bb] [01_]+;
     #OCTAL= "0" [0-7]+;
     BOOLEAN_LITERAL = "true" | "false";
 
     NULL_LITERAL = "null";
-
-    TRUE_KEYWORD = "true";
-    FALSE_KEYWORD = "false";
 
     ABSTRACT_KEYWORD = "abstract";
     ASSERT_KEYWORD = "assert";
