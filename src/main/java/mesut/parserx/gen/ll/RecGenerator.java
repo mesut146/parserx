@@ -3,7 +3,7 @@ package mesut.parserx.gen.ll;
 import com.squareup.javapoet.MethodSpec;
 import mesut.parserx.gen.Template;
 import mesut.parserx.nodes.*;
-import mesut.parserx.utils.Helper;
+import mesut.parserx.utils.IOUtils;
 
 import javax.lang.model.element.Modifier;
 import java.io.File;
@@ -53,7 +53,7 @@ public class RecGenerator {
         template.set("prod_list", prods.toString());
         template.set("la_list", laList.toString());
         File file = new File(outDir, className + ".java");
-        Helper.write(template.toString(), file);
+        IOUtils.write(template.toString(), file);
     }
 
     void mergeOrs() {

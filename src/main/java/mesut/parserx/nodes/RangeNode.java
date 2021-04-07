@@ -22,14 +22,6 @@ public class RangeNode extends Node implements Comparable<RangeNode> {
         return new RangeNode(start, start);
     }
 
-    @Override
-    public String toString() {
-        if (start == end) {
-            return UnicodeUtils.printChar(start);
-        }
-        return UnicodeUtils.printChar(start) + "-" + UnicodeUtils.printChar(end);
-    }
-
     public static RangeNode intersect(RangeNode r1, RangeNode r2) {
         int l = Math.max(r1.start, r2.start);
         int r = Math.min(r1.end, r2.end);
@@ -37,6 +29,17 @@ public class RangeNode extends Node implements Comparable<RangeNode> {
             return null;
         }
         return new RangeNode(l, r);
+    }
+
+    @Override
+    public String toString() {
+        if (start == end) {
+            return UnicodeUtils.printChar(start);
+        }
+        if (Character.isAlphabetic(start) && Character.isAlphabetic(end)) {
+            return UnicodeUtils.printChar(start) + "-" + UnicodeUtils.printChar(end);
+        }
+        return UnicodeUtils.escapeUnicode(start) + "-" + UnicodeUtils.escapeUnicode(end);
     }
 
     public boolean intersect(RangeNode other) {

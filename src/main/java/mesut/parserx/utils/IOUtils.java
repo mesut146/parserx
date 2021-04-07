@@ -1,12 +1,8 @@
 package mesut.parserx.utils;
 
-import mesut.parserx.nodes.Node;
-import mesut.parserx.nodes.OrNode;
-import mesut.parserx.nodes.Sequence;
-
 import java.io.*;
 
-public class Helper {
+public class IOUtils {
 
     public static String read(InputStream inputStream) throws IOException {
         StringBuilder sb = new StringBuilder();
@@ -28,15 +24,4 @@ public class Helper {
         wr.close();
     }
 
-    public static Node split(Node node) {
-        if (node.isSequence()) {
-            Sequence sequence = node.asSequence();
-            return new Sequence(sequence.list.subList(1, sequence.size())).normal();
-        }
-        else if (node.isOr()) {
-            OrNode or = node.asOr();
-            return new OrNode(or.list.subList(1, or.size())).normal();
-        }
-        return node;
-    }
 }

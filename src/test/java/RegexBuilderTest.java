@@ -1,17 +1,39 @@
+import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
-import mesut.parserx.regex.RegexBuilder;
+import mesut.parserx.dfa.NFABuilder;
+import mesut.parserx.dfa.NfaReader;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.StringNode;
+import mesut.parserx.nodes.TokenDecl;
+import mesut.parserx.nodes.Tree;
+import mesut.parserx.regex.RegexBuilder;
+import mesut.parserx.regex.RegexOptimizer;
+import mesut.parserx.regex.RegexUtils;
 import org.junit.Ignore;
 import org.junit.Test;
-import mesut.parserx.utils.NfaReader;
-import mesut.parserx.regex.RegexOptimizer;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class RegexBuilderTest {
 
-    //  /* (^*)* * (^/ (^*)* *)* /
+    @Test
+    public void lineComment() throws IOException {
+        NFA nfa = NfaReader.read("final=2\nstart=0\n0->1,/\n1->2,/\n2->2,[^\\n]");
+        Node node = new RegexBuilder(nfa).buildRegex();
+        System.out.println(node);
+    }
+
+    @Test
+    public void blockComment() throws IOException {
+        Node node = RegexUtils.blockComment();
+        Tree tree = new Tree();
+        tree.addToken(new TokenDecl("comment", node));
+        NFA nfa = NFABuilder.build(tree).dfa();
+        Minimization.optimize(nfa);
+        nfa.dot(new FileWriter(Env.dotFile("dfa")));
+    }
 
     @Test
     @Ignore

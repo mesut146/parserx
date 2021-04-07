@@ -43,14 +43,6 @@ public class Alphabet {
         throw new RuntimeException("invalid range " + node);
     }
 
-    public int getId(int ch) {
-        return getId(RangeNode.of(ch, ch));
-    }
-
-    public int getId(int left, int right) {
-        return getId(RangeNode.of(left, right));
-    }
-
     public RangeNode getRange(int id) {
         return getRegex(id).asRange();
     }
@@ -62,11 +54,6 @@ public class Alphabet {
             }
         }
         throw new RuntimeException("invalid alphabet id: " + id);
-    }
-
-    public void update(int id, Node node) {
-        map.remove(getRegex(id));
-        map.put(node, id);
     }
 
     public Iterator<RangeNode> getRanges() {
@@ -111,7 +98,7 @@ public class Alphabet {
         }
         PrintWriter w = new PrintWriter(os);
         for (int id = 0; id < lastId; id++) {
-            w.printf("%s -> %s\n", getRange(id), id);
+            w.printf("%s -> %s\n", getRegex(id), id);
         }
         w.close();
     }

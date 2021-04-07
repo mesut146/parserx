@@ -1,13 +1,12 @@
 import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.nodes.Tree;
-import mesut.parserx.utils.Helper;
-import mesut.parserx.utils.NfaReader;
+import mesut.parserx.utils.IOUtils;
+import mesut.parserx.dfa.NfaReader;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.PrintWriter;
 
 public class DfaTest {
 
@@ -15,11 +14,11 @@ public class DfaTest {
     public void hopcroft() throws Exception {
         //File file = Env.getResFile("fsm/dfa-min.dfa");
         File file = Env.getResFile("min/dfa2.dfa");
-        NFA dfa = NfaReader.read(Helper.read(file));
+        NFA dfa = NfaReader.read(IOUtils.read(file));
         //Minimization.removeUnreachable(dfa);
         //dfa = Minimization.optimize(dfa);
         dfa = Minimization.Hopcroft(dfa);
-        dfa.dump(new PrintWriter(System.out));
+        dfa.dump();
         dfa.dot(new FileWriter(Env.dotFile("dfa1")));
     }
 
@@ -27,7 +26,7 @@ public class DfaTest {
     public void minimizeMy() throws Exception {
         File file = Env.getResFile("min/dfa-min.dfa");
         //File file = Env.getResFile("fsm/dfa2.dfa");
-        NFA dfa = NfaReader.read(Helper.read(file));
+        NFA dfa = NfaReader.read(IOUtils.read(file));
         Minimization.removeUnreachable(dfa);
         Minimization.removeDead(dfa);
         Minimization.optimize(dfa);
@@ -55,6 +54,6 @@ public class DfaTest {
         //dfa = Minimization.Hopcroft(dfa);
         dfa = Minimization.optimize(dfa);
         dfa.dot(new FileWriter(Env.dotFile("dfa1")));
-        dfa.dump(new PrintWriter(System.out));
+        dfa.dump();
     }
 }

@@ -6,8 +6,8 @@ import mesut.parserx.gen.LeftRecursive;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.regex.RegexBuilder;
-import mesut.parserx.utils.Helper;
-import mesut.parserx.utils.NfaReader;
+import mesut.parserx.utils.IOUtils;
+import mesut.parserx.dfa.NfaReader;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -28,6 +28,7 @@ public class Main {
         File input = null;
         File output = null;
         List<String> cmd = new ArrayList<>();
+        File dot = null;
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("-input") || args[i].equals("-in")) {
                 input = new File(args[i + 1]);
@@ -35,6 +36,10 @@ public class Main {
             }
             else if (args[i].equals("-output") || args[i].equals("-out")) {
                 output = new File(args[i + 1]);
+                i++;
+            }
+            else if (args[i].equals("-dot")) {
+                dot = new File(args[i + 1]);
                 i++;
             }
             else if (cmds.contains(args[i])) {
@@ -60,12 +65,16 @@ public class Main {
             else if (cmd.contains("-nfa")) {
                 Tree tree = Tree.makeTree(input);
                 NFA nfa = tree.makeNFA();
-                if (output == null) {
-                    output = new File(input + "-nfa.dot");
+                if (dot != null) {
+                    nfa.dot(new FileWriter(dot));
                 }
-                nfa.dot(new FileWriter(output));
+                if (output == null) {
+                    output = new File(input + ".nfa");
+                }
+                nfa.dump(new PrintWriter(new FileWriter(output)));
             }
             else if (cmd.contains("-dfa")) {
+                //g2dfa
                 Tree tree = Tree.makeTree(input);
                 NFA dfa = tree.makeNFA().dfa();
                 if (cmd.contains("-optimize")) {
@@ -73,19 +82,23 @@ public class Main {
                     Minimization.removeUnreachable(dfa);
                     Minimization.optimize(dfa);
                 }
-                if (output == null) {
-                    output = new File(input + "-dfa.dot");
+                if (dot != null) {
+                   dfa.dot(new FileWriter(dot));
                 }
-                dfa.dot(new FileWriter(output));
+                if (output == null) {
+                    output = new File(input + ".dfa");
+                }
+                dfa.dump(new PrintWriter(new FileWriter(output)));
             }
             else if (cmd.contains("-regex")) {
+                //nfa2regex
                 NFA nfa = NfaReader.read(input);
                 Node node = RegexBuilder.from(nfa);
                 if (output == null) {
                     System.out.println(node);
                 }
                 else {
-                    Helper.write(node.toString(), output);
+                    IOUtils.write(node.toString(), output);
                 }
             }
             else if (cmd.contains("-nfa2dfa")) {
@@ -108,10 +121,10 @@ public class Main {
 
     static void save(Tree tree, File output) {
         if (output == null) {
-            output = new File(tree.file.getAbsolutePath() + "-out.g");
+            output = new File(tree.file + "-out.g");
         }
         try {
-            Helper.write(tree.toString(), output);
+            IOUtils.write(tree.toString(), output);
         } catch (IOException e) {
             e.printStackTrace();
         }

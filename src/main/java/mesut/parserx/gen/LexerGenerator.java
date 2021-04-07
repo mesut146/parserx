@@ -4,7 +4,7 @@ import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.RangeNode;
-import mesut.parserx.utils.Helper;
+import mesut.parserx.utils.IOUtils;
 import mesut.parserx.utils.UnicodeUtils;
 
 import java.io.File;
@@ -60,7 +60,7 @@ public class LexerGenerator {
         template.set("token_class", tokenClassName);
         template.set("next_token", functionName);
         makeTables(template);
-        Helper.write(template.toString(), file);
+        IOUtils.write(template.toString(), file);
         System.out.println("lexer file generated to " + file);
 
         writeTokenClass();
@@ -199,7 +199,7 @@ public class LexerGenerator {
         template.set("package", packageName);
         template.set("token_class", tokenClassName);
 
-        Helper.write(template.toString(), out);
+        IOUtils.write(template.toString(), out);
 
         System.out.println("token class generated to " + out);
     }

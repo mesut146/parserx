@@ -1,7 +1,7 @@
 package mesut.parserx.gen;
 
 import mesut.parserx.nodes.NodeList;
-import mesut.parserx.utils.Helper;
+import mesut.parserx.utils.IOUtils;
 
 import java.io.IOException;
 import java.util.*;
@@ -15,7 +15,7 @@ public class Template {
         if (!fileName.startsWith("/")) {
             fileName = "/" + fileName;
         }
-        content = Helper.read(getClass().getResourceAsStream(fileName));
+        content = IOUtils.read(getClass().getResourceAsStream(fileName));
     }
 
     //mark positions of variable

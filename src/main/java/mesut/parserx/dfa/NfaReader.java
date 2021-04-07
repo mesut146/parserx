@@ -1,15 +1,14 @@
-package mesut.parserx.utils;
+package mesut.parserx.dfa;
 
-import mesut.parserx.dfa.Alphabet;
-import mesut.parserx.dfa.NFA;
 import mesut.parserx.nodes.StringNode;
+import mesut.parserx.utils.IOUtils;
 
 import java.io.*;
 
 public class NfaReader {
 
     public static NFA read(File file) throws IOException {
-        return read(Helper.read(new FileInputStream(file)));
+        return read(IOUtils.read(new FileInputStream(file)));
     }
 
     //initial 0
@@ -28,9 +27,9 @@ public class NfaReader {
             if (line.isEmpty() || line.startsWith("//")) {
                 continue;
             }
-            if (line.startsWith("initial")) {
+            if (line.startsWith("initial") || line.startsWith("start")) {
                 gotInitial = true;
-                nfa.initial = Integer.parseInt(line.split("initial\\s*=")[1].trim());
+                nfa.initial = Integer.parseInt(line.split("initial|start\\s*=")[1].trim());
                 continue;
             }
             if (line.startsWith("final")) {

@@ -2,11 +2,9 @@ import mesut.parserx.dfa.NFA;
 import mesut.parserx.grammar.GParser;
 import mesut.parserx.grammar.ParseException;
 import mesut.parserx.nodes.Node;
-import mesut.parserx.nodes.StringNode;
 import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
-import mesut.parserx.regex.RegexBuilder;
-import mesut.parserx.utils.NfaReader;
+import mesut.parserx.dfa.NfaReader;
 import org.junit.Ignore;
 import org.junit.Test;
 

@@ -5,7 +5,7 @@ import mesut.parserx.dfa.Alphabet;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
 import mesut.parserx.nodes.*;
-import mesut.parserx.utils.NfaReader;
+import mesut.parserx.dfa.NfaReader;
 import mesut.parserx.utils.UnicodeUtils;
 
 import java.io.IOException;

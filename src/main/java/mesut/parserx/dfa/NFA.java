@@ -13,7 +13,7 @@ import java.util.*;
 @SuppressWarnings("unchecked")
 public class NFA {
     public static boolean debugTransition = false;
-    public Tree tree;//grammar file
+    public Tree tree;
     public List<Transition>[] trans;
     public boolean[] accepting;
     public boolean[] isSkip;
@@ -147,47 +147,6 @@ public class NFA {
         return ++lastState;
     }
 
-    public void dump() {
-        dump(new PrintWriter(System.out));
-    }
-
-    public void dump(PrintWriter w) {
-        w.println("initial=" + initial);
-        w.print("final=");
-        for (int i : it()) {
-            if (isAccepting(i)) w.print(i + " ");
-        }
-        w.println();
-        for (int state = 0; state <= lastState; state++) {
-            if (!hasTransitions(state)) continue;
-            List<Transition> arr = trans[state];
-            sort(arr);
-            for (Transition tr : arr) {
-                w.print(state + " -> " + tr.target);
-                if (!tr.epsilon) {
-                    w.print("  , ");
-                    w.print(getAlphabet().getRegex(tr.input));
-                }
-                w.println();
-            }
-        }
-        w.close();
-    }
-
-    private void sort(List<Transition> arr) {
-        Collections.sort(arr, new Comparator<Transition>() {
-            @Override
-            public int compare(Transition o1, Transition o2) {
-                Node r1 = getAlphabet().getRegex(o1.input);
-                Node r2 = getAlphabet().getRegex(o2.input);
-                if (r1.isRange() && r2.isRange()) {
-                    return r1.asRange().compareTo(r2.asRange());
-                }
-                return 0;
-            }
-        });
-    }
-
     public boolean isAccepting(StateSet set) {
         for (int state : set) {
             if (isAccepting(state)) {
@@ -261,6 +220,48 @@ public class NFA {
             if (tr.input == input) return tr.target;
         }
         return -1;
+    }
+
+    public void dump() {
+        dump(new PrintWriter(System.out));
+    }
+
+    public void dump(Writer writer) {
+        PrintWriter w=new PrintWriter(writer);
+        w.println("initial=" + initial);
+        w.print("final=");
+        for (int i : it()) {
+            if (isAccepting(i)) w.print(i + " ");
+        }
+        w.println();
+        for (int state = 0; state <= lastState; state++) {
+            if (!hasTransitions(state)) continue;
+            List<Transition> arr = trans[state];
+            sort(arr);
+            for (Transition tr : arr) {
+                w.print(state + " -> " + tr.target);
+                if (!tr.epsilon) {
+                    w.print("  , ");
+                    w.print(getAlphabet().getRegex(tr.input));
+                }
+                w.println();
+            }
+        }
+        w.close();
+    }
+
+    private void sort(List<Transition> arr) {
+        Collections.sort(arr, new Comparator<Transition>() {
+            @Override
+            public int compare(Transition o1, Transition o2) {
+                Node r1 = getAlphabet().getRegex(o1.input);
+                Node r2 = getAlphabet().getRegex(o2.input);
+                if (r1.isRange() && r2.isRange()) {
+                    return r1.asRange().compareTo(r2.asRange());
+                }
+                return 0;
+            }
+        });
     }
 
     public void dot(Writer writer) {

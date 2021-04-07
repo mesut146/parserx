@@ -3,7 +3,7 @@ import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
 import mesut.parserx.nodes.RangeNode;
 import org.junit.Test;
-import mesut.parserx.utils.Helper;
+import mesut.parserx.utils.IOUtils;
 
 import java.io.FileInputStream;
 import java.util.List;
@@ -16,7 +16,7 @@ public class Simulator {
         try {
             NFA dfa = NFA.makeDFA(Env.getJavaLexer());
 
-            char[] input = Helper.read(new FileInputStream(Env.getFile2("/java/a.java"))).toCharArray();
+            char[] input = IOUtils.read(new FileInputStream(Env.getFile2("/java/a.java"))).toCharArray();
             pos = 0;
             for (int i = 0; i < 100; i++) {
                 nextToken(dfa, input);

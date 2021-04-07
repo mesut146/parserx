@@ -3,10 +3,9 @@ package mesut.parserx.nodes;
 import mesut.parserx.dfa.Alphabet;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.NFABuilder;
-import mesut.parserx.gen.PrepareLexer;
 import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.grammar.GParser;
-import mesut.parserx.utils.Helper;
+import mesut.parserx.utils.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +39,7 @@ public class Tree {
 
     public static Tree makeTree(File path) {
         try {
-            return makeTree(Helper.read(path));
+            return makeTree(IOUtils.read(path));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

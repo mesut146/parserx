@@ -13,26 +13,28 @@ public class CharClass {
 
     //find all intersecting inputs and split them so that all of them becomes unique
     public static void makeDistinctRanges(Tree tree) {
-        Set<RangeNode> ranges = new HashSet<>();//whole input set as ranges nodes
+        Set<RangeNode> ranges = new HashSet<>();
         List<Bracket> brackets = new ArrayList<>();
-        for (TokenDecl decl : tree.getTokens()) {
-            walkNodes(decl.regex, ranges, brackets);
+        //first collect ranges
+        for (TokenDecl token : tree.tokens) {
+            walkNodes(token.regex, ranges, brackets);
         }
         //find intersecting ranges and split them
         outer:
         while (true) {
             for (Bracket bracket : brackets) {
-                for (RangeNode r1 : bracket.getRanges()) {
+                for (RangeNode range : bracket.getRanges()) {
                     //if this range intersect other ranges
-                    if (!r1.isSingle()) {
-                        if (split(r1, ranges, bracket)) {
+                    if (!range.isSingle()) {
+                        if (split(range, ranges, bracket)) {
                             continue outer;
                         }
                     }
                 }//for bracket
             }
             break;//found none break while
-        }//while
+        }
+        //finally add all ranges to alphabet
         for (Bracket bracket : brackets) {
             for (RangeNode rangeNode : bracket.getRanges()) {
                 tree.alphabet.addRegex(rangeNode);
@@ -80,7 +82,6 @@ public class CharClass {
     }
 
     static void walkNodes(Node node, Set<RangeNode> ranges, List<Bracket> brackets) {
-        //find all ranges and store them
         if (node.isBracket()) {
             Bracket b = node.asBracket().normalize();
             ranges.addAll(b.rangeNodes);
