@@ -6,6 +6,8 @@ import java.util.List;
 // rule1 | rule2 | rule3...
 public class OrNode extends NodeList {
 
+    public static boolean hasSpace = true;
+
     public OrNode(Node... args) {
         super(args);
     }
@@ -22,9 +24,15 @@ public class OrNode extends NodeList {
             sb.append(node);
             if (node.label != null) {
                 sb.append(" #").append(node.label);
+                sb.append("\n  ");
             }
             if (it.hasNext()) {
-                sb.append(" | ");
+                if (hasSpace) {
+                    sb.append(" | ");
+                }
+                else {
+                    sb.append("|");
+                }
             }
         }
         return sb.toString();

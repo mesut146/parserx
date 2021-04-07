@@ -32,6 +32,10 @@ public class RegexBuilder {
         return new RegexBuilder(NfaReader.read(input)).buildRegex();
     }
 
+    public static Node from(NFA nfa) {
+        return new RegexBuilder(nfa).buildRegex();
+    }
+
     public Node buildRegex() {
         Transition.alphabet = alphabet;
         //make initial not incoming

@@ -27,7 +27,7 @@ public class RegexBuilderTest {
     @Test
     @Ignore
     public void build() throws Exception {
-        StringNode.string_quote = false;
+        StringNode.print_quote = false;
         NFA nfa = NfaReader.read(Env.getResFile("fsm/comment.nfa"));
         RegexBuilder regexBuilder = new RegexBuilder(nfa);
         //regexBuilder.setOrder(5,4,3,2,1);

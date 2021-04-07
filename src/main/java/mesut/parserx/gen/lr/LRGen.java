@@ -44,7 +44,7 @@ public abstract class LRGen<T extends LrItemSet> {
     }
 
     void prepare() {
-        PrepareTree.checkReferences(tree);
+        PrepareTree.checkReferences(tree);//todo remove
         EbnfToBnf.rhsSequence = true;
         tree = EbnfToBnf.transform(tree);
         PrepareTree.checkReferences(tree);

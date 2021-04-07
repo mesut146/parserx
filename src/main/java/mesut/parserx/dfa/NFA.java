@@ -152,25 +152,24 @@ public class NFA {
     }
 
     public void dump(PrintWriter w) {
+        w.println("initial=" + initial);
+        w.print("final=");
+        for (int i : it()) {
+            if (isAccepting(i)) w.print(i + " ");
+        }
+        w.println();
         for (int state = 0; state <= lastState; state++) {
             if (!hasTransitions(state)) continue;
             List<Transition> arr = trans[state];
-            w.println(printState(state));
             sort(arr);
             for (Transition tr : arr) {
-                w.print("  ");
-                if (tr.epsilon) {
-                    w.print("E");
-                }
-                else {
+                w.print(state + " -> " + tr.target);
+                if (!tr.epsilon) {
+                    w.print("  , ");
                     w.print(getAlphabet().getRegex(tr.input));
                 }
-
-                w.print(" -> ");
-                w.print(printState(tr.target));
                 w.println();
             }
-            w.println();
         }
         w.close();
     }
@@ -187,13 +186,6 @@ public class NFA {
                 return 0;
             }
         });
-    }
-
-    String printState(int st) {
-        if (isAccepting(st)) {
-            return "(S" + st + (names[st] == null ? "" : ", " + names[st]) + ")";
-        }
-        return "S" + st;
     }
 
     public boolean isAccepting(StateSet set) {

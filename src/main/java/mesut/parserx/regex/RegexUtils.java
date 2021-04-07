@@ -5,6 +5,13 @@ import mesut.parserx.utils.Helper;
 
 public class RegexUtils {
 
+    public static String print(Node node) {
+        if (node.isString()) {
+            return node.asString().toString();
+        }
+        return node.toString();
+    }
+
     //de morgan laws
     public static Node negate(Node regex) throws Exception {
         if (regex.isOr()) {

@@ -1,13 +1,14 @@
-
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.grammar.GParser;
 import mesut.parserx.grammar.ParseException;
 import mesut.parserx.nodes.Node;
+import mesut.parserx.nodes.StringNode;
 import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
+import mesut.parserx.regex.RegexBuilder;
+import mesut.parserx.utils.NfaReader;
 import org.junit.Ignore;
 import org.junit.Test;
-import mesut.parserx.utils.NfaReader;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -42,24 +43,12 @@ public class NfaTest {
         tree.makeNFA();
     }
 
-    @Test
-    public void comment() throws ParseException, IOException {
-        //String regex = "\"/*\" \"x\"* \"*\" (\"yx*\")* \"/\"";
-        String regex = "\"/*\" (\"x\" | \"*y\")* \"*/\"";
-        Tree tree = makeTree(regex);
-        NFA nfa = tree.makeNFA();
-        NFA dfa = nfa.dfa();
-
-        nfa.dot(new FileWriter(Env.testRes + "/test-nfa.dot"));
-        dfa.dot(new FileWriter(Env.testRes + "/test-dfa.dot"));
-    }
-
     @Ignore
     @Test
     public void reader() throws Exception {
-        File file = Env.getResFile("fsm/test.nfa");
+        File file = Env.getResFile("fsm/comment.nfa");
         NFA nfa = NfaReader.read(file);
-        //nfa.dump(null);
+        nfa.dump();
     }
 
     @Ignore

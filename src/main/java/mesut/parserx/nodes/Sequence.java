@@ -2,9 +2,9 @@ package mesut.parserx.nodes;
 
 import java.util.List;
 
-//list of rules
-//rhs
 public class Sequence extends NodeList {
+
+    public static boolean hasSpace = true;
 
     public Sequence(Node... arr) {
         super(arr);
@@ -20,7 +20,7 @@ public class Sequence extends NodeList {
 
     @Override
     public String toString() {
-        return NodeList.join(list, " ");
+        return NodeList.join(list, hasSpace ? " " : "");
     }
 
     public Node normal() {

@@ -12,8 +12,9 @@ public class NfaReader {
         return read(Helper.read(new FileInputStream(file)));
     }
 
-    //%state -> target, symbol
-    //state -> (final), symbol
+    //initial 0
+    //final state list separated by space
+    //state -> target, symbol
     //symbol type is string without quotes
     public static NFA read(String str) throws IOException {
         BufferedReader reader = new BufferedReader(new StringReader(str));
@@ -21,59 +22,45 @@ public class NfaReader {
         String line;
         Alphabet alphabet = new Alphabet();
         nfa.tree.alphabet = alphabet;
+        boolean gotInitial = false;
         while ((line = reader.readLine()) != null) {
             line = line.trim();
             if (line.isEmpty() || line.startsWith("//")) {
                 continue;
             }
+            if (line.startsWith("initial")) {
+                gotInitial = true;
+                nfa.initial = Integer.parseInt(line.split("initial\\s*=")[1].trim());
+                continue;
+            }
+            if (line.startsWith("final")) {
+                for (String f : line.split("final\\s*=")[1].split(" ")) {
+                    nfa.setAccepting(Integer.parseInt(f.trim()), true);
+                }
+                continue;
+            }
             int arrow = line.indexOf("->");
             int comma = line.indexOf(",");
-            if (arrow == -1 || comma == -1) {
-                throw new RuntimeException("invalid line: " + line + " '->' and ',' expected");
+            if (arrow == -1) {
+                throw new RuntimeException("invalid line: " + line + " '->' expected");
             }
-            int[] state = getState(line.substring(0, arrow));
-            int[] target = getState(line.substring(arrow + 2, comma));
-
-            int id = getId(alphabet, line.substring(comma + 1));
-            if (id == -1) {
-                nfa.addEpsilon(state[0], target[0]);
+            int state = Integer.parseInt(line.substring(0, arrow).trim());
+            if (comma == -1) {
+                //epsilon
+                int target = Integer.parseInt(line.substring(arrow + 2).trim());
+                nfa.addEpsilon(state, target);
             }
             else {
-                nfa.addTransition(state[0], target[0], id);
+                //with input
+                int target = Integer.parseInt(line.substring(arrow + 2, comma).trim());
+                StringNode node = new StringNode(line.substring(comma + 1).trim());
+                nfa.addTransition(state, target, alphabet.addRegex(node));
             }
-            if (state[1] == 1) nfa.setAccepting(state[0], true);
-            if (target[1] == 1) nfa.setAccepting(target[0], true);
-            if (state[2] == 1) {
-                nfa.initial = state[0];
-            }
+        }
+        if (!gotInitial) {
+            System.err.println("no initial state");
+            return null;
         }
         return nfa;
-    }
-
-    static int[] getState(String str) {
-        str = str.trim();
-        int isFinal = 0;
-        int isInitial = 0;
-        if (str.startsWith("(")) {
-            isFinal = 1;
-            str = str.substring(1, str.length() - 1);
-        }
-        else if ("iI%".indexOf(str.charAt(0)) != -1) {
-            isInitial = 1;
-            str = str.substring(1);
-        }
-        if (str.startsWith("s") || str.startsWith("S")) {
-            str = str.substring(1);
-        }
-        return new int[]{Integer.parseInt(str), isFinal, isInitial};
-    }
-
-    static int getId(Alphabet alphabet, String input) {
-        //todo epsilon
-        if (input.equalsIgnoreCase("eps") || input.equalsIgnoreCase("epsilon")) {
-            return -1;
-        }
-        StringNode node = new StringNode(input.trim());
-        return alphabet.addRegex(node);
     }
 }
