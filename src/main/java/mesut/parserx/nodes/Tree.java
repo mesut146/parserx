@@ -93,6 +93,9 @@ public class Tree {
     }
 
     public void addToken(TokenDecl token) {
+        if (indexOf(token.tokenName) != -1) {
+            throw new RuntimeException("token " + token + " already exists");
+        }
         tokens.add(token);
     }
 

@@ -3,6 +3,10 @@ package mesut.parserx.dfa;
 import mesut.parserx.gen.PrepareLexer;
 import mesut.parserx.nodes.*;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Stack;
+
 public class NFABuilder {
     NFA nfa;
     Tree tree;
@@ -113,6 +117,35 @@ public class NFABuilder {
             //we have lexer ref just replace with target's regex
             NameNode name = node.asName();
             p.end = insert(tree.getToken(name.name).regex, start).end;
+        }
+        else if (node instanceof UntilNode) {
+            Node r = ((UntilNode) node).node;
+            if (!r.isString()) {
+                throw new RuntimeException("until node only supports strings");
+            }
+            int ns = nfa.newState();
+            nfa.addEpsilon(start, ns);
+            p.end = insert(r, ns).end;
+            //trace all transitions and negate them
+            Stack<Integer> stack = new Stack<>();
+            stack.add(ns);
+            Set<Transition> done = new HashSet<>();
+            while (!stack.isEmpty()) {
+                for (Transition tr : nfa.get(stack.pop())) {
+                    if (done.contains(tr)) continue;
+                    Node c = nfa.getAlphabet().getRegex(tr.input);
+                    Bracket bracket = new Bracket();
+                    bracket.add(c);
+                    bracket.negate = true;
+
+                    /*bracket.normalize();
+                    bracket.clear();
+                    bracket.addAll(bracket.rangeNodes);*/
+                    int id = nfa.getAlphabet().addRegex(bracket);
+                    done.add(nfa.addTransition(tr.target, ns, id));
+                    stack.add(tr.target);
+                }
+            }
         }
         else {
             throw new RuntimeException("invalid node: " + node);
