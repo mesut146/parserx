@@ -265,7 +265,7 @@ Node named():
  Node node;
 }
 {
-  (name = name() "=")? node = simple()
+  (LOOKAHEAD(name() "=") name = name() "=")? node = simple()
   {
     if(name != null) node.name = name;
     return node;

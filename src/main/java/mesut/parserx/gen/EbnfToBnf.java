@@ -3,7 +3,6 @@ package mesut.parserx.gen;
 import mesut.parserx.nodes.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 //transform ebnf to bnf
@@ -13,6 +12,7 @@ public class EbnfToBnf {
     public static boolean expand_or = true;//separate rules for each or content
     public static boolean combine_or = false;//exclusive expand_or
     public static boolean rhsSequence = true;//make sure rhs always sequence
+    public static boolean expandGroup = true;
     static String starSuffix = "*", plusSuffix = "+", optSuffix = "?";
     Tree tree;//in ebnf
     Tree res;//out bnf
@@ -99,6 +99,9 @@ public class EbnfToBnf {
     }
 
     Node transform(GroupNode groupNode, RuleDecl decl) {
+        if (!expandGroup) {
+            return groupNode;
+        }
         //r = a (e1 e2) b;
         //r = a r_g b;
         //r_g = e1 e2;
