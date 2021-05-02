@@ -8,7 +8,6 @@ import mesut.parserx.grammar.GParser;
 import mesut.parserx.utils.IOUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,8 +38,11 @@ public class Tree {
 
     public static Tree makeTree(File path) {
         try {
-            return makeTree(IOUtils.read(path));
-        } catch (IOException e) {
+            String grammar = IOUtils.read(path);
+            grammar += " ";
+            GParser parser = new GParser(new StringReader(grammar));
+            return parser.tree(path).prepare();
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

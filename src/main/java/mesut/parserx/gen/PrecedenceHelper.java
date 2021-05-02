@@ -45,15 +45,10 @@ public class PrecedenceHelper {
         for (String s : all) {
             levels.put(s, lastLevel);
         }
-        lastLevel++;
+        lastLevel--;//last added gets lower prec
     }
 
-    private void handle() {
-        Node rhs = rule.rhs;
-        if (!rhs.isOr()) return;
-
-        //collect operators
-        OrNode or = rhs.asOr();
+    OrNode collect(OrNode or) {
         OrNode rest = new OrNode();
         for (Node ch : or) {
             if (!ch.isSequence()) {
@@ -61,9 +56,9 @@ public class PrecedenceHelper {
                 continue;
             }
             boolean added = false;
-            Sequence sequence = ch.asSequence();
-            if (sequence.size() == 3 && isName(sequence.first(), rule.name) && isName(sequence.last(), rule.name)) {
-                Node mid = sequence.get(1);
+            Sequence seq = ch.asSequence();
+            if (seq.size() == 3 && isName(seq.first(), rule.name) && isName(seq.last(), rule.name)) {
+                Node mid = seq.get(1);
                 if (mid.isString()) {
                     addLast(mid.asString().value);
                     added = true;
@@ -118,18 +113,24 @@ public class PrecedenceHelper {
                 rest.add(ch);
             }
         }
+        return rest;
+    }
+
+    //first is higher
+    private void handle() {
+        Node rhs = rule.rhs.normal();
+        if (!rhs.isOr()) return;
+
+        //collect operators
+        OrNode rest = collect(rhs.asOr());
+
         if (levels.isEmpty()) {
+            //no operator
             return;
         }
-        //transform
-        System.out.println(levels);
+        //begin transform
         //group same level operators
-        Map<Integer, OrNode> groups = new TreeMap<>(new Comparator<Integer>() {
-            @Override
-            public int compare(Integer o1, Integer o2) {
-                return o2.compareTo(o1);
-            }
-        });
+        Map<Integer, OrNode> groups = new TreeMap<>();
         for (Map.Entry<String, Integer> entry : levels.entrySet()) {
             OrNode list = groups.get(entry.getValue());
             if (list == null) {
@@ -144,21 +145,31 @@ public class PrecedenceHelper {
         rule.rhs = res;
 
         //remove lowest because it accepts any so it is in main rule
-        res.add(Sequence.of(rule.ref(), groups.remove(0).normal(), rule.ref()));
+        res.add(Sequence.of(rule.ref(), groups.remove(lastLevel + 1).normal(), rule.ref()));
 
-        int id = 0;
         Node prev = new OrNode(rest.list);
-        for (Map.Entry<Integer, OrNode> entry : groups.entrySet()) {
-            String name = rule.name + id++;
+        //start from highest
+        for (int i = 0; i > lastLevel + 1; i--) {
+            OrNode or = groups.get(i);
+            String name = getName(or);
             String lhsName = name + "0";
             NameNode ref = new NameNode(name, false);
             res.add(new NameNode(name, false));
-            tree.addRule(new RuleDecl(name, Sequence.of(new NameNode(lhsName), entry.getValue().normal(), new NameNode(lhsName))));
+            tree.addRule(new RuleDecl(name, Sequence.of(new NameNode(lhsName), or.normal(), new NameNode(lhsName))));
             //make lhs rhs
-            RuleDecl lhsRule = new RuleDecl(lhsName, new OrNode(ref, prev));
+            RuleDecl lhsRule = new RuleDecl(lhsName, new OrNode(ref, prev).normal());
             tree.addRule(lhsRule);
             prev = lhsRule.ref();
         }
+    }
+
+    String getName(OrNode ops) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < ops.size(); i++) {
+            sb.append(tree.getTokenByValue(ops.get(i).asString().value).tokenName);
+            if (i < ops.size() - 1) sb.append("_");
+        }
+        return sb.toString();
     }
 
 }

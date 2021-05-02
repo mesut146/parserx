@@ -6,7 +6,8 @@ import java.util.List;
 // rule1 | rule2 | rule3...
 public class OrNode extends NodeList {
 
-    public static boolean hasSpace = true;
+    public static boolean newLine = true;
+    public static int newLineLimit = 3;
 
     public OrNode(Node... args) {
         super(args);
@@ -19,23 +20,31 @@ public class OrNode extends NodeList {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        boolean simp = isSimple();
         for (Iterator<Node> it = list.iterator(); it.hasNext(); ) {
             Node node = it.next();
             sb.append(node);
             if (node.label != null) {
                 sb.append(" #").append(node.label);
+            }
+            if (newLine && !simp) {
                 sb.append("\n  ");
             }
             if (it.hasNext()) {
-                if (hasSpace) {
-                    sb.append(" | ");
-                }
-                else {
-                    sb.append("|");
-                }
+                sb.append(" | ");
             }
         }
         return sb.toString();
+    }
+
+    //printable without newline
+    boolean isSimple() {
+        for (Node c : this) {
+            if (!c.isString() && !c.isName()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public Node normal() {

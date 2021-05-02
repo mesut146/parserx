@@ -1,4 +1,5 @@
 import mesut.parserx.gen.EbnfToBnf;
+import mesut.parserx.gen.LeftRecursive;
 import mesut.parserx.gen.PrecedenceHelper;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
@@ -22,5 +23,6 @@ public class TransformTest {
         PrecedenceHelper helper = new PrecedenceHelper(tree);
         tree = helper.transform();
         System.out.println(tree);
+        tree = LeftRecursive.transform(tree);
     }
 }

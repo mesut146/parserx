@@ -96,4 +96,8 @@ public class Node {
         if (name != null) return name + " = ";
         return "";
     }
+
+    public Node normal() {
+        return this;
+    }
 }

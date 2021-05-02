@@ -218,6 +218,9 @@ public class LeftRecursive {
                 }
             }
         }
+        else if (r.isString()) {
+            info.zero = r;
+        }
         else {
             throw new RuntimeException("invalid: " + r.getClass());
         }

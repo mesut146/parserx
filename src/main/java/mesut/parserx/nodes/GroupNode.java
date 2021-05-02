@@ -15,7 +15,10 @@ public class GroupNode extends Node implements Iterable<Node> {
     }
 
     public String toString() {
-        return varString() + "(" + node + ")";
+        OrNode.newLine = false;
+        String s = varString() + "(" + node + ")";
+        OrNode.newLine = true;
+        return s;
     }
 
     @Override
