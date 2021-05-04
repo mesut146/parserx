@@ -2,6 +2,9 @@ package mesut.parserx.gen;
 
 import mesut.parserx.nodes.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 //remove left recursions
 public class LeftRecursive {
     public Tree tree;
@@ -37,18 +40,18 @@ public class LeftRecursive {
 
     public Node indirect(RuleDecl rule) {
         Node node = rule.rhs.copy();
-        RuleDecl tmp = new RuleDecl(rule.name, replace(node, rule.ref()));
+        RuleDecl tmp = new RuleDecl(rule.name, replace(node, rule.ref(), new HashSet<NameNode>()));
         //now it is in direct recursive form
         return removeDirect(tmp);
     }
 
     //substitute references that can start with name don't touch rest
-    Node replace(Node node, final NameNode name) {
+    Node replace(Node node, final NameNode name, Set<NameNode> done) {
         if (node.isOr()) {
             OrNode res = new OrNode();
             for (Node ch : node.asOr()) {
                 if (startr(ch, name)) {
-                    ch = replace(ch, name);
+                    ch = replace(ch, name, done);
                 }
                 res.add(ch);
             }
@@ -59,7 +62,7 @@ public class LeftRecursive {
             for (int i = 0; i < node.asSequence().size(); i++) {
                 Node ch = res.get(i);
                 if (startr(ch, name)) {
-                    res.set(i, replace(ch, name));
+                    res.set(i, replace(ch, name, done));
                     if (!Helper.canBeEmpty(ch, tree)) {
                         break;
                     }
@@ -69,15 +72,18 @@ public class LeftRecursive {
         }
         else if (node.isName()) {
             if (!node.equals(name) && node.asName().isRule() && startr(node, name)) {
-                //find rule and substitute rhs
-                return replace(tree.getRule(node.asName().name).rhs.copy(), name);
+                if (done.add(node.asName())) {
+                    System.out.println("sub " + node + " with " + name);
+                    //find rule and substitute rhs
+                    return replace(tree.getRule(node.asName().name).rhs.copy(), name, done);
+                }
             }
         }
         else if (node.isGroup()) {
-            return new GroupNode(replace(node.asGroup().node, name)).normal();
+            return new GroupNode(replace(node.asGroup().node, name, done)).normal();
         }
         else if (node.isRegex()) {
-            return new RegexNode(replace(node.asRegex().node, name), node.asRegex().type);
+            return new RegexNode(replace(node.asRegex().node, name, done), node.asRegex().type);
         }
         return node;
     }
@@ -252,6 +258,7 @@ public class LeftRecursive {
     }
 
     boolean startr(Node node, NameNode name) {
+        //System.out.println("startr with " + name + " , " + node);
         return Helper.first(node, tree, true).contains(name);
     }
 

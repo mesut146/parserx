@@ -1,6 +1,7 @@
 import mesut.parserx.gen.EbnfToBnf;
 import mesut.parserx.gen.LeftRecursive;
 import mesut.parserx.gen.PrecedenceHelper;
+import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
 
@@ -22,7 +23,17 @@ public class TransformTest {
         //System.out.println(tree);
         PrecedenceHelper helper = new PrecedenceHelper(tree);
         tree = helper.transform();
-        System.out.println(tree);
+        System.out.println(NodeList.join(tree.rules, "\n"));
+        /*tree = LeftRecursive.transform(tree);
+        System.out.println("-------------");
+        System.out.println(NodeList.join(tree.rules, "\n"));*/
+    }
+
+    @Test
+    public void rec() throws Exception {
+        File file = Env.getResFile("pred.g");
+        Tree tree = Tree.makeTree(file);
         tree = LeftRecursive.transform(tree);
+        System.out.println(NodeList.join(tree.rules, "\n"));
     }
 }

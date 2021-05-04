@@ -169,6 +169,10 @@ public class PrecedenceHelper {
             sb.append(tree.getTokenByValue(ops.get(i).asString().value).tokenName);
             if (i < ops.size() - 1) sb.append("_");
         }
+        if (ops.size() == 1) {
+            //don't cause conf with token
+            sb.append("x");
+        }
         return sb.toString();
     }
 
