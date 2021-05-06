@@ -8,7 +8,7 @@ public class Env {
     static String testRes;
 
     static {
-        dir = "/home/mesut/IdeaProjects/parserx";
+        dir = "/home/mesut/Desktop/IdeaProjects/parserx";
         //dir = "/storage/emulated/0/AppProjects/parserx";
         testJava = dir + "/src/test/java";
         testRes = dir + "/src/test/resources";

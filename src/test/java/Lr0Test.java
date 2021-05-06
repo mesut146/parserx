@@ -20,12 +20,13 @@ public class Lr0Test {
         file = Env.getResFile(gr);
         //file = Env.getResFile("lr0/left.g");
         //file = Env.getResFile("lr1/calc2.g");
-        file = Env.getFile2("lr1/simple.g");
+        //file = Env.getFile2("lr1/simple.g");
+        file = Env.getResFile("rec/cyc.g");
         //file = Env.getFile2("javaParser.g");
         Tree tree = Tree.makeTree(file);
         Lr0Generator generator = new Lr0Generator(null, Env.dotDir().getAbsolutePath(), tree);
         generator.generate();
-        generator.writeDot(new PrintWriter(Env.dotFile("lr0.dot")));
+        generator.writeDot(new PrintWriter(Env.dotFile(file.getName()) + ".dot"));
         generator.makeTable();
     }
 
@@ -36,12 +37,13 @@ public class Lr0Test {
         //file = Env.getFile2("lr1/calc2.g");
         //file = Env.getFile2("lr1/calc3.g");
         //file = Env.getFile2("lr1/simple.g");
-        file = Env.getFile2("lr1/lr1.g");
+        //file = Env.getFile2("lr1/lr1.g");
+        file = Env.getResFile("rec/cyc.g");
         //file = Env.getFile2("lr1/rr.g");
         Tree tree = Tree.makeTree(file);
         Lr1Generator generator = new Lr1Generator(null, Env.dotDir().getAbsolutePath(), tree);
         generator.generate();
-        generator.writeDot(new PrintWriter(Env.dotFile("lr1.dot")));
+        generator.writeDot(new PrintWriter(Env.dotFile(file.getName() + ".dot")));
         generator.makeTable();
         //generator.merge();
     }

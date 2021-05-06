@@ -17,12 +17,7 @@ public class RegexOptimizer extends Transformer {
 
     @Override
     public Node transformNode(Node node) {
-        if (node.isSequence()) {
-            node = transformSequence2(node.asSequence());
-        }
-        else if (node.isOr()) {
-            node = transformOr2(node.asOr());
-        }
+        node = node.normal();//merge
         return super.transformNode(node);
     }
 
@@ -60,6 +55,19 @@ public class RegexOptimizer extends Transformer {
             if (n.isString()) {
                 sb.append(n.asString().value);
             }
+            else if (n.isRegex() && n.asRegex().isStar()) {
+                //a a* = a+
+                //a* a=a+
+                Node ch = n.asRegex().node;
+                if (i > 1 && node.get(i - 1).equals(ch)) {
+                    res.list.remove(i - 1);
+                    res.add(new RegexNode(ch, "+"));
+                }
+                else if (i < node.size() - 1 && node.get(i + 1).equals(ch)) {
+                    res.add(new RegexNode(ch, "+"));
+                    i++;//skip next
+                }
+            }
             else {
                 if (sb.length() != 0) {
                     res.add(new StringNode(sb.toString()));
@@ -72,36 +80,6 @@ public class RegexOptimizer extends Transformer {
             res.add(new StringNode(sb.toString()));
         }
         return res.normal();
-    }
-
-    //merge sequences
-    public Node transformSequence2(Sequence node) {
-        Sequence newNode = new Sequence();
-        for (int i = 0; i < node.size(); i++) {
-            Node n = transformNode(node.get(i));
-            if (n.isSequence()) {
-                newNode.addAll(n.asSequence().list);
-            }
-            else {
-                newNode.add(n);
-            }
-        }
-        return newNode.normal();
-    }
-
-    //merge ors
-    public Node transformOr2(OrNode node) {
-        OrNode newNode = new OrNode();
-        for (int i = 0; i < node.size(); i++) {
-            Node n = transformNode(node.get(i));
-            if (n.isOr()) {
-                newNode.addAll(n.asOr().list);
-            }
-            else {
-                newNode.add(n);
-            }
-        }
-        return newNode.normal();
     }
 
 }

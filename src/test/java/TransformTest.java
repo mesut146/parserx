@@ -31,7 +31,7 @@ public class TransformTest {
 
     @Test
     public void rec() throws Exception {
-        File file = Env.getResFile("pred.g");
+        File file = Env.getResFile("rec/cyc.g");
         Tree tree = Tree.makeTree(file);
         tree = LeftRecursive.transform(tree);
         System.out.println(NodeList.join(tree.rules, "\n"));

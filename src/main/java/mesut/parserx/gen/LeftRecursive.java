@@ -40,18 +40,19 @@ public class LeftRecursive {
 
     public Node indirect(RuleDecl rule) {
         Node node = rule.rhs.copy();
-        RuleDecl tmp = new RuleDecl(rule.name, replace(node, rule.ref(), new HashSet<NameNode>()));
+        //if first set is cyclic handle that rule first
+        RuleDecl tmp = new RuleDecl(rule.name, substitude(node, rule.ref(), new HashSet<NameNode>()));
         //now it is in direct recursive form
         return removeDirect(tmp);
     }
 
-    //substitute references that can start with name don't touch rest
-    Node replace(Node node, final NameNode name, Set<NameNode> done) {
+    //substitute start references that can start with name don't touch rest
+    Node substitude(Node node, final NameNode name, Set<NameNode> done) {
         if (node.isOr()) {
             OrNode res = new OrNode();
             for (Node ch : node.asOr()) {
                 if (startr(ch, name)) {
-                    ch = replace(ch, name, done);
+                    ch = substitude(ch, name, done);
                 }
                 res.add(ch);
             }
@@ -62,7 +63,7 @@ public class LeftRecursive {
             for (int i = 0; i < node.asSequence().size(); i++) {
                 Node ch = res.get(i);
                 if (startr(ch, name)) {
-                    res.set(i, replace(ch, name, done));
+                    res.set(i, substitude(ch, name, done));
                     if (!Helper.canBeEmpty(ch, tree)) {
                         break;
                     }
@@ -75,15 +76,15 @@ public class LeftRecursive {
                 if (done.add(node.asName())) {
                     System.out.println("sub " + node + " with " + name);
                     //find rule and substitute rhs
-                    return replace(tree.getRule(node.asName().name).rhs.copy(), name, done);
+                    return substitude(tree.getRule(node.asName().name).rhs.copy(), name, done);
                 }
             }
         }
         else if (node.isGroup()) {
-            return new GroupNode(replace(node.asGroup().node, name, done)).normal();
+            return new GroupNode(substitude(node.asGroup().node, name, done)).normal();
         }
         else if (node.isRegex()) {
-            return new RegexNode(replace(node.asRegex().node, name, done), node.asRegex().type);
+            return new RegexNode(substitude(node.asRegex().node, name, done), node.asRegex().type);
         }
         return node;
     }

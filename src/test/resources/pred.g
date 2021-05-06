@@ -2,6 +2,7 @@ include "javaLexer.g"
 
 token{
  REST: "hello";
+ R2: "r";
 }
 
 /*E:
@@ -11,18 +12,12 @@ token{
  | REST;
 */
 
-E: A "--";
-A: B "/";
-B: A | E "++" | REST;
-/*
-A: (A | E "++" | REST) "/";
-A: (E "++" | REST) "/" ("/")*;
-A: (A "--" "++" | REST) "/" ("/")*;
-A: REST "/" "/"* (A "--" "++" "/" "/"*)*
+E: A "a";
+A: B "b" | C "c";
+B: A | E "e" | "r";
+C: B "b" | "r";
 
-E: B "/" "--";
-B: A | E "++" | REST;
-*/
+
 
 /*E: REST
 | ("+" | "-" | "++" | "--" | "!" | "~") E #unary
