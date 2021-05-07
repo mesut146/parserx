@@ -2,12 +2,12 @@ package mesut.parserx.gen;
 
 import mesut.parserx.nodes.*;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 //remove left recursions
 public class LeftRecursive {
     public Tree tree;
+    Map<String, Node> cache = new HashMap<>();
 
     public LeftRecursive(Tree tree) {
         this.tree = tree;
@@ -29,7 +29,7 @@ public class LeftRecursive {
         while (startr(rule.rhs, rule.ref())) {
             if (start(rule.rhs, rule.ref())) {
                 //direct
-                rule.rhs = removeDirect(rule);
+                rule.rhs = removeDirect(rule.rhs, rule.ref());
             }
             else {
                 //indirect
@@ -41,9 +41,47 @@ public class LeftRecursive {
     public Node indirect(RuleDecl rule) {
         Node node = rule.rhs.copy();
         //if first set is cyclic handle that rule first
+        Set<NameNode> first = Helper.first(node, tree, false, true, false);
+        for (NameNode nm : first) {
+            if (!nm.equals(rule.rhs)) {
+                Set<NameNode> rest = Helper.first(node, tree, true, true, false);
+                rest.remove(nm);
+                rest.remove(rule.ref());
+                for (NameNode other : rest) {
+                    if (startr(other, nm)) {
+                        //cyclic
+                        //normalize this then substitute
+                        Node norm = normalize(other, nm);
+                    }
+                }
+            }
+        }
+
         RuleDecl tmp = new RuleDecl(rule.name, substitude(node, rule.ref(), new HashSet<NameNode>()));
         //now it is in direct recursive form
-        return removeDirect(tmp);
+        return removeDirect(tmp.rhs, tmp.ref());
+    }
+
+    //make sure node doesn't start with 'cause'
+    private Node normalize(NameNode node, NameNode cause) {
+        RuleDecl rule = tree.getRule(node.name);
+        Node rhs = removeDirect(rule.rhs, rule.ref());
+        //subs
+        rhs = substitude(rhs, cause, new HashSet<NameNode>());
+        rhs = removeDirect(rhs, cause);
+        cache.put(node.name, rhs);
+        return rhs;
+    }
+
+    PathNode makePath(NameNode name, Map<NameNode, PathNode> map) {
+        if (map.containsKey(name)) return map.get(name);
+        Set<NameNode> set = Helper.first(tree.getRule(name.name), tree, false, true, false);
+        PathNode pathNode = new PathNode(name.name);
+        map.put(name, pathNode);
+        for (NameNode ch : set) {
+            pathNode.next.add(makePath(ch, map));
+        }
+        return pathNode;
     }
 
     //substitute start references that can start with name don't touch rest
@@ -76,6 +114,9 @@ public class LeftRecursive {
                 if (done.add(node.asName())) {
                     System.out.println("sub " + node + " with " + name);
                     //find rule and substitute rhs
+                    if (cache.containsKey(node.asName().name)) {
+                        return cache.get(node.asName().name);
+                    }
                     return substitude(tree.getRule(node.asName().name).rhs.copy(), name, done);
                 }
             }
@@ -97,11 +138,11 @@ public class LeftRecursive {
         return new OrNode(s.list.subList(1, s.size())).normal();
     }
 
-    public Node removeDirect(RuleDecl rule) {
-        if (!start(rule.rhs, rule.ref())) {
-            return rule.rhs;
+    public Node removeDirect(Node node, NameNode ref) {
+        if (!start(node, ref)) {
+            return node;
         }
-        SplitInfo info = split(rule.rhs, rule.ref());
+        SplitInfo info = split(node, ref);
         Node tail = null;
         //extract tail
         if (info.one.isSequence()) {
@@ -229,7 +270,7 @@ public class LeftRecursive {
             info.zero = r;
         }
         else {
-            throw new RuntimeException("invalid: " + r.getClass());
+            throw new RuntimeException("invalid node: " + r.getClass());
         }
         return info;
     }
@@ -259,13 +300,21 @@ public class LeftRecursive {
     }
 
     boolean startr(Node node, NameNode name) {
-        //System.out.println("startr with " + name + " , " + node);
         return Helper.first(node, tree, true).contains(name);
     }
 
     public static class SplitInfo {
         public Node zero, one;
         boolean eps;
+    }
+
+    static class PathNode {
+        String name;
+        List<PathNode> next = new ArrayList<>();
+
+        public PathNode(String name) {
+            this.name = name;
+        }
     }
 
 }

@@ -3,6 +3,7 @@ package mesut.parserx.gen;
 import mesut.parserx.nodes.*;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 public class Helper {
@@ -32,15 +33,30 @@ public class Helper {
         return set;
     }
 
+    public static Set<NameNode> first(Node node, Tree tree, boolean rec, boolean allowRules, boolean allowTokens) {
+        Set<NameNode> set = new HashSet<>();
+        first(node, tree, rec, set);
+        for (Iterator<NameNode> it = set.iterator(); it.hasNext(); ) {
+            if (it.next().isToken) {
+                if (!allowTokens) {
+                    it.remove();
+                }
+            }
+            else {
+                if (!allowRules) {
+                    it.remove();
+                }
+            }
+        }
+        return set;
+    }
+
+    //first set of regex
     public static void first(Node node, Tree tree, boolean rec, Set<NameNode> set) {
         if (node.isName()) {
             NameNode name = node.asName();
-            if (!set.contains(name)) {
-                //System.out.println("n = " + node + " set=" + set);
-            }
             if (set.add(name)) {
                 if (rec && name.isRule()) {
-                    //System.out.println("n = " + node + " set=" + set);
                     first(tree.getRule(name.name).rhs, tree, rec, set);
                 }
             }
