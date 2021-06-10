@@ -4,6 +4,18 @@ import java.io.*;
 
 public class IOUtils {
 
+    public static File newName(File file, String ext) {
+        String name = file.getName();
+        int i = name.lastIndexOf('.');
+        if (i == -1) {
+            name = name + "." + ext;
+        }
+        else {
+            name = name.substring(0, i) + "." + ext;
+        }
+        return new File(file.getParent(), name);
+    }
+
     public static String read(InputStream in) throws IOException {
         StringBuilder sb = new StringBuilder();
         BufferedReader br = new BufferedReader(new InputStreamReader(in));

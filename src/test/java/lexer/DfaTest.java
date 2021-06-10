@@ -1,3 +1,6 @@
+package lexer;
+
+import common.Env;
 import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.nodes.Tree;

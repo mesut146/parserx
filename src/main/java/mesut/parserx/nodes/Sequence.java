@@ -26,12 +26,12 @@ public class Sequence extends NodeList {
 
     @Override
     public Node normal() {
+        normal0();
         if (size() == 1) {
             return first();
         }
         Sequence s = new Sequence();
         for (Node ch : this) {
-            ch = ch.normal();
             if (ch.isSequence()) {
                 s.addAll(ch.asSequence().list);
             }

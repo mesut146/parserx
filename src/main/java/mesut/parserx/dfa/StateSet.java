@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-//nfa state set
+//nfa,dfa state set
 public class StateSet implements Iterable<Integer> {
 
     public Set<Integer> states = new HashSet<>();

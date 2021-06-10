@@ -1,3 +1,6 @@
+package lexer;
+
+import common.Env;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Template;

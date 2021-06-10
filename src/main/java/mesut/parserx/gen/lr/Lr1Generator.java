@@ -60,8 +60,4 @@ public class Lr1Generator extends LRGen<Lr1ItemSet> {
     }
 
 
-    public void makeTable() {
-        DotWriter.lr1Table(this);
-    }
-
 }

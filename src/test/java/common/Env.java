@@ -1,11 +1,13 @@
+package common;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
 public class Env {
-    static String dir;
-    static String testJava;
-    static String testRes;
+    public static String dir;
+    public static String testJava;
+    public static String testRes;
 
     static {
         dir = "/home/mesut/Desktop/IdeaProjects/parserx";
@@ -20,7 +22,7 @@ public class Env {
 
     public static File dotFile(String name) throws IOException {
         dotDir().mkdirs();
-        File file= new File(dotDir(), name);
+        File file = new File(dotDir(), name);
         file.createNewFile();
         return file;
     }

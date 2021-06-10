@@ -61,6 +61,6 @@ public class PrepareTree extends SimpleTransformer {
             throw new RuntimeException("unknown string token: " + val + " in " + parent);
         }
         //replace
-        return decl.makeReference();
+        return decl.ref();
     }
 }

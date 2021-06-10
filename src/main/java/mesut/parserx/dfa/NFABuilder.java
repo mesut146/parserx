@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
 
+//nfa from grammar
 public class NFABuilder {
     NFA nfa;
     Tree tree;

@@ -1,3 +1,6 @@
+package regex;
+
+import common.Env;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.Tree;

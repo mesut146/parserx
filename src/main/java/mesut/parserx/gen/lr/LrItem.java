@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+//lr0,lr1
 public class LrItem {
     public List<NameNode> lookAhead = new ArrayList<>();
     RuleDecl ruleDecl;
@@ -98,9 +99,6 @@ public class LrItem {
 
     @Override
     public int hashCode() {
-        int result = ruleDecl.hashCode();
-        result = 31 * result + dotPos;
-        result = 31 * result + lookAhead.hashCode();
-        return result;
+        return Objects.hash(ruleDecl, dotPos, lookAhead);
     }
 }

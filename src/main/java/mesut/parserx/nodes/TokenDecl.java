@@ -1,6 +1,5 @@
 package mesut.parserx.nodes;
 
-//token name ;
 public class TokenDecl extends Node {
 
     public String tokenName;
@@ -17,11 +16,7 @@ public class TokenDecl extends Node {
         this.regex = regex;
     }
 
-    public void setName(String name) {
-        this.tokenName = name;
-    }
-
-    public NameNode makeReference() {
+    public NameNode ref() {
         return new NameNode(tokenName, true);
     }
 

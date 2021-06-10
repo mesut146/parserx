@@ -108,7 +108,6 @@ public class Tree {
 
     public void addRule(RuleDecl rule) {
         rule.index = rules.size();
-        rule.tree = this;
         rules.add(rule);
     }
 

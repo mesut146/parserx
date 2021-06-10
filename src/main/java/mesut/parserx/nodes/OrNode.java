@@ -66,6 +66,8 @@ public class OrNode extends NodeList {
 
     @Override
     public Node copy() {
-        return new OrNode(list);
+        return new OrNode(list) {{
+            this.label = label;
+        }};
     }
 }

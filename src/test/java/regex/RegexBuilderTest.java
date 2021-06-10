@@ -1,3 +1,7 @@
+package regex;
+
+import common.Env;
+import lexer.NfaTest;
 import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.NFABuilder;

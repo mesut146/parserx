@@ -4,11 +4,14 @@ import mesut.parserx.gen.EbnfToBnf;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.nodes.*;
+import mesut.parserx.utils.IOUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 public abstract class LRGen<T extends LrItemSet> {
@@ -24,23 +27,46 @@ public abstract class LRGen<T extends LrItemSet> {
         if (tree.start == null) {
             throw new RuntimeException("no start rule is defined");
         }
-        RuleDecl start = tree.getRule(tree.start.name);
-        Node rhs = start.rhs;
-        if (!rhs.isName()) {
+        List<RuleDecl> list = tree.getRules(tree.start.name);
+        boolean create = false;
+        if (list.size() == 1) {
+            //if start rule is already simple don't create new one
+            Node rhs = list.get(0).rhs;
             if (rhs.isSequence()) {
                 Node r = rhs.asSequence().normal();
                 if (!r.isName()) {
-                    //regex start node,create new one
-                    String name = "s'";
-                    if (tree.start.name.equals(name)) {
-                        name = "s_";
-                    }
-                    start = new RuleDecl(name, Sequence.of(tree.start));
-                    tree.addRule(start);
+                    create = true;
                 }
             }
         }
-        return start;
+        else {
+            create = true;
+        }
+        if (create) {
+            //regex start node,create new one
+            String name = "s'";
+            if (tree.start.name.equals(name)) {
+                name = "s_";
+            }
+            RuleDecl start = new RuleDecl(name, Sequence.of(tree.start));
+            tree.addRule(start);
+            tree.start = start.ref();
+            return start;
+        }
+        return list.get(0);
+    }
+
+    public File tableDotFile() {
+        return new File(dir, tree.file.getName() + "-table.dot");
+    }
+
+    public void writeTableDot() {
+        if (this instanceof Lr0Generator) {
+            DotWriter.lr0Table((Lr0Generator) this);
+        }
+        else {
+            DotWriter.lr1Table((Lr1Generator) this);
+        }
     }
 
     void prepare() {
@@ -53,12 +79,30 @@ public abstract class LRGen<T extends LrItemSet> {
         first = new LrItem(start, 0);
     }
 
+    public void writeGrammar() {
+        File file = tree.file;
+        String s = file.getName();
+        int i = s.lastIndexOf('.');
+        if (i != -1) {
+            s = s.substring(0, i);
+        }
+        writeGrammar(new File(file.getParent(), s + "-final.g"));
+    }
+
+    public void writeGrammar(File file) {
+        try {
+            IOUtils.write(tree.toString(), file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public abstract T makeSet(LrItem item);
 
     public void generate() {
         prepare();
 
-        Queue<T> queue = new LinkedList<>();
+        Queue<T> queue = new LinkedList<>();//itemsets
 
         T firstSet = makeSet(first);
         table.addId(firstSet);

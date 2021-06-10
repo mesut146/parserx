@@ -1,3 +1,6 @@
+package lexer;
+
+import common.Env;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.grammar.GParser;
 import mesut.parserx.grammar.ParseException;

@@ -8,7 +8,7 @@ token{
 }
 
 @start = E;
-E: A a;
+E: A a | B c c;
 A: B b | C c;
 B: A | E e | r1;
 C: B b | r2;

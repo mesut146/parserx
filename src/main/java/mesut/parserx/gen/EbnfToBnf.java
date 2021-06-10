@@ -116,8 +116,7 @@ public class EbnfToBnf {
     Node transform(OrNode orNode, RuleDecl decl) {
         if (expand_or) {
             for (Node node : orNode) {
-                RuleDecl newDecl = new RuleDecl();
-                newDecl.name = decl.name;
+                RuleDecl newDecl = new RuleDecl(decl.name);
                 newDecl.rhs = transform(node, newDecl);
                 transformRhs(newDecl);
             }

@@ -1,4 +1,6 @@
+package lexer;
 
+import common.Env;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
 import mesut.parserx.nodes.RangeNode;

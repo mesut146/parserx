@@ -8,10 +8,6 @@ import java.util.Set;
 
 public class Helper {
 
-    public static boolean startWith(RuleDecl rule, String name) {
-        return first(rule.rhs, rule.tree, false).contains(new NameNode(name, false));
-    }
-
     //extract epsilon from or
     public static Node hasEps(OrNode or) {
         OrNode res = new OrNode();

@@ -6,14 +6,14 @@ lexer &amp; parser generator for java
 - epsilon removal
 - left recursion removal
 - ebnf to bnf and vice versa
-- LR(0) and LR(0) dfa, table output as dot graph
+- LR(0),LR(1),LALR(1) dfa and table output as dot graph
 
 ## todo
 
 - [X] nfa construction
 - [X] nfa to dfa
-- [ ] dfa minimization 
+- [X] dfa minimization 
 - [X] lexer generator
-- [ ] lr(k) parser generator
-- [ ] ll(k) parser generator
+- [ ] LR parser generator
+- [ ] LL parser generator
 - [ ] recursive descent parser generator

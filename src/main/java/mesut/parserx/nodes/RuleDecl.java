@@ -7,9 +7,8 @@ import java.util.Objects;
 public class RuleDecl extends Node {
 
     public String name;
-    public Node rhs;//sequence,or,simple rule
+    public Node rhs;
     public int index;
-    public Tree tree;
 
     public RuleDecl() {
     }
@@ -25,10 +24,6 @@ public class RuleDecl extends Node {
 
     public NameNode ref() {
         return new NameNode(name, false);
-    }
-
-    public boolean is(NameNode node) {
-        return name.equals(node.name);
     }
 
     @Override

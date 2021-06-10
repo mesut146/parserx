@@ -11,7 +11,7 @@ public class DotWriter {
 
     public static void lr0Table(Lr0Generator generator) {
         try {
-            PrintWriter writer = new PrintWriter(new File(generator.dir, generator.tree.file.getName() + "-table.dot"));
+            PrintWriter writer = new PrintWriter(generator.tableDotFile());
             LrDFA<Lr0ItemSet> table = generator.table;
             List<NameNode> tokens = table.tokens;
             tokens.add(Lr0Generator.dollar);
@@ -44,11 +44,16 @@ public class DotWriter {
                     }
                     if (set.hasReduce()) {
                         List<LrItem> reduce = set.getReduce();
-                        if (reduce.get(0).ruleDecl.name.equals(start)) {
+                        String name = reduce.get(0).ruleDecl.name;
+                        if (name.equals(start)) {
                             writer.print("accept");
                         }
                         else {
-                            writer.print("R" + reduce.get(0).ruleDecl.name);
+                            writer.print("R" + name);
+                            if (generator.tree.getRules(name).size() > 1) {
+                                //index is needed
+                                writer.print(reduce.get(0).ruleDecl.index);
+                            }
                         }
                     }
                     writer.print("</TD>");
@@ -75,6 +80,10 @@ public class DotWriter {
     }
 
     public static void lr1Table(Lr1Generator generator) {
+        lr1Table(generator, false);
+    }
+
+    public static void lr1Table(Lr1Generator generator, boolean writeRules) {
         try {
             PrintWriter writer = new PrintWriter(new File(generator.dir, generator.tree.file.getName() + "-table.dot"));
             LrDFA<Lr1ItemSet> table = generator.table;
@@ -87,10 +96,15 @@ public class DotWriter {
             writer.println("node [shape=plaintext]");
             writer.println("some_node[label=");
             writer.println("<<TABLE>");
-            writer.println("<TR><TD>States</TD>");
+            writer.println("<TR>");
+            writer.println("<TD>States</TD>");
+            if (writeRules)
+                writer.println("<TD>Rules</TD>");
+            //tokens
             for (NameNode token : tokens) {
                 writer.print("<TD>" + token.name + "</TD>");
             }
+            //rules
             for (NameNode rule : table.rules) {
                 writer.println("<TD>" + rule.name + "</TD>");
             }
@@ -99,6 +113,16 @@ public class DotWriter {
             for (Lr1ItemSet set : table.itemSets) {
                 writer.print("<TR>");
                 writer.println("<TD>I" + table.getId(set) + "</TD>");
+                if (writeRules) {
+                    String s = set.toString();
+                    //int size = s.replaceAll("[^\n]", "").length();
+                    writer.println("<TD>");
+                    for (String line : s.replace("<", "&lt;").replace(">", "&gt;").split("\n")) {
+                        writer.print("<BR/>");
+                        writer.print(line);
+                    }
+                    writer.print("</TD>");
+                }
                 //shift/reduce
                 for (NameNode token : tokens) {
                     writer.print("<TD>");

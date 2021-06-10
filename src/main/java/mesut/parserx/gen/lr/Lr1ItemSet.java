@@ -39,45 +39,45 @@ public class Lr1ItemSet extends LrItemSet {
     }
 
     public void closure(NameNode node, LrItem sender) {
-        if (!node.isToken) {
-            //get rules
-            List<RuleDecl> rules = tree.getRules(node.name);
-            for (RuleDecl decl : rules) {
-                List<NameNode> laList = new ArrayList<>();
-                //page 261
-                //lookahead
-                //first(follow(node),sender la)
-                if (sender.getDotNode2() != null) {
-                    NameNode la = sender.getDotNode2();
-                    if (la.isToken) {
-                        laList.add(la);
-                    }
-                    else {
-                        //first of la becomes follow
-                        laList.addAll(first(la));
-                    }
-                }
-
-                if (laList.isEmpty()) {
-                    //first of sender
-                    laList.add(sender.lookAhead.get(0));
-                }
-                if (lalr) {
-                    LrItem newItem = new LrItem(decl, 0);
-                    newItem.lookAhead = laList;
-                    addItem(newItem, node);
+        if (node.isToken) {
+            throw new RuntimeException("closure error on node: " + node+", was expecting rule");
+        }
+        //get rules
+        List<RuleDecl> rules = tree.getRules(node.name);
+        for (RuleDecl decl : rules) {
+            List<NameNode> laList = new ArrayList<>();
+            //page 261
+            //lookahead
+            //first(follow(node),sender la)
+            if (sender.getDotNode2() != null) {
+                NameNode la = sender.getDotNode2();
+                if (la.isToken) {
+                    laList.add(la);
                 }
                 else {
-                    for (NameNode la : laList) {
-                        LrItem newItem = new LrItem(decl, 0);
-                        newItem.lookAhead.add(la);
-                        addItem(newItem, node);
-                    }
+                    //first of la becomes follow
+                    laList.addAll(first(la));
                 }
             }
-        }
-        else {
-            throw new RuntimeException("closure error on node: " + node);
+
+            if (laList.isEmpty()) {
+                //first of sender
+                laList.add(sender.lookAhead.get(0));
+            }
+            if (lalr) {
+                //merge into one
+                LrItem newItem = new LrItem(decl, 0);
+                newItem.lookAhead = laList;
+                addItem(newItem, node);
+            }
+            else {
+                //create per one
+                for (NameNode la : laList) {
+                    LrItem newItem = new LrItem(decl, 0);
+                    newItem.lookAhead.add(la);
+                    addItem(newItem, node);
+                }
+            }
         }
     }
 

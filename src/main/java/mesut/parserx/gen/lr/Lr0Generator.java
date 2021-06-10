@@ -1,12 +1,12 @@
 package mesut.parserx.gen.lr;
 
 import mesut.parserx.gen.LexerGenerator;
-import mesut.parserx.nodes.*;
+import mesut.parserx.nodes.Tree;
 
-import java.util.*;
+import java.io.File;
 
 // lr(0)
-public class Lr0Generator extends LRGen<Lr0ItemSet>{
+public class Lr0Generator extends LRGen<Lr0ItemSet> {
 
     public Lr0Generator(LexerGenerator lexerGenerator, String dir, Tree tree) {
         this.lexerGenerator = lexerGenerator;
@@ -16,15 +16,11 @@ public class Lr0Generator extends LRGen<Lr0ItemSet>{
 
     @Override
     public Lr0ItemSet makeSet(LrItem item) {
-        return new Lr0ItemSet(item,tree);
+        return new Lr0ItemSet(item, tree);
     }
 
 
     void writeSource() {
 
-    }
-
-    public void makeTable() {
-        DotWriter.lr0Table(this);
     }
 }
