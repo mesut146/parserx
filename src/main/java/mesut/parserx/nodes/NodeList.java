@@ -65,7 +65,7 @@ public class NodeList extends Node implements Iterable<Node> {
     public void add(Node node) {
         list.add(node);
     }
-    
+
     public <T extends Node> void addAll(List<T> other) {
         list.addAll(other);
     }
@@ -121,5 +121,14 @@ public class NodeList extends Node implements Iterable<Node> {
     @Override
     public int hashCode() {
         return list.hashCode();
+    }
+
+
+    public void normal0() {
+        List<Node> arr = new ArrayList<>();
+        for (Node ch : list) {
+            arr.add(ch.normal());
+        }
+        list = arr;
     }
 }

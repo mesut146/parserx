@@ -15,9 +15,10 @@ public class GroupNode extends Node implements Iterable<Node> {
     }
 
     public String toString() {
+        boolean backup = OrNode.newLine;
         OrNode.newLine = false;
         String s = varString() + "(" + node + ")";
-        OrNode.newLine = true;
+        OrNode.newLine = backup;
         return s;
     }
 

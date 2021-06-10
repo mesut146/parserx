@@ -4,11 +4,11 @@ import java.io.*;
 
 public class IOUtils {
 
-    public static String read(InputStream inputStream) throws IOException {
+    public static String read(InputStream in) throws IOException {
         StringBuilder sb = new StringBuilder();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
         String line;
-        while ((line = reader.readLine()) != null) {
+        while ((line = br.readLine()) != null) {
             sb.append(line).append("\n");
         }
         return sb.toString();

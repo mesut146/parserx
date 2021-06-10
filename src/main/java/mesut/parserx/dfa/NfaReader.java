@@ -4,6 +4,7 @@ import mesut.parserx.nodes.StringNode;
 import mesut.parserx.utils.IOUtils;
 
 import java.io.*;
+import java.rmi.RemoteException;
 
 public class NfaReader {
 
@@ -57,8 +58,7 @@ public class NfaReader {
             }
         }
         if (!gotInitial) {
-            System.err.println("no initial state");
-            return null;
+            throw new RemoteException("no initial state");
         }
         return nfa;
     }

@@ -48,8 +48,9 @@ public class OrNode extends NodeList {
     }
 
     public Node normal() {
+        normal0();
         if (size() == 1) {
-            return first();
+            return first().normal();
         }
         OrNode s = new OrNode();
         for (Node ch : this) {

@@ -31,6 +31,7 @@ public class Sequence extends NodeList {
         }
         Sequence s = new Sequence();
         for (Node ch : this) {
+            ch = ch.normal();
             if (ch.isSequence()) {
                 s.addAll(ch.asSequence().list);
             }
