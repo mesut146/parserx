@@ -12,8 +12,9 @@ import java.util.Objects;
 //lr0,lr1
 public class LrItem {
     public List<NameNode> lookAhead = new ArrayList<>();
-    RuleDecl ruleDecl;
-    int dotPos;
+    public RuleDecl ruleDecl;
+    public int dotPos;
+    public LrItemSet gotoSet;
 
     public LrItem(RuleDecl ruleDecl, int dotPos) {
         this.ruleDecl = ruleDecl;
@@ -32,6 +33,10 @@ public class LrItem {
 
     boolean isLr0() {
         return lookAhead.isEmpty();
+    }
+
+    public boolean isKernel() {
+        return dotPos == 0;
     }
 
     @Override

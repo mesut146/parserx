@@ -57,7 +57,7 @@
   
   <dirname property="module.parserx.basedir" file="${ant.file}"/>
 
-  <property name="compiler.args.parserx" value="-encoding UTF-8 -source 7 -target 1.7 ${compiler.args}"/>
+  <property name="compiler.args.parserx" value="-encoding UTF-8 -source 8 -target 1.8 ${compiler.args}"/>
   
   <property name="parserx.output.dir" value="${module.parserx.basedir}/target/classes"/>
   <property name="parserx.testoutput.dir" value="${module.parserx.basedir}/target/test-classes"/>

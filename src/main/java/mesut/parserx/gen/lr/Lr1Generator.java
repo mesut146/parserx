@@ -28,33 +28,26 @@ public class Lr1Generator extends LRGen<Lr1ItemSet> {
         return new Lr1ItemSet(item, tree);
     }
 
-    //merge same kernel states with different lookaheads
+    //lalr merger
+    //merge sets that have same kernel
     public void merge() {
-        LrDFA<Lr1ItemSet> table2 = new LrDFA<>();
+        LrDFA<Lr1ItemSet> res = new LrDFA<>();
         Map<Integer, Map<NameNode, Lr1ItemSet>> map = new HashMap<>();
         for (Lr1ItemSet from : table.itemSets) {
             int id = table.getId(from);
             Map<NameNode, Lr1ItemSet> m = map.get(id);
+            //init ids
             if (m == null) {
                 m = new HashMap<>();
                 map.put(id, m);
             }
+            for (LrItemSet other : table.itemSets) {
+                if (from == other) continue;
+                if(from.kernel.equals(other.kernel)){
 
-            for (LrTransition<Lr1ItemSet> t : table.getTrans(from)) {
-                /** if(table2.getTrans(from,t.symbol)){
-                 }*/
-
-                if (m.containsKey(t.symbol)) {
-                    //merge
-                    m.get(t.symbol).all.addAll(t.to.all);
-                    //remove t
-                    table2.addTransition(from, t.to, t.symbol);
-                    table.getTrans(from).remove(t);
-                }
-                else {
-                    m.put(t.symbol, t.to);
                 }
             }
+
         }
 
     }

@@ -6,6 +6,7 @@ import java.util.Objects;
 //name=rules;
 public class RuleDecl extends Node {
 
+    public static boolean printIndex = false;
     public String name;
     public Node rhs;
     public int index;
@@ -28,6 +29,9 @@ public class RuleDecl extends Node {
 
     @Override
     public String toString() {
+        if (printIndex) {
+            return "/*" + index + "*/  " + name + " = " + rhs + ";";
+        }
         return name + " = " + rhs + ";";
     }
 

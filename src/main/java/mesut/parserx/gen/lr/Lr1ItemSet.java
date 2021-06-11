@@ -10,7 +10,7 @@ import java.util.*;
 
 public class Lr1ItemSet extends LrItemSet {
 
-    public static boolean lalr = true;
+    public static final boolean mergeLa = true;
 
     public Lr1ItemSet(List<LrItem> kernel, Tree tree) {
         this.kernel.addAll(kernel);
@@ -40,7 +40,7 @@ public class Lr1ItemSet extends LrItemSet {
 
     public void closure(NameNode node, LrItem sender) {
         if (node.isToken) {
-            throw new RuntimeException("closure error on node: " + node+", was expecting rule");
+            throw new RuntimeException("closure error on node: " + node + ", was expecting rule");
         }
         //get rules
         List<RuleDecl> rules = tree.getRules(node.name);
@@ -62,12 +62,13 @@ public class Lr1ItemSet extends LrItemSet {
 
             if (laList.isEmpty()) {
                 //first of sender
-                laList.add(sender.lookAhead.get(0));
+                laList.addAll(sender.lookAhead);
+                //laList.add(sender.lookAhead.get(0));
             }
-            if (lalr) {
-                //merge into one
+            if (mergeLa) {
                 LrItem newItem = new LrItem(decl, 0);
                 newItem.lookAhead = laList;
+                newItem.gotoSet = this;
                 addItem(newItem, node);
             }
             else {
@@ -75,6 +76,7 @@ public class Lr1ItemSet extends LrItemSet {
                 for (NameNode la : laList) {
                     LrItem newItem = new LrItem(decl, 0);
                     newItem.lookAhead.add(la);
+                    newItem.gotoSet = this;
                     addItem(newItem, node);
                 }
             }

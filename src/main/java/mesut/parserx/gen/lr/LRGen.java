@@ -61,12 +61,13 @@ public abstract class LRGen<T extends LrItemSet> {
     }
 
     public void writeTableDot() {
-        if (this instanceof Lr0Generator) {
+        /*if (this instanceof Lr0Generator) {
             DotWriter.lr0Table((Lr0Generator) this);
         }
         else {
             DotWriter.lr1Table((Lr1Generator) this);
-        }
+        }*/
+        DotWriter.table(this, false);
     }
 
     void prepare() {
@@ -91,6 +92,7 @@ public abstract class LRGen<T extends LrItemSet> {
 
     public void writeGrammar(File file) {
         try {
+            RuleDecl.printIndex = true;
             IOUtils.write(tree.toString(), file);
         } catch (IOException e) {
             e.printStackTrace();
@@ -112,16 +114,21 @@ public abstract class LRGen<T extends LrItemSet> {
             T curSet = queue.poll();
             while (true) {
                 LrItem from = curSet.getItem();
-                if (from == null) {
-                    break;
-                }
+                if (from == null) break;
+
                 NameNode symbol = from.getDotNode();
                 if (symbol == null) continue;
-                //goto
                 LrItem toFirst = new LrItem(from, from.dotPos + 1);
+                if (from.gotoSet != null) {
+                    //preserve goto
+                    toFirst.gotoSet = from.gotoSet;
+                }
+                else {
+                    toFirst.gotoSet = curSet;
+                }
                 T targetSet = getSet(toFirst);
                 if (targetSet == null) {
-                    targetSet = getOldSet(curSet, symbol);
+                    targetSet = getSet(curSet, symbol);
                     if (targetSet == null) {
                         targetSet = makeSet(toFirst);
                         table.addId(targetSet);
@@ -163,10 +170,10 @@ public abstract class LRGen<T extends LrItemSet> {
     }
 
     //if there exist another transition from this
-    T getOldSet(T from, NameNode symbol) {
-        for (LrTransition<T> transition : table.getTrans(from)) {
-            if (transition.from.equals(from) && transition.symbol.equals(symbol)) {
-                return transition.to;
+    T getSet(T from, NameNode symbol) {
+        for (LrTransition<T> tr : table.getTrans(from)) {
+            if (tr.from.equals(from) && tr.symbol.equals(symbol)) {
+                return tr.to;
             }
         }
         return null;

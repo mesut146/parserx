@@ -13,7 +13,7 @@ public class LrDFA<T extends LrItemSet> {
     public List<NameNode> rules = new ArrayList<>();
     int lastId = -1;
     List<T> itemSets = new ArrayList<>();//todo idMap.keys()
-    Map<T, Integer> idMap = new HashMap<>();//item set to state id
+    Map<T, Integer> idMap = new HashMap<>();//item set -> state id
 
     public void addTransition(T from, T to, NameNode symbol) {
         LrTransition<T> t = new LrTransition<>(from, to, symbol);
@@ -27,7 +27,7 @@ public class LrDFA<T extends LrItemSet> {
         }
     }
 
-    public List<LrTransition<T>> getTrans(T set) {
+    public List<LrTransition<T>> getTrans(LrItemSet set) {
         List<LrTransition<T>> list = map[getId(set)];
         if (list == null) {
             list = new ArrayList<>();
@@ -59,7 +59,7 @@ public class LrDFA<T extends LrItemSet> {
         return -1;
     }
 
-    public int getId(T itemSet) {
+    public int getId(LrItemSet itemSet) {
         if (idMap.containsKey(itemSet)) {
             return idMap.get(itemSet);
         }
