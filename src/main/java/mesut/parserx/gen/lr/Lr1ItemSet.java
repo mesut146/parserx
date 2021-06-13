@@ -45,7 +45,7 @@ public class Lr1ItemSet extends LrItemSet {
         //get rules
         List<RuleDecl> rules = tree.getRules(node.name);
         for (RuleDecl decl : rules) {
-            List<NameNode> laList = new ArrayList<>();
+            Set<NameNode> laList = new HashSet<>();
             //page 261
             //lookahead
             //first(follow(node),sender la)

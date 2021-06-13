@@ -7,16 +7,17 @@ import mesut.parserx.nodes.Tree;
 import java.util.*;
 
 public abstract class LrItemSet {
-    public List<LrItem> kernel = new ArrayList<>();
+    public Set<LrItem> kernel = new HashSet<>();
     public List<LrItem> all = new ArrayList<>();
     public Set<LrItem> done = new HashSet<>();
+    public LrItemSet merged;
     Tree tree;
 
     public LrItemSet() {
     }
 
     public LrItemSet(List<LrItem> kernel, Tree tree) {
-        this.kernel = kernel;
+        this.kernel = new HashSet<>(kernel);
         this.tree = tree;
     }
 

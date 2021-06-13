@@ -6,24 +6,26 @@ import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Sequence;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 //lr0,lr1
 public class LrItem {
-    public List<NameNode> lookAhead = new ArrayList<>();
-    public RuleDecl ruleDecl;
+    public Set<NameNode> lookAhead = new HashSet<>();
+    public RuleDecl rule;
     public int dotPos;
     public LrItemSet gotoSet;
+    int hash = -1;
 
-    public LrItem(RuleDecl ruleDecl, int dotPos) {
-        this.ruleDecl = ruleDecl;
+    public LrItem(RuleDecl rule, int dotPos) {
+        this.rule = rule;
         this.dotPos = dotPos;
     }
 
-    public LrItem(LrItem ruleDecl, int dotPos) {
-        this(ruleDecl.ruleDecl, dotPos);
-        this.lookAhead = new ArrayList<>(ruleDecl.lookAhead);
+    public LrItem(LrItem item, int dotPos) {
+        this(item.rule, dotPos);
+        this.lookAhead = new HashSet<>(item.lookAhead);
     }
 
     public boolean hasReduce() {
@@ -35,16 +37,12 @@ public class LrItem {
         return lookAhead.isEmpty();
     }
 
-    public boolean isKernel() {
-        return dotPos == 0;
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(ruleDecl.name);
+        sb.append(rule.name);
         sb.append(" -> ");
-        Sequence rhs = ruleDecl.rhs.asSequence();
+        Sequence rhs = rule.rhs.asSequence();
         for (int i = 0; i < rhs.size(); i++) {
             if (i == dotPos) {
                 sb.append(". ");
@@ -59,7 +57,7 @@ public class LrItem {
         }
         if (!isLr0()) {
             sb.append(" , ");
-            sb.append(NodeList.join(lookAhead, "/"));
+            sb.append(NodeList.join(new ArrayList<>(lookAhead), "/"));
         }
         return sb.toString();
     }
@@ -75,7 +73,7 @@ public class LrItem {
 
     //node after dot
     public NameNode getDotNode() {
-        Sequence rhs = ruleDecl.rhs.asSequence();
+        Sequence rhs = rule.rhs.asSequence();
         if (dotPos < rhs.size()) {
             return rhs.get(dotPos).asName();
         }
@@ -84,7 +82,7 @@ public class LrItem {
 
     //2 node after dot
     public NameNode getDotNode2() {
-        Sequence rhs = ruleDecl.rhs.asSequence();
+        Sequence rhs = rule.rhs.asSequence();
         if (dotPos < rhs.size() - 1) {
             return rhs.get(dotPos + 1).asName();
         }
@@ -99,11 +97,17 @@ public class LrItem {
         LrItem item = (LrItem) other;
 
         if (dotPos != item.dotPos) return false;
-        return Objects.equals(ruleDecl, item.ruleDecl) && Objects.equals(lookAhead, item.lookAhead);
+        return Objects.equals(rule, item.rule) && lookAhead.equals(item.lookAhead);
+    }
+
+    public boolean isSame(LrItem other) {
+        return dotPos == other.dotPos && Objects.equals(rule, other.rule);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ruleDecl, dotPos, lookAhead);
+        if (hash == -1)
+            hash = Objects.hash(rule, dotPos, lookAhead);
+        return hash;
     }
 }

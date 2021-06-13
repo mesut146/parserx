@@ -41,13 +41,14 @@ public class RuleDecl extends Node {
         if (o == null || getClass() != o.getClass()) return false;
         RuleDecl decl = (RuleDecl) o;
         return index == decl.index &&
-                Objects.equals(name, decl.name) &&
-                Objects.equals(rhs, decl.rhs);
+                Objects.equals(name, decl.name) /*&&
+                Objects.equals(rhs, decl.rhs)*/;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, rhs, index);
+        //return Objects.hash(name, rhs, index);
+        return Objects.hash(name, index);
     }
 
 }

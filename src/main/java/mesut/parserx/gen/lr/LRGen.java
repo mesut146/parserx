@@ -119,16 +119,10 @@ public abstract class LRGen<T extends LrItemSet> {
                 NameNode symbol = from.getDotNode();
                 if (symbol == null) continue;
                 LrItem toFirst = new LrItem(from, from.dotPos + 1);
-                if (from.gotoSet != null) {
-                    //preserve goto
-                    toFirst.gotoSet = from.gotoSet;
-                }
-                else {
-                    toFirst.gotoSet = curSet;
-                }
-                T targetSet = getSet(toFirst);
+                toFirst.gotoSet = from.gotoSet == null ? curSet : from.gotoSet;
+                T targetSet = getSet(curSet, symbol);
                 if (targetSet == null) {
-                    targetSet = getSet(curSet, symbol);
+                    targetSet = getSet(toFirst);//find another set
                     if (targetSet == null) {
                         targetSet = makeSet(toFirst);
                         table.addId(targetSet);
@@ -149,12 +143,35 @@ public abstract class LRGen<T extends LrItemSet> {
                     System.out.printf("%s %s to %s\n", symbol, printSet(curSet), printSet(targetSet));
                 }
                 else {
-                    table.addTransition(curSet, targetSet, symbol);
+                    //check if item there
+                    if (!targetSet.kernel.contains(toFirst)) {
+                        //merge
+                        targetSet.kernel.add(toFirst);
+                        targetSet.closure(toFirst);
+                        table.addTransition(curSet, targetSet, symbol);
+                    }
                 }
                 //throw new RuntimeException();
             }
         }
         //merge();
+    }
+
+    //check if two item has conflict
+    void check(LrItemSet set) {
+        for (LrItem i1 : set.all) {
+            for (LrItem i2 : set.all) {
+                if (i1 == i2) continue;
+                if (i1.rule.rhs.equals(i2.rule.rhs)) {
+                    if (i1.hasReduce() && i2.hasReduce()) {
+                        throw new RuntimeException("reduce/reduce conflict " + set);
+                    }
+                    else if (i1.hasReduce() || i2.hasReduce()) {
+                        throw new RuntimeException("shift/reduce conflict " + set);
+                    }
+                }
+            }
+        }
     }
 
     //get itemSet that contains item

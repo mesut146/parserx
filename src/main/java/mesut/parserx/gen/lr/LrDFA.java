@@ -2,10 +2,7 @@ package mesut.parserx.gen.lr;
 
 import mesut.parserx.nodes.NameNode;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class LrDFA<T extends LrItemSet> {
     public List<LrTransition<T>>[] map = new List[100];
@@ -13,11 +10,11 @@ public class LrDFA<T extends LrItemSet> {
     public List<NameNode> rules = new ArrayList<>();
     int lastId = -1;
     List<T> itemSets = new ArrayList<>();//todo idMap.keys()
-    Map<T, Integer> idMap = new HashMap<>();//item set -> state id
+    Map<LrItemSet, Integer> idMap = new HashMap<>();//item set -> state id
 
     public void addTransition(T from, T to, NameNode symbol) {
         LrTransition<T> t = new LrTransition<>(from, to, symbol);
-        List<LrTransition<T>> list = getTrans(t.from);
+        List<LrTransition<T>> list = getTrans(from);
         list.add(t);
         if (symbol.isToken && !tokens.contains(symbol)) {
             tokens.add(symbol);
@@ -45,13 +42,20 @@ public class LrDFA<T extends LrItemSet> {
     }*/
 
     public void addId(T set) {
+        if (idMap.get(set) != null) {
+            throw new RuntimeException("duplicate set " + set);
+        }
         idMap.put(set, ++lastId);
         itemSets.add(set);
         set.closure();
     }
 
+    public void setId(LrItemSet set, int id) {
+        idMap.put(set, id);
+    }
+
     int getId(LrItem item) {
-        for (Map.Entry<T, Integer> entry : idMap.entrySet()) {
+        for (Map.Entry<LrItemSet, Integer> entry : idMap.entrySet()) {
             if (entry.getKey().kernel.contains(item)) {
                 return entry.getValue();
             }
@@ -60,14 +64,23 @@ public class LrDFA<T extends LrItemSet> {
     }
 
     public int getId(LrItemSet itemSet) {
-        if (idMap.containsKey(itemSet)) {
+        return getId0(itemSet);
+        /*if (idMap.containsKey(itemSet)) {
             return idMap.get(itemSet);
         }
+        //todo
         for (LrItem kernel : itemSet.kernel) {
             int id = getId(kernel);
             if (id != -1) {
                 return id;
             }
+        }
+        return -1;*/
+    }
+
+    public int getId0(LrItemSet set) {
+        if (idMap.containsKey(set)) {
+            return idMap.get(set);
         }
         return -1;
     }

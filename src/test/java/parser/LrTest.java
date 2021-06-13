@@ -61,8 +61,8 @@ public class LrTest {
         File file;
         //file = Env.getFile2("lr1/calc2.g");
         //file = Env.getFile2("lr1/calc3.g");
-        file = Env.getFile2("lr1/simple.g");
-        //file = Env.getFile2("lr0/simple.g");
+        //file = Env.getFile2("lr1/simple.g");
+        file = Env.getFile2("lr0/simple.g");
         //file = Env.getFile2("lr1/lr1.g");
         //file = Env.getResFile("rec/cyc.g");
         //file = Env.getFile2("lr1/rr.g");
@@ -70,7 +70,7 @@ public class LrTest {
         //Lr1ItemSet.mergeLa = true;
         Lr1Generator generator = new Lr1Generator(null, Env.dotDir().getAbsolutePath(), tree);
         generator.generate();
-        generator.merge();
+        //generator.merge();
         dots(generator, file);
         //generator.merge();
     }

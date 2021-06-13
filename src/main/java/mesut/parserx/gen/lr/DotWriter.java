@@ -65,7 +65,7 @@ public class DotWriter {
                     }
                     //reduce
                     for (LrItem item : set.getReduce()) {
-                        String name = item.ruleDecl.name;
+                        String name = item.rule.name;
                         if (item.lookAhead.isEmpty()) {
                             //lr0
                             if (name.equals(start)) {
@@ -75,7 +75,7 @@ public class DotWriter {
                                 writer.print("R");
                                 writer.print(name);
                                 //index is needed
-                                writer.print(item.ruleDecl.index);
+                                writer.print(item.rule.index);
                             }
                         }
                         else {
@@ -88,7 +88,7 @@ public class DotWriter {
                                     writer.print("R");
                                     writer.print(name);
                                     //index is needed
-                                    writer.print(item.ruleDecl.index);
+                                    writer.print(item.rule.index);
                                 }
                             }
                         }

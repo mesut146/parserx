@@ -4,8 +4,7 @@ import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.nodes.NameNode;
 import mesut.parserx.nodes.Tree;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 public class Lr1Generator extends LRGen<Lr1ItemSet> {
@@ -28,28 +27,86 @@ public class Lr1Generator extends LRGen<Lr1ItemSet> {
         return new Lr1ItemSet(item, tree);
     }
 
+
+    void sort(List<LrItem> list) {
+        Collections.sort(list, new Comparator<LrItem>() {
+            @Override
+            public int compare(LrItem o1, LrItem o2) {
+                int c = Integer.compare(o1.dotPos, o2.dotPos);
+                if (c == 0) {
+                    return o1.rule.equals(o2.rule) ? 0 : -1;
+                }
+                return c;
+            }
+        });
+    }
+
     //lalr merger
     //merge sets that have same kernel
     public void merge() {
+        System.out.println("before merging " + table.itemSets.size());
         LrDFA<Lr1ItemSet> res = new LrDFA<>();
-        Map<Integer, Map<NameNode, Lr1ItemSet>> map = new HashMap<>();
+        //first pass will merge states
         for (Lr1ItemSet from : table.itemSets) {
-            int id = table.getId(from);
-            Map<NameNode, Lr1ItemSet> m = map.get(id);
-            //init ids
-            if (m == null) {
-                m = new HashMap<>();
-                map.put(id, m);
+            if (res.getId0(from) == -1) {
+                res.addId(from);
             }
             for (LrItemSet other : table.itemSets) {
                 if (from == other) continue;
-                if(from.kernel.equals(other.kernel)){
-
+                List<LrItem> k1 = new ArrayList<>(from.kernel);
+                List<LrItem> k2 = new ArrayList<>(other.kernel);
+                if (k1.size() != k2.size()) {
+                    break;
+                }
+                sort(k1);
+                sort(k2);
+                boolean same = true;
+                for (int i = 0; i < k1.size(); i++) {
+                    LrItem i1 = k1.get(i);
+                    LrItem i2 = k2.get(i);
+                    if (!i1.isSame(i2)) {
+                        same = false;
+                        break;
+                    }
+                }
+                if (same) {
+                    //two will have same id and la
+                    if (res.getId0(other) == -1) {
+                        res.setId(other, res.getId0(from));
+                    }
+                    //merge la
+                    for (int i = 0; i < k1.size(); i++) {
+                        LrItem i1 = k1.get(i);
+                        LrItem i2 = k2.get(i);
+                        Set<NameNode> set = new HashSet<>(i1.lookAhead);
+                        set.addAll(i2.lookAhead);
+                        i1.lookAhead = set;
+                        i2.lookAhead = set;
+                    }
+                    break;
                 }
             }
-
         }
-
+        //second pass will make transitions with new ids
+        for (Lr1ItemSet from : table.itemSets) {
+            for (LrTransition<?> tr : table.getTrans(from)) {
+                boolean merged = false;
+                //omit merged's transition
+                for (LrTransition<?> old : res.getTrans(from)) {
+                    if (old.symbol.equals(tr.symbol)) {
+                        //merged transition
+                        merged = true;
+                        break;
+                    }
+                }
+                if (!merged) {
+                    res.addTransition(from, (Lr1ItemSet) tr.to, tr.symbol);
+                    check(tr.to);
+                }
+            }
+        }
+        table = res;
+        System.out.println("after merging " + table.itemSets.size());
     }
 
 
