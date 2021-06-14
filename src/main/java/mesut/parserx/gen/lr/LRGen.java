@@ -61,12 +61,6 @@ public abstract class LRGen<T extends LrItemSet> {
     }
 
     public void writeTableDot() {
-        /*if (this instanceof Lr0Generator) {
-            DotWriter.lr0Table((Lr0Generator) this);
-        }
-        else {
-            DotWriter.lr1Table((Lr1Generator) this);
-        }*/
         DotWriter.table(this, false);
     }
 
@@ -112,6 +106,7 @@ public abstract class LRGen<T extends LrItemSet> {
 
         while (!queue.isEmpty()) {
             T curSet = queue.poll();
+            //iterate items
             while (true) {
                 LrItem from = curSet.getItem();
                 if (from == null) break;
@@ -122,39 +117,38 @@ public abstract class LRGen<T extends LrItemSet> {
                 toFirst.gotoSet = from.gotoSet == null ? curSet : from.gotoSet;
                 T targetSet = getSet(curSet, symbol);
                 if (targetSet == null) {
-                    targetSet = getSet(toFirst);//find another set
+                    targetSet = getSet(toFirst);//find another set that has same core
                     if (targetSet == null) {
                         targetSet = makeSet(toFirst);
                         table.addId(targetSet);
-                        queue.add(targetSet);
-                        table.addTransition(curSet, targetSet, symbol);
                     }
                     else {
                         System.out.println("merge");
                         //merge
-                        targetSet.addItem(toFirst);
+                        if (!targetSet.all.contains(toFirst)) {
+                            targetSet.addItem(toFirst);
+                        }
                         /*targetSet.all.add(toFirst);
                         targetSet.kernel.add(toFirst);
                         targetSet.closure(toFirst);*/
-                            /*targetSet = new Lr1ItemSet(toFirst, tree);
-                            table.addId(targetSet);*/
-                        queue.add(targetSet);
+                        /*targetSet = new Lr1ItemSet(toFirst, tree);
+                        table.addId(targetSet);*/
                     }
+                    table.addTransition(curSet, targetSet, symbol);
+                    queue.add(targetSet);
                     System.out.printf("%s %s to %s\n", symbol, printSet(curSet), printSet(targetSet));
                 }
                 else {
                     //check if item there
-                    if (!targetSet.kernel.contains(toFirst)) {
+                    if (!targetSet.all.contains(toFirst)) {
                         //merge
-                        targetSet.kernel.add(toFirst);
-                        targetSet.closure(toFirst);
+                        targetSet.addItem(toFirst);
                         table.addTransition(curSet, targetSet, symbol);
+                        queue.add(targetSet);
                     }
                 }
-                //throw new RuntimeException();
             }
         }
-        //merge();
     }
 
     //check if two item has conflict

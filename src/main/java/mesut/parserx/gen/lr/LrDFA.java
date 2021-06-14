@@ -54,14 +54,14 @@ public class LrDFA<T extends LrItemSet> {
         idMap.put(set, id);
     }
 
-    int getId(LrItem item) {
+    /*int getId(LrItem item) {
         for (Map.Entry<LrItemSet, Integer> entry : idMap.entrySet()) {
             if (entry.getKey().kernel.contains(item)) {
                 return entry.getValue();
             }
         }
         return -1;
-    }
+    }*/
 
     public int getId(LrItemSet itemSet) {
         return getId0(itemSet);

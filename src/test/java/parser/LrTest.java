@@ -70,7 +70,7 @@ public class LrTest {
         //Lr1ItemSet.mergeLa = true;
         Lr1Generator generator = new Lr1Generator(null, Env.dotDir().getAbsolutePath(), tree);
         generator.generate();
-        //generator.merge();
+        generator.merge();
         dots(generator, file);
         //generator.merge();
     }

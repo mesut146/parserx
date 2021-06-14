@@ -65,10 +65,7 @@ public class LrItem {
     //if dot follows a terminal
     public boolean isDotNonTerminal() {
         NameNode nameNode = getDotNode();
-        if (nameNode == null) {
-            return false;
-        }
-        return !nameNode.isToken;
+        return nameNode == null ? false : !nameNode.isToken;
     }
 
     //node after dot

@@ -32,6 +32,7 @@ public abstract class LrItemSet {
         }
     }
 
+    //get item that is not used yet
     public LrItem getItem() {
         for (LrItem item : all) {
             if (!done.contains(item)) {

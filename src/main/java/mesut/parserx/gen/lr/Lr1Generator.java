@@ -21,7 +21,6 @@ public class Lr1Generator extends LRGen<Lr1ItemSet> {
         first.lookAhead.add(dollar);
     }
 
-
     @Override
     public Lr1ItemSet makeSet(LrItem item) {
         return new Lr1ItemSet(item, tree);
@@ -64,7 +63,7 @@ public class Lr1Generator extends LRGen<Lr1ItemSet> {
                 for (int i = 0; i < k1.size(); i++) {
                     LrItem i1 = k1.get(i);
                     LrItem i2 = k2.get(i);
-                    if (!i1.isSame(i2)) {
+                    if (!i1.isSame(i2)) {//same without la
                         same = false;
                         break;
                     }
