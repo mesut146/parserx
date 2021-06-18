@@ -2,7 +2,10 @@ package mesut.parserx.gen.lr;
 
 import mesut.parserx.nodes.NameNode;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class LrDFA<T extends LrItemSet> {
     public List<LrTransition<T>>[] map = new List[100];
@@ -15,6 +18,9 @@ public class LrDFA<T extends LrItemSet> {
     public void addTransition(T from, T to, NameNode symbol) {
         LrTransition<T> t = new LrTransition<>(from, to, symbol);
         List<LrTransition<T>> list = getTrans(from);
+        if (list.contains(t)) {
+            return;
+        }
         list.add(t);
         if (symbol.isToken && !tokens.contains(symbol)) {
             tokens.add(symbol);
@@ -33,55 +39,29 @@ public class LrDFA<T extends LrItemSet> {
         return list;
     }
 
-    /*public List<LrTransition<T>> getTrans(T set, NameNode symbol) {
-        for (LrTransition<Lr1ItemSet> transition : getTrans(set)) {
-            if (transition.from.equals(from) && transition.symbol.equals(symbol)) {
-                return transition.to;
-            }
-        }
-    }*/
-
     public void addId(T set) {
-        if (idMap.get(set) != null) {
+        if (idMap.containsKey(set)) {
             throw new RuntimeException("duplicate set " + set);
         }
         idMap.put(set, ++lastId);
         itemSets.add(set);
-        set.closure();
     }
 
     public void setId(LrItemSet set, int id) {
+        if (getId(set) != -1) {
+            throw new RuntimeException("can't set id of pre-existing set");
+        }
         idMap.put(set, id);
     }
 
-    /*int getId(LrItem item) {
-        for (Map.Entry<LrItemSet, Integer> entry : idMap.entrySet()) {
-            if (entry.getKey().kernel.contains(item)) {
-                return entry.getValue();
-            }
+    public int getId(LrItemSet set) {
+        for (Map.Entry<LrItemSet, Integer> s : idMap.entrySet()) {
+            //== is needed bc kernel may change later so does hashcode
+            if (s.getKey() == set) return s.getValue();
         }
-        return -1;
-    }*/
-
-    public int getId(LrItemSet itemSet) {
-        return getId0(itemSet);
-        /*if (idMap.containsKey(itemSet)) {
-            return idMap.get(itemSet);
-        }
-        //todo
-        for (LrItem kernel : itemSet.kernel) {
-            int id = getId(kernel);
-            if (id != -1) {
-                return id;
-            }
-        }
-        return -1;*/
-    }
-
-    public int getId0(LrItemSet set) {
-        if (idMap.containsKey(set)) {
+        /*if (idMap.containsKey(set)) {
             return idMap.get(set);
-        }
+        }*/
         return -1;
     }
 }

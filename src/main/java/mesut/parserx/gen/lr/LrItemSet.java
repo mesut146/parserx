@@ -10,7 +10,6 @@ public abstract class LrItemSet {
     public Set<LrItem> kernel = new HashSet<>();
     public List<LrItem> all = new ArrayList<>();
     public Set<LrItem> done = new HashSet<>();
-    public LrItemSet merged;
     Tree tree;
 
     public LrItemSet() {
@@ -32,7 +31,15 @@ public abstract class LrItemSet {
         }
     }
 
-    //get item that is not used yet
+    public void addCore(LrItem item) {
+        if (!all.contains(item)) {
+            kernel.add(item);
+            all.add(item);
+            closure(item);
+        }
+    }
+
+    //get item that is not processed yet
     public LrItem getItem() {
         for (LrItem item : all) {
             if (!done.contains(item)) {

@@ -2,10 +2,12 @@ import java.util.*;
 
 public class $parser_class${
     Stack<Symbol> stack = new Stack<>();
+    Stack<Integer> states = new Stack<>();
     $lexer_class$ lexer;
     static int ACCEPT = 0;
     static int SHIFT = 1;
     static int REDUCE = 2;
+    static int[] rhs_table;
 
     public $parser_class$($lexer_class$ lexer){
         this.lexer = lexer;
@@ -21,7 +23,7 @@ public class $parser_class${
 
     public void parse(){
         int state = 0;
-        push(state);
+        states.push(state);
         Symbol symbol = lexer.$lexer_method$();
         entry = T[state, symbol];
 
@@ -38,6 +40,7 @@ public class $parser_class${
                 push(entry.rule.lhs)
                 state = T[state, entry.rule.lhs]
                 push(state)
+                System.out.println("reduce ");
             }
             else if(entry.action == blank){
                 error();
@@ -47,7 +50,9 @@ public class $parser_class${
     }
 }
 
+//either a token or a rule
 public class Symbol{
     $token_class$ token;
     String name;
+    public int id;
 }

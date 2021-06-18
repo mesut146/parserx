@@ -4,16 +4,13 @@ import java.io.*;
 
 public class IOUtils {
 
-    public static File newName(File file, String ext) {
-        String name = file.getName();
+    public static String newName(String name, String suffix) {
         int i = name.lastIndexOf('.');
-        if (i == -1) {
-            name = name + "." + ext;
+        if (i != -1) {
+            name = name.substring(0, i);
         }
-        else {
-            name = name.substring(0, i) + "." + ext;
-        }
-        return new File(file.getParent(), name);
+        name = name + suffix;
+        return name;
     }
 
     public static String read(InputStream in) throws IOException {

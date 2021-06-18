@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -57,7 +58,7 @@ public abstract class LRGen<T extends LrItemSet> {
     }
 
     public File tableDotFile() {
-        return new File(dir, tree.file.getName() + "-table.dot");
+        return new File(dir, IOUtils.newName(tree.file.getName(), "-table.dot"));
     }
 
     public void writeTableDot() {
@@ -102,6 +103,7 @@ public abstract class LRGen<T extends LrItemSet> {
 
         T firstSet = makeSet(first);
         table.addId(firstSet);
+        firstSet.closure();
         queue.add(firstSet);
 
         while (!queue.isEmpty()) {
@@ -121,47 +123,76 @@ public abstract class LRGen<T extends LrItemSet> {
                     if (targetSet == null) {
                         targetSet = makeSet(toFirst);
                         table.addId(targetSet);
+                        targetSet.closure();
                     }
                     else {
                         System.out.println("merge");
-                        //merge
                         if (!targetSet.all.contains(toFirst)) {
-                            targetSet.addItem(toFirst);
+                            targetSet.addCore(toFirst);
+                            //targetSet.addItem(toFirst);
                         }
-                        /*targetSet.all.add(toFirst);
-                        targetSet.kernel.add(toFirst);
-                        targetSet.closure(toFirst);*/
-                        /*targetSet = new Lr1ItemSet(toFirst, tree);
-                        table.addId(targetSet);*/
                     }
                     table.addTransition(curSet, targetSet, symbol);
                     queue.add(targetSet);
-                    System.out.printf("%s %s to %s\n", symbol, printSet(curSet), printSet(targetSet));
+                    log(from, curSet, toFirst, targetSet, symbol);
                 }
                 else {
                     //check if item there
                     if (!targetSet.all.contains(toFirst)) {
                         //merge
-                        targetSet.addItem(toFirst);
+                        //targetSet.addItem(toFirst);
+                        targetSet.addCore(toFirst);
                         table.addTransition(curSet, targetSet, symbol);
                         queue.add(targetSet);
+                        log(from, curSet, toFirst, targetSet, symbol);
                     }
                 }
             }
+            System.out.println("-----------------");
+        }
+        checkAll();
+    }
+
+    void log(LrItem from, LrItemSet curSet, LrItem toFirst, LrItemSet targetSet, NameNode symbol) {
+        System.out.printf("%s (%d)%s to (%d)%s\n", symbol, table.getId(curSet), from, table.getId(targetSet), toFirst);
+    }
+
+    void checkAll() {
+        for (LrItemSet set : table.itemSets) {
+            check(set);
         }
     }
 
     //check if two item has conflict
     void check(LrItemSet set) {
-        for (LrItem i1 : set.all) {
-            for (LrItem i2 : set.all) {
-                if (i1 == i2) continue;
-                if (i1.rule.rhs.equals(i2.rule.rhs)) {
-                    if (i1.hasReduce() && i2.hasReduce()) {
-                        throw new RuntimeException("reduce/reduce conflict " + set);
+        boolean lr0 = this instanceof Lr0Generator;
+        for (int i = 0; i < set.all.size(); i++) {
+            LrItem i1 = set.all.get(i);
+            for (int j = i + 1; j < set.all.size(); j++) {
+                LrItem i2 = set.all.get(j);
+                if (i1.hasReduce() && i2.hasReduce()) {
+                    if (lr0) {
+                        throw new RuntimeException("reduce/reduce conflict " + table.getId(set) + "\n" + set);
                     }
-                    else if (i1.hasReduce() || i2.hasReduce()) {
-                        throw new RuntimeException("shift/reduce conflict " + set);
+                    else {
+                        //if any lookahead conflict
+                        HashSet<NameNode> la = new HashSet<>(i1.lookAhead);
+                        la.retainAll(i2.lookAhead);
+                        if (!la.isEmpty()) {
+                            throw new RuntimeException("reduce/reduce conflict " + table.getId(set) + "\n" + set);
+                        }
+                    }
+                }
+                else {
+                    if (i1.hasReduce() && !i2.hasReduce()) {
+                        if (lr0 || i1.lookAhead.contains(i2.getDotNode())) {
+                            throw new RuntimeException("shift/reduce conflict " + table.getId(set) + "\n" + set);
+                        }
+                    }
+                    else if (!i1.hasReduce() && i2.hasReduce()) {
+                        if (lr0 || i2.lookAhead.contains(i1.getDotNode())) {
+                            throw new RuntimeException("shift/reduce conflict " + table.getId(set) + "\n" + set);
+                        }
                     }
                 }
             }
@@ -190,14 +221,10 @@ public abstract class LRGen<T extends LrItemSet> {
         return null;
     }
 
-    String printSet(T set) {
-        return String.format("(%d)%s", table.getId(set), set.kernel);
-    }
-
     public void writeDot(PrintWriter dotWriter) {
         if (dotWriter == null) {
             try {
-                dotWriter = new PrintWriter(new File(dir, tree.file.getName() + ".dot"));
+                dotWriter = new PrintWriter(new File(dir, IOUtils.newName(tree.file.getName(), ".dot")));
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 return;

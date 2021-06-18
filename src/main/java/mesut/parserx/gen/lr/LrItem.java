@@ -93,6 +93,7 @@ public class LrItem {
 
         LrItem item = (LrItem) other;
 
+        //if (hash == item.hash) return true;
         if (dotPos != item.dotPos) return false;
         return Objects.equals(rule, item.rule) && lookAhead.equals(item.lookAhead);
     }

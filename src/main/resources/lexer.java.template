@@ -118,7 +118,7 @@ public class $lexer_class$ {
                         return token;
                     }
                     bufStart = bufPos;
-                    if (yychar == EOF) break;
+                    if (yychar == EOF) break;//return null;
                     if (getBit(skip, lastState)) return $next_token$();
                 }
                 else {

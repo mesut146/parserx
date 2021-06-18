@@ -40,38 +40,44 @@ public class Lr1Generator extends LRGen<Lr1ItemSet> {
         });
     }
 
+    boolean isSameKernel(List<LrItem> k1, List<LrItem> k2) {
+        if (k1.size() != k2.size()) {
+            return false;
+        }
+        sort(k1);
+        sort(k2);
+        for (int i = 0; i < k1.size(); i++) {
+            LrItem i1 = k1.get(i);
+            LrItem i2 = k2.get(i);
+            if (!i1.isSame(i2)) {//same without la
+                return false;
+            }
+        }
+        return true;
+    }
+
     //lalr merger
     //merge sets that have same kernel
     public void merge() {
         System.out.println("before merging " + table.itemSets.size());
         LrDFA<Lr1ItemSet> res = new LrDFA<>();
         //first pass will merge states
+        Set<LrItemSet> done = new HashSet<>();
         for (Lr1ItemSet from : table.itemSets) {
-            if (res.getId0(from) == -1) {
+            if (done.contains(from)) continue;
+            if (res.getId(from) == -1) {
                 res.addId(from);
             }
             for (LrItemSet other : table.itemSets) {
                 if (from == other) continue;
                 List<LrItem> k1 = new ArrayList<>(from.kernel);
                 List<LrItem> k2 = new ArrayList<>(other.kernel);
-                if (k1.size() != k2.size()) {
-                    break;
-                }
-                sort(k1);
-                sort(k2);
-                boolean same = true;
-                for (int i = 0; i < k1.size(); i++) {
-                    LrItem i1 = k1.get(i);
-                    LrItem i2 = k2.get(i);
-                    if (!i1.isSame(i2)) {//same without la
-                        same = false;
-                        break;
-                    }
-                }
-                if (same) {
-                    //two will have same id and la
-                    if (res.getId0(other) == -1) {
-                        res.setId(other, res.getId0(from));
+                if (isSameKernel(k1, k2)) {
+                    done.add(other);
+                    System.out.println("merging " + table.getId(from) + " with " + table.getId(other));
+                    if (res.getId(other) == -1) {
+                        //merge id if not done yet
+                        res.setId(other, res.getId(from));
                     }
                     //merge la
                     for (int i = 0; i < k1.size(); i++) {
@@ -100,7 +106,6 @@ public class Lr1Generator extends LRGen<Lr1ItemSet> {
                 }
                 if (!merged) {
                     res.addTransition(from, (Lr1ItemSet) tr.to, tr.symbol);
-                    check(tr.to);
                 }
             }
         }
