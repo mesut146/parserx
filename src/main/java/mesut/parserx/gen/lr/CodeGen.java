@@ -17,5 +17,6 @@ public class CodeGen {
         template.set("parser_class", parser_class);
         template.set("lexer_class", lexer_class);
         template.set("lexer_method", lexer_method);
+        template.set("rhs_sizes", "todo");
     }
 }

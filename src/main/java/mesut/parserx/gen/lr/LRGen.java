@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+//lr table generatorr
 public abstract class LRGen<T extends LrItemSet> {
     public static NameNode dollar = new NameNode("$");
     Tree tree;

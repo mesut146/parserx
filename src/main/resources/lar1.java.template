@@ -7,7 +7,8 @@ public class $parser_class${
     static int ACCEPT = 0;
     static int SHIFT = 1;
     static int REDUCE = 2;
-    static int[] rhs_table;
+    static int[] rhs_sizes;
+    static int[][] table;//[state][sym] = action
 
     public $parser_class$($lexer_class$ lexer){
         this.lexer = lexer;
@@ -22,37 +23,45 @@ public class $parser_class${
     }
 
     public void parse(){
-        int state = 0;
         states.push(state);
         Symbol symbol = lexer.$lexer_method$();
-        entry = T[state, symbol];
+        states.push(0);
+        int state = 0;
+        int action = table[state][symbol.id];
 
-        while(entry.action != ACCEPT){
-            if(entry.action == SHIFT){
-                push(symbol);
-                state = entry.state
-                push(state)
-                read(symbol)
+        while(true){
+        if(symbol == null){
+          break;
+        }
+          if(action > 0){//shift
+            stack.push(symbol);
+            states.push(action);
+            state = action;
+            symbol = lexer.$lexer_method$();
+          }
+          else{
+            int size = rhs_sizes[-action];
+            while(size > 0){
+              stack.pop();
+              states.pop();
             }
-            else if(entry.action == REDUCE){
-                do 2∗size rhs times {pop()}
-                state = top-of-stack()
-                push(entry.rule.lhs)
-                state = T[state, entry.rule.lhs]
-                push(state)
-                System.out.println("reduce ");
-            }
-            else if(entry.action == blank){
-                error();
-            }
-            entry = T[state, symbol]
+            symbol = new Symbol(-action)
+            stack.push(symbol);
+            int from = states.peek();
+            state = table[from][symbol.id];
+            System.out.println("reduced "+(-action));
+          }
         }
     }
 }
 
 //either a token or a rule
-public class Symbol{
+public static class Symbol{
     $token_class$ token;
     String name;
     public int id;
+
+    public Symbol(int id){
+      this.id = id;
+    }
 }

@@ -2,9 +2,23 @@ https://versioncontrolseidl.in.tum.de/parsergenerators/cup/-/blob/master/src/jav
 
 table[state][symbol_id] = action:int
 
-1st bit 1 if accept
-2nd bit 1 if reduce , 0 if shift
-3rd bit 1 if
+if(action > 0){
+  //shift
+  states.push(action);
+  stack.push(symbol);
+}
+else{
+  if(action == 0) error?
+  //reduce
+  int size = rhs_sizes[-action];
+  while(size > 0){
+    stack.pop();
+    states.pop();
+  }
+  stack.push(new Symbol(-action));
+  print();
+
+}
 
 
 
