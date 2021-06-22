@@ -1,7 +1,6 @@
 package mesut.parserx.gen.lr;
 
 import mesut.parserx.gen.EbnfToBnf;
-import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.IOUtils;
@@ -17,11 +16,11 @@ import java.util.Queue;
 
 //lr table generatorr
 public abstract class LRGen<T extends LrItemSet> {
-    public static NameNode dollar = new NameNode("$");
+    public static NameNode dollar = new NameNode("$");//eof
+    public CodeGen codeGen = new CodeGen(this);
     Tree tree;
     RuleDecl start;
     String dir;
-    LexerGenerator lexerGenerator;
     LrDFA<T> table = new LrDFA<>();
     LrItem first;
 
@@ -96,6 +95,7 @@ public abstract class LRGen<T extends LrItemSet> {
     }
 
     public abstract T makeSet(LrItem item);
+
 
     public void generate() {
         prepare();

@@ -8,14 +8,14 @@ import java.util.Map;
 //transform ebnf to bnf
 public class EbnfToBnf {
 
-    public static boolean leftRecursive = true;//make repetitions left recursive
-    public static boolean expand_or = true;//separate rules for each or content
+    public static boolean leftRecursive = true;//prefer left recursion on regex expansions
+    public static boolean expand_or = true;//separate rule for each 'or' content
     public static boolean combine_or = false;//exclusive expand_or
     public static boolean rhsSequence = true;//make sure rhs always sequence
-    public static boolean expandGroup = true;
+    public static boolean expandGroup = true;//make separate production for groups
     static String starSuffix = "*", plusSuffix = "+", optSuffix = "?";
-    Tree tree;//in ebnf
-    Tree res;//out bnf
+    Tree tree;//input ebnf
+    Tree res;//output bnf
     Map<String, Integer> countMap = new HashMap<>();
 
     public EbnfToBnf(Tree tree) {

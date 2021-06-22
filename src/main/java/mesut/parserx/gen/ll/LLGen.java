@@ -7,6 +7,7 @@ import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
 
+import java.io.PrintWriter;
 import java.util.*;
 
 public class LLGen {
@@ -50,6 +51,10 @@ public class LLGen {
             }
         }
         System.out.println(table.idMap);
+    }
+
+    public void dot(PrintWriter writer) {
+
     }
 
     static class LLTable {

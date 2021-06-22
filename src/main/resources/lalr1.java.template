@@ -4,60 +4,61 @@ public class $parser_class${
     Stack<Symbol> stack = new Stack<>();
     Stack<Integer> states = new Stack<>();
     $lexer_class$ lexer;
-    static int ACCEPT = 0;
-    static int SHIFT = 1;
-    static int REDUCE = 2;
-    static int[] rhs_sizes;
-    static int[][] table;//[state][sym] = action
+    static int[] rhs_sizes = {$rhs_sizes$};
+    static int[][] table = unpackTable(table_packed);
+    static String table_packed = $table_packed$;
 
     public $parser_class$($lexer_class$ lexer){
         this.lexer = lexer;
     }
 
-    void push(int st){
+    void unpackTable(String s){
 
-    }
-
-    void error(){
 
     }
 
     public void parse(){
-        states.push(state);
         Symbol symbol = lexer.$lexer_method$();
-        states.push(0);
+        states.push(0);//initial state
         int state = 0;
         int action = table[state][symbol.id];
 
         while(true){
-        if(symbol == null){
-          break;
-        }
-          if(action > 0){//shift
+          if(action == 0){
+            System.out.println("error");
+            return;
+          }
+          if(action == Integer.MAX_VALUE){
+            System.out.println("accept");
+            return;
+          }
+          if(action > 0){
+            //shift
             stack.push(symbol);
             states.push(action);
             state = action;
             symbol = lexer.$lexer_method$();
           }
           else{
+            //-action is rule index
             int size = rhs_sizes[-action];
-            while(size > 0){
+            while(size-- > 0){
               stack.pop();
               states.pop();
             }
-            symbol = new Symbol(-action)
+            symbol = new Symbol(-action);
             stack.push(symbol);
             int from = states.peek();
-            state = table[from][symbol.id];
+            action = table[from][symbol.id];
             System.out.println("reduced "+(-action));
           }
         }
     }
 }
 
-//either a token or a rule
+//a token or a rule
 public static class Symbol{
-    $token_class$ token;
+    //$token_class$ token;
     String name;
     public int id;
 

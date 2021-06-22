@@ -51,7 +51,7 @@ public class LrTest {
         file = Env.getFile2("lr1/calc3.g");
         //file = Env.getFile2("javaParser.g");
         Tree tree = Tree.makeTree(file);
-        Lr0Generator generator = new Lr0Generator(null, Env.dotDir().getAbsolutePath(), tree);
+        Lr0Generator generator = new Lr0Generator(Env.dotDir().getAbsolutePath(), tree);
         generator.generate();
         dots(generator, file);
     }
@@ -69,9 +69,11 @@ public class LrTest {
         //file = Env.getFile2("lr1/rr.g");
         Tree tree = Tree.makeTree(file);
         //Lr1ItemSet.mergeLa = true;
-        Lr1Generator generator = new Lr1Generator(null, Env.dotDir().getAbsolutePath(), tree);
+        Lr1Generator generator = new Lr1Generator(Env.dotDir().getAbsolutePath(), tree);
         generator.generate();
         generator.merge();
         dots(generator, file);
+        generator.codeGen.parser_class = "Parser";
+        generator.codeGen.gen();
     }
 }

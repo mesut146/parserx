@@ -2,23 +2,9 @@ https://versioncontrolseidl.in.tum.de/parsergenerators/cup/-/blob/master/src/jav
 
 table[state][symbol_id] = action:int
 
-if(action > 0){
-  //shift
-  states.push(action);
-  stack.push(symbol);
-}
-else{
-  if(action == 0) error?
-  //reduce
-  int size = rhs_sizes[-action];
-  while(size > 0){
-    stack.pop();
-    states.pop();
-  }
-  stack.push(new Symbol(-action));
-  print();
-
-}
+action == 0 error
+> 0 shift to
+< 0  reduce to
 
 
 

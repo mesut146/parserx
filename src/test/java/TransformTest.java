@@ -11,10 +11,10 @@ import java.io.File;
 public class TransformTest {
     @Test
     public void test() throws Exception {
-        //File file = Env.getResFile("javaParser.g");
-        File file = Env.getResFile("bnf.g");
+        File file = Env.getResFile("java/parser-jls.g");
+        //File file = Env.getResFile("bnf.g");
         Tree tree = Tree.makeTree(file);
-        System.out.println(new EbnfToBnf(tree).transform());
+        //System.out.println(new EbnfToBnf(tree).transform());
     }
 
     @Test

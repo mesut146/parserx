@@ -30,11 +30,24 @@ public class LrDFA<T extends LrItemSet> {
         }
     }
 
+    public LrItemSet getSet(int id) {
+        for (Map.Entry<LrItemSet, Integer> entry : idMap.entrySet()) {
+            if (entry.getValue().equals(id)) {
+                return entry.getKey();
+            }
+        }
+        throw new RuntimeException("can't find set from id:" + id);
+    }
+
     public List<LrTransition<T>> getTrans(LrItemSet set) {
-        List<LrTransition<T>> list = map[getId(set)];
+        return getTrans(getId(set));
+    }
+
+    public List<LrTransition<T>> getTrans(int id) {
+        List<LrTransition<T>> list = map[id];
         if (list == null) {
             list = new ArrayList<>();
-            map[getId(set)] = list;
+            map[id] = list;
         }
         return list;
     }

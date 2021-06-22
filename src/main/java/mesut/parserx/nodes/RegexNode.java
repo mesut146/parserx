@@ -7,10 +7,10 @@ public class RegexNode extends Node {
     public Node node;//lexer or parser rule
     public String type;
 
-    public RegexNode() {
-    }
-
     public RegexNode(Node rule, String type) {
+        if (rule.isSequence()) {
+            rule = new GroupNode(rule);
+        }
         this.node = rule;
         this.type = type;
     }

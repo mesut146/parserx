@@ -1,32 +1,32 @@
-tree::= includeStatement*
+tree= includeStatement*
         (tokenBlock  | skipBlock)*
         startDecl?
         ruleDecl*;
 
-includeStatement::= "include" <STRING_LITERAL>;
+includeStatement= "include" <STRING_LITERAL>;
 
-tokenBlock::= "token" "{" tokenDecl* "}";
-skipBlock::= "skip" "{" tokenDecl* "}";
+tokenBlock= "token" "{" tokenDecl* "}";
+skipBlock= "skip" "{" tokenDecl* "}";
 
-declSeparator::= ":" | "=" | ":=" | ":==" | "->";
-tokenDecl::= "#"? name declSeparator rhs;
-ruleDecl::= name declSeparator rhs;
+declSeparator= ":" | "=" | ":=" | ":==" | "->";
+tokenDecl= "#"? name declSeparator rhs;
+ruleDecl= name declSeparator rhs;
 
-rhs::= sequence ("|" sequence)*;
-sequence::= regex+;
-regex::= simple ("*" | "+" | "?")?
-simple::= group | ref | stringNode | bracketNode | untilNode | dotNode;
+rhs= sequence ("|" sequence)*;
+sequence= regex+;
+regex= simple ("*" | "+" | "?")?
+simple= group | ref | stringNode | bracketNode | untilNode | dotNode;
 
-group::= "(" rhs ")";
-stringNode::= <STRING_LITERAL>
-bracketNode::= <BRACKET_LIST>//easier to handle as token
-untilNode::= "~" regex;
-dotNode::= "."
+group= "(" rhs ")";
+stringNode= <STRING_LITERAL>
+bracketNode= <BRACKET_LIST>//easier to handle as token
+untilNode= "~" regex;
+dotNode= "."
 
-startDecl::= "@start" "=" name;
+startDecl= "@start" "=" name;
 
 
 
-ref::= lexerRef | name;
-lexerRef::= "{" name "}";
-name::= <IDENT>;
+ref= lexerRef | name;
+lexerRef= "{" name "}";
+name= <IDENT>;

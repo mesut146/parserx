@@ -382,6 +382,22 @@ EmptyNode empty():
   }
 }
 
+Node repeatNode():
+{
+  Node node;
+}
+{
+ "{" node = rhs() "}"{return new RegexNode(node, "*");}
+}
+
+Node optionalNode():
+{
+  Node node;
+}
+{
+ "[" node = rhs() "]"{return new RegexNode(node, "?");}
+}
+
 /*Bracket bracket():
 {
   Bracket b = new Bracket();

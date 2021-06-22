@@ -1,6 +1,5 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.nodes.NameNode;
 import mesut.parserx.nodes.Tree;
 
@@ -9,8 +8,7 @@ import java.util.*;
 
 public class Lr1Generator extends LRGen<Lr1ItemSet> {
 
-    public Lr1Generator(LexerGenerator lexerGenerator, String dir, Tree tree) {
-        this.lexerGenerator = lexerGenerator;
+    public Lr1Generator(String dir, Tree tree) {
         this.dir = dir;
         this.tree = tree;
     }

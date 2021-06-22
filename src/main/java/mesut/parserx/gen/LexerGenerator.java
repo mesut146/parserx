@@ -15,12 +15,12 @@ import java.util.List;
 import java.util.Map;
 
 public class LexerGenerator {
-    NFA dfa;
     public String outDir;
     public String className;
-    String packageName;
-    String tokenClassName = "Token";
-    String functionName = "next";
+    public String packageName;
+    public String tokenClassName = "Token";
+    public String functionName = "next";
+    NFA dfa;
     boolean outDirAuto;
     Map<String, Integer> idMap = new HashMap<>();//name -> id
 
