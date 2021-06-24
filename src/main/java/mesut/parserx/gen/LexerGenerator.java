@@ -4,6 +4,8 @@ import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.RangeNode;
+import mesut.parserx.nodes.TokenDecl;
+import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.IOUtils;
 import mesut.parserx.utils.UnicodeUtils;
 
@@ -12,54 +14,36 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 public class LexerGenerator {
-    public String outDir;
-    public String className;
-    public String packageName;
-    public String tokenClassName = "Token";
-    public String functionName = "next";
+    public HashMap<String, Integer> idMap = new HashMap<>();//name -> id
+    Options options;
     NFA dfa;
-    boolean outDirAuto;
-    Map<String, Integer> idMap = new HashMap<>();//name -> id
 
-    public LexerGenerator(NFA dfa, String outDir) {
+    public LexerGenerator(NFA dfa, Options options) {
         this.dfa = dfa;
-        this.outDir = outDir;
+        this.options = options;
     }
 
-    public void setClassName(String className) {
-        this.className = className;
-    }
-
-    public void setPackageName(String packageName) {
-        this.packageName = packageName;
-    }
-
-    public void setOutDirFromPackage(boolean value) {
-        this.outDirAuto = value;
-    }
-
-    public void setFunctionName(String functionName) {
-        this.functionName = functionName;
+    public LexerGenerator(Tree tree, Options options) {
+        this.dfa = tree.makeNFA().dfa();
+        this.options = options;
     }
 
     public void generate() throws IOException {
-        File file;
-        if (outDirAuto) {
-            file = new File(outDir, packageName.replace('.', '/') + "/" + className + ".java");
+        Template template = new Template("lexer.java.template");
+        if (options.packageName == null) {
+            template.set("package", "");
         }
         else {
-            file = new File(outDir, className + ".java");
+            template.set("package", "package " + options.packageName + ";\n");
         }
-
-        Template template = new Template("lexer.java.template");
-        template.set("package", packageName);
-        template.set("lexer_class", className);
-        template.set("token_class", tokenClassName);
-        template.set("next_token", functionName);
+        template.set("lexer_class", options.lexerClass);
+        template.set("token_class", options.tokenClass);
+        template.set("next_token", options.lexerFunction);
         makeTables(template);
+
+        File file = new File(options.outDir, options.lexerClass + ".java");
         IOUtils.write(template.toString(), file);
         System.out.println("lexer file generated to " + file);
 
@@ -78,34 +62,31 @@ public class LexerGenerator {
 
     private void nameAndId(Template template) {
         //generate name and id list
-        int[] idArr = new int[dfa.lastState + 1];
-        int idIdx = 1;
+        int id = 1;
+
+        for (TokenDecl decl : dfa.tree.getTokens()) {
+            if (decl.isSkip) continue;
+            idMap.put(decl.tokenName, id++);
+        }
+
+        int[] idArr = new int[dfa.lastState + 1];//state->id
 
         for (int state = dfa.initial; state <= dfa.lastState; state++) {
             //make id for token
             String name = dfa.names[state];
             if (name != null && dfa.isAccepting(state)) {
-                if (!idMap.containsKey(name)) {//if previously not assigned
-                    idMap.put(name, idIdx);
-                    idIdx++;
-                }
                 idArr[state] = idMap.get(name);
             }
         }
         //write name and id list
         Writer nameWriter = new Writer();
         Writer idWriter = new Writer();
-        idIdx = 0;
         for (int state = dfa.initial; state <= dfa.lastState; state++) {
-            if (idIdx > 0) {
-                idWriter.print(",");
-            }
             idWriter.print(idArr[state]);
-            idIdx++;
-
             nameWriter.print("\"" + (dfa.names[state] == null ? "" : dfa.names[state]) + "\"");
             if (state <= dfa.lastState - 1) {
                 nameWriter.print(",");
+                idWriter.print(",");
             }
         }
         template.set("name_list", nameWriter.getString());
@@ -193,11 +174,16 @@ public class LexerGenerator {
     }
 
     void writeTokenClass() throws IOException {
-        File out = new File(outDir, tokenClassName + ".java");
+        File out = new File(options.outDir, options.tokenClass + ".java");
         Template template = new Template("token.java.template");
 
-        template.set("package", packageName);
-        template.set("token_class", tokenClassName);
+        if (options.packageName == null) {
+            template.set("package", "");
+        }
+        else {
+            template.set("package", "package " + options.packageName + ";\n");
+        }
+        template.set("token_class", options.tokenClass);
 
         IOUtils.write(template.toString(), out);
 

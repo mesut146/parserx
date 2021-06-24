@@ -8,6 +8,10 @@ public class $token_class${
 
     public $token_class$(){}
 
+    public $token_class$(int type){
+        this.type = type;
+    }
+
     public $token_class$(int type, String value){
         this.type = type;
         this.value = value;

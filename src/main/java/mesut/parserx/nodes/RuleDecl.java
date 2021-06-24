@@ -15,10 +15,13 @@ public class RuleDecl extends Node {
     }
 
     public RuleDecl(String name) {
-        this.name = name;
+        this(name, null);
     }
 
     public RuleDecl(String name, Node rhs) {
+        if (name.equals("EOF")) {
+            throw new RuntimeException("rule name 'EOF' is reserved use another");
+        }
         this.name = name;
         this.rhs = rhs;
     }

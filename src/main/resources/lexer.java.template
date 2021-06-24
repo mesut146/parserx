@@ -1,5 +1,4 @@
-package $package$;
-
+$package$
 import java.io.*;
 import java.util.*;
 
@@ -8,12 +7,12 @@ public class $lexer_class$ {
     static int[] cMap = unpackCMap($cMap$);
     int[] skip = {$skip_list$};
     int[] accepting = {$final_list$};
-    //token names
+    //state -> token name
     String[] names = {$name_list$};
-    //token ids
+    //state->token id
     int[] ids = {$id_list$};
     static final int INITIAL = 0;
-    static final int EOF = -1;
+    static final int EOF = 0;
     Reader reader;
     int yypos = 0;//pos in file
     int yychar;
@@ -70,29 +69,13 @@ public class $lexer_class$ {
       if(bufPos == bufSize){
         char[] newBuf = new char[bufSize];
         System.arraycopy(yybuf, bufStart, newBuf, 0, bufPos - bufStart);
-        int read = reader.read(newBuf, bufPos - bufStart, bufSize - bufPos + bufStart);
-        if(read == -1){
-          //fill rest with EOF
-          //Arrays.fill(newBuf, , , (char)EOF);
-        }
+        reader.read(newBuf, bufPos - bufStart, bufSize - bufPos + bufStart);
         yybuf = newBuf;
         bufPos = bufPos - bufStart;
         bufStart = 0;
       }
 
     }
-
-    /*int read() throws IOException {
-        if (!backup) {
-            yychar = reader.read();
-            yypos++;
-        }
-        return yychar;
-    }*/
-
-    /*void expected(){
-        trans[curState]
-    }*/
 
     String getText(){
       return new String(yybuf, bufStart, bufPos - bufStart);
@@ -104,10 +87,14 @@ public class $lexer_class$ {
         int lastState = -1;
         int startPos = yypos;
         yychar = yybuf[bufPos];
-        if (yychar == EOF) return null;
+        if (yychar == EOF) return new Token(EOF);
         while (true) {
             yychar = yybuf[bufPos];
-            curState = trans[curState][cMap[yychar]];
+            if(yychar == EOF){
+              curState = -1;
+            }else{
+              curState = trans[curState][cMap[yychar]];
+            }
             if (curState == -1) {
                 if (lastState != -1) {
                     if (!getBit(skip, lastState)) {
@@ -131,7 +118,7 @@ public class $lexer_class$ {
                 if (getBit(accepting, curState)) lastState = curState;
             }
         }
-        return null;
+        return new Token(EOF);
     }
 
 

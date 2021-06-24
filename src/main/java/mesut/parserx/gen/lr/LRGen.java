@@ -14,10 +14,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-//lr table generatorr
+//lr table generator
 public abstract class LRGen<T extends LrItemSet> {
-    public static NameNode dollar = new NameNode("$");//eof
-    public CodeGen codeGen = new CodeGen(this);
+    public static NameNode dollar = new NameNode("$", true);//eof
     Tree tree;
     RuleDecl start;
     String dir;
@@ -45,9 +44,9 @@ public abstract class LRGen<T extends LrItemSet> {
         }
         if (create) {
             //regex start node,create new one
-            String name = "s'";
+            String name = "START$";
             if (tree.start.name.equals(name)) {
-                name = "s_";
+                throw new RuntimeException("start name already exist");
             }
             RuleDecl start = new RuleDecl(name, Sequence.of(tree.start));
             tree.addRule(start);

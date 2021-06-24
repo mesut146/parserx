@@ -1,6 +1,8 @@
 package parser;
 
 import common.Env;
+import mesut.parserx.gen.Options;
+import mesut.parserx.gen.lr.CodeGen;
 import mesut.parserx.gen.lr.LRGen;
 import mesut.parserx.gen.lr.Lr0Generator;
 import mesut.parserx.gen.lr.Lr1Generator;
@@ -73,7 +75,9 @@ public class LrTest {
         generator.generate();
         generator.merge();
         dots(generator, file);
-        generator.codeGen.parser_class = "Parser";
-        generator.codeGen.gen();
+        Options options = new Options();
+        options.outDir = Env.dotDir().getAbsolutePath();
+        CodeGen codeGen = new CodeGen(generator, options);
+        codeGen.gen();
     }
 }

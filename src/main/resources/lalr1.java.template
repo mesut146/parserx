@@ -5,6 +5,7 @@ public class $parser_class${
     Stack<Integer> states = new Stack<>();
     $lexer_class$ lexer;
     static int[] rhs_sizes = {$rhs_sizes$};
+    static int[] ruleIds = {$ruleIds$};//rule id -> symbol id
     static int[][] table = unpackTable(table_packed);
     static String table_packed = $table_packed$;
 
@@ -12,13 +13,17 @@ public class $parser_class${
         this.lexer = lexer;
     }
 
-    void unpackTable(String s){
+    static int[][] unpackTable(String s){
 
 
     }
 
+    Symbol next(){
+    return new Symbol(lexer.$lexer_method$);
+    }
+
     public void parse(){
-        Symbol symbol = lexer.$lexer_method$();
+        Symbol symbol = next();
         states.push(0);//initial state
         int state = 0;
         int action = table[state][symbol.id];
@@ -37,7 +42,7 @@ public class $parser_class${
             stack.push(symbol);
             states.push(action);
             state = action;
-            symbol = lexer.$lexer_method$();
+            symbol = next();
           }
           else{
             //-action is rule index
@@ -46,7 +51,7 @@ public class $parser_class${
               stack.pop();
               states.pop();
             }
-            symbol = new Symbol(-action);
+            symbol = new Symbol(ruleIds[-action]);
             stack.push(symbol);
             int from = states.peek();
             action = table[from][symbol.id];
@@ -57,12 +62,17 @@ public class $parser_class${
 }
 
 //a token or a rule
-public static class Symbol{
-    //$token_class$ token;
+class Symbol{
+    $token_class$ token;
     String name;
     public int id;
 
     public Symbol(int id){
       this.id = id;
     }
+     public Symbol($token_class$ token){
+       this.token = token;
+       this.id = token.type;
+       this.name = token.value;
+     }
 }

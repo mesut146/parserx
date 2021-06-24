@@ -3,7 +3,7 @@ package mesut.parserx.nodes;
 //base class used in grammar file
 public class Node {
 
-    public String name;//variable name
+    public String varName;//variable name
     public String label;//name in alternation
 
     public boolean isSequence() {
@@ -93,7 +93,7 @@ public class Node {
     }
 
     protected String varString() {
-        if (name != null) return name + " = ";
+        if (varName != null) return varName + " = ";
         return "";
     }
 

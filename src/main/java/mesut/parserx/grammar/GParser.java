@@ -308,7 +308,7 @@ s.add(r);
       ;
     }
     node = simple();
-if(name != null) node.name = name;
+if(name != null) node.varName = name;
     {if ("" != null) return node;}
     throw new Error("Missing return statement in function");
 }

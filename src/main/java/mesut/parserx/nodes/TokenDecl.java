@@ -8,10 +8,13 @@ public class TokenDecl extends Node {
     public Node regex;
 
     public TokenDecl(String tokenName) {
-        this.tokenName = tokenName;
+        this(tokenName, null);
     }
 
     public TokenDecl(String tokenName, Node regex) {
+        if (tokenName.equals("EOF")) {
+            throw new RuntimeException("token name 'EOF' is reserved use another");
+        }
         this.tokenName = tokenName;
         this.regex = regex;
     }

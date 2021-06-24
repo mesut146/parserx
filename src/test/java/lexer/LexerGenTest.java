@@ -3,6 +3,7 @@ package lexer;
 import common.Env;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.gen.LexerGenerator;
+import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
 import mesut.parserx.utils.UnicodeUtils;
 import org.junit.Ignore;
@@ -25,9 +26,11 @@ public class LexerGenTest {
     }
 
     static void generateTest(NFA dfa, String outDir) throws IOException {
-        LexerGenerator generator = new LexerGenerator(dfa, outDir);
-        generator.setClassName("GeneratedLexer");
-        generator.setPackageName("gen");
+        Options options = new Options();
+        options.outDir = outDir;
+        options.lexerClass = "GeneratedLexer";
+        options.packageName = "gen";
+        LexerGenerator generator = new LexerGenerator(dfa, options);
         generator.generate();
     }
 

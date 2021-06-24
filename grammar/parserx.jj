@@ -267,9 +267,9 @@ Node named():
 {
   (LOOKAHEAD(name() "=") name = name() "=")? node = simple()
   {
-    if(name != null) node.name = name;
-    return node;
-  }
+  if(name != null) node.varName = name;
+  return node;
+}
 }
 
 Node simple():
