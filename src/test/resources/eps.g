@@ -2,11 +2,14 @@ token{
   a="";b="";c="";d="";
 }
 
-A: a B c;
-B: b?;
-A1: a* b;
-A2: A3 b;
-A3: a*;
-C: B B c;
-D: (d+ A)?;
-E: (a | b)? c;
+A1: a b? c;
+A2: a B1 c;
+
+A3: a* b;
+A4: B2 b;
+
+A5: B1 B1 c;
+A6: (a | b)? c;
+
+B1: b?;
+B2: b*;

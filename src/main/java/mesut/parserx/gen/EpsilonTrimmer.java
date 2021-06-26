@@ -33,14 +33,14 @@ public class EpsilonTrimmer extends SimpleTransformer {
     }
 
     //A B C = A B C
-    Node replace(Sequence node, int i, Node opt) {
+    Or replace(Sequence node, int i, Node opt) {
         //A B? C = A B C | A C
         List<Node> l1 = new ArrayList<>(node.list);
         List<Node> l2 = new ArrayList<>(node.list);
         l1.remove(i);
         l2.remove(i);
         l1.add(i, opt);
-        return new Or(new Sequence(l1).normal(), new Sequence(l2));
+        return new Or(new Sequence(l1).normal(), new Sequence(l2)).dups();
     }
 
     @Override
@@ -51,11 +51,11 @@ public class EpsilonTrimmer extends SimpleTransformer {
                 Regex regex = ch.asRegex();
                 if (regex.isOptional()) {
                     //A B? C = A B C | A C
-                    return replace(node, i, regex.node);
+                    return transformOr(replace(node, i, regex.node), parent);
                 }
                 else if (regex.isStar()) {
                     //A B* C = A B+ C | A C
-                    return replace(node, i, new Regex(regex.node, "+"));
+                    return transformOr(replace(node, i, new Regex(regex.node, "+")), parent);
                 }
             }
             else if (ch.isName()) {
@@ -64,11 +64,11 @@ public class EpsilonTrimmer extends SimpleTransformer {
                     RuleDecl decl = tree.getRule(name.name);
                     if (decl.rhs.isOptional()) {
                         //substitute
-                        return replace(node, i, decl.rhs.asRegex().node);
+                        return transformOr(replace(node, i, decl.rhs.asRegex().node), parent);
                     }
                     else if (decl.rhs.isStar()) {
                         //substitute
-                        return replace(node, i, new Regex(decl.rhs.asRegex().node, "+"));
+                        return transformOr(replace(node, i, new Regex(decl.rhs.asRegex().node, "+")), parent);
                     }
                 }
             }

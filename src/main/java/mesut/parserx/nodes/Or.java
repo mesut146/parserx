@@ -65,7 +65,22 @@ public class Or extends NodeList {
                 s.add(ch);
             }
         }
-        return s;
+        return dups();
+    }
+
+    //remove identical nodes
+    public Or dups() {
+        for (int i = 0; i < size(); i++) {
+            Node ch = get(i);
+            for (int j = i + 1; j < size(); j++) {
+                if (ch.equals(get(j))) {
+                    Or res = new Or(list);
+                    res.list.remove(j);
+                    return res.dups();
+                }
+            }
+        }
+        return this;
     }
 
     @Override
