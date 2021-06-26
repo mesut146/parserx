@@ -13,7 +13,7 @@ public class CharClass {
 
     //find all intersecting inputs and split them so that all of them becomes unique
     public static void makeDistinctRanges(Tree tree) {
-        Set<RangeNode> ranges = new HashSet<>();
+        Set<Range> ranges = new HashSet<>();
         List<Bracket> brackets = new ArrayList<>();
         //first collect ranges
         for (TokenDecl token : tree.tokens) {
@@ -23,7 +23,7 @@ public class CharClass {
         outer:
         while (true) {
             for (Bracket bracket : brackets) {
-                for (RangeNode range : bracket.getRanges()) {
+                for (Range range : bracket.getRanges()) {
                     //if this range intersect other ranges
                     if (!range.isSingle()) {
                         if (split(range, ranges, bracket)) {
@@ -36,55 +36,55 @@ public class CharClass {
         }
         //finally add all ranges to alphabet
         for (Bracket bracket : brackets) {
-            for (RangeNode rangeNode : bracket.getRanges()) {
-                tree.alphabet.addRegex(rangeNode);
+            for (Range range : bracket.getRanges()) {
+                tree.alphabet.addRegex(range);
             }
         }
         //add chars in strings that are distinct
-        for (RangeNode rangeNode : ranges) {
-            RangeNode real = tree.alphabet.findRange(rangeNode);
+        for (Range range : ranges) {
+            Range real = tree.alphabet.findRange(range);
             if (real == null) {
-                tree.alphabet.addRegex(rangeNode);
+                tree.alphabet.addRegex(range);
             }
         }
     }
 
-    private static boolean split(RangeNode r1, Set<RangeNode> ranges, Bracket bracket) {
-        for (RangeNode r2 : ranges) {
+    private static boolean split(Range r1, Set<Range> ranges, Bracket bracket) {
+        for (Range r2 : ranges) {
             if (!r1.equals(r2) && r1.intersect(r2)) {
-                RangeNode inter = RangeNode.intersect(r1, r2);
-                RangeNode me1 = RangeNode.of(r1.start, inter.start - 1);
-                RangeNode me2 = RangeNode.of(inter.end + 1, r1.end);
+                Range inter = Range.intersect(r1, r2);
+                Range me1 = Range.of(r1.start, inter.start - 1);
+                Range me2 = Range.of(inter.end + 1, r1.end);
                 //RangeNode he1 = RangeNode.of(r2.start, inter.start - 1);
                 //RangeNode he2 = RangeNode.of(inter.end + 1, r2.end);
-                bracket.rangeNodes.remove(r1);
+                bracket.ranges.remove(r1);
                 ranges.remove(r1);
                 ranges.remove(r2);
                 if (me1.isValid()) {
-                    bracket.rangeNodes.add(me1);
+                    bracket.ranges.add(me1);
                     ranges.add(me1);
                 }
                 if (me2.isValid()) {
-                    bracket.rangeNodes.add(me2);
+                    bracket.ranges.add(me2);
                     ranges.add(me2);
                 }
                 //if (he1.isValid()) ranges.add(he1);
                 //if (he2.isValid()) ranges.add(he2);
 
-                bracket.rangeNodes.add(inter);
+                bracket.ranges.add(inter);
                 ranges.add(inter);
                 bracket.clear();
-                bracket.addAll(bracket.rangeNodes);
+                bracket.addAll(bracket.ranges);
                 return true;
             }//for ranges
         }//for ranges
         return false;
     }
 
-    static void walkNodes(Node node, Set<RangeNode> ranges, List<Bracket> brackets) {
+    static void walkNodes(Node node, Set<Range> ranges, List<Bracket> brackets) {
         if (node.isBracket()) {
             Bracket b = node.asBracket().normalize();
-            ranges.addAll(b.rangeNodes);
+            ranges.addAll(b.ranges);
             brackets.add(b);
         }
         else if (node.isSequence()) {
@@ -93,15 +93,15 @@ public class CharClass {
             }
         }
         else if (node.isDot()) {
-            Bracket b = DotNode.bracket;
-            ranges.addAll(b.rangeNodes);
+            Bracket b = Dot.bracket;
+            ranges.addAll(b.ranges);
             brackets.add(b);
         }
         else if (node.isString()) {
             //make range for each char in string
             String str = node.asString().value;
             for (char c : str.toCharArray()) {
-                ranges.add(RangeNode.of(c, c));
+                ranges.add(Range.of(c, c));
             }
         }
         else if (node.isGroup()) {

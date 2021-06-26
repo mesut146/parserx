@@ -1,9 +1,9 @@
 package mesut.parserx.nodes;
 
-public class UntilNode extends Node {
+public class Until extends Node {
     public Node node;
 
-    public UntilNode(Node node) {
+    public Until(Node node) {
         this.node = node;
     }
 

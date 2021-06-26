@@ -4,31 +4,31 @@ import mesut.parserx.utils.UnicodeUtils;
 
 import java.util.Objects;
 
-public class RangeNode extends Node implements Comparable<RangeNode> {
+public class Range extends Node implements Comparable<Range> {
 
     public int start;
     public int end;
 
-    public RangeNode(int start, int end) {
+    public Range(int start, int end) {
         this.start = start;
         this.end = end;
     }
 
-    public static RangeNode of(int start, int end) {
-        return new RangeNode(start, end);
+    public static Range of(int start, int end) {
+        return new Range(start, end);
     }
 
-    public static RangeNode of(int start) {
-        return new RangeNode(start, start);
+    public static Range of(int start) {
+        return new Range(start, start);
     }
 
-    public static RangeNode intersect(RangeNode r1, RangeNode r2) {
+    public static Range intersect(Range r1, Range r2) {
         int l = Math.max(r1.start, r2.start);
         int r = Math.min(r1.end, r2.end);
         if (l > r) {
             return null;
         }
-        return new RangeNode(l, r);
+        return new Range(l, r);
     }
 
     @Override
@@ -42,7 +42,7 @@ public class RangeNode extends Node implements Comparable<RangeNode> {
         return UnicodeUtils.escapeUnicode(start) + "-" + UnicodeUtils.escapeUnicode(end);
     }
 
-    public boolean intersect(RangeNode other) {
+    public boolean intersect(Range other) {
         return intersect(this, other) != null;
     }
 
@@ -55,7 +55,7 @@ public class RangeNode extends Node implements Comparable<RangeNode> {
     }
 
     @Override
-    public int compareTo(RangeNode other) {
+    public int compareTo(Range other) {
         if (start < other.start) {
             return -1;
         }
@@ -69,9 +69,9 @@ public class RangeNode extends Node implements Comparable<RangeNode> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        RangeNode rangeNode = (RangeNode) o;
-        return start == rangeNode.start &&
-                end == rangeNode.end;
+        Range range = (Range) o;
+        return start == range.start &&
+                end == range.end;
     }
 
     @Override

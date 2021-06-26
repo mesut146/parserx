@@ -1,6 +1,6 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.nodes.NameNode;
+import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Sequence;
@@ -12,7 +12,7 @@ import java.util.Set;
 
 //lr0,lr1
 public class LrItem {
-    public Set<NameNode> lookAhead = new HashSet<>();
+    public Set<Name> lookAhead = new HashSet<>();
     public RuleDecl rule;
     public int dotPos;
     public LrItemSet gotoSet;
@@ -64,12 +64,12 @@ public class LrItem {
 
     //if dot follows a terminal
     public boolean isDotNonTerminal() {
-        NameNode nameNode = getDotNode();
-        return nameNode == null ? false : !nameNode.isToken;
+        Name name = getDotNode();
+        return name == null ? false : !name.isToken;
     }
 
     //node after dot
-    public NameNode getDotNode() {
+    public Name getDotNode() {
         Sequence rhs = rule.rhs.asSequence();
         if (dotPos < rhs.size()) {
             return rhs.get(dotPos).asName();
@@ -78,7 +78,7 @@ public class LrItem {
     }
 
     //2 node after dot
-    public NameNode getDotNode2() {
+    public Name getDotNode2() {
         Sequence rhs = rule.rhs.asSequence();
         if (dotPos < rhs.size() - 1) {
             return rhs.get(dotPos + 1).asName();

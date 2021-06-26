@@ -10,7 +10,7 @@ import java.util.*;
 //consist of char or char range
 public class Bracket extends NodeList {
 
-    public List<RangeNode> rangeNodes;
+    public List<Range> ranges;
     public boolean negate;//[^abc]
     public boolean debug = false;
     private int pos;
@@ -32,7 +32,7 @@ public class Bracket extends NodeList {
     }
 
     public void add(char chr) {
-        add(RangeNode.of(chr));
+        add(Range.of(chr));
     }
 
     public void parse(String str) {
@@ -65,7 +65,7 @@ public class Bracket extends NodeList {
                 if (pos > end) {
                     throw new RuntimeException(String.format("invalid range %s-%s in: %s", c, end, str));
                 }
-                add(new RangeNode(c, end));
+                add(new Range(c, end));
             }
             else {
                 add(c);
@@ -103,10 +103,10 @@ public class Bracket extends NodeList {
         return c - 'A' + 10;
     }
 
-    public void sort(List<RangeNode> ranges) {
-        Collections.sort(ranges, new Comparator<RangeNode>() {
+    public void sort(List<Range> ranges) {
+        Collections.sort(ranges, new Comparator<Range>() {
             @Override
-            public int compare(RangeNode r1, RangeNode r2) {
+            public int compare(Range r1, Range r2) {
                 if (r1.start < r2.start) {
                     return -1;
                 }
@@ -118,10 +118,10 @@ public class Bracket extends NodeList {
         });
     }
 
-    public List<RangeNode> negateAll() {
+    public List<Range> negateAll() {
         if (debug) System.out.println("negating " + this);
-        List<RangeNode> res;
-        List<RangeNode> ranges;
+        List<Range> res;
+        List<Range> ranges;
         ranges = getRanges();
         sort(ranges);
         if (debug) System.out.println("sorted=" + ranges);
@@ -133,33 +133,33 @@ public class Bracket extends NodeList {
         //negate distinct ranges
         int last = CharClass.min;
         for (int i = 0; i < ranges.size(); i++) {
-            RangeNode range = ranges.get(i);
+            Range range = ranges.get(i);
             if (range.start < last) {
                 //intersect
                 last = range.end + 1;
             }
-            res.add(new RangeNode(last, range.start - 1));
+            res.add(new Range(last, range.start - 1));
             last = range.end + 1;
         }
-        res.add(new RangeNode(last, CharClass.max));
+        res.add(new Range(last, CharClass.max));
         if (debug) System.out.println("negated=" + res);
         return res;
     }
 
     //merge neighbor ranges
-    List<RangeNode> mergeRanges(List<RangeNode> ranges) {
+    List<Range> mergeRanges(List<Range> ranges) {
         sort(ranges);
-        List<RangeNode> res = new ArrayList<>();
-        RangeNode cur = null;
-        RangeNode next;
+        List<Range> res = new ArrayList<>();
+        Range cur = null;
+        Range next;
         for (int i = 0; i < ranges.size(); i++) {
             if (cur == null) {
                 cur = ranges.get(i);
             }
             if (i < ranges.size() - 1) {
                 next = ranges.get(i + 1);
-                if (RangeNode.intersect(cur, next) != null) {
-                    cur = new RangeNode(cur.start, Math.max(cur.end, next.end));
+                if (Range.intersect(cur, next) != null) {
+                    cur = new Range(cur.start, Math.max(cur.end, next.end));
                 }
                 else {
                     res.add(cur);
@@ -175,9 +175,9 @@ public class Bracket extends NodeList {
     }
 
     public Bracket optimize() {
-        rangeNodes = mergeRanges(getRanges());
+        ranges = mergeRanges(getRanges());
         list.clear();
-        list.addAll(rangeNodes);
+        list.addAll(ranges);
         return this;
     }
 
@@ -215,25 +215,25 @@ public class Bracket extends NodeList {
         return sb.toString();
     }
 
-    public List<RangeNode> getRanges() {
-        if (rangeNodes == null) {
-            rangeNodes = new ArrayList<>();
+    public List<Range> getRanges() {
+        if (ranges == null) {
+            ranges = new ArrayList<>();
             for (Node node : this) {
                 if (node.isRange()) {
-                    rangeNodes.add(node.asRange());
+                    ranges.add(node.asRange());
                 }
                 else {
                     throw new RuntimeException();
                 }
             }
         }
-        return rangeNodes;
+        return ranges;
     }
 
     //remove negation
     public Bracket normalize() {
         if (negate) {
-            rangeNodes = negateAll();
+            ranges = negateAll();
             negate = false;
         }
         else {

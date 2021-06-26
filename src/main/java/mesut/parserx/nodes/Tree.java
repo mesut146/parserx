@@ -16,7 +16,7 @@ import java.util.List;
 public class Tree {
 
     public List<RuleDecl> rules;
-    public NameNode start;
+    public Name start;
     public File file = null;
     public Alphabet alphabet = new Alphabet();
     public List<TokenDecl> tokens;

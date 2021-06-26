@@ -1,20 +1,22 @@
 package mesut.parserx.nodes;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
-//right side
-//can refer to rule or token
-public class NameNode extends Node {
+//rule or token symbol
+public class Name extends Node {
 
     public static boolean tokenBrace = false;
     public String name;
     public boolean isToken;//if we reference to a token
+    public List<Name> args = new ArrayList<>();
 
-    public NameNode(String name) {
+    public Name(String name) {
         this.name = name;
     }
 
-    public NameNode(String name, boolean isToken) {
+    public Name(String name, boolean isToken) {
         this.name = name;
         this.isToken = isToken;
     }
@@ -25,23 +27,27 @@ public class NameNode extends Node {
 
     @Override
     public String toString() {
-        String s;
+        StringBuilder sb = new StringBuilder();
+        sb.append(varString());
         if (isToken && tokenBrace) {
-            s = "{" + name + "}";
+            sb.append("{").append(name).append("}");
         }
         else {
-            s = name;
+            sb.append(name);
+            if (!args.isEmpty()) {
+                sb.append("(").append(NodeList.join(args, ", ")).append(")");
+            }
         }
-        return varString() + s;
+        return sb.toString();
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        NameNode nameNode = (NameNode) o;
-        return isToken == nameNode.isToken &&
-                Objects.equals(name, nameNode.name);
+        Name name = (Name) o;
+        return isToken == name.isToken &&
+                Objects.equals(this.name, name.name);
     }
 
     @Override
@@ -51,6 +57,6 @@ public class NameNode extends Node {
 
     @Override
     public Node copy() {
-        return new NameNode(name, isToken);
+        return new Name(name, isToken);
     }
 }

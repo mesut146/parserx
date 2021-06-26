@@ -1,7 +1,7 @@
 package mesut.parserx.nodes;
 
 //base class used in grammar file
-public class Node {
+public abstract class Node {
 
     public String varName;//variable name
     public String label;//name in alternation
@@ -15,27 +15,27 @@ public class Node {
     }
 
     public boolean isRegex() {
-        return this instanceof RegexNode;
+        return this instanceof Regex;
     }
 
-    public RegexNode asRegex() {
-        return (RegexNode) this;
+    public Regex asRegex() {
+        return (Regex) this;
     }
 
     public boolean isOr() {
-        return this instanceof OrNode;
+        return this instanceof Or;
     }
 
-    public OrNode asOr() {
-        return (OrNode) this;
+    public Or asOr() {
+        return (Or) this;
     }
 
     public boolean isGroup() {
-        return this instanceof GroupNode;
+        return this instanceof Group;
     }
 
-    public GroupNode asGroup() {
-        return (GroupNode) this;
+    public Group asGroup() {
+        return (Group) this;
     }
 
     public boolean isString() {
@@ -56,23 +56,31 @@ public class Node {
     }
 
     public boolean isRange() {
-        return this instanceof RangeNode;
+        return this instanceof Range;
     }
 
-    public RangeNode asRange() {
-        return (RangeNode) this;
+    public Range asRange() {
+        return (Range) this;
     }
 
     public boolean isName() {
-        return this instanceof NameNode;
+        return this instanceof Name;
     }
 
-    public NameNode asName() {
-        return (NameNode) this;
+    public Name asName() {
+        return (Name) this;
     }
 
-    public boolean isEmpty() {
-        return this instanceof EmptyNode;
+    public boolean isEpsilon() {
+        return this instanceof Epsilon;
+    }
+
+    public boolean isOptional() {
+        return isRegex() && asRegex().isOptional();
+    }
+
+    public boolean isStar() {
+        return isRegex() && asRegex().isStar();
     }
 
     @Override
@@ -85,11 +93,11 @@ public class Node {
     }
 
     public boolean isDot() {
-        return this instanceof DotNode;
+        return this instanceof Dot;
     }
 
-    public DotNode asDot() {
-        return (DotNode) this;
+    public Dot asDot() {
+        return (Dot) this;
     }
 
     protected String varString() {

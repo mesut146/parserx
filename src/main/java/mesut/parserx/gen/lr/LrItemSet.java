@@ -1,6 +1,6 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.nodes.NameNode;
+import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Tree;
 
@@ -68,7 +68,7 @@ public abstract class LrItemSet {
 
     public abstract void closure(LrItem it);
 
-    public abstract void closure(NameNode node, LrItem sender);
+    public abstract void closure(Name node, LrItem sender);
 
     @Override
     public String toString() {

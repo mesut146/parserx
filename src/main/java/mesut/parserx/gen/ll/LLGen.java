@@ -2,7 +2,7 @@ package mesut.parserx.gen.ll;
 
 import mesut.parserx.gen.EbnfToBnf;
 import mesut.parserx.gen.Helper;
-import mesut.parserx.nodes.NameNode;
+import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
@@ -29,23 +29,23 @@ public class LLGen {
         LLTable table = new LLTable();
         for (RuleDecl ruleDecl : tree.rules) {
             Node node = ruleDecl.rhs;
-            Set<NameNode> first = Helper.first(node, tree, true);
-            Set<NameNode> tmp = new HashSet<>();
-            for (NameNode name : first) {
+            Set<Name> first = Helper.first(node, tree, true);
+            Set<Name> tmp = new HashSet<>();
+            for (Name name : first) {
                 if (name.isToken) {
                     tmp.add(name);
                 }
             }
             first = tmp;
             if (Helper.canBeEmpty(node, tree)) {
-                Set<NameNode> follow = new HashSet<>();
+                Set<Name> follow = new HashSet<>();
                 Helper.follow(ruleDecl.ref(), tree, follow);
-                for (NameNode name : follow) {
+                for (Name name : follow) {
                     table.set(ruleDecl.ref(), name, ruleDecl.index);
                 }
             }
             else {
-                for (NameNode name : first) {
+                for (Name name : first) {
                     table.set(ruleDecl.ref(), name, ruleDecl.index);
                 }
             }
@@ -58,14 +58,14 @@ public class LLGen {
     }
 
     static class LLTable {
-        Map<NameNode, Map<NameNode, Integer>> idMap = new HashMap<>();
-        List<NameNode> tokens = new ArrayList<>();
+        Map<Name, Map<Name, Integer>> idMap = new HashMap<>();
+        List<Name> tokens = new ArrayList<>();
 
-        void set(NameNode rule, NameNode token, int id) {
+        void set(Name rule, Name token, int id) {
             if (!token.isToken) {
                 throw new RuntimeException("non terminal cell ");
             }
-            Map<NameNode, Integer> list = idMap.get(rule);
+            Map<Name, Integer> list = idMap.get(rule);
             if (list == null) {
                 list = new HashMap<>();
                 idMap.put(rule, list);

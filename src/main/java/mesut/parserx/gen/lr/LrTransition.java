@@ -1,13 +1,13 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.nodes.NameNode;
+import mesut.parserx.nodes.Name;
 
 public class LrTransition<T extends LrItemSet> {
     T from;
     T to;
-    NameNode symbol;
+    Name symbol;
 
-    public LrTransition(T from, T to, NameNode symbol) {
+    public LrTransition(T from, T to, Name symbol) {
         this.from = from;
         this.to = to;
         this.symbol = symbol;

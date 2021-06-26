@@ -1,12 +1,11 @@
 package mesut.parserx.dfa;
 
 import mesut.parserx.nodes.Node;
-import mesut.parserx.nodes.RangeNode;
+import mesut.parserx.nodes.Range;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 //character classes used by nfa,dfa
@@ -29,10 +28,10 @@ public class Alphabet {
     }
 
     //check if range conflicts with existing ranges
-    private void check(RangeNode rangeNode) {
-        RangeNode r = findRange(rangeNode);
-        if (r != null && !r.equals(rangeNode)) {
-            throw new RuntimeException("conflicting range in alphabet: " + rangeNode + " on " + r);
+    private void check(Range range) {
+        Range r = findRange(range);
+        if (r != null && !r.equals(range)) {
+            throw new RuntimeException("conflicting range in alphabet: " + range + " on " + r);
         }
     }
 
@@ -43,7 +42,7 @@ public class Alphabet {
         throw new RuntimeException("invalid range " + node);
     }
 
-    public RangeNode getRange(int id) {
+    public Range getRange(int id) {
         return getRegex(id).asRange();
     }
 
@@ -56,16 +55,16 @@ public class Alphabet {
         throw new RuntimeException("invalid alphabet id: " + id);
     }
 
-    public Iterator<RangeNode> getRanges() {
+    public Iterator<Range> getRanges() {
         final Iterator<Node> iterator = map.keySet().iterator();
-        return new Iterator<RangeNode>() {
+        return new Iterator<Range>() {
             @Override
             public boolean hasNext() {
                 return iterator.hasNext();
             }
 
             @Override
-            public RangeNode next() {
+            public Range next() {
                 return iterator.next().asRange();
             }
 
@@ -77,7 +76,7 @@ public class Alphabet {
     }
 
     //find intersecting range
-    public RangeNode findRange(RangeNode range) {
+    public Range findRange(Range range) {
         for (Map.Entry<Node, Integer> entry : map.entrySet()) {
             if (entry.getKey().asRange().intersect(range)) {
                 return entry.getKey().asRange();

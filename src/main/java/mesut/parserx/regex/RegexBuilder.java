@@ -3,9 +3,9 @@ package mesut.parserx.regex;
 
 import mesut.parserx.dfa.Alphabet;
 import mesut.parserx.dfa.NFA;
+import mesut.parserx.dfa.NfaReader;
 import mesut.parserx.dfa.Transition;
 import mesut.parserx.nodes.*;
-import mesut.parserx.dfa.NfaReader;
 import mesut.parserx.utils.UnicodeUtils;
 
 import java.io.IOException;
@@ -57,34 +57,35 @@ public class RegexBuilder {
             }
         }
 
-        OrNode orNode = new OrNode();
+        Or or = new Or();
         for (Transition transition : nfa.trans[nfa.initial]) {
-            orNode.add(alphabet.getRegex(transition.input));
+            or.add(alphabet.getRegex(transition.input));
         }
-        return orNode.normal();
+        return or.normal();
     }
 
 
     Node idToNode(Transition transition) {
         if (transition.epsilon) {
-            return new EmptyNode();
+            return new Epsilon();
         }
         Node node = alphabet.getRegex(transition.input);
         if (!node.isRange()) {
             return node;
         }
-        RangeNode rangeNode = node.asRange();
-        if (rangeNode.isSingle()) {
-            return new StringNode(UnicodeUtils.printChar(rangeNode.start));
+        Range range = node.asRange();
+        if (range.isSingle()) {
+            return new StringNode(UnicodeUtils.printChar(range.start));
         }
         else {
             Bracket bracket = new Bracket();
-            bracket.add((char) rangeNode.start);
-            bracket.add((char) rangeNode.end);
+            bracket.add((char) range.start);
+            bracket.add((char) range.end);
             return bracket;
         }
     }
 
+    //eliminate state by removing incoming and outgoing transitions
     void eliminate(int state) {
         if (nfa.hasTransitions(state)) {
             List<Transition> list = nfa.trans[state];
@@ -99,8 +100,7 @@ public class RegexBuilder {
                     }
                     Node node;
                     node = path(in, out);
-                    //System.out.println(node);
-                    if (node.isEmpty()) {
+                    if (node.isEpsilon()) {
                         nfa.addEpsilon(in.state, out.target);
                     }
                     else {
@@ -140,14 +140,14 @@ public class RegexBuilder {
         if (loop != null) {
             Node node = idToNode(loop);
             if (node.isSequence()) {
-                node = new GroupNode(node);
+                node = new Group(node);
             }
-            path.add(new RegexNode(node, "*"));
+            path.add(new Regex(node, "*"));
         }
         if (!out.epsilon)
             path.add(idToNode(out));
         if (path.size() == 0) {
-            return new EmptyNode();
+            return new Epsilon();
         }
         return path.normal();
     }
@@ -157,11 +157,11 @@ public class RegexBuilder {
     void mergeAll(int state) {
         if (nfa.hasTransitions(state)) {
             List<Transition> list = nfa.trans[state];
-            Map<Integer, OrNode> map = new HashMap<>();
+            Map<Integer, Or> map = new HashMap<>();
             for (Transition tr : list) {
-                OrNode arr = map.get(tr.target);
+                Or arr = map.get(tr.target);
                 if (arr == null) {
-                    arr = new OrNode();
+                    arr = new Or();
                     map.put(tr.target, arr);
                 }
                 arr.add(idToNode(tr));
@@ -169,7 +169,7 @@ public class RegexBuilder {
             list.clear();
             for (int target : map.keySet()) {
                 Node or = map.get(target).normal();
-                if (or.isEmpty()) {
+                if (or.isEpsilon()) {
                     list.add(new Transition(state, target));
                 }
                 else {

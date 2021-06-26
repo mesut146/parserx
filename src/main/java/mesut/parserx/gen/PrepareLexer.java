@@ -19,7 +19,7 @@ public class PrepareLexer extends SimpleTransformer {
     }
 
     @Override
-    public Node transformName(NameNode node, Node parent) {
+    public Node transformName(Name node, Node parent) {
         TokenDecl tokenDecl = tree.getToken(node.name);
         if (tokenDecl == null) {
             throw new RuntimeException("invalid token: " + node.name);

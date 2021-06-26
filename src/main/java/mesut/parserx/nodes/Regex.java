@@ -2,17 +2,17 @@ package mesut.parserx.nodes;
 
 import java.util.Objects;
 
-public class RegexNode extends Node {
+public class Regex extends Node {
 
-    public Node node;//lexer or parser rule
+    public Node node;
     public String type;
 
-    public RegexNode(Node rule, String type) {
+    public Regex(Node rule, String type) {
         if (rule.isSequence()) {
-            rule = new GroupNode(rule);
+            rule = new Group(rule);
         }
         this.node = rule;
-        this.type = type;
+        setType(type);
     }
 
     public boolean isStar() {
@@ -44,14 +44,14 @@ public class RegexNode extends Node {
 
     public Node normal() {
         if (isOptional() && node.isRegex() && node.asRegex().isPlus()) {
-            return new RegexNode(node.asRegex().node, "*");
+            return new Regex(node.asRegex().node, "*");
         }
         return this;
     }
 
     @Override
     public Node copy() {
-        return new RegexNode(node, type);
+        return new Regex(node, type);
     }
 
     @Override
@@ -59,10 +59,10 @@ public class RegexNode extends Node {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        RegexNode regexNode = (RegexNode) o;
+        Regex regex = (Regex) o;
 
-        if (!Objects.equals(node, regexNode.node)) return false;
-        return Objects.equals(type, regexNode.type);
+        if (!Objects.equals(node, regex.node)) return false;
+        return Objects.equals(type, regex.type);
     }
 
     @Override

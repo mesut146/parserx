@@ -21,7 +21,7 @@ public class NodeList extends Node implements Iterable<Node> {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < list.size(); i++) {
             T node = list.get(i);
-            if (node instanceof OrNode) {
+            if (node instanceof Or) {
                 sb.append("(").append(node).append(")");
             }
             else {

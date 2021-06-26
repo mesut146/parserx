@@ -4,7 +4,7 @@ import common.Env;
 import mesut.parserx.gen.LeftRecursive;
 import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.nodes.NodeList;
-import mesut.parserx.nodes.OrNode;
+import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
@@ -36,7 +36,7 @@ public class LeftRecursion {
 
     @Test
     public void direct() throws Exception {
-        OrNode.newLine = false;
+        Or.newLine = false;
         File file = Env.getResFile("rec/direct.g");
         Tree tree = Tree.makeTree(file);
         tree = LeftRecursive.transform(tree);
@@ -46,7 +46,7 @@ public class LeftRecursion {
 
     @Test
     public void rec() throws Exception {
-        OrNode.newLine = false;
+        Or.newLine = false;
         File file = Env.getResFile("rec/cyc2.g");
         Tree tree = Tree.makeTree(file);
         tree = LeftRecursive.transform(tree);

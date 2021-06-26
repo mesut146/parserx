@@ -3,7 +3,7 @@ package mesut.parserx.gen.lr;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
-import mesut.parserx.nodes.NameNode;
+import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.utils.IOUtils;
 import mesut.parserx.utils.UnicodeUtils;
@@ -19,8 +19,8 @@ public class CodeGen {
     public Options options;
     LrDFA<?> dfa;
     LRGen<?> gen;
-    HashMap<NameNode, Integer> ids = new HashMap<>();
-    NameNode EOF = new NameNode("EOF", true);
+    HashMap<Name, Integer> ids = new HashMap<>();
+    Name EOF = new Name("EOF", true);
     List<RuleDecl> all;
     LexerGenerator lexerGenerator;
 
@@ -72,13 +72,13 @@ public class CodeGen {
     //symbol ids
     void genIds() {
         int id = lexerGenerator.idMap.size() + 1;
-        for (NameNode rule : dfa.rules) {
+        for (Name rule : dfa.rules) {
             ids.put(rule, id++);
         }
         ids.put(gen.start.ref(), id);
     }
 
-    int getId(NameNode name){
+    int getId(Name name){
         if (name.isToken){
             return lexerGenerator.idMap.get(name.name);
         }
@@ -125,7 +125,7 @@ public class CodeGen {
 
         sb.append("  //tokens\n");
         sb.append(field("EOF", 0));
-        for (NameNode token : dfa.tokens) {
+        for (Name token : dfa.tokens) {
             if (token.name.equals("$")) {
                 continue;
             }
@@ -133,7 +133,7 @@ public class CodeGen {
         }
         sb.append("  //rules\n");
         sb.append(field(gen.start.name, ids.get(gen.start.ref())));
-        for (NameNode rule : dfa.rules) {
+        for (Name rule : dfa.rules) {
             sb.append(field(rule.name, ids.get(rule)));
         }
 

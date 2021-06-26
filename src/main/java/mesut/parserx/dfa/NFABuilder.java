@@ -54,14 +54,14 @@ public class NFABuilder {
             p.end = ns;
         }
         else if (node.isDot()) {
-            p = insert(DotNode.bracket, start);
+            p = insert(Dot.bracket, start);
         }
         else if (node.isBracket()) {
             Bracket b = node.asBracket().normalize();
             int end = nfa.newState();
             //in order to have only one end state we add epsilons?
             for (int i = 0; i < b.size(); i++) {
-                RangeNode rn = b.rangeNodes.get(i);
+                Range rn = b.ranges.get(i);
                 int left = rn.start;
                 int right = rn.end;
                 nfa.addTransitionRange(start, end, left, right);
@@ -77,7 +77,7 @@ public class NFABuilder {
             p.end = st;
         }
         else if (node.isRegex()) {
-            RegexNode rn = node.asRegex();
+            Regex rn = node.asRegex();
             if (rn.isStar()) {
                 int end = nfa.newState();
                 nfa.addEpsilon(start, end);//zero
@@ -101,7 +101,7 @@ public class NFABuilder {
             }
         }
         else if (node.isOr()) {
-            OrNode or = (OrNode) node;
+            Or or = (Or) node;
             int end = nfa.newState();
             for (Node n : or) {
                 int e = insert(n, start).end;
@@ -110,17 +110,17 @@ public class NFABuilder {
             p.end = end;
         }
         else if (node.isGroup()) {
-            GroupNode group = node.asGroup();
+            Group group = node.asGroup();
             Node rhs = group.node;
             p.end = insert(rhs, start).end;
         }
         else if (node.isName()) {//?
             //we have lexer ref just replace with target's regex
-            NameNode name = node.asName();
+            Name name = node.asName();
             p.end = insert(tree.getToken(name.name).regex, start).end;
         }
-        else if (node instanceof UntilNode) {
-            Node r = ((UntilNode) node).node;
+        else if (node instanceof Until) {
+            Node r = ((Until) node).node;
             if (!r.isString()) {
                 throw new RuntimeException("until node only supports strings");
             }

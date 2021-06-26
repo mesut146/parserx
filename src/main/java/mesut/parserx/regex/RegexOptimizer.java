@@ -23,8 +23,8 @@ public class RegexOptimizer extends Transformer {
 
     //shrink or into bracket by combining single length strings
     @Override
-    public Node transformOr(OrNode node) {
-        OrNode newNode = new OrNode();
+    public Node transformOr(Or node) {
+        Or newNode = new Or();
         Bracket bracket = new Bracket();
         for (Node ch : node) {
             ch = transformNode(ch);
@@ -61,10 +61,10 @@ public class RegexOptimizer extends Transformer {
                 Node ch = n.asRegex().node;
                 if (i > 1 && node.get(i - 1).equals(ch)) {
                     res.list.remove(i - 1);
-                    res.add(new RegexNode(ch, "+"));
+                    res.add(new Regex(ch, "+"));
                 }
                 else if (i < node.size() - 1 && node.get(i + 1).equals(ch)) {
-                    res.add(new RegexNode(ch, "+"));
+                    res.add(new Regex(ch, "+"));
                     i++;//skip next
                 }
             }

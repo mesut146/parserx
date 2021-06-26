@@ -33,7 +33,7 @@ public class PrecedenceHelper {
         return node.isName() && node.asName().name.equals(name);
     }
 
-    String getOp(NameNode name) {
+    String getOp(Name name) {
         TokenDecl tok = tree.getToken(name.name);
         if (tok.regex.isString()) {
             return tok.regex.asString().value;
@@ -48,8 +48,8 @@ public class PrecedenceHelper {
         lastLevel--;//last added gets lower prec
     }
 
-    OrNode collect(OrNode or) {
-        OrNode rest = new OrNode();
+    Or collect(Or or) {
+        Or rest = new Or();
         for (Node ch : or) {
             if (!ch.isSequence()) {
                 rest.add(ch);
@@ -72,7 +72,7 @@ public class PrecedenceHelper {
                 }
                 else if (mid.isGroup()) {
                     //same level ops
-                    GroupNode group = mid.asGroup();
+                    Group group = mid.asGroup();
                     if (group.node.isString()) {
                         addLast(group.node.asString().value);
                         added = true;
@@ -85,7 +85,7 @@ public class PrecedenceHelper {
                         }
                     }
                     else if (group.node.isOr()) {
-                        OrNode o = group.node.asOr();
+                        Or o = group.node.asOr();
                         List<String> arr = new ArrayList<>();
                         for (Node c : o) {
                             if (c.isString()) {
@@ -122,7 +122,7 @@ public class PrecedenceHelper {
         if (!rhs.isOr()) return;
 
         //collect operators
-        OrNode rest = collect(rhs.asOr());
+        Or rest = collect(rhs.asOr());
 
         if (levels.isEmpty()) {
             //no operator
@@ -130,40 +130,40 @@ public class PrecedenceHelper {
         }
         //begin transform
         //group same level operators
-        Map<Integer, OrNode> groups = new TreeMap<>();
+        Map<Integer, Or> groups = new TreeMap<>();
         for (Map.Entry<String, Integer> entry : levels.entrySet()) {
-            OrNode list = groups.get(entry.getValue());
+            Or list = groups.get(entry.getValue());
             if (list == null) {
-                list = new OrNode();
+                list = new Or();
                 groups.put(entry.getValue(), list);
             }
             list.add(new StringNode(entry.getKey()));
         }
 
         //create rules for each group
-        OrNode res = new OrNode(rest.list);
+        Or res = new Or(rest.list);
         rule.rhs = res;
 
         //remove lowest because it accepts any so it is in main rule
         res.add(Sequence.of(rule.ref(), groups.remove(lastLevel + 1).normal(), rule.ref()));
 
-        Node prev = new OrNode(rest.list);
+        Node prev = new Or(rest.list);
         //start from highest
         for (int i = 0; i > lastLevel + 1; i--) {
-            OrNode or = groups.get(i);
+            Or or = groups.get(i);
             String name = getName(or);
             String lhsName = name + "0";
-            NameNode ref = new NameNode(name, false);
-            res.add(new NameNode(name, false));
-            tree.addRule(new RuleDecl(name, Sequence.of(new NameNode(lhsName), or.normal(), new NameNode(lhsName))));
+            Name ref = new Name(name, false);
+            res.add(new Name(name, false));
+            tree.addRule(new RuleDecl(name, Sequence.of(new Name(lhsName), or.normal(), new Name(lhsName))));
             //make lhs rhs
-            RuleDecl lhsRule = new RuleDecl(lhsName, new OrNode(ref, prev).normal());
+            RuleDecl lhsRule = new RuleDecl(lhsName, new Or(ref, prev).normal());
             tree.addRule(lhsRule);
             prev = lhsRule.ref();
         }
     }
 
-    String getName(OrNode ops) {
+    String getName(Or ops) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < ops.size(); i++) {
             sb.append(tree.getTokenByValue(ops.get(i).asString().value).tokenName);

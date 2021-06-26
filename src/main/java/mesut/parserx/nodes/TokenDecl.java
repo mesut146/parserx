@@ -19,8 +19,8 @@ public class TokenDecl extends Node {
         this.regex = regex;
     }
 
-    public NameNode ref() {
-        return new NameNode(tokenName, true);
+    public Name ref() {
+        return new Name(tokenName, true);
     }
 
     @Override

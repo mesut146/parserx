@@ -1,7 +1,7 @@
 package mesut.parserx.dfa;
 
 import mesut.parserx.nodes.Node;
-import mesut.parserx.nodes.RangeNode;
+import mesut.parserx.nodes.Range;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.UnicodeUtils;
 
@@ -112,7 +112,7 @@ public class NFA {
     public void addTransitionRange(int state, int target, int left, int right) {
         if (debugTransition)
             System.out.printf("st:%d (%s-%s) to st:%d\n", state, UnicodeUtils.printChar(left), UnicodeUtils.printChar(right), target);
-        addTransition(state, target, getAlphabet().getId(RangeNode.of(left, right)));
+        addTransition(state, target, getAlphabet().getId(Range.of(left, right)));
     }
 
     public void setAccepting(int state, boolean val) {

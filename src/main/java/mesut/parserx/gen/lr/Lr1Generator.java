@@ -1,6 +1,6 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.nodes.NameNode;
+import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
 
 import java.util.*;
@@ -81,7 +81,7 @@ public class Lr1Generator extends LRGen<Lr1ItemSet> {
                     for (int i = 0; i < k1.size(); i++) {
                         LrItem i1 = k1.get(i);
                         LrItem i2 = k2.get(i);
-                        Set<NameNode> set = new HashSet<>(i1.lookAhead);
+                        Set<Name> set = new HashSet<>(i1.lookAhead);
                         set.addAll(i2.lookAhead);
                         i1.lookAhead = set;
                         i2.lookAhead = set;

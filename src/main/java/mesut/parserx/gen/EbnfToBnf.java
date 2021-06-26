@@ -54,17 +54,17 @@ public class EbnfToBnf {
             transformRhs(decl);
         }
         if (combine_or) {
-            Map<String, OrNode> map = new HashMap<>();
+            Map<String, Or> map = new HashMap<>();
             for (RuleDecl ruleDecl : res.rules) {
-                OrNode or = map.get(ruleDecl.name);
+                Or or = map.get(ruleDecl.name);
                 if (or == null) {
-                    or = new OrNode();
+                    or = new Or();
                     map.put(ruleDecl.name, or);
                 }
                 or.add(ruleDecl.rhs);
             }
             res.rules.clear();
-            for (Map.Entry<String, OrNode> entry : map.entrySet()) {
+            for (Map.Entry<String, Or> entry : map.entrySet()) {
                 res.addRule(new RuleDecl(entry.getKey(), entry.getValue().normal()));
             }
         }
@@ -98,7 +98,7 @@ public class EbnfToBnf {
         return node;
     }
 
-    Node transform(GroupNode groupNode, RuleDecl decl) {
+    Node transform(Group groupNode, RuleDecl decl) {
         if (!expandGroup) {
             return groupNode;
         }
@@ -110,10 +110,10 @@ public class EbnfToBnf {
         RuleDecl newDecl = new RuleDecl(newName);
         newDecl.rhs = transform(rhs, newDecl);
         addRule(newDecl);
-        return new NameNode(newName);
+        return new Name(newName);
     }
 
-    Node transform(OrNode orNode, RuleDecl decl) {
+    Node transform(Or orNode, RuleDecl decl) {
         if (expand_or) {
             for (Node node : orNode) {
                 RuleDecl newDecl = new RuleDecl(decl.name);
@@ -122,7 +122,7 @@ public class EbnfToBnf {
             }
         }
         else {
-            OrNode or = new OrNode();
+            Or or = new Or();
             for (Node node : orNode) {
                 or.add(transform(node, decl));
             }
@@ -139,35 +139,35 @@ public class EbnfToBnf {
         return res.normal();
     }
 
-    Node transform(RegexNode regexNode, RuleDecl decl) {
-        Node node = transform(regexNode.node, decl);
-        regexNode.node = node;
-        if (regexNode.isStar()) {
+    Node transform(Regex regex, RuleDecl decl) {
+        Node node = transform(regex.node, decl);
+        regex.node = node;
+        if (regex.isStar()) {
             //b* = E | b* b; left
             //b* = E | b b*; right
-            NameNode ref = new NameNode(decl.name + "_" + getCount(decl.name) + starSuffix);
+            Name ref = new Name(decl.name + "_" + getCount(decl.name) + starSuffix);
             Node newNode;
             if (leftRecursive) {
-                newNode = new OrNode(new EmptyNode(), new Sequence(ref, node));
+                newNode = new Or(new Epsilon(), new Sequence(ref, node));
             }
             else {
-                newNode = new OrNode(new EmptyNode(), new Sequence(node, ref));
+                newNode = new Or(new Epsilon(), new Sequence(node, ref));
             }
             RuleDecl r = new RuleDecl(ref.name, newNode);
             r.rhs = transform(newNode, r);
             addRule(r);
             return ref;
         }
-        else if (regexNode.isPlus()) {
+        else if (regex.isPlus()) {
             //b+ = b | b b+; right
             //b+ = b | b+ b; left
-            NameNode ref = new NameNode(decl.name + "_" + getCount(decl.name) + plusSuffix);
+            Name ref = new Name(decl.name + "_" + getCount(decl.name) + plusSuffix);
             Node newNode;
             if (leftRecursive) {
-                newNode = new OrNode(regexNode.node, Sequence.of(ref, regexNode.node));
+                newNode = new Or(regex.node, Sequence.of(ref, regex.node));
             }
             else {
-                newNode = new OrNode(regexNode.node, Sequence.of(regexNode.node, ref));
+                newNode = new Or(regex.node, Sequence.of(regex.node, ref));
             }
             RuleDecl r = new RuleDecl(ref.name, newNode);
             r.rhs = transform(newNode, r);
@@ -176,8 +176,8 @@ public class EbnfToBnf {
         }
         else {
             //r = E | a;
-            NameNode ref = new NameNode(decl.name + "_" + getCount(decl.name) + optSuffix);
-            Node newNode = new OrNode(new EmptyNode(), node);
+            Name ref = new Name(decl.name + "_" + getCount(decl.name) + optSuffix);
+            Node newNode = new Or(new Epsilon(), node);
             RuleDecl r = new RuleDecl(ref.name, newNode);
             r.rhs = transform(newNode, r);
             addRule(r);

@@ -36,7 +36,7 @@ public class Sequence extends NodeList {
                 s.addAll(ch.asSequence().list);
             }
             else if (ch.isOr()) {
-                s.add(new GroupNode(ch));
+                s.add(new Group(ch));
             }
             else {
                 s.add(ch);

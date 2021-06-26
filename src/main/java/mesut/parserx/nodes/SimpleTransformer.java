@@ -34,9 +34,6 @@ public class SimpleTransformer {
         else if (node.isString()) {
             return transformString(node.asString(), parent);
         }
-        else if (node.isEmpty()) {
-            return transformEmpty((EmptyNode) node, parent);
-        }
         return node;
     }
 
@@ -44,7 +41,7 @@ public class SimpleTransformer {
         return node;
     }
 
-    public Node transformGroup(GroupNode node, Node parent) {
+    public Node transformGroup(Group node, Node parent) {
         node.node = transformNode(node.node, node);
         return node;
     }
@@ -56,12 +53,12 @@ public class SimpleTransformer {
         return node;
     }
 
-    public Node transformRegex(RegexNode node, Node parent) {
+    public Node transformRegex(Regex node, Node parent) {
         node.node = transformNode(node.node, node);
         return node;
     }
 
-    public Node transformOr(OrNode node, Node parent) {
+    public Node transformOr(Or node, Node parent) {
         for (int i = 0; i < node.size(); i++) {
             node.set(i, transformNode(node.get(i), node));
         }
@@ -72,11 +69,8 @@ public class SimpleTransformer {
         return node;
     }
 
-    public Node transformName(NameNode node, Node parent) {
+    public Node transformName(Name node, Node parent) {
         return node;
     }
 
-    public Node transformEmpty(EmptyNode node, Node parent) {
-        return node;
-    }
 }

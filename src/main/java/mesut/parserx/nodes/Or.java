@@ -1,19 +1,20 @@
 package mesut.parserx.nodes;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
 // rule1 | rule2 | rule3...
-public class OrNode extends NodeList {
+public class Or extends NodeList {
 
     public static boolean newLine = true;
     public static int newLineLimit = 3;
 
-    public OrNode(Node... args) {
-        super(args);
+    public Or(Node... args) {
+        this(Arrays.asList(args));
     }
 
-    public OrNode(List<Node> args) {
+    public Or(List<Node> args) {
         super(args);
     }
 
@@ -52,10 +53,13 @@ public class OrNode extends NodeList {
         if (size() == 1) {
             return first().normal();
         }
-        OrNode s = new OrNode();
+        Or s = new Or();
         for (Node ch : this) {
             if (ch.isOr()) {
                 s.addAll(ch.asOr().list);
+            }
+            else if (ch.isOptional()) {
+                //doesn't make sense
             }
             else {
                 s.add(ch);
@@ -66,7 +70,7 @@ public class OrNode extends NodeList {
 
     @Override
     public Node copy() {
-        return new OrNode(list) {{
+        return new Or(list) {{
             this.label = label;
         }};
     }

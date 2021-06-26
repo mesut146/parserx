@@ -31,10 +31,6 @@ public class Env {
         return Env.getResFile("/javaLexer.g");
     }
 
-    public static File getCalc() throws Exception {
-        return Env.getResFile("/calc.g");
-    }
-
     public static File getFile2(String name) {
         return new File(testRes, name);
     }

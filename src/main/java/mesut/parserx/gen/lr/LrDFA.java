@@ -1,6 +1,6 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.nodes.NameNode;
+import mesut.parserx.nodes.Name;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,13 +9,13 @@ import java.util.Map;
 
 public class LrDFA<T extends LrItemSet> {
     public List<LrTransition<T>>[] map = new List[100];
-    public List<NameNode> tokens = new ArrayList<>();
-    public List<NameNode> rules = new ArrayList<>();
+    public List<Name> tokens = new ArrayList<>();
+    public List<Name> rules = new ArrayList<>();
     int lastId = -1;
     List<T> itemSets = new ArrayList<>();//todo idMap.keys()
     Map<LrItemSet, Integer> idMap = new HashMap<>();//item set -> state id
 
-    public void addTransition(T from, T to, NameNode symbol) {
+    public void addTransition(T from, T to, Name symbol) {
         LrTransition<T> t = new LrTransition<>(from, to, symbol);
         List<LrTransition<T>> list = getTrans(from);
         if (list.contains(t)) {

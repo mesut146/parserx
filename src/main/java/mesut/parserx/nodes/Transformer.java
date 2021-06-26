@@ -32,8 +32,8 @@ public abstract class Transformer {
         return node;
     }
 
-    public Node transformGroup(GroupNode node) {
-        return new GroupNode(transformNode(node.node));
+    public Node transformGroup(Group node) {
+        return new Group(transformNode(node.node));
     }
 
     public Node transformSequence(Sequence node) {
@@ -44,12 +44,12 @@ public abstract class Transformer {
         return res;
     }
 
-    public Node transformRegex(RegexNode node) {
-        return new RegexNode(transformNode(node.node), node.type);
+    public Node transformRegex(Regex node) {
+        return new Regex(transformNode(node.node), node.type);
     }
 
-    public Node transformOr(OrNode node) {
-        OrNode res = new OrNode();
+    public Node transformOr(Or node) {
+        Or res = new Or();
         for (Node ch : node) {
             res.add(transformNode(ch));
         }
@@ -60,7 +60,7 @@ public abstract class Transformer {
         return node.normalize().optimize();
     }
 
-    public Node transformName(NameNode node) {
+    public Node transformName(Name node) {
         return node;
     }
 

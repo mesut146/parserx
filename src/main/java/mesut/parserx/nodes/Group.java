@@ -6,19 +6,19 @@ import java.util.Objects;
 
 //can be lexer group or parser group
 //(rule1 rule2)
-public class GroupNode extends Node implements Iterable<Node> {
+public class Group extends Node implements Iterable<Node> {
 
     public Node node;
 
-    public GroupNode(Node rhs) {
+    public Group(Node rhs) {
         this.node = rhs;
     }
 
     public String toString() {
-        boolean backup = OrNode.newLine;
-        OrNode.newLine = false;
+        boolean backup = Or.newLine;
+        Or.newLine = false;
         String s = varString() + "(" + node + ")";
-        OrNode.newLine = backup;
+        Or.newLine = backup;
         return s;
     }
 
@@ -31,10 +31,11 @@ public class GroupNode extends Node implements Iterable<Node> {
     }
 
     public Node normal() {
-        if (node.isString() || node.isBracket() || node.isName() || node.isRegex() || node.isGroup()) {
-            return node;
+        if (node.isSequence() || node.isOr()) {
+            return this;
         }
-        return this;
+        //extract simple nodes
+        return node;
     }
 
     @Override
@@ -42,7 +43,7 @@ public class GroupNode extends Node implements Iterable<Node> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        GroupNode nodes = (GroupNode) o;
+        Group nodes = (Group) o;
         return Objects.equals(node, nodes.node);
     }
 
@@ -55,6 +56,6 @@ public class GroupNode extends Node implements Iterable<Node> {
 
     @Override
     public Node copy() {
-        return new GroupNode(node);
+        return new Group(node);
     }
 }

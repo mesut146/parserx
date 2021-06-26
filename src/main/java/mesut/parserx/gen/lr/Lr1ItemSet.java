@@ -1,6 +1,6 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.nodes.NameNode;
+import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Sequence;
 import mesut.parserx.nodes.Tree;
@@ -38,19 +38,19 @@ public class Lr1ItemSet extends LrItemSet {
         }
     }
 
-    public void closure(NameNode node, LrItem sender) {
+    public void closure(Name node, LrItem sender) {
         if (node.isToken) {
             throw new RuntimeException("closure error on node: " + node + ", was expecting rule");
         }
         //get rules
         List<RuleDecl> rules = tree.getRules(node.name);
         for (RuleDecl decl : rules) {
-            Set<NameNode> laList = new HashSet<>();
+            Set<Name> laList = new HashSet<>();
             //page 261
             //lookahead
             //first(follow(node),sender la)
             if (sender.getDotNode2() != null) {
-                NameNode la = sender.getDotNode2();
+                Name la = sender.getDotNode2();
                 if (la.isToken) {
                     laList.add(la);
                 }
@@ -73,7 +73,7 @@ public class Lr1ItemSet extends LrItemSet {
             }
             else {
                 //create per one
-                for (NameNode la : laList) {
+                for (Name la : laList) {
                     LrItem newItem = new LrItem(decl, 0);
                     newItem.lookAhead.add(la);
                     newItem.gotoSet = this;
@@ -83,7 +83,7 @@ public class Lr1ItemSet extends LrItemSet {
         }
     }
 
-    void addItem(LrItem item, NameNode node) {
+    void addItem(LrItem item, Name node) {
         if (all.contains(item)) {
             return;
         }
@@ -94,17 +94,17 @@ public class Lr1ItemSet extends LrItemSet {
     }
 
     //first terminals of rule
-    public Set<NameNode> first(NameNode nameNode) {
+    public Set<Name> first(Name name) {
         //todo if first has epsilon look next
-        Set<NameNode> list = new HashSet<>();
-        for (RuleDecl decl : tree.getRules(nameNode.name)) {
+        Set<Name> list = new HashSet<>();
+        for (RuleDecl decl : tree.getRules(name.name)) {
             Sequence node = decl.rhs.asSequence();
             handleFirst(node.get(0).asName(), list);
         }
         return list;
     }
 
-    void handleFirst(NameNode node, Set<NameNode> list) {
+    void handleFirst(Name node, Set<Name> list) {
         if (node.asName().isToken) {
             list.add(node);
         }

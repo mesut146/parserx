@@ -3,7 +3,7 @@ package lexer;
 import common.Env;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
-import mesut.parserx.nodes.RangeNode;
+import mesut.parserx.nodes.Range;
 import org.junit.Test;
 import mesut.parserx.utils.IOUtils;
 
@@ -57,8 +57,8 @@ public class Simulator {
         if (dfa.hasTransitions(curState)) {
             List<Transition> list = dfa.trans[curState];
             for (Transition transition : list) {
-                RangeNode rangeNode = dfa.getAlphabet().getRange(transition.input);
-                if (input >= rangeNode.start && input <= rangeNode.end) {
+                Range range = dfa.getAlphabet().getRange(transition.input);
+                if (input >= range.start && input <= range.end) {
                     return transition.target;
                 }
             }

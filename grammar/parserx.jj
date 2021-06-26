@@ -209,7 +209,7 @@ void startDecl(Tree tree):
 Node rhs():
 {
   Node rule;
-  OrNode or = new OrNode();
+  Or or = new Or();
 }
 {
   rule = orContent() { or.add(rule); }
@@ -222,11 +222,11 @@ Node rhs():
 
 Node orContent():
 {
-  Node node = new EmptyNode();
+  Node node;
   Token label;
 }
 {
-  (node = sequence())? ["#" label = <IDENT>{node.label = label.image;}]
+  node = sequence() ["#" label = <IDENT>{node.label = label.image;}]
   {
     return node;
   }
@@ -255,8 +255,8 @@ Node regexType(Node node):{}
 {
  ("*" | "+" | "?")
   {
-    return new RegexNode(node,getToken(0).image);
-  }
+  return new Regex(node,getToken(0).image);
+}
 }
 
 Node named():
@@ -290,8 +290,8 @@ Node dotNode():
 {}
 {
   <DOT>{
-    return DotNode.instance;
-  }
+  return Dot.instance;
+}
 }
 //[a-z]
 Node bracketNode():
@@ -315,8 +315,8 @@ Node group():
 {
   "(" rule = rhs() ")"
   {
-    return new GroupNode(rule);
-  }
+  return new Group(rule);
+}
 }
 
 Node untilNode():
@@ -324,7 +324,7 @@ Node untilNode():
   Node node;
 }
 {
-  "~" node = regex() {return new UntilNode(node);}
+  "~" node = regex() {return new Until(node);}
 }
 
 
@@ -339,25 +339,25 @@ Node stringNode():
   }
 }
 
-NameNode lexerRef():
+Name lexerRef():
 {
   String name;
 }
 {
  "{" name = name() "}"
  {
-   return new NameNode(name,true);
- }
+  return new Name(name,true);
+}
 }
 
-NameNode ref():
+Name ref():
 {
   String name;
-  NameNode ref;
+  Name ref;
 }
 {
   (name = name(){
-    ref = new NameNode(name);
+    ref = new Name(name);
   }
   | ref = lexerRef() )
   {
@@ -374,20 +374,12 @@ String name():
 }
 
 
-EmptyNode empty():
-{}
-{
-  "%empty"{
-    return new EmptyNode();
-  }
-}
-
 Node repeatNode():
 {
   Node node;
 }
 {
- "{" node = rhs() "}"{return new RegexNode(node, "*");}
+ "{" node = rhs() "}"{return new Regex(node, "*");}
 }
 
 Node optionalNode():
@@ -395,7 +387,7 @@ Node optionalNode():
   Node node;
 }
 {
- "[" node = rhs() "]"{return new RegexNode(node, "?");}
+ "[" node = rhs() "]"{return new Regex(node, "?");}
 }
 
 /*Bracket bracket():

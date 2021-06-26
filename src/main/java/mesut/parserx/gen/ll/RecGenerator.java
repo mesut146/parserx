@@ -58,17 +58,17 @@ public class RecGenerator {
 
     void mergeOrs() {
         rules = new ArrayList<>();
-        Map<String, OrNode> map = new HashMap<>();
+        Map<String, Or> map = new HashMap<>();
         for (RuleDecl decl : tree.rules) {
-            OrNode or = map.get(decl.name);
+            Or or = map.get(decl.name);
             if (or == null) {
-                or = new OrNode();
+                or = new Or();
                 map.put(decl.name, or);
 
             }
             or.add(decl.rhs);
         }
-        for (Map.Entry<String, OrNode> entry : map.entrySet()) {
+        for (Map.Entry<String, Or> entry : map.entrySet()) {
             rules.add(new RuleDecl(entry.getKey(), entry.getValue().normal()));
         }
     }
@@ -89,7 +89,7 @@ public class RecGenerator {
         return null;
     }
 
-    String laFuncName(NameNode name) {
+    String laFuncName(Name name) {
         if (laNameMap.containsKey(name.name)) {
             return laNameMap.get(name.name);
         }
@@ -124,7 +124,7 @@ public class RecGenerator {
             sb.append("return true;");
         }
         else if (node.isName()) {
-            NameNode name = node.asName();
+            Name name = node.asName();
             if (name.isToken) {
                 sb.append("return la().type == ").append(name.name);
             }
@@ -133,7 +133,7 @@ public class RecGenerator {
             }
         }
         else if (node.isOr()) {
-            OrNode or = node.asOr();
+            Or or = node.asOr();
             boolean first = true;
             for (Node ch : or) {
                 sb.append(first ? "if(" : "else if(").append(makeLa(ch)).append(") return true;\n");
@@ -145,13 +145,13 @@ public class RecGenerator {
             return makeLa(node.asGroup().node);
         }
         else if (node.isRegex()) {
-            RegexNode regexNode = node.asRegex();
-            String s = makeLa(regexNode.node);
-            if (regexNode.isStar()) {
+            Regex regex = node.asRegex();
+            String s = makeLa(regex.node);
+            if (regex.isStar()) {
                 sb.append("if(").append(s).append(") return true;\n");
                 sb.append("return true;");
             }
-            else if (regexNode.isOptional()) {
+            else if (regex.isOptional()) {
                 sb.append("if(").append(s).append(") return true;\n");
                 sb.append("return true;");
             }
@@ -178,7 +178,7 @@ public class RecGenerator {
     String makeProd(Node node) {
         StringBuilder sb = new StringBuilder();
         if (node.isOr()) {
-            OrNode or = node.asOr();
+            Or or = node.asOr();
             for (int i = 0; i < or.size(); i++) {
                 if (i == or.size() - 1) {
                     sb.append("else{\n");
@@ -197,7 +197,7 @@ public class RecGenerator {
             sb.append(makeProd(node.asGroup().node));
         }
         else if (node.isName()) {
-            NameNode name = node.asName();
+            Name name = node.asName();
             sb.append(name.name).append(" = ");
             if (name.isToken) {
                 sb.append("pop();\n");
@@ -215,21 +215,21 @@ public class RecGenerator {
             sb.append("\n");
         }
         else if (node.isRegex()) {
-            RegexNode regexNode = node.asRegex();
-            if (regexNode.isOptional()) {
-                sb.append("if(").append(makeLa(regexNode.node)).append("){\n");
-                append(sb, makeProd(regexNode.node));
+            Regex regex = node.asRegex();
+            if (regex.isOptional()) {
+                sb.append("if(").append(makeLa(regex.node)).append("){\n");
+                append(sb, makeProd(regex.node));
                 sb.append("}\n");
             }
-            else if (regexNode.isStar()) {
-                sb.append("while(").append(makeLa(regexNode.node)).append("){\n");
-                append(sb, makeProd(regexNode.node));
+            else if (regex.isStar()) {
+                sb.append("while(").append(makeLa(regex.node)).append("){\n");
+                append(sb, makeProd(regex.node));
                 sb.append("}\n");
             }
             else {
                 sb.append("do{\n");
-                append(sb, makeProd(regexNode.node));
-                sb.append("}while(").append(makeLa(regexNode.node)).append(");\n");
+                append(sb, makeProd(regex.node));
+                sb.append("}while(").append(makeLa(regex.node)).append(");\n");
             }
         }
         else {

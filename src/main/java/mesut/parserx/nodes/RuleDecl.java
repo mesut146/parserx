@@ -1,5 +1,7 @@
 package mesut.parserx.nodes;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 //rule decl in grammar
@@ -10,6 +12,7 @@ public class RuleDecl extends Node {
     public String name;
     public Node rhs;
     public int index;
+    public List<Name> args = new ArrayList<>();
 
     public RuleDecl() {
     }
@@ -26,16 +29,23 @@ public class RuleDecl extends Node {
         this.rhs = rhs;
     }
 
-    public NameNode ref() {
-        return new NameNode(name, false);
+    public Name ref() {
+        return new Name(name, false);
     }
 
     @Override
     public String toString() {
         if (printIndex) {
-            return "/*" + index + "*/  " + name + " = " + rhs + ";";
+            return "/*" + index + "*/  " + name + printArgs() + " = " + rhs + ";";
         }
-        return name + " = " + rhs + ";";
+        return name + printArgs() + " = " + rhs + ";";
+    }
+
+    String printArgs() {
+        if (args.isEmpty()) {
+            return "";
+        }
+        return "(" + NodeList.join(args, ", ") + ")";
     }
 
     @Override

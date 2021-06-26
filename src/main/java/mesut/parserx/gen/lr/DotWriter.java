@@ -1,6 +1,6 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.nodes.NameNode;
+import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.TokenDecl;
 
 import java.io.FileNotFoundException;
@@ -13,7 +13,7 @@ public class DotWriter {
         try {
             PrintWriter writer = new PrintWriter(generator.tableDotFile());
             LrDFA<?> table = generator.table;
-            List<NameNode> tokens = table.tokens;
+            List<Name> tokens = table.tokens;
             tokens.add(LRGen.dollar);
 
             writer.println("digraph G{");
@@ -27,7 +27,7 @@ public class DotWriter {
             if (writeRules)
                 writer.println("<TD>Rules</TD>");
             //tokens
-            for (NameNode token : tokens) {
+            for (Name token : tokens) {
                 TokenDecl decl = generator.tree.getToken(token.name);
                 if (decl != null && decl.regex.isString()) {
                     writer.print("<TD>" + decl.regex + "</TD>");
@@ -37,7 +37,7 @@ public class DotWriter {
                 }
             }
             //rules
-            for (NameNode rule : table.rules) {
+            for (Name rule : table.rules) {
                 writer.println("<TD>" + rule.name + "</TD>");
             }
             writer.println("</TR>");
@@ -55,7 +55,7 @@ public class DotWriter {
                     writer.print("</TD>");
                 }
                 //shift/reduce
-                for (NameNode token : tokens) {
+                for (Name token : tokens) {
                     writer.print("<TD>");
                     //shift
                     for (LrTransition<?> tr : table.getTrans(set)) {
@@ -99,7 +99,7 @@ public class DotWriter {
                     writer.print("</TD>");
                 }
                 //goto
-                for (NameNode rule : table.rules) {
+                for (Name rule : table.rules) {
                     writer.print("<TD>");
                     /*for (LrItem item : set.getReduce()) {
                         if (item.ruleDecl.name.equals(rule.name)) {

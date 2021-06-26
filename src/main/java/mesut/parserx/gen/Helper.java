@@ -8,31 +8,24 @@ import java.util.Set;
 
 public class Helper {
 
-    //extract epsilon from or
-    public static Node hasEps(OrNode or) {
-        OrNode res = new OrNode();
-        for (Node node : or) {
-            if (!node.isEmpty()) {
-                res.add(node);
-            }
-        }
-        if (res.size() == or.size()) {
-            //no epsilon
-            return null;
-        }
-        return res.normal();
+    public static Node trim(Sequence s) {
+        return new Sequence(s.list.subList(1, s.size())).normal();
     }
 
-    public static Set<NameNode> first(Node node, Tree tree, boolean rec) {
-        Set<NameNode> set = new HashSet<>();
+    public static boolean start(Node node, Name name, Tree tree) {
+        return first(node, tree, true).contains(name);
+    }
+
+    public static Set<Name> first(Node node, Tree tree, boolean rec) {
+        Set<Name> set = new HashSet<>();
         first(node, tree, rec, set);
         return set;
     }
 
-    public static Set<NameNode> first(Node node, Tree tree, boolean rec, boolean allowRules, boolean allowTokens) {
-        Set<NameNode> set = new HashSet<>();
+    public static Set<Name> first(Node node, Tree tree, boolean rec, boolean allowRules, boolean allowTokens) {
+        Set<Name> set = new HashSet<>();
         first(node, tree, rec, set);
-        for (Iterator<NameNode> it = set.iterator(); it.hasNext(); ) {
+        for (Iterator<Name> it = set.iterator(); it.hasNext(); ) {
             if (it.next().isToken) {
                 if (!allowTokens) {
                     it.remove();
@@ -48,9 +41,9 @@ public class Helper {
     }
 
     //first set of regex
-    public static void first(Node node, Tree tree, boolean rec, Set<NameNode> set) {
+    public static void first(Node node, Tree tree, boolean rec, Set<Name> set) {
         if (node.isName()) {
-            NameNode name = node.asName();
+            Name name = node.asName();
             if (set.add(name)) {
                 if (rec && name.isRule()) {
                     first(tree.getRule(name.name).rhs, tree, rec, set);
@@ -79,7 +72,7 @@ public class Helper {
         }
     }
 
-    public static void follow(NameNode name, Tree tree, Set<NameNode> set) {
+    public static void follow(Name name, Tree tree, Set<Name> set) {
         if (set.contains(name)) return;
         for (RuleDecl rule : tree.rules) {
             Node rhs = rule.rhs;
@@ -88,7 +81,7 @@ public class Helper {
                 int i = s.indexOf(name);
                 if (i == -1) continue;
                 if (i < s.size() - 1) {
-                    NameNode next = (NameNode) s.get(i + 1);
+                    Name next = (Name) s.get(i + 1);
                     if (next.isToken) {
                         //R: a A b
                         //FO(A)=b
@@ -109,24 +102,20 @@ public class Helper {
         }
     }
 
-    public static boolean canBeEmpty(Node node, Tree tree) {
-        if (node.isEmpty()) {
-            return true;
-        }
-        else if (node.isName()) {
+    public static boolean canBeEmpty(Node node, Tree tree) { if (node.isName()) {
             if (node.asName().isRule()) {
-                return canBeEmpty(tree.getRule(node.asName().name), tree);
+                return canBeEmpty(tree.getRule(node.asName().name).rhs, tree);
             }
         }
         else if (node.isGroup()) {
             return canBeEmpty(node.asGroup().node, tree);
         }
         else if (node.isRegex()) {
-            RegexNode regexNode = node.asRegex();
-            if (regexNode.isOptional() || regexNode.isStar()) {
+            Regex regex = node.asRegex();
+            if (regex.isOptional() || regex.isStar()) {
                 return true;
             }
-            return canBeEmpty(regexNode.node, tree);
+            return canBeEmpty(regex.node, tree);
         }
         else if (node.isOr()) {
             for (Node ch : node.asOr()) {

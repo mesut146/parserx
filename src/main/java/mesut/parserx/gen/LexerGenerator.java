@@ -3,7 +3,7 @@ package mesut.parserx.gen;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
 import mesut.parserx.nodes.NodeList;
-import mesut.parserx.nodes.RangeNode;
+import mesut.parserx.nodes.Range;
 import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.IOUtils;
@@ -96,11 +96,11 @@ public class LexerGenerator {
     private void cmap(Template template) {
         Writer cmapWriter = new Writer();
         cmapWriter.print("\"");
-        for (Iterator<RangeNode> it = dfa.getAlphabet().getRanges(); it.hasNext(); ) {
-            RangeNode rangeNode = it.next();
-            int left = rangeNode.start;
-            int right = rangeNode.end;
-            int id = dfa.getAlphabet().getId(rangeNode);
+        for (Iterator<Range> it = dfa.getAlphabet().getRanges(); it.hasNext(); ) {
+            Range range = it.next();
+            int left = range.start;
+            int right = range.end;
+            int id = dfa.getAlphabet().getId(range);
             cmapWriter.print(UnicodeUtils.escapeUnicode(left));
             cmapWriter.print(UnicodeUtils.escapeUnicode(right));
             cmapWriter.print(UnicodeUtils.escapeUnicode(id));

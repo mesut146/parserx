@@ -17,25 +17,25 @@ public class RegexUtils {
             return new Sequence(sequence.list.subList(1, sequence.size())).normal();
         }
         else if (node.isOr()) {
-            OrNode or = node.asOr();
-            return new OrNode(or.list.subList(1, or.size())).normal();
+            Or or = node.asOr();
+            return new Or(or.list.subList(1, or.size())).normal();
         }
         return node;
     }
 
     public static Node lineComment() {
-        return Sequence.of(new StringNode("//"), new RegexNode(new Bracket("[^\\n]"), "*"));
+        return Sequence.of(new StringNode("//"), new Regex(new Bracket("[^\\n]"), "*"));
     }
 
     public static Node blockComment() {
-        return Sequence.of(new StringNode("/*"), new RegexNode(new OrNode(new Bracket("[^*]"), new Sequence(new StringNode("*"), new Bracket("[^/]"))), "*"), new StringNode("*/"));
+        return Sequence.of(new StringNode("/*"), new Regex(new Or(new Bracket("[^*]"), new Sequence(new StringNode("*"), new Bracket("[^/]"))), "*"), new StringNode("*/"));
     }
 
     //de morgan laws
     public static Node negate(Node regex) throws Exception {
         if (regex.isOr()) {
             //(a|b)' = a' . b'
-            OrNode or = regex.asOr();
+            Or or = regex.asOr();
             Node left = or.first();
             Node right = split(or);
             return new Sequence(negate(left), negate(right));
@@ -45,14 +45,14 @@ public class RegexUtils {
             Sequence seq = regex.asSequence();
             Node left = seq.get(0);
             Node right = split(seq);
-            return new OrNode(negate(left), negate(right));
+            return new Or(negate(left), negate(right));
         }
         else if (regex.isString()) {
             StringNode str = regex.asString();
             if (str.value.length() == 1) {
                 Bracket bracket = new Bracket();
                 bracket.negate = true;
-                bracket.add(RangeNode.of(str.value.charAt(0)));
+                bracket.add(Range.of(str.value.charAt(0)));
                 return bracket;
             }
             Sequence seq = new Sequence();
@@ -62,7 +62,7 @@ public class RegexUtils {
             return negate(seq);
         }
         else if (regex.isGroup()) {
-            return new GroupNode(negate(regex.asGroup().node));
+            return new Group(negate(regex.asGroup().node));
         }
         else if (regex.isBracket()) {
             Bracket bracket = regex.asBracket();

@@ -16,7 +16,7 @@ import java.util.Queue;
 
 //lr table generator
 public abstract class LRGen<T extends LrItemSet> {
-    public static NameNode dollar = new NameNode("$", true);//eof
+    public static Name dollar = new Name("$", true);//eof
     Tree tree;
     RuleDecl start;
     String dir;
@@ -113,7 +113,7 @@ public abstract class LRGen<T extends LrItemSet> {
                 LrItem from = curSet.getItem();
                 if (from == null) break;
 
-                NameNode symbol = from.getDotNode();
+                Name symbol = from.getDotNode();
                 if (symbol == null) continue;
                 LrItem toFirst = new LrItem(from, from.dotPos + 1);
                 toFirst.gotoSet = from.gotoSet == null ? curSet : from.gotoSet;
@@ -153,7 +153,7 @@ public abstract class LRGen<T extends LrItemSet> {
         checkAll();
     }
 
-    void log(LrItem from, LrItemSet curSet, LrItem toFirst, LrItemSet targetSet, NameNode symbol) {
+    void log(LrItem from, LrItemSet curSet, LrItem toFirst, LrItemSet targetSet, Name symbol) {
         System.out.printf("%s (%d)%s to (%d)%s\n", symbol, table.getId(curSet), from, table.getId(targetSet), toFirst);
     }
 
@@ -176,7 +176,7 @@ public abstract class LRGen<T extends LrItemSet> {
                     }
                     else {
                         //if any lookahead conflict
-                        HashSet<NameNode> la = new HashSet<>(i1.lookAhead);
+                        HashSet<Name> la = new HashSet<>(i1.lookAhead);
                         la.retainAll(i2.lookAhead);
                         if (!la.isEmpty()) {
                             throw new RuntimeException("reduce/reduce conflict " + table.getId(set) + "\n" + set);
@@ -212,7 +212,7 @@ public abstract class LRGen<T extends LrItemSet> {
     }
 
     //if there exist another transition from this
-    T getSet(T from, NameNode symbol) {
+    T getSet(T from, Name symbol) {
         for (LrTransition<T> tr : table.getTrans(from)) {
             if (tr.from.equals(from) && tr.symbol.equals(symbol)) {
                 return tr.to;

@@ -1,6 +1,6 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.nodes.NameNode;
+import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
 
@@ -28,7 +28,7 @@ public class Lr0ItemSet extends LrItemSet {
 
     }
 
-    public void closure(NameNode node, LrItem it) {
+    public void closure(Name node, LrItem it) {
         if (!node.isToken) {
             List<RuleDecl> ruleDecl = tree.getRules(node.name);
             for (RuleDecl decl : ruleDecl) {

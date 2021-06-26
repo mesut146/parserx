@@ -1,8 +1,8 @@
 package mesut.parserx.nodes;
 
-public class DotNode extends Node {
+public class Dot extends Node {
 
-    public static DotNode instance = new DotNode();
+    public static Dot instance = new Dot();
     public static Bracket bracket = toBracket().normalize();
 
     //convert dot to bracket node
