@@ -2,9 +2,7 @@ package mesut.parserx.gen;
 
 import mesut.parserx.nodes.*;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 public class Helper {
 
@@ -72,6 +70,45 @@ public class Helper {
         }
     }
 
+    public static List<Name> firstList(Node node, Tree tree) {
+        ArrayList<Name> list = new ArrayList<>();
+        firstList(node, tree, true, list);
+        return list;
+    }
+
+    //first list of regex,allows duplicates
+    public static void firstList(Node node, Tree tree, boolean rec, List<Name> set) {
+        if (node.isName()) {
+            Name name = node.asName();
+            if (!set.contains(name)) {
+                if (rec && name.isRule()) {
+                    firstList(tree.getRule(name.name).rhs, tree, rec, set);
+                }
+            }
+            set.add(name);
+        }
+        else if (node.isOr()) {
+            for (Node ch : node.asOr()) {
+                firstList(ch, tree, rec, set);
+            }
+        }
+        else if (node.isSequence()) {
+            Sequence seq = node.asSequence();
+            for (Node ch : seq) {
+                firstList(ch, tree, rec, set);
+                if (!canBeEmpty(ch, tree)) {
+                    break;
+                }
+            }
+        }
+        else if (node.isGroup()) {
+            firstList(node.asGroup().node, tree, rec, set);
+        }
+        else if (node.isRegex()) {
+            firstList(node.asRegex().node, tree, rec, set);
+        }
+    }
+
     public static void follow(Name name, Tree tree, Set<Name> set) {
         if (set.contains(name)) return;
         for (RuleDecl rule : tree.rules) {
@@ -102,7 +139,8 @@ public class Helper {
         }
     }
 
-    public static boolean canBeEmpty(Node node, Tree tree) { if (node.isName()) {
+    public static boolean canBeEmpty(Node node, Tree tree) {
+        if (node.isName()) {
             if (node.asName().isRule()) {
                 return canBeEmpty(tree.getRule(node.asName().name).rhs, tree);
             }

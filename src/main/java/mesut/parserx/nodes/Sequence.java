@@ -15,8 +15,8 @@ public class Sequence extends NodeList {
         super(arr);
     }
 
-    public static Sequence of(Node... a) {
-        return new Sequence(a);
+    public static Node of(Node... a) {
+        return new Sequence(a).normal();
     }
 
     @Override
@@ -26,7 +26,7 @@ public class Sequence extends NodeList {
 
     @Override
     public Node normal() {
-        normal0();
+        normalCh();
         if (size() == 1) {
             return first();
         }
@@ -38,7 +38,7 @@ public class Sequence extends NodeList {
             else if (ch.isOr()) {
                 s.add(new Group(ch));
             }
-            else {
+            else if (!s.isEpsilon()) {
                 s.add(ch);
             }
         }

@@ -34,7 +34,7 @@ public class FactorTest {
         //Tree tree = Tree.makeTree(Env.getResFile("rec/leftRec2.g"));
         Factor factor = new Factor(tree);
         factor.handle();
-        factor.handle();
+        //factor.handle();
         System.out.println(tree);
     }
 }

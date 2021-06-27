@@ -2,15 +2,13 @@ package mesut.parserx.gen;
 
 import mesut.parserx.nodes.*;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class Factor {
+public class Factor extends SimpleTransformer {
 
     Tree tree;
-    List<RuleDecl> results = new ArrayList<>();
 
     public Factor(Tree tree) {
         this.tree = tree;
@@ -31,8 +29,26 @@ public class Factor {
         return tmp.iterator().next();
     }
 
+    Name hasDup(List<Name> list) {
+        for (int i = 0; i < list.size(); i++) {
+            for (int j = i + 1; j < list.size(); j++) {
+                if (list.get(i).equals(list.get(j))) {
+                    return list.get(i);
+                }
+            }
+        }
+        return null;
+    }
+
     boolean factor(RuleDecl decl) {
-        if (decl.rhs.isOr()) {
+        List<Name> list = Helper.firstList(decl.rhs, tree);
+        Name cc = hasDup(list);
+        if (cc != null && cc.isToken) {
+            PullInfo p = pull(decl.rhs, cc);
+            decl.rhs = new Or(new Sequence(cc, p.one), p.zero);
+            return true;
+        }
+        /*if (decl.rhs.isOr()) {
             Or or = decl.rhs.asOr();
             for (int i = 0; i < or.size(); i++) {
                 Set<Name> s1 = Helper.first(or.get(i), tree, true);
@@ -47,35 +63,50 @@ public class Factor {
                 }
             }
         }
+        else if (decl.rhs.isSequence()) {
+
+        }*/
         return false;
     }
 
     PullInfo pullSeq(Sequence s, Name sym) {
         PullInfo info = new PullInfo();
         //E=A B
-        Node first = s.first();
-        Node sec = Helper.trim(s);
-        if (Helper.start(first, sym, tree)) {
-            if (Helper.canBeEmpty(first, tree)) {
-                if (Helper.start(sec, sym, tree)) {
-
+        Node A = s.first();
+        Node B = Helper.trim(s);
+        if (Helper.start(A, sym, tree)) {
+            PullInfo p1 = pull(A, sym);
+            if (Helper.canBeEmpty(A, tree)) {
+                if (Helper.start(B, sym, tree)) {
+                    if (Helper.canBeEmpty(p1.zero, tree)) {
+                        throw new RuntimeException("A0 empty");
+                    }
+                    PullInfo p2 = pull(B, sym);
+                    //A B = (a A1 | A0) (a B1 | B0) = a A1 a B1 | a A1 B0 | A0 a B1 | A0 B0
+                    info.one = new Or(new Sequence(p1.one, sym, p2.one).normal(), new Sequence(p1.one, p2.zero).normal());
+                    info.zero = new Or(new Sequence(p1.zero, sym, p2.one).normal(), new Sequence(p1.zero, p2.zero).normal());
                 }
-
+                else {
+                    //A B = (a A1 | A0) B = a A1 B | A0 B
+                    info.zero = Sequence.of(p1.zero, B);
+                    info.one = Sequence.of(p1.one, B);
+                }
             }
             else {
-                PullInfo p1 = pull(first, sym);
+                //E1: A1 B , E0: A0 B
                 if (p1.zero != null) {
-                    info.zero = makeSeq(p1.zero, sec);
+                    info.zero = makeSeq(p1.zero, B);
                 }
-                info.one = makeSeq(p1.one, sec);
+                info.one = makeSeq(p1.one, B);
             }
         }
         else {
-            //first must be empty
-            PullInfo p2 = pull(sec, sym);
+            //A must be empty,B starts
+            //E1:
+            PullInfo p2 = pull(B, sym);
             info.one = p2.one;
             if (p2.zero != null) {
-                info.zero = first;
+                info.zero = A;
             }
         }
         return info;
@@ -165,7 +196,7 @@ public class Factor {
         else if (regex.isPlus()) {
             //A+=A A*
             Sequence s = new Sequence(regex.node, new Regex(regex.node, "*"));
-            return pull(s, sym);
+            return pull(s.normal(), sym);
         }
         else {
             //A*=A+?

@@ -124,7 +124,7 @@ public class NodeList extends Node implements Iterable<Node> {
     }
 
 
-    public void normal0() {
+    public void normalCh() {
         List<Node> arr = new ArrayList<>();
         for (Node ch : list) {
             arr.add(ch.normal());

@@ -61,7 +61,7 @@ public class Or extends NodeList {
     }
 
     public Node normal() {
-        normal0();
+        normalCh();
         if (size() == 1) {
             return first().normal();
         }
