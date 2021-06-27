@@ -7,7 +7,8 @@ token{
 }
 
 E: A a c;
-A: b?;
+A: b? | d*;
+//A:b | € | D+;
 //E: b a c | a c; //E0: b a c
 
 //E: A a b | a c | d;

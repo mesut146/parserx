@@ -1,6 +1,7 @@
 package regex;
 
 import common.Env;
+import mesut.parserx.gen.Epsilons;
 import mesut.parserx.gen.Factor;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Or;
@@ -8,6 +9,15 @@ import mesut.parserx.nodes.Tree;
 import org.junit.Test;
 
 public class FactorTest {
+
+    @Test
+    public void eps() throws Exception {
+        //Tree tree = Tree.makeTree(Env.getResFile("factor.g"));
+        Tree tree = Tree.makeTree(Env.getResFile("eps.g"));
+        System.out.println(new Epsilons(tree).trim(tree.getRule("C").rhs));
+        System.out.println(tree);
+    }
+
     @Test
     public void pull() throws Exception {
         Or.newLine = false;

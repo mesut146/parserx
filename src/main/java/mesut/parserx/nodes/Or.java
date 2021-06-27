@@ -7,8 +7,7 @@ import java.util.List;
 // rule1 | rule2 | rule3...
 public class Or extends NodeList {
 
-    public static boolean newLine = true;
-    public static int newLineLimit = 3;
+    public static boolean newLine = false;
 
     public Or(Node... args) {
         this(Arrays.asList(args));
@@ -16,6 +15,19 @@ public class Or extends NodeList {
 
     public Or(List<Node> args) {
         super(args);
+    }
+
+    String withNewline() {
+        StringBuilder sb = new StringBuilder();
+        for (Iterator<Node> it = list.iterator(); it.hasNext(); ) {
+            Node node = it.next();
+            sb.append(node.withLabel());
+            sb.append("\n");
+            if (it.hasNext()) {
+                sb.append("|  ");
+            }
+        }
+        return sb.toString();
     }
 
     @Override

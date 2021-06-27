@@ -50,17 +50,75 @@ public class Factor {
         return false;
     }
 
+    PullInfo pullSeq(Sequence s, Name sym) {
+        PullInfo info = new PullInfo();
+        //E=A B
+        Node first = s.first();
+        Node sec = Helper.trim(s);
+        if (Helper.start(first, sym, tree)) {
+            if (Helper.canBeEmpty(first, tree)) {
+                if (Helper.start(sec, sym, tree)) {
+
+                }
+
+            }
+            else {
+                PullInfo p1 = pull(first, sym);
+                if (p1.zero != null) {
+                    info.zero = makeSeq(p1.zero, sec);
+                }
+                info.one = makeSeq(p1.one, sec);
+            }
+        }
+        else {
+            //first must be empty
+            PullInfo p2 = pull(sec, sym);
+            info.one = p2.one;
+            if (p2.zero != null) {
+                info.zero = first;
+            }
+        }
+        return info;
+    }
+
+    PullInfo pullOr(Or or, Name sym) {
+        PullInfo info = new PullInfo();
+        //A | B
+        //a A1 | A0 | a
+        Or one = new Or();
+        Or zero = new Or();
+        for (Node ch : or) {
+            if (Helper.start(ch, sym, tree)) {
+                PullInfo pi = pull(ch, sym);
+                one.add(pi.one);
+                if (pi.zero != null) {
+                    zero.add(pi.zero);
+                }
+            }
+            else {
+                zero.add(ch);
+            }
+        }
+        if (zero.size() != 0) {
+            info.zero = zero.normal();
+        }
+        if (one.size() != 0) {
+            info.one = one.normal();
+        }
+        return info;
+    }
+
     //pull a single token 'sym' and store result in info
     //A: sym A1 | A0
     //A0=part doest start with sym
     //A1=part after sym
     public PullInfo pull(Node node, Name sym) {
-        PullInfo info = new PullInfo();
         if (!Helper.first(node, tree, true).contains(sym)) {
             //info.not = node;
             //return info;
             throw new RuntimeException("can't pull");
         }
+        PullInfo info = new PullInfo();
         if (node.isName()) {
             Name name = node.asName();
             if (name.equals(sym)) {
@@ -78,82 +136,41 @@ public class Factor {
             info = pull(node.asGroup().node, sym);
         }
         else if (node.isOr()) {
-            //A | B
-            //a A1 | A0 | a
-            Or one = new Or();
-            Or zero = new Or();
-            for (Node ch : node.asOr()) {
-                if (Helper.start(ch, sym, tree)) {
-                    PullInfo pi = pull(ch, sym);
-                    one.add(pi.one);
-                    if (pi.zero != null) {
-                        zero.add(pi.zero);
-                    }
-                }
-                else {
-                    zero.add(ch);
-                }
-            }
-            if (zero.size() != 0) {
-                info.zero = zero.normal();
-            }
-            if (one.size() != 0) {
-                info.one = one.normal();
-            }
+            info = pullOr(node.asOr(), sym);
         }
         else if (node.isSequence()) {
             //E=A B
-            Sequence s = node.asSequence();
-            Node first = s.first();
-            Node sec = Helper.trim(s);
-            if (Helper.start(first, sym, tree)) {
-                if (Helper.canBeEmpty(first, tree)) {
-                    if (Helper.start(sec, sym, tree)) {
-
-                    }
-
-                }
-                else {
-                    PullInfo p1 = pull(first, sym);
-                    if (p1.zero != null) {
-                        info.zero = makeSeq(p1.zero, sec);
-                    }
-                    info.one = makeSeq(p1.one, sec);
-                }
-            }
-            else {
-                //first must be empty
-                PullInfo p2 = pull(sec, sym);
-                info.one = p2.one;
-                if (p2.zero != null) {
-                    info.zero = first;
-                }
-            }
+            info = pullSeq(node.asSequence(), sym);
         }
         else if (node.isRegex()) {
-            Regex regex = node.asRegex();
-            if (regex.isOptional()) {
-                PullInfo pi = pull(regex.node, sym);
-                if (pi.one != null) {
-                    info.one = pi.one;
-                }
-                if (pi.zero != null) {
-                    info.zero = new Or(pi.zero, new Epsilon());
-                }
-            }
-            else if (regex.isPlus()) {
-                //A+=A A*
-                Sequence s = new Sequence(regex.node, new Regex(regex.node, "*"));
-                return pull(s, sym);
-            }
-            else {
-                //A*=A+?
-                Regex star = new Regex(regex.node, "+");
-                return pull(new Or(star, new Epsilon()), sym);
-            }
+            info = pullRegex(node.asRegex(), sym);
         }
         else {
             throw new RuntimeException("invalid node: " + node.getClass());
+        }
+        return info;
+    }
+
+    PullInfo pullRegex(Regex regex, Name sym) {
+        PullInfo info = new PullInfo();
+        if (regex.isOptional()) {
+            PullInfo pi = pull(regex.node, sym);
+            if (pi.one != null) {
+                info.one = pi.one;
+            }
+            if (pi.zero != null) {
+                info.zero = new Or(pi.zero, new Epsilon());
+            }
+        }
+        else if (regex.isPlus()) {
+            //A+=A A*
+            Sequence s = new Sequence(regex.node, new Regex(regex.node, "*"));
+            return pull(s, sym);
+        }
+        else {
+            //A*=A+?
+            Regex star = new Regex(regex.node, "+");
+            return pull(new Or(star, new Epsilon()), sym);
         }
         return info;
     }
