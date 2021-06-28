@@ -62,6 +62,9 @@ public class Or extends NodeList {
 
     public Node normal() {
         normalCh();
+        if (size() == 0) {
+            return null;
+        }
         if (size() == 1) {
             return first().normal();
         }
@@ -73,7 +76,7 @@ public class Or extends NodeList {
             else if (ch.isOptional()) {
                 //doesn't make sense
             }
-            else {
+            else if (!ch.isEpsilon()) {
                 s.add(ch);
             }
         }

@@ -45,7 +45,13 @@ public class Factor extends SimpleTransformer {
         Name cc = hasDup(list);
         if (cc != null && cc.isToken) {
             PullInfo p = pull(decl.rhs, cc);
-            decl.rhs = new Or(new Sequence(cc, p.one), p.zero);
+            Node one = Sequence.of(cc, p.one);
+            if (p.zero == null) {
+                decl.rhs = one;
+            }
+            else {
+                decl.rhs = new Or(one, p.zero).normal();
+            }
             return true;
         }
         /*if (decl.rhs.isOr()) {
@@ -78,13 +84,9 @@ public class Factor extends SimpleTransformer {
             PullInfo p1 = pull(A, sym);
             if (Helper.canBeEmpty(A, tree)) {
                 if (Helper.start(B, sym, tree)) {
-                    if (Helper.canBeEmpty(p1.zero, tree)) {
-                        throw new RuntimeException("A0 empty");
-                    }
-                    PullInfo p2 = pull(B, sym);
-                    //A B = (a A1 | A0) (a B1 | B0) = a A1 a B1 | a A1 B0 | A0 a B1 | A0 B0
-                    info.one = new Or(new Sequence(p1.one, sym, p2.one).normal(), new Sequence(p1.one, p2.zero).normal());
-                    info.zero = new Or(new Sequence(p1.zero, sym, p2.one).normal(), new Sequence(p1.zero, p2.zero).normal());
+                    Node no = new Epsilons(tree).trim(A);
+                    //A B = A_no B | B =
+                    return pull(new Or(Sequence.of(no, B), B), sym);
                 }
                 else {
                     //A B = (a A1 | A0) B = a A1 B | A0 B
@@ -93,6 +95,8 @@ public class Factor extends SimpleTransformer {
                 }
             }
             else {
+                //A no empty
+                //(a A1 | A0) B
                 //E1: A1 B , E0: A0 B
                 if (p1.zero != null) {
                     info.zero = makeSeq(p1.zero, B);
@@ -101,21 +105,18 @@ public class Factor extends SimpleTransformer {
             }
         }
         else {
-            //A must be empty,B starts
-            //E1:
-            PullInfo p2 = pull(B, sym);
-            info.one = p2.one;
-            if (p2.zero != null) {
-                info.zero = A;
-            }
+            //A empty,B starts
+            //A_no B | B
+            Node no = new Epsilons(tree).trim(A);
+            return pull(new Or(Sequence.of(no, B), B), sym);
         }
         return info;
     }
 
     PullInfo pullOr(Or or, Name sym) {
         PullInfo info = new PullInfo();
-        //A | B
-        //a A1 | A0 | a
+        //A | B | C
+        //a A1 | A0 | a B1 | B0 | C
         Or one = new Or();
         Or zero = new Or();
         for (Node ch : or) {
@@ -130,12 +131,8 @@ public class Factor extends SimpleTransformer {
                 zero.add(ch);
             }
         }
-        if (zero.size() != 0) {
-            info.zero = zero.normal();
-        }
-        if (one.size() != 0) {
-            info.one = one.normal();
-        }
+        info.zero = zero.normal();
+        info.one = one.normal();
         return info;
     }
 
@@ -163,14 +160,12 @@ public class Factor extends SimpleTransformer {
             }
         }
         else if (node.isGroup()) {
-            Or.newLine = false;
             info = pull(node.asGroup().node, sym);
         }
         else if (node.isOr()) {
             info = pullOr(node.asOr(), sym);
         }
         else if (node.isSequence()) {
-            //E=A B
             info = pullSeq(node.asSequence(), sym);
         }
         else if (node.isRegex()) {
@@ -208,10 +203,10 @@ public class Factor extends SimpleTransformer {
 
     Node makeSeq(Node n1, Node n2) {
         if (n1 == null) {
-            return n2;
+            return n2.normal();
         }
         if (n2 == null) {
-            return n1;
+            return n1.normal();
         }
         return new Sequence(n1, n2).normal();
     }
