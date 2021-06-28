@@ -61,7 +61,7 @@ public class EpsilonTrimmer extends SimpleTransformer {
             else if (ch.isName()) {
                 Name name = ch.asName();
                 if (name.isRule()) {
-                    RuleDecl decl = tree.getRule(name.name);
+                    RuleDecl decl = tree.getRule(name);
                     if (decl.rhs.isOptional()) {
                         //substitute
                         return transformOr(replace(node, i, decl.rhs.asRegex().node), parent);

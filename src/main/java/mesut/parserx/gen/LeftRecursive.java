@@ -46,7 +46,7 @@ public class LeftRecursive {
         for (Name any : set) {
             if (any.equals(ref)) continue;
             //if any start with rule
-            RuleDecl anyDecl = tree.getRule(any.name);
+            RuleDecl anyDecl = tree.getRule(any);
             Node rhs = anyDecl.rhs;
             if (start(rhs, ref)) {
                 //cut transition
@@ -88,7 +88,7 @@ public class LeftRecursive {
         else if (node.isName()) {
             if (node.equals(ref)) {
                 //expand
-                return tree.getRule(ref.name).rhs.copy();
+                return tree.getRule(ref).rhs.copy();
             }
         }
         else if (node.isGroup()) {
@@ -296,7 +296,7 @@ public class LeftRecursive {
             PathNode pathNode = new PathNode(name.name);
             map.put(name, pathNode);
             //get start nodes
-            Set<Name> set = Helper.first(tree.getRule(name.name).rhs, tree, false, true, false);
+            Set<Name> set = Helper.first(tree.getRule(name).rhs, tree, false, true, false);
             for (Name ch : set) {
                 pathNode.next.add(makePath(ch, map));
             }

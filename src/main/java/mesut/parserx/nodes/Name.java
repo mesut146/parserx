@@ -1,7 +1,6 @@
 package mesut.parserx.nodes;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 //rule or token symbol
@@ -10,7 +9,7 @@ public class Name extends Node {
     public static boolean tokenBrace = false;
     public String name;
     public boolean isToken;//if we reference to a token
-    public List<Name> args = new ArrayList<>();
+    public ArrayList<Name> args = new ArrayList<>();
 
     public Name(String name) {
         this.name = name;
@@ -47,7 +46,7 @@ public class Name extends Node {
         if (o == null || getClass() != o.getClass()) return false;
         Name name = (Name) o;
         return isToken == name.isToken &&
-                Objects.equals(this.name, name.name);
+                Objects.equals(this.name, name.name) && args.equals(name.args);
     }
 
     @Override

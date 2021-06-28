@@ -6,12 +6,9 @@ token{
  e:"";
 }
 
-//E: A a c;
-//A: b? | d*;
-//A:b | € | D+;
-//E: b a c | a c; //E0: b a c
+/*E: A b | a c;
+A: a d | e;*/
 
-//E: A a b | a c | d;
-//A: a d | e;
-//E: a b | a c | d;
-E: a b | a;
+E: A a | B b;
+A: e e;
+B: A c | d;

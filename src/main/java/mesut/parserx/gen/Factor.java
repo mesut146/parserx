@@ -14,19 +14,73 @@ public class Factor extends SimpleTransformer {
         this.tree = tree;
     }
 
-    public void handle() {
-        for (RuleDecl decl : tree.rules) {
-            while (factor(decl)) {
+    @Override
+    public Node transformOr(Or or, Node parent) {
+        Node node = super.transformOr(or, parent);
+        if (node.isOr()) {
+            or = node.asOr();
+        }
+        else {
+            return node;
+        }
+        for (int i = 0; i < or.size(); i++) {
+            Set<Name> s1 = Helper.first(or.get(i), tree, true);
+            for (int j = 0; j < or.size(); j++) {
+                Set<Name> s2 = Helper.first(or.get(i), tree, true);
+                Name sym = conf(s1, s2);
+                if (sym != null) {
+                    PullInfo info = pull(or, sym);
+                    Node one = Sequence.of(sym, info.one);
+                    return new Or(one, info.zero).normal();
+                }
+            }
+        }
+        return or;
+    }
 
+    @Override
+    public Node transformSequence(Sequence s, Node parent) {
+        Node node = super.transformSequence(s, parent);
+        if (node.isSequence()) {
+            s = node.asSequence();
+        }
+        else {
+            return node;
+        }
+        Node A = s.first();
+        if (Helper.canBeEmpty(A, tree)) {
+            Node B = Helper.trim(s);
+            Set<Name> s1 = Helper.first(A, tree, true);
+            Set<Name> s2 = Helper.first(B, tree, true);
+            Name sym = conf(s1, s2);
+            if (sym != null) {
+                return transformOr(new Or(Sequence.of(new Epsilons(tree).trim(A), B), B), parent);
+            }
+        }
+        return s;
+    }
+
+    public void handle() {
+        boolean modified = false;
+        while (true) {
+            for (int i = 0; i < tree.rules.size(); i++) {
+                RuleDecl decl = tree.rules.get(i);
+                while (modified = factor(decl)) ;
+
+                if (modified) {
+                    //restart if any modification happens
+                    break;
+                }
+            }
+            if (!modified) {
+                break;
             }
         }
     }
 
-    Name conf(Set<Name> s1, Set<Name> s2) {
-        Set<Name> tmp = new HashSet<>(s1);
-        tmp.retainAll(s2);
-        if (tmp.isEmpty()) return null;
-        return tmp.iterator().next();
+    private boolean factor(RuleDecl decl) {
+        decl.rhs = transformNode(decl.rhs, decl);
+        return false;
     }
 
     Name hasDup(List<Name> list) {
@@ -40,39 +94,65 @@ public class Factor extends SimpleTransformer {
         return null;
     }
 
-    boolean factor(RuleDecl decl) {
-        List<Name> list = Helper.firstList(decl.rhs, tree);
-        Name cc = hasDup(list);
-        if (cc != null && cc.isToken) {
-            PullInfo p = pull(decl.rhs, cc);
-            Node one = Sequence.of(cc, p.one);
-            if (p.zero == null) {
-                decl.rhs = one;
-            }
-            else {
-                decl.rhs = new Or(one, p.zero).normal();
-            }
-            return true;
-        }
-        /*if (decl.rhs.isOr()) {
-            Or or = decl.rhs.asOr();
-            for (int i = 0; i < or.size(); i++) {
-                Set<Name> s1 = Helper.first(or.get(i), tree, true);
-                for (int j = i + 1; j < or.size(); j++) {
-                    Set<Name> s2 = Helper.first(or.get(j), tree, true);
-                    Name common = conf(s1, s2);
-                    if (common != null) {
-                        PullInfo p = pull(or, common);
-                        decl.rhs = new Or(new Sequence(common, p.one), p.zero);
-                        return true;
-                    }
-                }
-            }
-        }
-        else if (decl.rhs.isSequence()) {
+    Name conf(Set<Name> s1, Set<Name> s2) {
+        Set<Name> copy = new HashSet<>(s1);
+        copy.retainAll(s2);
+        if (copy.isEmpty()) return null;
+        return copy.iterator().next();
+    }
 
-        }*/
-        return false;
+
+    //pull a single token 'sym' and store result in info
+    //A: sym A1 | A0
+    //A0=part doest start with sym
+    //A1=part after sym
+    public PullInfo pull(Node node, Name sym) {
+        if (!Helper.first(node, tree, true).contains(sym)) {
+            throw new RuntimeException("can't pull");
+        }
+        PullInfo info = new PullInfo();
+        if (node.isName()) {
+            Name name = node.asName();
+            if (name.equals(sym)) {
+                info.one = new Epsilon();
+            }
+            else if (name.isRule()) {
+                RuleDecl decl = tree.getRule(name);
+                //check if already pulled before
+                if (decl.args.size() == 1 && decl.args.get(0).equals(sym)) {
+                    info.zero = new Name("X");
+                    info.one = decl.ref();
+                    return info;
+                }
+                PullInfo tmp = pull(decl.rhs, sym);
+                RuleDecl oneDecl = new RuleDecl(decl.name, tmp.one.normal());
+                if (tmp.zero != null) {
+                    RuleDecl zeroDecl = new RuleDecl(decl.name + "0", tmp.zero.normal());
+                    tree.addRule(zeroDecl);
+                    info.zero = zeroDecl.ref();
+                }
+                oneDecl.args.add(sym);
+                tree.addRule(oneDecl);
+
+                info.one = oneDecl.ref();
+            }
+        }
+        else if (node.isGroup()) {
+            info = pull(node.asGroup().node, sym);
+        }
+        else if (node.isOr()) {
+            info = pullOr(node.asOr(), sym);
+        }
+        else if (node.isSequence()) {
+            info = pullSeq(node.asSequence(), sym);
+        }
+        else if (node.isRegex()) {
+            info = pullRegex(node.asRegex(), sym);
+        }
+        else {
+            throw new RuntimeException("invalid node: " + node.getClass());
+        }
+        return info;
     }
 
     PullInfo pullSeq(Sequence s, Name sym) {
@@ -133,47 +213,6 @@ public class Factor extends SimpleTransformer {
         }
         info.zero = zero.normal();
         info.one = one.normal();
-        return info;
-    }
-
-    //pull a single token 'sym' and store result in info
-    //A: sym A1 | A0
-    //A0=part doest start with sym
-    //A1=part after sym
-    public PullInfo pull(Node node, Name sym) {
-        if (!Helper.first(node, tree, true).contains(sym)) {
-            //info.not = node;
-            //return info;
-            throw new RuntimeException("can't pull");
-        }
-        PullInfo info = new PullInfo();
-        if (node.isName()) {
-            Name name = node.asName();
-            if (name.equals(sym)) {
-                info.one = new Epsilon();
-                return info;
-            }
-            if (name.isRule()) {
-                RuleDecl decl = tree.getRule(name.name);
-                PullInfo tmp = pull(decl.rhs, sym);
-                return tmp;
-            }
-        }
-        else if (node.isGroup()) {
-            info = pull(node.asGroup().node, sym);
-        }
-        else if (node.isOr()) {
-            info = pullOr(node.asOr(), sym);
-        }
-        else if (node.isSequence()) {
-            info = pullSeq(node.asSequence(), sym);
-        }
-        else if (node.isRegex()) {
-            info = pullRegex(node.asRegex(), sym);
-        }
-        else {
-            throw new RuntimeException("invalid node: " + node.getClass());
-        }
         return info;
     }
 

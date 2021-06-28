@@ -30,8 +30,8 @@ public class FactorTest {
     @Test
     public void all() throws Exception {
         Or.newLine = false;
-        Tree tree = Tree.makeTree(Env.getResFile("factor.g"));
-        //Tree tree = Tree.makeTree(Env.getResFile("rec/leftRec2.g"));
+        //Tree tree = Tree.makeTree(Env.getResFile("factor.g"));
+        Tree tree = Tree.makeTree(Env.getResFile("rec/leftRec2.g"));
         Factor factor = new Factor(tree);
         factor.handle();
         //factor.handle();

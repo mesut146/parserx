@@ -30,7 +30,9 @@ public class RuleDecl extends Node {
     }
 
     public Name ref() {
-        return new Name(name, false);
+        Name res = new Name(name, false);
+        res.args = new ArrayList<>(args);
+        return res;
     }
 
     @Override

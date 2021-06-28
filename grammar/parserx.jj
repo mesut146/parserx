@@ -12,6 +12,8 @@ package mesut.parserx.grammar;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.*;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GParser
 {
@@ -191,11 +193,22 @@ void ruleDecl(Tree tree):
   Node rhs;
 }
 {
-  name = name() declSeparator() rhs = rhs() ";"
+  name = name()[decl.args = args()] declSeparator() rhs = rhs() ";"
   {
     decl.name=name;
     decl.rhs=rhs;
     tree.addRule(decl);
+  }
+}
+
+
+List<Name> args():
+{
+  List<Name> list = new ArrayList<>();
+  String s;
+}{
+  "(" s = name(){list.add(new Name(s));} ("," s = name(){list.add(new Name(s));})* ")"  {
+     return list;
   }
 }
 

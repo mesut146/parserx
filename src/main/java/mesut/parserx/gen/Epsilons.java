@@ -53,7 +53,7 @@ public class Epsilons {
         }
         else if (node.isName()) {
             Name name = node.asName();
-            RuleDecl decl = tree.getRule(name.name);
+            RuleDecl decl = tree.getRule(name);
             RuleDecl newDecl = new RuleDecl(name.name + "_noe", trim(decl.rhs));
             tree.addRule(newDecl);
             return newDecl.ref();

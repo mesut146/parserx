@@ -44,7 +44,7 @@ public class Helper {
             Name name = node.asName();
             if (set.add(name)) {
                 if (rec && name.isRule()) {
-                    first(tree.getRule(name.name).rhs, tree, rec, set);
+                    first(tree.getRule(name).rhs, tree, rec, set);
                 }
             }
         }
@@ -68,6 +68,9 @@ public class Helper {
         else if (node.isRegex()) {
             first(node.asRegex().node, tree, rec, set);
         }
+        else if (node.isEpsilon()) {
+            set.add(((Epsilon) node));
+        }
     }
 
     public static List<Name> firstList(Node node, Tree tree) {
@@ -77,35 +80,38 @@ public class Helper {
     }
 
     //first list of regex,allows duplicates
-    public static void firstList(Node node, Tree tree, boolean rec, List<Name> set) {
+    public static void firstList(Node node, Tree tree, boolean rec, List<Name> list) {
         if (node.isName()) {
             Name name = node.asName();
-            if (!set.contains(name)) {
+            if (!list.contains(name)) {
+                list.add(name);
                 if (rec && name.isRule()) {
-                    firstList(tree.getRule(name.name).rhs, tree, rec, set);
+                    firstList(tree.getRule(name).rhs, tree, rec, list);
                 }
             }
-            set.add(name);
+            else {
+                list.add(name);
+            }
         }
         else if (node.isOr()) {
             for (Node ch : node.asOr()) {
-                firstList(ch, tree, rec, set);
+                firstList(ch, tree, rec, list);
             }
         }
         else if (node.isSequence()) {
             Sequence seq = node.asSequence();
             for (Node ch : seq) {
-                firstList(ch, tree, rec, set);
+                firstList(ch, tree, rec, list);
                 if (!canBeEmpty(ch, tree)) {
                     break;
                 }
             }
         }
         else if (node.isGroup()) {
-            firstList(node.asGroup().node, tree, rec, set);
+            firstList(node.asGroup().node, tree, rec, list);
         }
         else if (node.isRegex()) {
-            firstList(node.asRegex().node, tree, rec, set);
+            firstList(node.asRegex().node, tree, rec, list);
         }
     }
 
@@ -138,26 +144,28 @@ public class Helper {
             }
         }
     }
-
     public static boolean canBeEmpty(Node node, Tree tree) {
+        return canBeEmpty(node,tree,new HashSet<>());
+    }
+    public static boolean canBeEmpty(Node node, Tree tree,Set<Name> set) {
         if (node.isName()) {
-            if (node.asName().isRule()) {
-                return canBeEmpty(tree.getRule(node.asName().name).rhs, tree);
+            if (node.asName().isRule() && set.add(node.asName())) {
+                return canBeEmpty(tree.getRule(node.asName()).rhs, tree,set);
             }
         }
         else if (node.isGroup()) {
-            return canBeEmpty(node.asGroup().node, tree);
+            return canBeEmpty(node.asGroup().node, tree,set);
         }
         else if (node.isRegex()) {
             Regex regex = node.asRegex();
             if (regex.isOptional() || regex.isStar()) {
                 return true;
             }
-            return canBeEmpty(regex.node, tree);
+            return canBeEmpty(regex.node, tree,set);
         }
         else if (node.isOr()) {
             for (Node ch : node.asOr()) {
-                if (canBeEmpty(ch, tree)) {
+                if (canBeEmpty(ch, tree,set)) {
                     return true;
                 }
             }
@@ -165,7 +173,7 @@ public class Helper {
         else if (node.isSequence()) {
             Sequence sequence = node.asSequence();
             for (int i = 0; i < sequence.size(); i++) {
-                if (!canBeEmpty(sequence.get(i), tree)) {
+                if (!canBeEmpty(sequence.get(i), tree,set)) {
                     return false;
                 }
             }

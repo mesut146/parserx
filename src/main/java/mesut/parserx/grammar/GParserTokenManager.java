@@ -4,6 +4,8 @@ package mesut.parserx.grammar;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.*;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Token Manager. */
 @SuppressWarnings ("unused")

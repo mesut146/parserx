@@ -191,9 +191,17 @@ public class Tree {
 
 
     public RuleDecl getRule(String name) {
-        List<RuleDecl> list = getRules(name);
-        if (!list.isEmpty()) {
-            return list.get(0);
+        for (RuleDecl decl : rules) {
+            if (decl.name.equals(name)) return decl;
+        }
+        return null;
+    }
+
+    public RuleDecl getRule(Name res) {
+        for (RuleDecl decl : rules) {
+            if (decl.ref().equals(res)) {
+                return decl;
+            }
         }
         return null;
     }
