@@ -14,25 +14,6 @@ public class PrepareTree extends SimpleTransformer {
         new ReferenceChecker(tree).check();
     }
 
-    //put back terminals as string nodes for good visuals
-    public static void revert(final Tree tree) {
-        final SimpleTransformer transformer = new SimpleTransformer() {
-            @Override
-            public Node transformName(Name node, Node parent) {
-                if (node.isToken) {
-                    Node rhs = tree.getToken(node.name).regex;
-                    if (rhs.isString()) {
-                        return rhs;
-                    }
-                }
-                return super.transformName(node, parent);
-            }
-        };
-        for (RuleDecl ruleDecl : tree.rules) {
-            transformer.transformRule(ruleDecl);
-        }
-    }
-
     @Override
     public Node transformOr(Or node, Node parent) {
         for (Node ch : node) {
@@ -58,22 +39,32 @@ public class PrepareTree extends SimpleTransformer {
 
         @Override
         public Node transformName(Name node, Node parent) {
-            if (tree.hasRule(node.name)) {
-                node.isToken = false;
+            if (node.isToken) {
+                checkToken(node, parent);
             }
             else {
-                TokenDecl decl = tree.getToken(node.name);
-                if (decl == null) {
-                    throw new RuntimeException("invalid reference: " + node.name + " in " + parent);
+                //rule or token
+                if (tree.getRule(node) != null) {
+                    node.isToken = false;
                 }
                 else {
-                    if (decl.isSkip) {
-                        throw new RuntimeException("skip token inside production is not allowed");
-                    }
-                    node.isToken = true;
+                    checkToken(node, parent);
                 }
             }
             return node;
+        }
+
+        void checkToken(Name node, Node parent) {
+            TokenDecl decl = tree.getToken(node.name);
+            if (decl == null) {
+                throw new RuntimeException("invalid reference: " + node.name + " in " + parent);
+            }
+            else {
+                if (decl.isSkip) {
+                    throw new RuntimeException("skip token inside production is not allowed");
+                }
+                node.isToken = true;
+            }
         }
 
         @Override

@@ -64,7 +64,7 @@ public class LexerGenerator {
         //generate name and id list
         int id = 1;
 
-        for (TokenDecl decl : dfa.tree.getTokens()) {
+        for (TokenDecl decl : dfa.tree.tokens) {
             if (decl.isSkip) continue;
             idMap.put(decl.tokenName, id++);
         }

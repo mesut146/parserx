@@ -1,5 +1,6 @@
 import common.Env;
 import mesut.parserx.gen.EbnfToBnf;
+import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.PrecedenceHelper;
 import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.nodes.NodeList;
@@ -24,7 +25,7 @@ public class TransformTest {
         //System.out.println(tree);
         PrecedenceHelper helper = new PrecedenceHelper(tree);
         tree = helper.transform();
-        PrepareTree.revert(tree);
+        Helper.revert(tree);
         System.out.println(NodeList.join(tree.rules, "\n"));
         /*tree = LeftRecursive.transform(tree);
         System.out.println("-------------");

@@ -144,41 +144,62 @@ public class Helper {
             }
         }
     }
+
     public static boolean canBeEmpty(Node node, Tree tree) {
-        return canBeEmpty(node,tree,new HashSet<>());
+        return canBeEmpty(node, tree, new HashSet<>());
     }
-    public static boolean canBeEmpty(Node node, Tree tree,Set<Name> set) {
+
+    public static boolean canBeEmpty(Node node, Tree tree, Set<Name> set) {
         if (node.isName()) {
             if (node.asName().isRule() && set.add(node.asName())) {
-                return canBeEmpty(tree.getRule(node.asName()).rhs, tree,set);
+                return canBeEmpty(tree.getRule(node.asName()).rhs, tree, set);
             }
         }
         else if (node.isGroup()) {
-            return canBeEmpty(node.asGroup().node, tree,set);
+            return canBeEmpty(node.asGroup().node, tree, set);
         }
         else if (node.isRegex()) {
-            Regex regex = node.asRegex();
-            if (regex.isOptional() || regex.isStar()) {
+            Regex r = node.asRegex();
+            if (r.isOptional() || r.isStar()) {
                 return true;
             }
-            return canBeEmpty(regex.node, tree,set);
+            return canBeEmpty(r.node, tree, set);
         }
         else if (node.isOr()) {
             for (Node ch : node.asOr()) {
-                if (canBeEmpty(ch, tree,set)) {
+                if (canBeEmpty(ch, tree, set)) {
                     return true;
                 }
             }
         }
         else if (node.isSequence()) {
-            Sequence sequence = node.asSequence();
-            for (int i = 0; i < sequence.size(); i++) {
-                if (!canBeEmpty(sequence.get(i), tree,set)) {
+            Sequence s = node.asSequence();
+            for (int i = 0; i < s.size(); i++) {
+                if (!canBeEmpty(s.get(i), tree, set)) {
                     return false;
                 }
             }
             return true;
         }
         return false;
+    }
+
+    //put back terminals as string nodes for good visuals
+    public static void revert(final Tree tree) {
+        final SimpleTransformer transformer = new SimpleTransformer() {
+            @Override
+            public Node transformName(Name node, Node parent) {
+                if (node.isToken) {
+                    Node rhs = tree.getToken(node.name).regex;
+                    if (rhs.isString()) {
+                        return rhs;
+                    }
+                }
+                return super.transformName(node, parent);
+            }
+        };
+        for (RuleDecl ruleDecl : tree.rules) {
+            transformer.transformRule(ruleDecl);
+        }
     }
 }

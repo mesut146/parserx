@@ -2,6 +2,12 @@ package mesut.parserx.nodes;
 
 public class SimpleTransformer {
 
+    public void transformAll(Tree tree) {
+        for (RuleDecl decl : tree.rules) {
+            transformRule(decl);
+        }
+    }
+
     public RuleDecl transformRule(RuleDecl decl) {
         decl.rhs = transformNode(decl.rhs, decl);
         return decl;

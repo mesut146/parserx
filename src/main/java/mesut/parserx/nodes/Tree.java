@@ -16,6 +16,7 @@ import java.util.List;
 public class Tree {
 
     public List<RuleDecl> rules;
+    public List<RuleDecl> hiddenRules;
     public Name start;
     public File file = null;
     public Alphabet alphabet = new Alphabet();
@@ -111,15 +112,6 @@ public class Tree {
         rules.add(rule);
     }
 
-    public boolean hasRule(String name) {
-        for (RuleDecl decl : rules) {
-            if (decl.name.equals(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     //find token by string literal
     public TokenDecl getTokenByValue(String val) {
         for (TokenDecl decl : tokens) {
@@ -185,10 +177,13 @@ public class Tree {
             }
             sb.append(NodeList.join(rules, "\n"));
         }
+        if (!hiddenRules.isEmpty()) {
+            sb.append("/* hidden rules */\n");
+            sb.append(NodeList.join(hiddenRules, "\n"));
+        }
 
         return sb.toString();
     }
-
 
     public RuleDecl getRule(String name) {
         for (RuleDecl decl : rules) {
@@ -214,10 +209,6 @@ public class Tree {
             }
         }
         return list;
-    }
-
-    public List<TokenDecl> getTokens() {
-        return tokens;
     }
 
 }

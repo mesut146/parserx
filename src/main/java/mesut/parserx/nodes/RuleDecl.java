@@ -13,6 +13,7 @@ public class RuleDecl extends Node {
     public Node rhs;
     public int index;
     public List<Name> args = new ArrayList<>();
+    public boolean hidden = false;//if true rule has no effect
 
     public RuleDecl() {
     }
@@ -37,10 +38,14 @@ public class RuleDecl extends Node {
 
     @Override
     public String toString() {
-        if (printIndex) {
-            return "/*" + index + "*/  " + name + printArgs() + " = " + rhs + ";";
+        String s = name + printArgs() + " = " + rhs + ";";
+        if (hidden) {
+            return "/*" + s + "*/";
         }
-        return name + printArgs() + " = " + rhs + ";";
+        if (printIndex) {
+            return "/*" + index + "*/ " + s;
+        }
+        return s;
     }
 
     String printArgs() {
@@ -55,14 +60,11 @@ public class RuleDecl extends Node {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RuleDecl decl = (RuleDecl) o;
-        return index == decl.index &&
-                Objects.equals(name, decl.name) /*&&
-                Objects.equals(rhs, decl.rhs)*/;
+        return index == decl.index && Objects.equals(name, decl.name);
     }
 
     @Override
     public int hashCode() {
-        //return Objects.hash(name, rhs, index);
         return Objects.hash(name, index);
     }
 

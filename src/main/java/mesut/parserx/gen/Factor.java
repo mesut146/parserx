@@ -25,7 +25,7 @@ public class Factor extends SimpleTransformer {
         }
         for (int i = 0; i < or.size(); i++) {
             Set<Name> s1 = Helper.first(or.get(i), tree, true);
-            for (int j = 0; j < or.size(); j++) {
+            for (int j = i + 1; j < or.size(); j++) {
                 Set<Name> s2 = Helper.first(or.get(i), tree, true);
                 Name sym = conf(s1, s2);
                 if (sym != null) {
@@ -61,12 +61,18 @@ public class Factor extends SimpleTransformer {
     }
 
     public void handle() {
-        boolean modified = false;
         while (true) {
+            boolean modified = false;
             for (int i = 0; i < tree.rules.size(); i++) {
                 RuleDecl decl = tree.rules.get(i);
-                while (modified = factor(decl)) ;
-
+                while (true) {
+                    if (factor(decl)) {
+                        modified = true;
+                    }
+                    else {
+                        break;
+                    }
+                }
                 if (modified) {
                     //restart if any modification happens
                     break;
@@ -107,6 +113,7 @@ public class Factor extends SimpleTransformer {
     //A0=part doest start with sym
     //A1=part after sym
     public PullInfo pull(Node node, Name sym) {
+        System.out.println("pull:" + node + " sym:" + sym);
         if (!Helper.first(node, tree, true).contains(sym)) {
             throw new RuntimeException("can't pull");
         }

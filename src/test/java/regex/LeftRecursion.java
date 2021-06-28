@@ -1,6 +1,7 @@
 package regex;
 
 import common.Env;
+import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.LeftRecursive;
 import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.nodes.NodeList;
@@ -19,7 +20,7 @@ public class LeftRecursion {
         Tree tree = Tree.makeTree(file);
         LeftRecursive leftRecursive = new LeftRecursive(tree);
         leftRecursive.process();
-        PrepareTree.revert(tree);
+        Helper.revert(tree);
         System.out.println(tree);
     }
 
