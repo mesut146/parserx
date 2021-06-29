@@ -96,10 +96,6 @@ public abstract class Node {
         return this instanceof Dot;
     }
 
-    public Dot asDot() {
-        return (Dot) this;
-    }
-
     protected String varString() {
         if (varName != null) return varName + " = ";
         return "";

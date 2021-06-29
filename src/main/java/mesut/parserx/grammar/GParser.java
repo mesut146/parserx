@@ -227,7 +227,7 @@ or.add(rule);
     label_6:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case 51:{
+      case 49:{
         ;
         break;
         }
@@ -235,7 +235,7 @@ or.add(rule);
         jj_la1[9] = jj_gen;
         break label_6;
       }
-      jj_consume_token(51);
+      jj_consume_token(49);
       rule = orContent();
 or.add(rule);
     }
@@ -272,6 +272,7 @@ s.add(r);
       case LBRACE:
       case DOT:
       case TILDE:
+      case EMPTY:
       case STRING_LITERAL:
       case IDENT:
       case BRACKET_LIST:{
@@ -360,6 +361,11 @@ if(name != null) node.varName = name;
       }
     case DOT:{
       rule = dotNode();
+      break;
+      }
+    case EMPTY:{
+      jj_consume_token(EMPTY);
+rule = new Epsilon();
       break;
       }
     default:
@@ -490,6 +496,13 @@ ref = new Name(name);
     finally { jj_save(3, xla); }
   }
 
+  private boolean jj_3_2()
+ {
+    if (jj_scan_token(KEYWORD_SKIP)) return true;
+    if (jj_scan_token(LBRACE)) return true;
+    return false;
+  }
+
   private boolean jj_3_4()
  {
     if (jj_3R_9()) return true;
@@ -528,13 +541,6 @@ ref = new Name(name);
     return false;
   }
 
-  private boolean jj_3_2()
- {
-    if (jj_scan_token(KEYWORD_SKIP)) return true;
-    if (jj_scan_token(LBRACE)) return true;
-    return false;
-  }
-
   /** Generated Token Manager. */
   public GParserTokenManager token_source;
   JavaCharStream jj_input_stream;
@@ -557,7 +563,7 @@ ref = new Name(name);
 	   jj_la1_0 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x7880000,0x1000,0x200000,0x0,0x0,0x80105000,0x38000000,0x80105000,0x4000,};
 	}
 	private static void jj_la1_init_1() {
-	   jj_la1_1 = new int[] {0x40,0x14,0x80,0x100,0x101,0x1,0x0,0x0,0x0,0x80000,0x1,0x20120,0x0,0x20120,0x100,};
+	   jj_la1_1 = new int[] {0x40,0x14,0x80,0x100,0x101,0x1,0x0,0x0,0x0,0x20000,0x1,0x8122,0x0,0x8122,0x100,};
 	}
   final private JJCalls[] jj_2_rtns = new JJCalls[4];
   private boolean jj_rescan = false;
@@ -770,7 +776,7 @@ ref = new Name(name);
   /** Generate ParseException. */
   public ParseException generateParseException() {
 	 jj_expentries.clear();
-	 boolean[] la1tokens = new boolean[52];
+	 boolean[] la1tokens = new boolean[50];
 	 if (jj_kind >= 0) {
 	   la1tokens[jj_kind] = true;
 	   jj_kind = -1;
@@ -787,7 +793,7 @@ ref = new Name(name);
 		 }
 	   }
 	 }
-	 for (int i = 0; i < 52; i++) {
+	 for (int i = 0; i < 50; i++) {
 	   if (la1tokens[i]) {
 		 jj_expentry = new int[1];
 		 jj_expentry[0] = i;

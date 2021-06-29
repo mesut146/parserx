@@ -81,19 +81,15 @@ public interface GParserConstants {
   /** RegularExpression Id. */
   int HEX_DIGIT = 43;
   /** RegularExpression Id. */
-  int ESCAPED_SPECIAL = 44;
+  int OCTAL_DIGIT = 44;
   /** RegularExpression Id. */
-  int OCTAL_DIGIT = 45;
+  int ESCAPED_HEX = 45;
   /** RegularExpression Id. */
-  int ESCAPED_HEX = 46;
+  int ESCAPED_OCTAL = 46;
   /** RegularExpression Id. */
-  int ESCAPED_OCTAL = 47;
+  int BRACKET_LIST = 47;
   /** RegularExpression Id. */
-  int UNICODE = 48;
-  /** RegularExpression Id. */
-  int BRACKET_LIST = 49;
-  /** RegularExpression Id. */
-  int INTEGER = 50;
+  int INTEGER = 48;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -139,7 +135,7 @@ public interface GParserConstants {
     "\"^\"",
     "\"~\"",
     "\"#\"",
-    "\"%empty\"",
+    "<EMPTY>",
     "\"token\"",
     "\"tokens\"",
     "\"skip\"",
@@ -150,11 +146,9 @@ public interface GParserConstants {
     "<CHAR>",
     "<DIGIT>",
     "<HEX_DIGIT>",
-    "<ESCAPED_SPECIAL>",
     "<OCTAL_DIGIT>",
     "<ESCAPED_HEX>",
     "<ESCAPED_OCTAL>",
-    "<UNICODE>",
     "<BRACKET_LIST>",
     "<INTEGER>",
     "\"|\"",

@@ -35,7 +35,9 @@ public class Epsilons {
             Or res = new Or();
             for (int i = 0; i < or.size(); i++) {
                 Node ch = or.get(i);
-                res.add(trim(ch));
+                if (!ch.isEpsilon()) {
+                    res.add(trim(ch));
+                }
             }
             return res;
         }
@@ -54,8 +56,12 @@ public class Epsilons {
         else if (node.isName()) {
             Name name = node.asName();
             RuleDecl decl = tree.getRule(name);
-            RuleDecl newDecl = new RuleDecl(name.name + "_noe", trim(decl.rhs));
-            tree.addRule(newDecl);
+            String newName = name.name + "_noe";
+            RuleDecl newDecl = tree.getRule(newName);
+            if (newDecl == null) {
+                newDecl = new RuleDecl(newName, trim(decl.rhs));
+                tree.addRule(newDecl);
+            }
             return newDecl.ref();
         }
         else {

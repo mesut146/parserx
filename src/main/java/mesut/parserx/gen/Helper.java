@@ -181,7 +181,7 @@ public class Helper {
             }
             return true;
         }
-        return false;
+        return node.isEpsilon();
     }
 
     //put back terminals as string nodes for good visuals

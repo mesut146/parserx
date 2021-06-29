@@ -9,12 +9,11 @@ import java.util.List;
 //convert epsilons to '?'
 //or eliminate them by expanding
 public class EpsilonTrimmer extends SimpleTransformer {
-    Tree tree, res;
-    List<String> hasEpsilon = new ArrayList<>();
+    Tree tree;
+    boolean modified;
 
     public EpsilonTrimmer(Tree tree) {
         this.tree = tree;
-        res = new Tree(tree);
     }
 
     public static Tree trim(Tree input) {
@@ -24,12 +23,17 @@ public class EpsilonTrimmer extends SimpleTransformer {
 
     public Tree trim() {
         for (RuleDecl rule : tree.rules) {
-            rule = transformRule(rule);
-            if (rule != null) {
-                res.addRule(rule);
+            modified = false;
+            transformRule(rule);
+            if (Helper.canBeEmpty(rule.rhs, tree)) {
+                rule.hidden = true;
+            }
+            if (modified) {
+                trim();
+                break;
             }
         }
-        return res;
+        return tree;
     }
 
     //A B C = A B C
@@ -45,6 +49,13 @@ public class EpsilonTrimmer extends SimpleTransformer {
 
     @Override
     public Node transformSequence(Sequence node, Node parent) {
+        Node tmp = super.transformSequence(node, parent);
+        if (tmp.isSequence()) {
+            node = tmp.asSequence();
+        }
+        else {
+            return node;
+        }
         for (int i = 0; i < node.size(); i++) {
             Node ch = node.get(i);
             if (ch.isRegex()) {
@@ -77,24 +88,11 @@ public class EpsilonTrimmer extends SimpleTransformer {
     }
 
     @Override
-    public Node transformOr(Or node, Node parent) {
-        Node tmp = super.transformOr(node, parent);
-        if (tmp.isOr()) {
-            node = tmp.asOr();
-        }
-        else {
-            return tmp;
-        }
-        for (Node ch : node) {
-            if (ch.isRegex()) {
-                Regex regex = ch.asRegex();
-                if (regex.isStar()) {
-
-                }
-                else if (regex.isOptional()) {
-
-                }
-            }
+    public Node transformName(Name node, Node parent) {
+        if (node.isRule() && Helper.canBeEmpty(node, tree)) {
+            Node noe = new Epsilons(tree).trim(node);
+            modified = true;
+            return noe;
         }
         return node;
     }

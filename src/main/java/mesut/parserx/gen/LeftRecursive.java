@@ -14,9 +14,9 @@ public class LeftRecursive {
     }
 
     public static Tree transform(Tree input) {
-        LeftRecursive leftRecursive = new LeftRecursive(input);
-        leftRecursive.process();
-        return leftRecursive.tree;
+        LeftRecursive lr = new LeftRecursive(input);
+        lr.process();
+        return lr.tree;
     }
 
     public void process() {
@@ -59,7 +59,7 @@ public class LeftRecursive {
         return node;
     }
 
-    //make sure node doesnt start with ref
+    //make sure node doesn't start with ref
     Node subFirst(Node node, Name ref) {
         if (node.isOr()) {
             Or res = new Or();
@@ -87,7 +87,7 @@ public class LeftRecursive {
         }
         else if (node.isName()) {
             if (node.equals(ref)) {
-                //expand
+                //substitute
                 return tree.getRule(ref).rhs.copy();
             }
         }
@@ -100,14 +100,6 @@ public class LeftRecursive {
         return node;
     }
 
-    Node trimFirst(Sequence s) {
-        return new Sequence(s.list.subList(1, s.size())).normal();
-    }
-
-    Node trimFirst(Or s) {
-        return new Or(s.list.subList(1, s.size())).normal();
-    }
-
     public Node removeDirect(Node node, Name ref) {
         if (!start(node, ref)) {
             return node;
@@ -117,14 +109,14 @@ public class LeftRecursive {
         Node tail;
         //extract tail
         if (one.isSequence()) {
-            tail = trimFirst(one.asSequence());
+            tail = Helper.trim(one.asSequence());
         }
         else if (one.isOr()) {
             //multiple ones, extract all
             Or or = one.asOr();
             Or tmp = new Or();
             for (Node ch : or) {
-                tmp.add(trimFirst(ch.asSequence()));
+                tmp.add(Helper.trim(ch.asSequence()));
             }
             tail = tmp.normal();
         }
@@ -201,7 +193,7 @@ public class LeftRecursive {
         else if (r.isSequence()) {
             Sequence seq = r.asSequence();
             Node left = seq.first();
-            Node right = trimFirst(seq);
+            Node right = Helper.trim(seq);
             SplitInfo s1 = split(left, name);
             if (start(left, name)) {
                 one = new Or(makeSeq(s1.one.normal(), right));

@@ -100,8 +100,8 @@ public class Or extends NodeList {
 
     @Override
     public Node copy() {
-        return new Or(list) {{
-            this.label = label;
-        }};
+        Or res = new Or(list);
+        res.label = label;
+        return res;
     }
 }

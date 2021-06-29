@@ -1,9 +1,9 @@
 package regex;
 
 import common.Env;
+import mesut.parserx.gen.EbnfToBnf;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.LeftRecursive;
-import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.RuleDecl;
@@ -21,6 +21,8 @@ public class LeftRecursion {
         LeftRecursive leftRecursive = new LeftRecursive(tree);
         leftRecursive.process();
         Helper.revert(tree);
+        EbnfToBnf.expand_or = false;
+        tree = EbnfToBnf.transform(tree);
         System.out.println(tree);
     }
 

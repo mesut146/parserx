@@ -8,6 +8,8 @@ import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
 
+import java.io.File;
+
 public class FactorTest {
 
     @Test
@@ -30,7 +32,8 @@ public class FactorTest {
     @Test
     public void all() throws Exception {
         Or.newLine = false;
-        Tree tree = Tree.makeTree(Env.getResFile("factor.g"));
+        //Tree tree = Tree.makeTree(Env.getResFile("factor.g"));
+        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/dots/recc.g"));
         //Tree tree = Tree.makeTree(Env.getResFile("rec/leftRec2.g"));
         Factor factor = new Factor(tree);
         factor.handle();

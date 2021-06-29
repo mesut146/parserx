@@ -13,7 +13,7 @@ public class EbnfToBnf {
     public static boolean combine_or = false;//exclusive expand_or
     public static boolean rhsSequence = true;//make sure rhs always sequence
     public static boolean expandGroup = true;//make separate production for groups
-    static String starSuffix = "*", plusSuffix = "+", optSuffix = "?";
+    public static boolean putSuffix = true;
     Tree tree;//input ebnf
     Tree res;//output bnf
     Map<String, Integer> countMap = new HashMap<>();
@@ -145,7 +145,10 @@ public class EbnfToBnf {
         if (regex.isStar()) {
             //b* = E | b* b; left
             //b* = E | b b*; right
-            Name ref = new Name(decl.name + "_" + getCount(decl.name) + starSuffix);
+            Name ref = new Name(decl.name + getCount(decl.name));
+            if (putSuffix) {
+                ref.name += "_star";
+            }
             Node newNode;
             if (leftRecursive) {
                 newNode = new Or(new Epsilon(), new Sequence(ref, node));
@@ -161,7 +164,10 @@ public class EbnfToBnf {
         else if (regex.isPlus()) {
             //b+ = b | b b+; right
             //b+ = b | b+ b; left
-            Name ref = new Name(decl.name + "_" + getCount(decl.name) + plusSuffix);
+            Name ref = new Name(decl.name + getCount(decl.name));
+            if (putSuffix) {
+                ref.name += "_plus";
+            }
             Node newNode;
             if (leftRecursive) {
                 newNode = new Or(regex.node, Sequence.of(ref, regex.node));
@@ -176,7 +182,10 @@ public class EbnfToBnf {
         }
         else {
             //r = E | a;
-            Name ref = new Name(decl.name + "_" + getCount(decl.name) + optSuffix);
+            Name ref = new Name(decl.name + getCount(decl.name));
+            if (putSuffix) {
+                ref.name += "_opt";
+            }
             Node newNode = new Or(new Epsilon(), node);
             RuleDecl r = new RuleDecl(ref.name, newNode);
             r.rhs = transform(newNode, r);

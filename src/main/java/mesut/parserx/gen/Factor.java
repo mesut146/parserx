@@ -2,13 +2,15 @@ package mesut.parserx.gen;
 
 import mesut.parserx.nodes.*;
 
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class Factor extends SimpleTransformer {
 
     Tree tree;
+    HashMap<Name, PullInfo> cache = new HashMap<>();
+    boolean modified;
 
     public Factor(Tree tree) {
         this.tree = tree;
@@ -29,9 +31,15 @@ public class Factor extends SimpleTransformer {
                 Set<Name> s2 = Helper.first(or.get(i), tree, true);
                 Name sym = conf(s1, s2);
                 if (sym != null) {
+                    modified = true;
                     PullInfo info = pull(or, sym);
                     Node one = Sequence.of(sym, info.one);
-                    return new Or(one, info.zero).normal();
+                    if (info.zero == null) {
+                        return one;
+                    }
+                    else {
+                        return new Or(one, info.zero).normal();
+                    }
                 }
             }
         }
@@ -62,7 +70,7 @@ public class Factor extends SimpleTransformer {
 
     public void handle() {
         while (true) {
-            boolean modified = false;
+            modified = false;
             for (int i = 0; i < tree.rules.size(); i++) {
                 RuleDecl decl = tree.rules.get(i);
                 while (true) {
@@ -89,28 +97,19 @@ public class Factor extends SimpleTransformer {
         return false;
     }
 
-    Name hasDup(List<Name> list) {
-        for (int i = 0; i < list.size(); i++) {
-            for (int j = i + 1; j < list.size(); j++) {
-                if (list.get(i).equals(list.get(j))) {
-                    return list.get(i);
-                }
-            }
-        }
-        return null;
-    }
-
     Name conf(Set<Name> s1, Set<Name> s2) {
         Set<Name> copy = new HashSet<>(s1);
         copy.retainAll(s2);
-        if (copy.isEmpty()) return null;
-        return copy.iterator().next();
+        for (Name name : copy) {
+            if (!name.isEpsilon()) return name;
+        }
+        return null;
     }
 
 
     //pull a single token 'sym' and store result in info
     //A: sym A1 | A0
-    //A0=part doest start with sym
+    //A0=part doesn't start with sym
     //A1=part after sym
     public PullInfo pull(Node node, Name sym) {
         System.out.println("pull:" + node + " sym:" + sym);
@@ -124,10 +123,14 @@ public class Factor extends SimpleTransformer {
                 info.one = new Epsilon();
             }
             else if (name.isRule()) {
+                if (cache.containsKey(name)) {
+                    return cache.get(name);
+                }
+                cache.put(name, info);
                 RuleDecl decl = tree.getRule(name);
                 //check if already pulled before
                 if (decl.args.size() == 1 && decl.args.get(0).equals(sym)) {
-                    info.zero = new Name("X");
+                    info.zero = new Name("X");//todo
                     info.one = decl.ref();
                     return info;
                 }
@@ -140,7 +143,6 @@ public class Factor extends SimpleTransformer {
                 }
                 oneDecl.args.add(sym);
                 tree.addRule(oneDecl);
-
                 info.one = oneDecl.ref();
             }
         }

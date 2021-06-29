@@ -15,18 +15,15 @@ import java.util.List;
 //the grammar file for both lexer and parser
 public class Tree {
 
-    public List<RuleDecl> rules;
-    public List<RuleDecl> hiddenRules;
+    public List<RuleDecl> rules = new ArrayList<>();
+    public List<RuleDecl> hiddenRules = new ArrayList<>();
     public Name start;
     public File file = null;
     public Alphabet alphabet = new Alphabet();
-    public List<TokenDecl> tokens;
-    List<File> includes;
+    public List<TokenDecl> tokens = new ArrayList<>();
+    List<File> includes = new ArrayList<>();
 
     public Tree() {
-        tokens = new ArrayList<>();
-        rules = new ArrayList<>();
-        includes = new ArrayList<>();
     }
 
     public Tree(Tree tree) {

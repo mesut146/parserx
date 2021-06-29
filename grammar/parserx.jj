@@ -73,16 +73,16 @@ TOKEN :
 | < COMMA: "," >
 | < QUOTE: "'" >
 | < EQ: "=">
-| <COLONEQEQ: ":==">
-| <COLONEQ: ":=">
-| <ARROW: "->">
+| < COLONEQEQ: ":==">
+| < COLONEQ: ":=">
+| < ARROW: "->">
 | < STAR: "*">
 | < PLUS: "+">
 | < QUES: "?">
 | < XOR: "^">//negation
 | < TILDE: "~">//read until
 | < HASH: "#">
-| <EMPTY: "%empty">
+| < EMPTY: "%empty" | "ε">
 }
 
 TOKEN:
@@ -101,13 +101,9 @@ TOKEN:
 | <#CHAR: ["a"-"z","A"-"Z"]>
 | <#DIGIT: ["0"-"9"]>
 | <#HEX_DIGIT: ["a"-"f","A"-"f","0"-"9"]>
-| <#ESCAPED_SPECIAL: ("\\" ["a","b","e","f","n","r","t","v","\\","'","\"","?","s"])>
 | <#OCTAL_DIGIT: ["0"-"7"]>
 | <ESCAPED_HEX: "\\x" (<HEX_DIGIT>)+ >
 | <ESCAPED_OCTAL: "\\" (<OCTAL_DIGIT>)+ >
-| <#UNICODE: "\\u" <HEX_DIGIT> <HEX_DIGIT> <HEX_DIGIT> <HEX_DIGIT> >
-//| <RANGE: <UNIT> "-" <UNIT> >
-//| <UNIT: <UNICODE> | <ESCAPED_SPECIAL> | <ESCAPED_HEX> | <ESCAPED_OCTAL> >
 | <BRACKET_LIST: "["  (~["]"])* "]">
 | <INTEGER: (<DIGIT>)+>
 }
@@ -295,7 +291,8 @@ Node simple():
    | rule = stringNode()
    | rule = bracketNode()
    | rule = untilNode()
-   | rule = dotNode())
+   | rule = dotNode()
+   | <EMPTY>{rule = new Epsilon();})
    { return rule; }
 }
 
@@ -385,7 +382,6 @@ String name():
 {
   token = <IDENT>{return token.image;}
 }
-
 
 Node repeatNode():
 {
