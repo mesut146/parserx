@@ -146,7 +146,7 @@ public class Helper {
     }
 
     public static boolean canBeEmpty(Node node, Tree tree) {
-        return canBeEmpty(node, tree, new HashSet<>());
+        return canBeEmpty(node, tree, new HashSet<Name>());
     }
 
     public static boolean canBeEmpty(Node node, Tree tree, Set<Name> set) {

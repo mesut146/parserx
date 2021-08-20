@@ -25,8 +25,9 @@ public class FactorTest {
         Or.newLine = false;
         Tree tree = Tree.makeTree(Env.getResFile("factor.g"));
         Factor factor = new Factor(tree);
-        Factor.PullInfo info = factor.pull(new Name("E", false), new Name("a", true));
+        Factor.PullInfo info = factor.pull(new Name("E", false), new Name("A", false));
         System.out.printf("E0=%s\nE1=%s\n", info.zero, info.one);
+        System.out.println(tree);
     }
 
     @Test

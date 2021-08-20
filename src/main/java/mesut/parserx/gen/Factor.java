@@ -112,9 +112,9 @@ public class Factor extends SimpleTransformer {
     //A0=part doesn't start with sym
     //A1=part after sym
     public PullInfo pull(Node node, Name sym) {
-        System.out.println("pull:" + node + " sym:" + sym);
+        //System.out.println("pull:" + node + " sym:" + sym);
         if (!Helper.first(node, tree, true).contains(sym)) {
-            throw new RuntimeException("can't pull");
+            throw new RuntimeException("can't pull " + sym + " from " + node);
         }
         PullInfo info = new PullInfo();
         if (node.isName()) {
@@ -137,7 +137,7 @@ public class Factor extends SimpleTransformer {
                 PullInfo tmp = pull(decl.rhs, sym);
                 RuleDecl oneDecl = new RuleDecl(decl.name, tmp.one.normal());
                 if (tmp.zero != null) {
-                    RuleDecl zeroDecl = new RuleDecl(decl.name + "0", tmp.zero.normal());
+                    RuleDecl zeroDecl = new RuleDecl(decl.name + "_no_" + sym, tmp.zero.normal());
                     tree.addRule(zeroDecl);
                     info.zero = zeroDecl.ref();
                 }
