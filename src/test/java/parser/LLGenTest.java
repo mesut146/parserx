@@ -1,6 +1,7 @@
 package parser;
 
 import common.Env;
+import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.LLGen;
 import mesut.parserx.gen.ll.LLRec;
@@ -17,11 +18,35 @@ public class LLGenTest {
     }
 
     @Test
-    public void rec() throws Exception {
-        Tree tree = Tree.makeTree(Env.getResFile("ll.g"));
+    public void model() throws Exception {
+        Tree tree = Tree.makeTree(Env.getResFile("model.g"));
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         LLRec gen = new LLRec(tree, options);
         gen.gen();
+    }
+
+    @Test
+    public void all() throws Exception {
+        Options options = new Options();
+        options.outDir = Env.dotDir().getAbsolutePath();
+        Tree tree = Tree.makeTree(Env.getResFile("calc-1.g"));
+        new LexerGenerator(tree, options).generate();
+        LLRec gen = new LLRec(tree, options);
+        gen.gen();
+    }
+
+    @Test
+    public void sw() {
+        boolean first = true;
+        while (true) {
+            switch (5) {
+                case 1:
+                case 5:
+                    System.out.println("case");
+                default:
+                    System.out.println("def");
+            }
+        }
     }
 }

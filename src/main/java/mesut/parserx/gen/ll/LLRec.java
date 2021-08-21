@@ -17,8 +17,13 @@ public class LLRec {
     public Options options;
     Tree tree;
     StringBuilder sb = new StringBuilder();
-    Name curRule;
+    StringBuilder sb2 = new StringBuilder();
+    String curRule;
     Map<Name, Integer> varCount = new HashMap<>();
+    String nodeSuffix = "Node";
+    int groupCount;
+    boolean hasFirst;
+    boolean hasFlag;
 
     public LLRec(Tree tree, Options options) {
         this.tree = tree;
@@ -32,15 +37,11 @@ public class LLRec {
     }
 
     void indent(String data) {
-        for (String line : data.split("\n")) {
-            sb.append("  ").append(line).append("\n");
-        }
+        indent(data, sb);
     }
 
     public void gen() throws IOException {
-        EbnfToBnf.combine_or = true;
-        EbnfToBnf.expand_or = false;
-        tree = EbnfToBnf.transform(tree);
+        tree = EbnfToBnf.combineOr(tree);
         sb.append("public class ").append(options.parserClass).append("{\n");
 
         writeConsume();
@@ -48,7 +49,10 @@ public class LLRec {
 
         for (RuleDecl decl : tree.rules) {
             if (!decl.hidden) {
-                curRule = decl.ref();
+                curRule = decl.name;
+                groupCount = 1;
+                hasFirst = false;
+                hasFlag = false;
                 gen(decl);
             }
         }
@@ -74,68 +78,93 @@ public class LLRec {
 
     void model(RuleDecl decl) {
         sb.append(String.format("public static class %s{\n", decl.name + "Node"));
-        indent(model(decl.rhs));
+        indent(model(decl.rhs, decl.name));
+        indent(sb2.toString(), sb);
         sb.append("\n}\n");
     }
 
-    private String model(Node node) {
-        StringBuilder sb = new StringBuilder();
+    private String model(Node node, final String prefix) {
+        final StringBuilder sb = new StringBuilder();
         if (node.isSequence()) {
             for (Node ch : node.asSequence()) {
-                indent(model(ch), sb);
+                indent(model(ch, prefix), sb);
             }
         }
         else if (node.isName()) {
             Name name = node.asName();
             if (name.isToken) {
-                sb.append("Token ").append(vName(name)).append(";\n");
+                sb.append(String.format("public Token %s;\n", vName(name)));
             }
             else {
-                sb.append(name).append("Node ").append(vName(name)).append(";\n");
+                sb.append(String.format("public %s%s %s;\n", name, nodeSuffix, vName(name)));
             }
         }
         else if (node.isOr()) {
             sb.append("public int which;\n");
             int num = 1;
-            for (Node ch : node.asOr()) {
-                sb.append(curRule.name).append(num).append(" ").append(curRule.name.toLowerCase()).append(num).append(";\n");
-                num++;
-            }
-            num = 1;
-            for (Node ch : node.asOr()) {
-                StringBuilder s0 = new StringBuilder("public class " + curRule.name + num + "{\n");
-                indent(model(ch), s0);
-                s0.append("\n}\n");
-                sb.append(s0);
+            for (final Node ch : node.asOr()) {
+                if (isSimple(ch)) {
+                    sb.append(model(ch, prefix));
+                }
+                else {
+                    String clsName = camel(prefix) + num;
+                    sb.append(String.format("%s %s%d;\n", clsName, prefix.toLowerCase(), num));
+                    StringBuilder s0 = new StringBuilder("public static class " + clsName + "{\n");
+                    indent(model(ch, clsName), s0);
+                    s0.append("\n}\n");
+                    sb2.append(s0);
+                }
                 num++;
             }
         }
         else if (node.isRegex()) {
             Regex regex = node.asRegex();
             if (regex.isOptional()) {
-                return model(regex.node);
+                return model(regex.node, prefix);
             }
             else {
-                sb.append("public List<");
                 if (regex.node.isName()) {
                     if (regex.node.asName().isToken) {
-                        sb.append("Token");
+                        sb.append(String.format("public List<Token> %s = new ArrayList<>();\n", vName(regex.node.asName())));
                     }
                     else {
-                        sb.append(regex.node).append("Node");
+                        sb.append(String.format("public List<%s%s> %s = new ArrayList<>();\n", regex.node, nodeSuffix, vName(regex.node.asName())));
                     }
                 }
                 else {
                     //group
-                    sb.append(curRule.name).append("g1");
+                    String s = prefix + "g" + groupCount++;
+                    sb.append(String.format("public List<%s> %s = new ArrayList<>();\n", s, s.toLowerCase()));
+                    indent(model(regex.node, prefix), sb2);
                 }
-                sb.append("> ");
             }
+        }
+        else if (node.isGroup()) {
+            final Group group = node.asGroup();
+            final String s = "g" + groupCount++;
+            sb.append(String.format("%s%s %s%s;\n", curRule, s, curRule.toLowerCase(), s));
+
+            StringBuilder s0 = new StringBuilder("public static class " + curRule + s + "{\n");
+            indent(model(group.node, curRule + s), s0);
+            s0.append("\n}\n");
+            sb2.append(s0);
         }
         else {
             throw new RuntimeException("invalid node: " + node.getClass());
         }
         return sb.toString();
+    }
+
+    boolean isSimple(Node node) {
+        if (node.isRegex()) {
+            Regex regex = node.asRegex();
+            return regex.node.isName();
+        }
+        return node.isName();
+    }
+
+    String camel(String s) {
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
     }
 
     String vName(Name name) {
@@ -152,23 +181,11 @@ public class LLRec {
 
     void gen(RuleDecl decl) {
         model(decl);
-        /*sb.append("public void ").append(decl.name).append("(");
-        if (!decl.args.isEmpty()) {
-            sb.append(NodeList.join(decl.args, ", "));
-        }
-        sb.append("){\n");
 
-        write(decl.rhs);
-
-        sb.append("}");*/
-    }
-
-    Name first(Node node) {
-        return Helper.first(node, tree, true).iterator().next();
-    }
-
-    void writeSwitch(Node node, String s, String s2) {
-
+        String type = decl.name + nodeSuffix;
+        sb.append(String.format("public %s %s(%s){\n", type, decl.name, NodeList.join(decl.args, ", ")));
+        indent(write(decl.rhs), sb);
+        sb.append("}\n");
     }
 
     String write(Node node) {
@@ -178,39 +195,74 @@ public class LLRec {
             sb.append("switch(peek().type){\n");
             for (int i = 0; i < or.size(); i++) {
                 Node ch = or.get(i);
-                Set<Name> set = Helper.first(ch, tree, true);
+                Set<Name> set = Helper.first(ch, tree, true, false, true);
                 for (Name la : set) {
-                    sb.append("case ").append(la.name).append(":\n");
+                    sb.append("  case ").append(la.name).append(":\n");
                 }
-                sb.append("{\n");
-                write(ch);
-                sb.append("}\n");
+                sb.append("  {\n");
+                indent(write(ch), sb);
+                sb.append("break;\n");
+                sb.append("  }\n");
             }
-            sb.append("default: throw new RuntimeException(\"err\")");
-            sb.append("\n}");
+            sb.append("  default: \n  throw new RuntimeException(\"err\");");
+            sb.append("\n}\n");
         }
         else if (node.isGroup()) {
-            write(node.asGroup().node);
+            sb.append(write(node.asGroup().node));
         }
         else if (node.isSequence()) {
             Sequence s = node.asSequence();
             for (int i = 0; i < s.size(); i++) {
-                write(s.get(i));
+                sb.append(write(s.get(i)));
             }
         }
         else if (node.isName()) {
             Name name = node.asName();
             if (name.isRule()) {
-                sb.append(name);//with args
+                sb.append(name);
+                sb.append("(");
+                //with args
+                sb.append(");\n");
             }
             else {
-                sb.append(String.format("consume(TokenType.%s);", name.name));
+                sb.append(String.format("consume(TokenType.%s);\n", name.name));
             }
         }
         else if (node.isRegex()) {
             Regex regex = node.asRegex();
             if (regex.isOptional()) {
-                writeSwitch(regex.node, "", write(regex.node));
+                //empty default
+                writeSwitch(regex.node, sb, "", write(regex.node));
+            }
+            else if (regex.isStar()) {
+                //while
+                if (!hasFlag) {
+                    hasFlag = true;
+                    sb.append("boolean ");
+                }
+                sb.append("flag = true;\n");
+                sb.append("while(flag){\n");
+                String def = "flag = false;\n";
+                writeSwitch(regex.node, sb, def, write(regex.node));
+                sb.append("\n}\n");
+            }
+            else {
+                //do while
+                if (!hasFlag) {
+                    hasFlag = true;
+                    sb.append("boolean ");
+                }
+                sb.append("flag = true;\n");
+                if (!hasFirst) {
+                    hasFirst = true;
+                    sb.append("boolean ");
+                }
+                sb.append("first = true;\n");
+                sb.append("while(flag){\n");
+                String def = "if(!first)  flag = false;\n" + "else  throw new RuntimeException(\"unexpected token: \"+peek());";
+                writeSwitch(regex.node, sb, def, write(regex.node));
+                sb.append("first = false;\n");
+                sb.append("\n}\n");
             }
         }
         else {
@@ -219,5 +271,18 @@ public class LLRec {
         return sb.toString();
     }
 
-
+    void writeSwitch(Node node, StringBuilder sb, String def, String action) {
+        sb.append("switch(peek().type){\n");
+        for (Name token : Helper.first(node, tree, true, false, true)) {
+            sb.append("  case TokenType.").append(token).append(":\n");
+        }
+        sb.append("  {\n");
+        indent(action, sb);
+        sb.append("  }\n  break;\n");
+        if (!def.isEmpty()) {
+            sb.append("  default:\n");
+            indent(def, sb);
+        }
+        sb.append("}\n");
+    }
 }

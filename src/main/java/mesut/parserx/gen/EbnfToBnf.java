@@ -26,6 +26,24 @@ public class EbnfToBnf {
         return new EbnfToBnf(input).transform();
     }
 
+    public static Tree combineOr(Tree input) {
+        Tree res = new Tree(input);
+        Map<String, Or> map = new HashMap<>();
+        for (RuleDecl ruleDecl : input.rules) {
+            Or or = map.get(ruleDecl.name);
+            if (or == null) {
+                or = new Or();
+                map.put(ruleDecl.name, or);
+            }
+            or.add(ruleDecl.rhs);
+        }
+        res.rules.clear();
+        for (Map.Entry<String, Or> entry : map.entrySet()) {
+            res.addRule(new RuleDecl(entry.getKey(), entry.getValue().normal()));
+        }
+        return res;
+    }
+
     int getCount(String name) {
         int cnt;
         if (countMap.containsKey(name)) {
@@ -54,19 +72,7 @@ public class EbnfToBnf {
             transformRhs(decl);
         }
         if (combine_or) {
-            Map<String, Or> map = new HashMap<>();
-            for (RuleDecl ruleDecl : res.rules) {
-                Or or = map.get(ruleDecl.name);
-                if (or == null) {
-                    or = new Or();
-                    map.put(ruleDecl.name, or);
-                }
-                or.add(ruleDecl.rhs);
-            }
-            res.rules.clear();
-            for (Map.Entry<String, Or> entry : map.entrySet()) {
-                res.addRule(new RuleDecl(entry.getKey(), entry.getValue().normal()));
-            }
+            res = combineOr(res);
         }
         return res;
     }
