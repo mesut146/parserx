@@ -17,9 +17,10 @@ public class LLRec {
     public Options options;
     Tree tree;
     StringBuilder sb = new StringBuilder();
-    StringBuilder sb2 = new StringBuilder();
+    StringBuilder sb2;
+    StringBuilder code = new StringBuilder();
     String curRule;
-    Map<Name, Integer> varCount = new HashMap<>();
+    Map<String, Map<String, Integer>> varCount = new HashMap<>();
     String nodeSuffix = "Node";
     int groupCount;
     boolean hasFirst;
@@ -53,12 +54,25 @@ public class LLRec {
                 groupCount = 1;
                 hasFirst = false;
                 hasFlag = false;
+                varCount.clear();
                 gen(decl);
             }
         }
+        indent(code.toString(), sb);
         sb.append("}");
 
         IOUtils.write(sb.toString(), new File(options.outDir, options.parserClass + ".java"));
+    }
+
+    void gen(RuleDecl decl) {
+        model(decl);
+
+        String type = decl.name + nodeSuffix;
+        code.append(String.format("public %s %s(%s){\n", type, decl.name, NodeList.join(decl.args, ", ")));
+        code.append(String.format("  %s res = new %s();\n", type, type));
+        indent(write(decl.rhs, "res", type), code);
+        code.append("  return res;\n");
+        code.append("}\n");
     }
 
     void writeConsume() {
@@ -77,7 +91,8 @@ public class LLRec {
     }
 
     void model(RuleDecl decl) {
-        sb.append(String.format("public static class %s{\n", decl.name + "Node"));
+        sb2 = new StringBuilder();
+        sb.append(String.format("\npublic static class %s{\n", decl.name + "Node"));
         indent(model(decl.rhs, decl.name));
         indent(sb2.toString(), sb);
         sb.append("\n}\n");
@@ -93,10 +108,10 @@ public class LLRec {
         else if (node.isName()) {
             Name name = node.asName();
             if (name.isToken) {
-                sb.append(String.format("public Token %s;\n", vName(name)));
+                sb.append(String.format("public Token %s;\n", vName(name, prefix)));
             }
             else {
-                sb.append(String.format("public %s%s %s;\n", name, nodeSuffix, vName(name)));
+                sb.append(String.format("public %s%s %s;\n", name, nodeSuffix, vName(name, prefix)));
             }
         }
         else if (node.isOr()) {
@@ -109,7 +124,7 @@ public class LLRec {
                 else {
                     String clsName = camel(prefix) + num;
                     sb.append(String.format("%s %s%d;\n", clsName, prefix.toLowerCase(), num));
-                    StringBuilder s0 = new StringBuilder("public static class " + clsName + "{\n");
+                    StringBuilder s0 = new StringBuilder("\npublic static class " + clsName + "{\n");
                     indent(model(ch, clsName), s0);
                     s0.append("\n}\n");
                     sb2.append(s0);
@@ -124,28 +139,33 @@ public class LLRec {
             }
             else {
                 if (regex.node.isName()) {
+                    String nm = vName(regex.node.asName(), prefix);
                     if (regex.node.asName().isToken) {
-                        sb.append(String.format("public List<Token> %s = new ArrayList<>();\n", vName(regex.node.asName())));
+                        sb.append(String.format("public List<Token> %s = new ArrayList<>();\n", nm));
                     }
                     else {
-                        sb.append(String.format("public List<%s%s> %s = new ArrayList<>();\n", regex.node, nodeSuffix, vName(regex.node.asName())));
+                        sb.append(String.format("public List<%s%s> %s = new ArrayList<>();\n", regex.node, nodeSuffix, nm));
                     }
                 }
                 else {
                     //group
-                    String s = prefix + "g" + groupCount++;
-                    sb.append(String.format("public List<%s> %s = new ArrayList<>();\n", s, s.toLowerCase()));
-                    indent(model(regex.node, prefix), sb2);
+                    String cls = curRule + "g" + groupCount++;
+                    sb.append(String.format("public List<%s> %s = new ArrayList<>();\n", cls, cls.toLowerCase()));
+                    StringBuilder s0 = new StringBuilder("\npublic static class " + cls + "{\n");
+                    indent(model(regex.node, cls), s0);
+                    s0.append("\n}\n");
+                    sb2.append(s0);
                 }
             }
         }
         else if (node.isGroup()) {
             final Group group = node.asGroup();
             final String s = "g" + groupCount++;
-            sb.append(String.format("%s%s %s%s;\n", curRule, s, curRule.toLowerCase(), s));
+            String cls = curRule + s;
+            sb.append(String.format("public %s %s%s;\n", cls, curRule.toLowerCase(), s));
 
-            StringBuilder s0 = new StringBuilder("public static class " + curRule + s + "{\n");
-            indent(model(group.node, curRule + s), s0);
+            StringBuilder s0 = new StringBuilder("\npublic static class " + cls + "{\n");
+            indent(model(group.node, cls), s0);
             s0.append("\n}\n");
             sb2.append(s0);
         }
@@ -167,40 +187,43 @@ public class LLRec {
         return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
     }
 
-    String vName(Name name) {
-        if (varCount.containsKey(name)) {
-            int count = varCount.get(name);
-            varCount.put(name, count + 1);
-            return name.name + count;
+    String vName(Name name, String cls) {
+        Map<String, Integer> map = varCount.get(cls);
+        if (map == null) {
+            map = new HashMap<>();
+            varCount.put(cls, map);
         }
-        else {
-            varCount.put(name, 1);
+        Integer i = map.get(cls);
+        if (i == null) {
+            map.put(name.name, 1);
             return name.name;
         }
+        else {
+            map.put(name.name, i + 1);
+            return name.name + i;
+        }
     }
 
-    void gen(RuleDecl decl) {
-        model(decl);
-
-        String type = decl.name + nodeSuffix;
-        sb.append(String.format("public %s %s(%s){\n", type, decl.name, NodeList.join(decl.args, ", ")));
-        indent(write(decl.rhs), sb);
-        sb.append("}\n");
-    }
-
-    String write(Node node) {
+    String write(Node node, String vname, String cls) {
         StringBuilder sb = new StringBuilder();
         if (node.isOr()) {
             Or or = node.asOr();
             sb.append("switch(peek().type){\n");
             for (int i = 0; i < or.size(); i++) {
                 Node ch = or.get(i);
+                String var = cls + (i + 1);
                 Set<Name> set = Helper.first(ch, tree, true, false, true);
                 for (Name la : set) {
                     sb.append("  case ").append(la.name).append(":\n");
                 }
                 sb.append("  {\n");
-                indent(write(ch), sb);
+                if (isSimple(ch)) {
+                    indent(write(ch, var, cls), sb);
+                }
+                else {
+                    sb.append(String.format("  %s.%s = new %s();\n", vname, var, var));
+                    indent(write(ch, var, cls), sb);
+                }
                 sb.append("break;\n");
                 sb.append("  }\n");
             }
@@ -208,23 +231,25 @@ public class LLRec {
             sb.append("\n}\n");
         }
         else if (node.isGroup()) {
-            sb.append(write(node.asGroup().node));
+            sb.append(write(node.asGroup().node, vname, cls));
         }
         else if (node.isSequence()) {
             Sequence s = node.asSequence();
             for (int i = 0; i < s.size(); i++) {
-                sb.append(write(s.get(i)));
+                sb.append(write(s.get(i), vname, cls));
             }
         }
         else if (node.isName()) {
             Name name = node.asName();
             if (name.isRule()) {
+                sb.append(vname).append(".").append(vName(name, cls)).append(" = ");
                 sb.append(name);
                 sb.append("(");
                 //with args
                 sb.append(");\n");
             }
             else {
+                sb.append(vname).append(".").append(vName(name, cls)).append(" = ");
                 sb.append(String.format("consume(TokenType.%s);\n", name.name));
             }
         }
@@ -232,7 +257,7 @@ public class LLRec {
             Regex regex = node.asRegex();
             if (regex.isOptional()) {
                 //empty default
-                writeSwitch(regex.node, sb, "", write(regex.node));
+                writeSwitch(regex.node, sb, "", write(regex.node, vname, cls));
             }
             else if (regex.isStar()) {
                 //while
@@ -243,7 +268,7 @@ public class LLRec {
                 sb.append("flag = true;\n");
                 sb.append("while(flag){\n");
                 String def = "flag = false;\n";
-                writeSwitch(regex.node, sb, def, write(regex.node));
+                writeSwitch(regex.node, sb, def, write(regex.node, vname, cls));
                 sb.append("\n}\n");
             }
             else {
@@ -260,7 +285,7 @@ public class LLRec {
                 sb.append("first = true;\n");
                 sb.append("while(flag){\n");
                 String def = "if(!first)  flag = false;\n" + "else  throw new RuntimeException(\"unexpected token: \"+peek());";
-                writeSwitch(regex.node, sb, def, write(regex.node));
+                writeSwitch(regex.node, sb, def, write(regex.node, vname, cls));
                 sb.append("first = false;\n");
                 sb.append("\n}\n");
             }
