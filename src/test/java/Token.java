@@ -1,17 +1,17 @@
-$package$
-public class $token_class${
+
+public class Token{
     public int type;
     public String value;
     public int offset;
     public String name;//token name that's declared in grammar
 
-    public $token_class$(){}
+    public Token(){}
 
-    public $token_class$(int type){
+    public Token(int type){
         this.type = type;
     }
 
-    public $token_class$(int type, String value){
+    public Token(int type, String value){
         this.type = type;
         this.value = value;
     }

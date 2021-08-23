@@ -83,6 +83,10 @@ public abstract class Node {
         return isRegex() && asRegex().isStar();
     }
 
+    public boolean isPlus() {
+        return isRegex() && asRegex().isPlus();
+    }
+
     @Override
     public int hashCode() {
         return toString().hashCode();

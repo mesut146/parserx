@@ -1,44 +1,32 @@
-A: a+ b* c? | (a d | e)+
+------group
+A: (a | b) c;
 
-la(a)
+class A{
+  Ag1 g1;
+  Token c;
 
-
---------------------
-A: R?
-void A(){
-  if(la(R)){
-    prod(R)
+  class Ag1{
+    int which;
+    Token a;
+    Token b;
   }
 }
 
-A: R*
-void A(){
-  while(la(R)){
-    prod(R)
+A A(){
+  A res = new A();
+  Ag1 g1 = new Ag1();
+  res.g1 = g1;
+  switch(peek()){
+    case a:
+      g1.a = consume(a);
+    case b:
+      g1.b = consume(b);
+    default:
+      throw err;
   }
+  return res;
 }
 
-A: R+
-void A(){
-  do{
-    prod(R)
-  }while(la(R));
-}
 
-A: L R
-void A(){
-  prod()
-}
-
-A: L | R | T
-void A(){
-  if(){
-    prod(L);
-  }
-  else if(){
-    prod(R);
-  }
-  else{
-    prod(T);
-  }
-}
+-----group
+A: (a | b)+ c;

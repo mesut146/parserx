@@ -1,3 +1,4 @@
+$package$
 public class $parser_class${
   $lexer_class$ lexer;
   int[][] table ;

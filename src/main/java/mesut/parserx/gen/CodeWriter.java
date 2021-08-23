@@ -1,9 +1,15 @@
 package mesut.parserx.gen;
 
 public class CodeWriter {
+    public boolean auto;
     StringBuilder sb = new StringBuilder();
     int level = 0;
     String indent;
+
+    public CodeWriter(boolean auto) {
+        this.auto = auto;
+        init();
+    }
 
     void init() {
         indent = "";
@@ -12,8 +18,26 @@ public class CodeWriter {
         }
     }
 
-    public void write(String line) {
-        sb.append(indent).append(line);
+    public void append(String line) {
+        if (auto && line.endsWith("}")) {
+            down();
+        }
+        if (line.isEmpty()) {
+            //sb.append("\n");
+        }
+        else {
+            sb.append(indent).append(line).append("\n");
+        }
+        if (auto && line.endsWith("{")) {
+            up();
+        }
+    }
+
+    public void all(String s) {
+        String[] arr = s.split("\n");
+        for (int i = 0; i < arr.length; i++) {
+            append(arr[i]);
+        }
     }
 
     public void up() {

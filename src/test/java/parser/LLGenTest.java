@@ -24,6 +24,7 @@ public class LLGenTest {
         options.outDir = Env.dotDir().getAbsolutePath();
         LLRec gen = new LLRec(tree, options);
         gen.gen();
+        new LexerGenerator(tree, options).generate();
     }
 
     @Test
