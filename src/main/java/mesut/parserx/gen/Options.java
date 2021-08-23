@@ -7,4 +7,5 @@ public class Options {
     public String tokenClass = "Token";
     public String packageName;
     public String outDir;
+    public boolean genVisitor = false;
 }

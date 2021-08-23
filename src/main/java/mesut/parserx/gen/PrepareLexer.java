@@ -20,10 +20,10 @@ public class PrepareLexer extends SimpleTransformer {
 
     @Override
     public Node transformName(Name node, Node parent) {
-        TokenDecl tokenDecl = tree.getToken(node.name);
-        if (tokenDecl == null) {
+        TokenDecl decl = tree.getToken(node.name);
+        if (decl == null) {
             throw new RuntimeException("invalid token: " + node.name);
         }
-        return tokenDecl.regex;
+        return decl.regex;
     }
 }

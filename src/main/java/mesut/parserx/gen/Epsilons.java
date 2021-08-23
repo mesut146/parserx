@@ -17,38 +17,58 @@ public class Epsilons {
         }
         if (node.isRegex()) {
             Regex regex = node.asRegex();
+            boolean empty = Helper.canBeEmpty(regex.node, tree);
             if (regex.isOptional()) {
-                //A? = A | €
-                return trim(regex.node);
+                if (empty) {
+                    //A? = A | € = A_no_eps | €
+                    return trim(regex.node);
+                }
+                return regex.node;
             }
             else if (regex.isStar()) {
-                //A* = A+ | € | A A* | €
-                return new Sequence(trim(regex.node), regex);
+                if (empty) {
+                    //A* = A+ | € = A A* | € = (A1 | €) A1* | € = A1 A1* | A1* | €
+                    //A1 A1* | A1+ | € = A1+ | €
+                    return new Regex(trim(regex.node), "+");
+                }
+                //A+ | €
+                return new Regex(regex.node, "+");
             }
             else {
-                //A+ = A A*
-                return new Sequence(trim(regex.node), regex);
+                //no must be empty
+                //A+ = A A* = (A_no_eps | €) (A_no_eps | €)* =  A_no_eps A_no_eps* | A_no_eps*
+                //=A_no_eps (A_no_eps)* | A_no_eps+ | € = A_no_eps+ | €
+                return new Regex(trim(regex.node), "+");
             }
         }
         else if (node.isOr()) {
             Or or = node.asOr();
-            Or res = new Or();
-            for (int i = 0; i < or.size(); i++) {
-                Node ch = or.get(i);
-                if (!ch.isEpsilon()) {
-                    res.add(trim(ch));
+            Node a = or.first();
+            Node b = Helper.trim(or);
+            if (Helper.canBeEmpty(a, tree)) {
+                if (Helper.canBeEmpty(b, tree)) {
+                    //A | B = A1 | € | B1 | € = A1 | B1 | €
+                    return new Or(trim(a), trim(b));
+                }
+                else {
+                    //A | B = A1 | € | B
+                    return new Or(trim(a), b);
                 }
             }
-            return res;
+            else {
+                //b must be empty
+                // A | B = A | B1 | €
+                return new Or(a, trim(b));
+            }
         }
         else if (node.isSequence()) {
-            //A B -> A1 B | A B1
             Sequence s = node.asSequence();
-            Node a = s.first();
-            Node b = Helper.trim(s);
-            Sequence s1 = new Sequence(trim(a), b);
-            Sequence s2 = new Sequence(a, trim(b));
-            return new Or(s1, s2);
+            Node a = trim(s.first());
+            Node b = trim(Helper.trim(s));
+            //both a b are empty
+            //A B = (A1 | €) (B1 | €) = A1 B1 | A1 | B1 | € = A1 B1? | B1 | €
+            Sequence s1 = new Sequence(a, b);
+            return new Or(s1, a, b);
         }
         else if (node.isGroup()) {
             return new Group(trim(node.asGroup().node)).normal();
