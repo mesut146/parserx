@@ -21,6 +21,7 @@ public class Tree {
     public File file = null;
     public Alphabet alphabet = new Alphabet();
     public List<TokenDecl> tokens = new ArrayList<>();
+    public boolean mergeRules = false;
     List<File> includes = new ArrayList<>();
 
     public Tree() {
@@ -105,6 +106,21 @@ public class Tree {
     }
 
     public void addRule(RuleDecl rule) {
+        if (!mergeRules && getRule(rule.name) != null) {
+            throw new RuntimeException(String.format("rule %s already exists", rule.name));
+        }
+        if (mergeRules) {
+            RuleDecl prev = getRule(rule.name);
+            Or or;
+            if (prev.rhs.isOr()) {
+                or = prev.rhs.asOr();
+            }
+            else {
+                or = new Or(prev.rhs);
+            }
+            or.add(rule.rhs);
+            prev.rhs = or;
+        }
         rule.index = rules.size();
         rules.add(rule);
     }

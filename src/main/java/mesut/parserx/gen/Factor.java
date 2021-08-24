@@ -8,6 +8,7 @@ import java.util.Set;
 
 public class Factor extends SimpleTransformer {
 
+    public static boolean keepFactor = true;
     Tree tree;
     HashMap<Name, PullInfo> cache = new HashMap<>();
     boolean modified;
@@ -120,7 +121,9 @@ public class Factor extends SimpleTransformer {
         if (node.isName()) {
             Name name = node.asName();
             if (name.equals(sym)) {
-                info.one = new Epsilon();
+                //info.one = new Epsilon();
+                name.factored = true;
+                info.one = name;
             }
             else if (name.isRule()) {
                 if (cache.containsKey(name)) {
@@ -174,11 +177,11 @@ public class Factor extends SimpleTransformer {
             if (Helper.canBeEmpty(A, tree)) {
                 if (Helper.start(B, sym, tree)) {
                     Node no = new Epsilons(tree).trim(A);
-                    //A B = A_no B | B =
+                    //A B = A_noe B | B
                     return pull(new Or(Sequence.of(no, B), B), sym);
                 }
                 else {
-                    //A B = (a A1 | A0) B = a A1 B | A0 B
+                    //A B = (sym A1 | A0) B = sym A1 B | A0 B
                     info.zero = Sequence.of(p1.zero, B);
                     info.one = Sequence.of(p1.one, B);
                 }
@@ -195,7 +198,7 @@ public class Factor extends SimpleTransformer {
         }
         else {
             //A empty,B starts
-            //A_no B | B
+            //A B=A_noe B | B
             Node no = new Epsilons(tree).trim(A);
             return pull(new Or(Sequence.of(no, B), B), sym);
         }
@@ -228,12 +231,14 @@ public class Factor extends SimpleTransformer {
     PullInfo pullRegex(Regex regex, Name sym) {
         PullInfo info = new PullInfo();
         if (regex.isOptional()) {
+            //A?=A | € = sym A1 | A0 | €
             PullInfo pi = pull(regex.node, sym);
             if (pi.one != null) {
                 info.one = pi.one;
             }
             if (pi.zero != null) {
-                info.zero = new Or(pi.zero, new Epsilon());
+                //info.zero = new Or(pi.zero, new Epsilon());
+                info.zero = new Regex(pi.zero, "?");
             }
         }
         else if (regex.isPlus()) {
@@ -242,9 +247,9 @@ public class Factor extends SimpleTransformer {
             return pull(s.normal(), sym);
         }
         else {
-            //A*=A+?
-            Regex star = new Regex(regex.node, "+");
-            return pull(new Or(star, new Epsilon()), sym);
+            //A*=A+?-A+|€
+            Regex plus = new Regex(regex.node, "+");
+            return pull(new Or(plus, new Epsilon()), sym);
         }
         return info;
     }

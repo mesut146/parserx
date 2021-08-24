@@ -26,6 +26,7 @@ public class PrepareTree extends SimpleTransformer {
 
     public static class ReferenceChecker extends SimpleTransformer {
         Tree tree;
+        RuleDecl curRule;
 
         public ReferenceChecker(Tree tree) {
             this.tree = tree;
@@ -33,6 +34,7 @@ public class PrepareTree extends SimpleTransformer {
 
         public void check() {
             for (RuleDecl decl : tree.rules) {
+                curRule = decl;
                 transformRule(decl);
             }
         }
@@ -57,7 +59,7 @@ public class PrepareTree extends SimpleTransformer {
         void checkToken(Name node, Node parent) {
             TokenDecl decl = tree.getToken(node.name);
             if (decl == null) {
-                throw new RuntimeException("invalid reference: " + node.name + " in " + parent);
+                throw new RuntimeException("invalid reference: " + node.name + " in " + curRule.name);
             }
             else {
                 if (decl.isSkip) {

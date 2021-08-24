@@ -41,4 +41,11 @@ public class FactorTest {
         //factor.handle();
         System.out.println(tree);
     }
+
+    @Test
+    public void java() throws Exception {
+        Tree tree = Tree.makeTree(Env.getFile2("java/parser-jls.g"));
+
+        System.out.println(tree);
+    }
 }

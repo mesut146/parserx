@@ -36,18 +36,4 @@ public class LLGenTest {
         LLRec gen = new LLRec(tree, options);
         gen.gen();
     }
-
-    @Test
-    public void sw() {
-        boolean first = true;
-        while (true) {
-            switch (5) {
-                case 1:
-                case 5:
-                    System.out.println("case");
-                default:
-                    System.out.println("def");
-            }
-        }
-    }
 }

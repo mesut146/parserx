@@ -10,6 +10,7 @@ public class Name extends Node {
     public String name;
     public boolean isToken;//if we reference to a token
     public ArrayList<Name> args = new ArrayList<>();
+    public boolean factored;
 
     public Name(String name) {
         this.name = name;
@@ -29,10 +30,17 @@ public class Name extends Node {
         StringBuilder sb = new StringBuilder();
         sb.append(varString());
         if (isToken && tokenBrace) {
-            sb.append("{").append(name).append("}");
+            sb.append("{").append(name);
+            if (factored) {
+                sb.append("(").append(name).append(")");
+            }
+            sb.append("}");
         }
         else {
             sb.append(name);
+            if (factored) {
+                sb.append("(").append(name).append(")");
+            }
             if (!args.isEmpty()) {
                 sb.append("(").append(NodeList.join(args, ", ")).append(")");
             }
