@@ -78,11 +78,9 @@ public class Epsilons {
             if (name.factored) {
                 return name;
             }
-            if (!name.args.isEmpty()){
-                throw new RuntimeException("encode name");
-            }
+
             RuleDecl decl = tree.getRule(name);
-            String newName = name.name + "_noe";
+            String newName = Factor.encode(name).name + "_noe";
             RuleDecl newDecl = tree.getRule(newName);
             if (newDecl == null) {
                 newDecl = new RuleDecl(newName, trim(decl.rhs));

@@ -1,0 +1,27 @@
+A: (a | b)* c | (a | d)+ e;
+
+
+A: (a | b) (a | b)* c | c | (a | d) (a | d)* e;
+
+A: a (a | b)* c | a (a | d)* e | b (a | b)* c | c | d (a | d)* e;
+
+A: a ((a | b)* c | (a | d)* e) | b (a | b)* c | c | d (a | d)* e;
+
+
+A: B* c | D+ e;
+B: a | b;
+D: a | d;
+
+A: B B* c | c | D D* e;
+A: a (B* c | D* e) | c | B_no_a B* c | D_no_a D* e;
+A: a E | c | B_no_a B* c | D_no_a D* e;
+E: B* c | D* e;
+E: B B* c | c | D D* e | e;
+E: a (B* c | D* e) | e | B_no_a B* c | D_no_a D* e;
+E: a E | e | B_no_a B* c | D_no_a D* e;
+E: a* (e | B_no_a B* c | D_no_a D* e);
+
+A: a a* (e | B_no_a B* c | D_no_a D* e) | c | B_no_a B* c | D_no_a D* e;
+
+A: a a* (e | b (a | b)* c | d (a | d)* e) | c | b (a | b)* c | d (a | d)* e;
+

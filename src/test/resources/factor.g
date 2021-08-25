@@ -12,10 +12,26 @@ token{
 
 }
 
+//enhanced
+/*
 A: B c | a b d | x y;
 B: a b | a p | m n;
+*/
 
+//regex
+/*A: a* b | B c | d;
+B: x? a* m;*/
 
+B: x C m | C m;
+C: a*;
+
+B: C m | x C m | m
+
+/*
+A: a* (a*(a*) b | B(a*) c) | d | B_no_a* c;
+B(a*): x? a*(a*) m;
+B_no_a*: x m | m = x? m;
+*/
 
 /*
 E: A b | a c;

@@ -1,0 +1,30 @@
+A: (a | b)* d | (a | c)* e | f;
+
+A: B* d | C* e | f;
+B: a | b;
+C: a | c;
+
+X: B* d | C* e;
+A: X | f;
+
+X: B B* d | d | C C* e | e;
+
+X: a (B(a) B* d | C(a) C* e) | B_no_a B* d | C_no_a C* e | d | e;
+
+X: a (B* d | C* e) | b B* d | c C* e | d | e;
+
+X: a X | b B* d | c C* e | d | e;
+
+X: a* (b B* d | c C* e | d | e)
+
+
+A: a* (b B* d | c C* e | d | e) | f;
+
+A: a* (b (a | b)* d | c (a | c)* e | d | e) | f;
+
+
+X: (a | b)* d | (a | c)* e;
+X: a* (b (a | b)* d | c (a | c)* e | d | e);
+X: a* 
+
+

@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Factor extends SimpleTransformer {
+public class Factor2 extends SimpleTransformer {
 
     public static boolean keepFactor = true;
     Tree tree;
@@ -14,7 +14,7 @@ public class Factor extends SimpleTransformer {
     boolean modified;
     RuleDecl curRule;
 
-    public Factor(Tree tree) {
+    public Factor2(Tree tree) {
         this.tree = tree;
     }
 
@@ -124,12 +124,10 @@ public class Factor extends SimpleTransformer {
     //A: sym A1 | A0
     //A0=part doesn't start with sym
     //A1=part after sym
-    public PullInfo pull(Node node, Name sym) {
-        if (sym.factored) {
-            throw new RuntimeException("factored sym");
-        }
+    public PullInfo pull(Node node, Regex sym) {
+        //todo sym factored
         //System.out.println("pull:" + node + " sym:" + sym);
-        if (!Helper.first(node, tree, true).contains(sym)) {
+        if (!Helper.first(node, tree, true).contains(sym.node)) {
             throw new RuntimeException("can't pull " + sym + " from " + node);
         }
         PullInfo info = new PullInfo();
