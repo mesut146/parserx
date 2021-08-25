@@ -63,7 +63,15 @@ public class Name extends Node {
     }
 
     @Override
-    public Node copy() {
-        return new Name(name, isToken);
+    public Name copy() {
+        Name res = new Name(name, isToken);
+        res.args = new ArrayList<>(args);
+        return res;
+    }
+
+    public RuleDecl makeRule() {
+        RuleDecl decl = new RuleDecl(name);
+        decl.args = new ArrayList<>(args);
+        return decl;
     }
 }

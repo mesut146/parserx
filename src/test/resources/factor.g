@@ -4,7 +4,18 @@ token{
  c:"";
  d:"";
  e:"";
+ m:"m";
+ n:"n";
+ p:"p";
+ x:"x";
+ y:"y";
+
 }
+
+A: B c | a b d | x y;
+B: a b | a p | m n;
+
+
 
 /*
 E: A b | a c;
@@ -12,9 +23,9 @@ A: a d | e;
 */
 
 
-E: A a | B b;
+/*E: A a | B b;
 A: e e;
-B: A c | d;
+B: A c | d;*/
 
 
 /*E: A | B;

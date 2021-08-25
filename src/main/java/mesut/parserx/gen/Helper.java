@@ -46,6 +46,7 @@ public class Helper {
     public static void first(Node node, Tree tree, boolean rec, Set<Name> set) {
         if (node.isName()) {
             Name name = node.asName();
+            if (name.factored) return;
             if (set.add(name)) {
                 if (rec && name.isRule()) {
                     first(tree.getRule(name).rhs, tree, rec, set);
@@ -77,45 +78,46 @@ public class Helper {
         }
     }
 
-    public static List<Name> firstList(Node node, Tree tree) {
-        ArrayList<Name> list = new ArrayList<>();
-        firstList(node, tree, true, list);
-        return list;
+    public static Map<Name, Integer> firstMap(Node node, Tree tree) {
+        Map<Name, Integer> map = new HashMap<>();
+        firstMap(node, tree, true, map);
+        return map;
     }
 
-    //first list of regex,allows duplicates
-    public static void firstList(Node node, Tree tree, boolean rec, List<Name> list) {
+    //freq of first set of regex
+    public static void firstMap(Node node, Tree tree, boolean rec, Map<Name, Integer> map) {
         if (node.isName()) {
             Name name = node.asName();
-            if (!list.contains(name)) {
-                list.add(name);
-                if (rec && name.isRule()) {
-                    firstList(tree.getRule(name).rhs, tree, rec, list);
-                }
+            if (name.factored) return;
+            if (map.containsKey(name)) {
+                map.put(name, map.get(name) + 1);
             }
             else {
-                list.add(name);
+                map.put(name, 1);
+                if (rec && name.isRule()) {
+                    firstMap(tree.getRule(name).rhs, tree, rec, map);
+                }
             }
         }
         else if (node.isOr()) {
             for (Node ch : node.asOr()) {
-                firstList(ch, tree, rec, list);
+                firstMap(ch, tree, rec, map);
             }
         }
         else if (node.isSequence()) {
             Sequence seq = node.asSequence();
             for (Node ch : seq) {
-                firstList(ch, tree, rec, list);
+                firstMap(ch, tree, rec, map);
                 if (!canBeEmpty(ch, tree)) {
                     break;
                 }
             }
         }
         else if (node.isGroup()) {
-            firstList(node.asGroup().node, tree, rec, list);
+            firstMap(node.asGroup().node, tree, rec, map);
         }
         else if (node.isRegex()) {
-            firstList(node.asRegex().node, tree, rec, list);
+            firstMap(node.asRegex().node, tree, rec, map);
         }
     }
 
@@ -155,6 +157,7 @@ public class Helper {
 
     public static boolean canBeEmpty(Node node, Tree tree, Set<Name> set) {
         if (node.isName()) {
+            if (node.asName().factored) return true;//acts as epsilon
             if (node.asName().isRule() && set.add(node.asName())) {
                 return canBeEmpty(tree.getRule(node.asName()).rhs, tree, set);
             }

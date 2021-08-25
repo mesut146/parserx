@@ -12,6 +12,7 @@ public class Factor extends SimpleTransformer {
     Tree tree;
     HashMap<Name, PullInfo> cache = new HashMap<>();
     boolean modified;
+    RuleDecl curRule;
 
     public Factor(Tree tree) {
         this.tree = tree;
@@ -29,9 +30,10 @@ public class Factor extends SimpleTransformer {
         for (int i = 0; i < or.size(); i++) {
             Set<Name> s1 = Helper.first(or.get(i), tree, true);
             for (int j = i + 1; j < or.size(); j++) {
-                Set<Name> s2 = Helper.first(or.get(i), tree, true);
+                Set<Name> s2 = Helper.first(or.get(j), tree, true);
                 Name sym = conf(s1, s2);
                 if (sym != null) {
+                    System.out.printf("factoring %s in %s\n", sym, curRule.name);
                     modified = true;
                     PullInfo info = pull(or, sym);
                     Node one = Sequence.of(sym, info.one);
@@ -74,6 +76,7 @@ public class Factor extends SimpleTransformer {
             modified = false;
             for (int i = 0; i < tree.rules.size(); i++) {
                 RuleDecl decl = tree.rules.get(i);
+                curRule = decl;
                 while (true) {
                     if (factor(decl)) {
                         modified = true;
@@ -98,9 +101,15 @@ public class Factor extends SimpleTransformer {
         return false;
     }
 
+    //return common sym in two set
     Name conf(Set<Name> s1, Set<Name> s2) {
         Set<Name> copy = new HashSet<>(s1);
         copy.retainAll(s2);
+        //rule has higher priority
+        for (Name name : copy) {
+            if (!name.isEpsilon() && name.isRule()) return name;
+        }
+        //token finally
         for (Name name : copy) {
             if (!name.isEpsilon()) return name;
         }
@@ -113,6 +122,9 @@ public class Factor extends SimpleTransformer {
     //A0=part doesn't start with sym
     //A1=part after sym
     public PullInfo pull(Node node, Name sym) {
+        if (sym.factored) {
+            throw new RuntimeException("factored sym");
+        }
         //System.out.println("pull:" + node + " sym:" + sym);
         if (!Helper.first(node, tree, true).contains(sym)) {
             throw new RuntimeException("can't pull " + sym + " from " + node);
@@ -121,9 +133,14 @@ public class Factor extends SimpleTransformer {
         if (node.isName()) {
             Name name = node.asName();
             if (name.equals(sym)) {
-                //info.one = new Epsilon();
-                name.factored = true;
-                info.one = name;
+                if (keepFactor) {
+                    name = name.copy();
+                    name.factored = true;
+                    info.one = name;
+                }
+                else {
+                    info.one = new Epsilon();
+                }
             }
             else if (name.isRule()) {
                 if (cache.containsKey(name)) {
@@ -132,21 +149,36 @@ public class Factor extends SimpleTransformer {
                 cache.put(name, info);
                 RuleDecl decl = tree.getRule(name);
                 //check if already pulled before
-                if (decl.args.size() == 1 && decl.args.get(0).equals(sym)) {
-                    info.zero = new Name("X");//todo
-                    info.one = decl.ref();
-                    return info;
+
+                Name zeroName;
+                if (name.args.isEmpty()) {
+                    zeroName = new Name(name.name, false);
                 }
-                PullInfo tmp = pull(decl.rhs, sym);
-                RuleDecl oneDecl = new RuleDecl(decl.name, tmp.one.normal());
-                if (tmp.zero != null) {
-                    RuleDecl zeroDecl = new RuleDecl(decl.name + "_no_" + sym, tmp.zero.normal());
-                    tree.addRule(zeroDecl);
-                    info.zero = zeroDecl.ref();
+                else {
+                    //encode args
+                    zeroName = new Name(name.name + "_" + NodeList.join(name.args, "_"), false);
                 }
-                oneDecl.args.add(sym);
-                tree.addRule(oneDecl);
-                info.one = oneDecl.ref();
+
+                zeroName.name += "_no_" + sym.name;
+                Name oneName = name.copy();
+                oneName.args.add(sym);
+
+                info.zero = zeroName;
+                info.one = oneName;
+
+                if (tree.getRule(zeroName) == null && tree.getRule(oneName) == null) {
+                    PullInfo tmp = pull(decl.rhs, sym);
+
+                    RuleDecl oneDecl = oneName.makeRule();
+                    oneDecl.rhs = tmp.one.normal();
+                    tree.addRule(oneDecl);
+
+                    if (tmp.zero != null) {
+                        RuleDecl zeroDecl = zeroName.makeRule();
+                        zeroDecl.rhs = tmp.zero.normal();
+                        tree.addRule(zeroDecl);
+                    }
+                }
             }
         }
         else if (node.isGroup()) {
@@ -198,9 +230,17 @@ public class Factor extends SimpleTransformer {
         }
         else {
             //A empty,B starts
-            //A B=A_noe B | B
-            Node no = new Epsilons(tree).trim(A);
-            return pull(new Or(Sequence.of(no, B), B), sym);
+            if (A.isName() && A.asName().factored) {
+                PullInfo tmp = pull(B, sym);
+                if (tmp.zero != null)
+                    info.zero = Sequence.of(A, tmp.zero);
+                info.one = Sequence.of(A, tmp.one);
+            }
+            else {
+                //A B=A_noe B | B
+                Node no = new Epsilons(tree).trim(A);
+                return pull(new Or(Sequence.of(no, B), B), sym);
+            }
         }
         return info;
     }

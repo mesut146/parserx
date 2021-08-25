@@ -1,7 +1,5 @@
 package mesut.parserx.nodes;
 
-import java.util.Objects;
-
 public class Regex extends Node {
 
     public Node node;
@@ -61,8 +59,7 @@ public class Regex extends Node {
 
         Regex regex = (Regex) o;
 
-        if (!Objects.equals(node, regex.node)) return false;
-        return Objects.equals(type, regex.type);
+        return node.equals(regex.node) && type.equals(regex.type);
     }
 
     @Override

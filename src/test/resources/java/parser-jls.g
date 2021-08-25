@@ -26,8 +26,7 @@ Type:
 
 //4.2. Primitive Types and Values
 PrimitiveType:
-   Annotation* NumericType
- | Annotation* "boolean";
+   Annotation* (NumericType | "boolean");
 
 NumericType:
   IntegralType | FloatingPointType;
@@ -75,8 +74,7 @@ TypeParameterModifier:
   Annotation;
 
 TypeBound:
-   "extends" TypeVariable
- | "extends" ClassOrInterfaceType AdditionalBound*;
+   "extends" (TypeVariable | ClassOrInterfaceType AdditionalBound*);
 
 AdditionalBound:
   "&" InterfaceType;
@@ -95,8 +93,7 @@ Wildcard:
   Annotation* "?" WildcardBounds?;
 
 WildcardBounds:
-   "extends" ReferenceType
- | "super" ReferenceType;
+   "extends" ReferenceType | "super" ReferenceType;
 
 CompilationUnit:
   OrdinaryCompilationUnit | ModularCompilationUnit;
@@ -179,7 +176,7 @@ NormalAnnotation:
   "@" TypeName "(" ElementValuePairList? ")";
 
 ElementValuePairList:
-ElementValuePair ("," ElementValuePair)*;
+  ElementValuePair ("," ElementValuePair)*;
 
 ElementValuePair:
   Identifier "=" ElementValue;
@@ -609,8 +606,7 @@ IfThenElseStatementNoShortIf:
 
 //14.10. The assert Statement
 AssertStatement:
-   "assert" Expression ";"
- | "assert" Expression ":" Expression ";";
+  "assert" Expression (":" Expression)? ";";
 
 //14.11. The switch Statement
 SwitchStatement:
@@ -622,12 +618,10 @@ SwitchBlock:
  | "{" SwitchBlockStatementGroup* (SwitchLabel ":")* "}";
 
 SwitchRule:
-   SwitchLabel "->" Expression ";"
- | SwitchLabel "->" Block
- | SwitchLabel "->" ThrowStatement;
+  SwitchLabel "->" (Expression ";" | Block | ThrowStatement);
 
 SwitchBlockStatementGroup:
-SwitchLabel ":" (SwitchLabel ":")* BlockStatements;
+  SwitchLabel ":" (SwitchLabel ":")* BlockStatements;
 
 SwitchLabel:
    "case" CaseConstant ("," CaseConstant)*
@@ -698,8 +692,7 @@ SynchronizedStatement:
 
 //14.20. The try statement
 TryStatement:
-   "try" Block Catches
- | "try" Block Catches? Finally
+   "try" Block (Catches Finally? | Finally)
  | TryWithResourcesStatement;
 
 Catches:
@@ -786,10 +779,7 @@ TypeArgumentsOrDiamond:
 
 //15.10.1. Array Creation Expressions
 ArrayCreationExpression:
-   "new" PrimitiveType DimExprs Dims?
- | "new" ClassOrInterfaceType DimExprs Dims?
- | "new" PrimitiveType Dims ArrayInitializer
- | "new" ClassOrInterfaceType Dims ArrayInitializer;
+  "new" (PrimitiveType | ClassOrInterfaceType) (DimExprs Dims? | Dims ArrayInitializer);
 
 DimExprs:
   DimExpr DimExpr*;
@@ -804,9 +794,7 @@ ArrayAccess:
 
 //15.11. Field Access Expressions
 FieldAccess:
-   Primary "." Identifier
- | "super" "." Identifier
- | TypeName "." "super" "." Identifier;
+ (Primary | "super" | TypeName "." "super") "." Identifier;
 
 
 //15.12. Method Invocation Expressions
@@ -903,10 +891,7 @@ ShiftExpression:
 //15.20. Relational Operators
 RelationalExpression:
    ShiftExpression
- | RelationalExpression "<" ShiftExpression
- | RelationalExpression ">" ShiftExpression
- | RelationalExpression "<=" ShiftExpression
- | RelationalExpression ">=" ShiftExpression
+ | RelationalExpression ("<" | ">" | "<=" | ">=") ShiftExpression
  | RelationalExpression "instanceof" ReferenceType;
 
 //15.20.1. Numerical Comparison Operators <, <=, >, and >=
@@ -914,8 +899,7 @@ RelationalExpression:
 //15.21. Equality Operators
 EqualityExpression:
    RelationalExpression
- | EqualityExpression "==" RelationalExpression
- | EqualityExpression "!=" RelationalExpression;
+ | EqualityExpression ("==" | "!=") RelationalExpression;
 
 //15.21.1. Numerical Equality Operators == and !=
 //15.21.2. Boolean Equality Operators == and !=
@@ -949,9 +933,7 @@ ConditionalOrExpression:
 
 //15.25. Conditional Operator ? :
 ConditionalExpression:
-   ConditionalOrExpression
- | ConditionalOrExpression "?" Expression ":" ConditionalExpression
- | ConditionalOrExpression "?" Expression ":" LambdaExpression;
+  ConditionalOrExpression ("?" Expression ":" (ConditionalExpression | LambdaExpression))?;
 
 //15.26. Assignment Operators
 AssignmentExpression:

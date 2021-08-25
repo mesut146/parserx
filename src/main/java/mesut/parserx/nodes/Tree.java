@@ -106,11 +106,11 @@ public class Tree {
     }
 
     public void addRule(RuleDecl rule) {
-        if (!mergeRules && getRule(rule.name) != null) {
+        if (!mergeRules && getRule(rule.ref()) != null) {
             throw new RuntimeException(String.format("rule %s already exists", rule.name));
         }
         if (mergeRules) {
-            RuleDecl prev = getRule(rule.name);
+            RuleDecl prev = getRule(rule.ref());
             Or or;
             if (prev.rhs.isOr()) {
                 or = prev.rhs.asOr();
