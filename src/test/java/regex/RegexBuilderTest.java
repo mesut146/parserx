@@ -54,7 +54,8 @@ public class RegexBuilderTest {
     @Ignore
     public void build() throws Exception {
         StringNode.print_quote = false;
-        NFA nfa = NfaReader.read(Env.getResFile("fsm/comment.nfa"));
+        //NFA nfa = NfaReader.read(Env.getResFile("fsm/comment.nfa"));
+        NFA nfa = NfaReader.read(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/regex/in.nfa"));
         RegexBuilder regexBuilder = new RegexBuilder(nfa);
         //regexBuilder.setOrder(5,4,3,2,1);
         //regexBuilder.setOrder(2, 3, 4, 1, 5);

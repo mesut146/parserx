@@ -238,6 +238,7 @@ public class Minimization {
         return false;
     }
 
+    //todo broken
     public static NFA Hopcroft(NFA dfa) {
         List<StateSet> P = group(dfa);
         List<StateSet> W = new ArrayList<>(P);

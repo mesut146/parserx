@@ -5,6 +5,8 @@ import mesut.parserx.utils.IOUtils;
 
 import java.io.*;
 import java.rmi.RemoteException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class NfaReader {
 
@@ -30,11 +32,18 @@ public class NfaReader {
             }
             if (line.startsWith("initial") || line.startsWith("start")) {
                 gotInitial = true;
-                nfa.initial = Integer.parseInt(line.split("initial|start\\s*=")[1].trim());
+                Pattern p = Pattern.compile("(initial|start)\\s*=\\s*(.*)");
+                Matcher m = p.matcher(line);
+                m.find();
+                nfa.initial = Integer.parseInt(m.group(2));
                 continue;
             }
             if (line.startsWith("final")) {
-                for (String f : line.split("final\\s*=")[1].split(" ")) {
+                Pattern p = Pattern.compile("final\\s*=\\s*(.*)");
+                Matcher m = p.matcher(line);
+                m.find();
+                for (String f : m.group(1).split(" ")) {
+                    if (f.trim().isEmpty()) continue;
                     nfa.setAccepting(Integer.parseInt(f.trim()), true);
                 }
                 continue;

@@ -85,14 +85,7 @@ public class Factor extends SimpleTransformer {
             for (int i = 0; i < tree.rules.size(); i++) {
                 RuleDecl decl = tree.rules.get(i);
                 curRule = decl;
-                while (true) {
-                    if (factor(decl)) {
-                        modified = true;
-                    }
-                    else {
-                        break;
-                    }
-                }
+                factorRule(decl);
                 if (modified) {
                     //restart if any modification happens
                     break;
@@ -104,9 +97,8 @@ public class Factor extends SimpleTransformer {
         }
     }
 
-    private boolean factor(RuleDecl decl) {
+    private void factorRule(RuleDecl decl) {
         decl.rhs = transformNode(decl.rhs, decl);
-        return false;
     }
 
     //return common sym in two set

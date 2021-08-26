@@ -1,13 +1,14 @@
 package lexer;
 
 import common.Env;
+import mesut.parserx.Main;
 import mesut.parserx.dfa.NFA;
+import mesut.parserx.dfa.NfaReader;
 import mesut.parserx.grammar.GParser;
 import mesut.parserx.grammar.ParseException;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
-import mesut.parserx.dfa.NfaReader;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -47,7 +48,8 @@ public class NfaTest {
     @Ignore
     @Test
     public void reader() throws Exception {
-        File file = Env.getResFile("fsm/comment.nfa");
+        //File file = Env.getResFile("fsm/comment.nfa");
+        File file = new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/nfa2dfa/in.nfa");
         NFA nfa = NfaReader.read(file);
         nfa.dump();
     }

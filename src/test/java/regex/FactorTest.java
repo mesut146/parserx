@@ -34,9 +34,11 @@ public class FactorTest {
     @Test
     public void all() throws Exception {
         Or.newLine = false;
-        Tree tree = Tree.makeTree(Env.getResFile("factor.g"));
+        //Tree tree = Tree.makeTree(Env.getResFile("factor.g"));
         //Tree tree = Tree.makeTree(Env.getResFile("rec/leftRec2.g"));
+        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/factoring/1.g"));
         Factor factor = new Factor(tree);
+        Factor.keepFactor = false;
         factor.handle();
         System.out.println(tree);
     }

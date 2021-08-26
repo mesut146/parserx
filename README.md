@@ -6,7 +6,7 @@ lexer &amp; parser generator and grammar toolkit written in java
 
 - accepts regex like grammar(EBNF)
 - epsilon removal
-- left recursion removal
+- left recursion removal(direct and indirect)
 - left factoring
 - ebnf to bnf and vice versa
 - LR(0),LR(1),LALR(1) parser generator
