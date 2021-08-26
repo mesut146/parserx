@@ -3,7 +3,10 @@
     <words>
       <w>decl</w>
       <w>ebnf</w>
+      <w>ident</w>
+      <w>lbrace</w>
       <w>lparen</w>
+      <w>rbrace</w>
       <w>rparen</w>
       <w>yybuf</w>
       <w>yychar</w>

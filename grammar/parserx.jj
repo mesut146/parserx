@@ -73,13 +73,12 @@ TOKEN :
 | < COMMA: "," >
 | < QUOTE: "'" >
 | < EQ: "=">
-| < COLONEQEQ: ":==">
 | < COLONEQ: ":=">
+| < COLONCOLONEQ: "::=">
 | < ARROW: "->">
 | < STAR: "*">
 | < PLUS: "+">
 | < QUES: "?">
-| < XOR: "^">//negation
 | < TILDE: "~">//read until
 | < HASH: "#">
 | < EMPTY: "%empty" | "ε">
@@ -88,7 +87,6 @@ TOKEN :
 TOKEN:
 {
   <KEYWORD_TOKEN: "token">
-| <KEYWORD_TOKENS: "tokens">
 | <KEYWORD_SKIP: "skip">
 | <STRING_LITERAL: "\"" (~["\r","\n","\""] | "\\\"")* "\"">
 | <INCLUDE_DIRECTIVE: "include">
@@ -179,7 +177,7 @@ void skipBlock(Tree tree):
 void declSeparator():
 {}
 {
-  "=" | ":" | ":==" | ":=" | "->"
+  "=" | ":" | ":=" | "->"
 }
 
 void ruleDecl(Tree tree):
@@ -383,40 +381,19 @@ String name():
   token = <IDENT>{return token.image;}
 }
 
-Node repeatNode():
+/*Node repeatNode():
 {
   Node node;
 }
 {
  "{" node = rhs() "}"{return new Regex(node, "*");}
-}
+}*/
 
-Node optionalNode():
+/*Node optionalNode():
 {
   Node node;
 }
 {
  "[" node = rhs() "]"{return new Regex(node, "?");}
-}
-
-/*Bracket bracket():
-{
-  Bracket b = new Bracket();
-  Node node;
-}
-{
-  "[" ["^"] (node = bracketUnit(){b.add(node);})+ "]"
-  {
-    return b;
-  }
 }*/
 
-/*Node bracketUnit():
-{}
-{
- <RANGE>{
-
- } | <UNIT>{
-
- }
-}*/

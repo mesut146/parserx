@@ -22,6 +22,7 @@ public class Factor extends SimpleTransformer {
         return new Name(name.name + "_" + NodeList.join(name.args, "_"), false);
     }
 
+    //factor or
     @Override
     public Node transformOr(Or or, Node parent) {
         Node node = super.transformOr(or, parent);
@@ -53,6 +54,7 @@ public class Factor extends SimpleTransformer {
         return or;
     }
 
+    //factor sequence
     @Override
     public Node transformSequence(Sequence s, Node parent) {
         Node node = super.transformSequence(s, parent);
@@ -62,6 +64,8 @@ public class Factor extends SimpleTransformer {
         else {
             return node;
         }
+        //A B needs factoring if A can be empty
+        //A B -> A_noeps B | B
         Node A = s.first();
         if (Helper.canBeEmpty(A, tree)) {
             Node B = Helper.trim(s);
@@ -308,7 +312,7 @@ public class Factor extends SimpleTransformer {
     }
 
     public static class PullInfo {
-        public Node one;
-        public Node zero;
+        public Node one;//after factor
+        public Node zero;//other
     }
 }
