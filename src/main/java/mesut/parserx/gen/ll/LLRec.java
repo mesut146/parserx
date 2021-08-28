@@ -5,7 +5,7 @@ import mesut.parserx.gen.EbnfToBnf;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.Options;
 import mesut.parserx.nodes.*;
-import mesut.parserx.utils.IOUtils;
+import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +37,7 @@ public class LLRec {
         }
     }
 
+
     void indent(String data) {
         indent(data, sb);
     }
@@ -67,7 +68,10 @@ public class LLRec {
         indent(code.toString(), sb);
         sb.append("}");
 
-        IOUtils.write(sb.toString(), new File(options.outDir, options.parserClass + ".java"));
+        File file = new File(options.outDir, options.parserClass + ".java");
+
+        Utils.write(sb.toString(), file);
+        System.out.println("parser file generated to " + file);
         genTokenType();
     }
 
@@ -83,7 +87,6 @@ public class LLRec {
         code.append("  return res;\n");
         code.append("}\n");
     }
-
 
     void writeFill() {
         String s = "void fill() throws java.io.IOException{\n" +
@@ -137,7 +140,8 @@ public class LLRec {
 
         c.append("}");
         File file = new File(options.outDir, tokens + ".java");
-        IOUtils.write(c.get(), file);
+        Utils.write(c.get(), file);
+        System.out.println("write " + file);
     }
 
     String peekExpr() {
@@ -177,7 +181,7 @@ public class LLRec {
                     sb.append(model(ch, prefix));
                 }
                 else {
-                    String clsName = camel(prefix) + num;
+                    String clsName = Utils.camel(prefix) + num;
                     sb.append(String.format("%s %s%d;\n", clsName, prefix.toLowerCase(), num));
                     StringBuilder s0 = new StringBuilder("\npublic static class " + clsName + "{\n");
                     indent(model(ch, clsName), s0);
@@ -243,10 +247,6 @@ public class LLRec {
         return node.isName();
     }
 
-    String camel(String s) {
-        return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
-    }
-
     String vName(Name name, String cls) {
         Map<String, Integer> map = varCount.get(cls);
         if (map == null) {
@@ -286,7 +286,7 @@ public class LLRec {
                 }
                 else {
                     String varl = outerCls.toLowerCase() + (i + 1);
-                    String cls = camel(outerCls) + (i + 1);
+                    String cls = Utils.camel(outerCls) + (i + 1);
                     sb.append(String.format("%s %s = new %s();\n", curRule + "." + cls, varl, curRule + "." + cls));
                     sb.append(String.format("%s.%s = %s;\n", outerVar, varl, varl));
                     sb.all(write(ch, varl, cls, flagCount, firstCount, arr(ch)));
@@ -305,7 +305,7 @@ public class LLRec {
                     arr.append(nm);
                     first = false;
                 }
-                sb.append(String.format("throw new RuntimeException(\"expecting one of [%s] got: \"+peek());",arr));
+                sb.append(String.format("throw new RuntimeException(\"expecting one of [%s] got: \"+peek());", arr));
                 sb.append("}");
             }
             sb.all("\n}");

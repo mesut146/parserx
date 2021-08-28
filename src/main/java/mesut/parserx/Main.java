@@ -10,7 +10,7 @@ import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.regex.RegexBuilder;
-import mesut.parserx.utils.IOUtils;
+import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -82,7 +82,7 @@ public class Main {
                 if (output == null) {
                     output = new File(tree.file + "-out.g");
                 }
-                IOUtils.write(tree.toString(), output);
+                Utils.write(tree.toString(), output);
                 logwrite(output);
             }
             else if (cmd.contains("-factor")) {
@@ -92,7 +92,7 @@ public class Main {
                 if (output == null) {
                     output = new File(tree.file + "-out.g");
                 }
-                IOUtils.write(tree.toString(), output);
+                Utils.write(tree.toString(), output);
                 logwrite(output);
             }
             else if (cmd.contains("-nfa")) {
@@ -139,7 +139,7 @@ public class Main {
                     System.out.println(node);
                 }
                 else {
-                    IOUtils.write(node.toString(), output);
+                    Utils.write(node.toString(), output);
                     logwrite(output);
                 }
             }

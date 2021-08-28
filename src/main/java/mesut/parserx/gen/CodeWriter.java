@@ -19,15 +19,14 @@ public class CodeWriter {
     }
 
     public void append(String line) {
+        if (line.isEmpty()) {
+            sb.append("\n");
+            return;
+        }
         if (auto && line.endsWith("}")) {
             down();
         }
-        if (line.isEmpty()) {
-            //sb.append("\n");
-        }
-        else {
-            sb.append(indent).append(line).append("\n");
-        }
+        sb.append(indent).append(line).append("\n");
         if (auto && line.endsWith("{")) {
             up();
         }

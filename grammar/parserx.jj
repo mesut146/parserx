@@ -88,7 +88,8 @@ TOKEN:
 {
   <KEYWORD_TOKEN: "token">
 | <KEYWORD_SKIP: "skip">
-| <STRING_LITERAL: "\"" (~["\r","\n","\""] | "\\\"")* "\"">
+//| <STRING_LITERAL: "\"" (~["\r","\n","\""] | "\\\"")* "\"">
+| <STRING_LITERAL: "\"" (~["\r","\n","\\","\""] | "\\" ~[])* "\"">
 | <INCLUDE_DIRECTIVE: "include">
 | <START_SIRECTIVE: "@start">
 }
@@ -347,29 +348,14 @@ Node stringNode():
   }
 }
 
-Name lexerRef():
-{
-  String name;
-}
-{
- "{" name = name() "}"
- {
-  return new Name(name,true);
-}
-}
-
+//token or rule
 Name ref():
 {
   String name;
-  Name ref;
 }
 {
-  (name = name(){
-    ref = new Name(name);
-  }
-  | ref = lexerRef() )
-  {
-    return ref;
+  name = name(){
+    return new Name(name);
   }
 }
 

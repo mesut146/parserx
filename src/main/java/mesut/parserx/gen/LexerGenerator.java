@@ -6,7 +6,7 @@ import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Range;
 import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
-import mesut.parserx.utils.IOUtils;
+import mesut.parserx.utils.Utils;
 import mesut.parserx.utils.UnicodeUtils;
 
 import java.io.File;
@@ -44,7 +44,7 @@ public class LexerGenerator {
         makeTables(template);
 
         File file = new File(options.outDir, options.lexerClass + ".java");
-        IOUtils.write(template.toString(), file);
+        Utils.write(template.toString(), file);
         System.out.println("lexer file generated to " + file);
 
         writeTokenClass();
@@ -185,7 +185,7 @@ public class LexerGenerator {
         }
         template.set("token_class", options.tokenClass);
 
-        IOUtils.write(template.toString(), out);
+        Utils.write(template.toString(), out);
 
         System.out.println("token class generated to " + out);
     }

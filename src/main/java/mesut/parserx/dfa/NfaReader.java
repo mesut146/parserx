@@ -1,7 +1,7 @@
 package mesut.parserx.dfa;
 
 import mesut.parserx.nodes.StringNode;
-import mesut.parserx.utils.IOUtils;
+import mesut.parserx.utils.Utils;
 
 import java.io.*;
 import java.rmi.RemoteException;
@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 public class NfaReader {
 
     public static NFA read(File file) throws IOException {
-        return read(IOUtils.read(new FileInputStream(file)));
+        return read(Utils.read(new FileInputStream(file)));
     }
 
     //initial 0

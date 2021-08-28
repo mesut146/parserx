@@ -2,7 +2,11 @@ package mesut.parserx.utils;
 
 import java.io.*;
 
-public class IOUtils {
+public class Utils {
+
+    public static String camel(String s) {
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
+    }
 
     public static String newName(String name, String suffix) {
         int i = name.lastIndexOf('.');

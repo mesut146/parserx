@@ -41,9 +41,9 @@ public interface GParserConstants {
   /** RegularExpression Id. */
   int EQ = 23;
   /** RegularExpression Id. */
-  int COLONEQEQ = 24;
+  int COLONEQ = 24;
   /** RegularExpression Id. */
-  int COLONEQ = 25;
+  int COLONCOLONEQ = 25;
   /** RegularExpression Id. */
   int ARROW = 26;
   /** RegularExpression Id. */
@@ -53,43 +53,39 @@ public interface GParserConstants {
   /** RegularExpression Id. */
   int QUES = 29;
   /** RegularExpression Id. */
-  int XOR = 30;
+  int TILDE = 30;
   /** RegularExpression Id. */
-  int TILDE = 31;
+  int HASH = 31;
   /** RegularExpression Id. */
-  int HASH = 32;
+  int EMPTY = 32;
   /** RegularExpression Id. */
-  int EMPTY = 33;
+  int KEYWORD_TOKEN = 33;
   /** RegularExpression Id. */
-  int KEYWORD_TOKEN = 34;
+  int KEYWORD_SKIP = 34;
   /** RegularExpression Id. */
-  int KEYWORD_TOKENS = 35;
+  int STRING_LITERAL = 35;
   /** RegularExpression Id. */
-  int KEYWORD_SKIP = 36;
+  int INCLUDE_DIRECTIVE = 36;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 37;
+  int START_SIRECTIVE = 37;
   /** RegularExpression Id. */
-  int INCLUDE_DIRECTIVE = 38;
+  int IDENT = 38;
   /** RegularExpression Id. */
-  int START_SIRECTIVE = 39;
+  int CHAR = 39;
   /** RegularExpression Id. */
-  int IDENT = 40;
+  int DIGIT = 40;
   /** RegularExpression Id. */
-  int CHAR = 41;
+  int HEX_DIGIT = 41;
   /** RegularExpression Id. */
-  int DIGIT = 42;
+  int OCTAL_DIGIT = 42;
   /** RegularExpression Id. */
-  int HEX_DIGIT = 43;
+  int ESCAPED_HEX = 43;
   /** RegularExpression Id. */
-  int OCTAL_DIGIT = 44;
+  int ESCAPED_OCTAL = 44;
   /** RegularExpression Id. */
-  int ESCAPED_HEX = 45;
+  int BRACKET_LIST = 45;
   /** RegularExpression Id. */
-  int ESCAPED_OCTAL = 46;
-  /** RegularExpression Id. */
-  int BRACKET_LIST = 47;
-  /** RegularExpression Id. */
-  int INTEGER = 48;
+  int INTEGER = 46;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -126,18 +122,16 @@ public interface GParserConstants {
     "\",\"",
     "\"\\\'\"",
     "\"=\"",
-    "\":==\"",
     "\":=\"",
+    "\"::=\"",
     "\"->\"",
     "\"*\"",
     "\"+\"",
     "\"?\"",
-    "\"^\"",
     "\"~\"",
     "\"#\"",
     "<EMPTY>",
     "\"token\"",
-    "\"tokens\"",
     "\"skip\"",
     "<STRING_LITERAL>",
     "\"include\"",

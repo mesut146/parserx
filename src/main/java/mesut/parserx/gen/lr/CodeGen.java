@@ -5,7 +5,7 @@ import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.RuleDecl;
-import mesut.parserx.utils.IOUtils;
+import mesut.parserx.utils.Utils;
 import mesut.parserx.utils.UnicodeUtils;
 
 import java.io.File;
@@ -42,7 +42,7 @@ public class CodeGen {
         ruleId(template);
         writeTable(template);
         File file = new File(gen.dir, options.parserClass + ".java");
-        IOUtils.write(template.toString(), file);
+        Utils.write(template.toString(), file);
         writeSym();
     }
 
@@ -140,7 +140,7 @@ public class CodeGen {
         sb.append("\n}");
 
         File file = new File(options.outDir, "sym.java");
-        IOUtils.write(sb.toString(), file);
+        Utils.write(sb.toString(), file);
     }
 
     String field(String name, int id) {

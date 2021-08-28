@@ -3,7 +3,7 @@ package mesut.parserx.gen.lr;
 import mesut.parserx.gen.EbnfToBnf;
 import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.nodes.*;
-import mesut.parserx.utils.IOUtils;
+import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -57,7 +57,7 @@ public abstract class LRGen<T extends LrItemSet> {
     }
 
     public File tableDotFile() {
-        return new File(dir, IOUtils.newName(tree.file.getName(), "-table.dot"));
+        return new File(dir, Utils.newName(tree.file.getName(), "-table.dot"));
     }
 
     public void writeTableDot() {
@@ -87,7 +87,7 @@ public abstract class LRGen<T extends LrItemSet> {
     public void writeGrammar(File file) {
         try {
             RuleDecl.printIndex = true;
-            IOUtils.write(tree.toString(), file);
+            Utils.write(tree.toString(), file);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -224,7 +224,7 @@ public abstract class LRGen<T extends LrItemSet> {
     public void writeDot(PrintWriter dotWriter) {
         if (dotWriter == null) {
             try {
-                dotWriter = new PrintWriter(new File(dir, IOUtils.newName(tree.file.getName(), ".dot")));
+                dotWriter = new PrintWriter(new File(dir, Utils.newName(tree.file.getName(), ".dot")));
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 return;

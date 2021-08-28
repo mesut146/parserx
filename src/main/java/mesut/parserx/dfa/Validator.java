@@ -9,7 +9,8 @@ public class Validator {
         for (int state : dfa.it()) {
             Set<Integer> inputs = new HashSet<>();
             for (Transition tr : dfa.get(state)) {
-                if (!inputs.add(tr.input)) {
+                //epsilon or more than one input transition
+                if (tr.epsilon || !inputs.add(tr.input)) {
                     return false;
                 }
             }

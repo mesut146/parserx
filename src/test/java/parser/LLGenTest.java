@@ -3,10 +3,13 @@ package parser;
 import common.Env;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
+import mesut.parserx.gen.VisitorGenerator;
 import mesut.parserx.gen.ll.LLGen;
 import mesut.parserx.gen.ll.LLRec;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
+
+import java.io.File;
 
 public class LLGenTest {
 
@@ -35,5 +38,16 @@ public class LLGenTest {
         new LexerGenerator(tree, options).generate();
         LLRec gen = new LLRec(tree, options);
         gen.gen();
+    }
+
+    @Test
+    public void visitor() throws Exception {
+        Options options = new Options();
+        options.outDir = Env.dotDir().getAbsolutePath();
+        options.parserClass = "Test";
+        //Tree tree = Tree.makeTree(Env.getResFile("calc-1.g"));
+        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/parserx.g"));
+        VisitorGenerator visitorGenerator = new VisitorGenerator(tree, options);
+        visitorGenerator.generate();
     }
 }

@@ -8,4 +8,5 @@ public class Options {
     public String packageName;
     public String outDir;
     public boolean genVisitor = false;
+    public String astClass;
 }

@@ -7,7 +7,7 @@ import mesut.parserx.gen.lr.LRGen;
 import mesut.parserx.gen.lr.Lr0Generator;
 import mesut.parserx.gen.lr.Lr1Generator;
 import mesut.parserx.nodes.Tree;
-import mesut.parserx.utils.IOUtils;
+import mesut.parserx.utils.Utils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -35,7 +35,7 @@ public class LrTest {
 
         dot(gen.tableDotFile());
 
-        File dot = Env.dotFile(IOUtils.newName(file.getName(), ".dot"));
+        File dot = Env.dotFile(Utils.newName(file.getName(), ".dot"));
         gen.writeDot(new PrintWriter(dot));
         dot(dot);
     }

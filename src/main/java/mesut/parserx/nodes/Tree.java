@@ -5,7 +5,7 @@ import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.NFABuilder;
 import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.grammar.GParser;
-import mesut.parserx.utils.IOUtils;
+import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.StringReader;
@@ -37,7 +37,7 @@ public class Tree {
 
     public static Tree makeTree(File path) {
         try {
-            String grammar = IOUtils.read(path);
+            String grammar = Utils.read(path);
             grammar += " ";
             GParser parser = new GParser(new StringReader(grammar));
             return parser.tree(path).prepare();

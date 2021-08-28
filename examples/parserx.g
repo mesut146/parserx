@@ -1,11 +1,15 @@
 token{
  BOOLEAN: "true" | "false";
- OPTION: "option";
+ OPTIONS: "options";
  TOKEN: "token";
  SKIP: "skip";
+ INCLUDE: "include";
  START: "@start";
  EPSILON: "%epsilon" | "ε";
  IDENT: [a-zA-Z_] [a-zA-Z0-9_]*;
+ BRACKET: "[" ~"]";
+ STRING: "\"" ([^\r\n\\] | "\\" .)* "\"";
+ NUMBER: [0-9]+;
 }
 
 token{
@@ -17,7 +21,13 @@ token{
  PLUS: "+";
  QUES: "?";
  POW: "^";
+ EQ: "=";
  SEPARATOR: ":" | "=" | ":=" | "::=" | "->";
+ TILDE: "~";
+ HASH: "#";
+ COMMA: ",";
+ OR: "|";
+ DOT: ".";
 }
 
 skip{
@@ -28,12 +38,12 @@ skip{
 }
 
 optionsBlock: "options" "{" option* "}";
-opiton: IDENT "=" (NUMBER | BOOLEAN);
+option: IDENT "=" (NUMBER | BOOLEAN);
 
 
 tree: includeStatement* (tokenBlock  | skipBlock)* startDecl? ruleDecl*;
 
-includeStatement: "include" <STRING_LITERAL>;
+includeStatement: "include" STRING;
 startDecl: "@start" "=" name;
 
 tokenBlock: "token" "{" tokenDecl* "}";
@@ -46,14 +56,13 @@ args: "(" name ("," name)* ")";
 
 rhs: sequence ("|" sequence)*;
 sequence: regex+;
-regex: simple ("*" | "+" | "?")?
+regex: simple ("*" | "+" | "?")?;
 simple: group | ref | stringNode | bracketNode | untilNode | dotNode | EPSILON;
 
 group: "(" rhs ")";
-stringNode: <STRING_LITERAL>
-bracketNode: <BRACKET_LIST>//easier to handle as token
+stringNode: STRING;
+bracketNode: BRACKET;//easier to handle as token
 untilNode: "~" regex;
-dotNode: "."
-ref: lexerRef | name;
-lexerRef: "{" name "}";
+dotNode: ".";
+ref: name;
 name: IDENT;

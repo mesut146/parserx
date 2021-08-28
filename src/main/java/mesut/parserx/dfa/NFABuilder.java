@@ -124,6 +124,7 @@ public class NFABuilder {
             if (!r.isString()) {
                 throw new RuntimeException("until node only supports strings");
             }
+            //firstly add as normal string
             int ns = nfa.newState();
             nfa.addEpsilon(start, ns);
             p.end = insert(r, ns).end;

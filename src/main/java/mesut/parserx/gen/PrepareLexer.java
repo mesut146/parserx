@@ -2,7 +2,7 @@ package mesut.parserx.gen;
 
 import mesut.parserx.nodes.*;
 
-//replaces references with regex contents
+//replace references with regex contents
 public class PrepareLexer extends SimpleTransformer {
 
     Tree tree;

@@ -147,10 +147,6 @@ decl=new TokenDecl(name);
       jj_consume_token(COLON);
       break;
       }
-    case COLONEQEQ:{
-      jj_consume_token(COLONEQEQ);
-      break;
-      }
     case COLONEQ:{
       jj_consume_token(COLONEQ);
       break;
@@ -227,7 +223,7 @@ or.add(rule);
     label_6:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case 49:{
+      case 47:{
         ;
         break;
         }
@@ -235,7 +231,7 @@ or.add(rule);
         jj_la1[9] = jj_gen;
         break label_6;
       }
-      jj_consume_token(49);
+      jj_consume_token(47);
       rule = orContent();
 or.add(rule);
     }
@@ -269,7 +265,6 @@ node.label = label.image;
 s.add(r);
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case LPAREN:
-      case LBRACE:
       case DOT:
       case TILDE:
       case EMPTY:
@@ -342,7 +337,6 @@ if(name != null) node.varName = name;
       rule = group();
       break;
       }
-    case LBRACE:
     case IDENT:{
       rule = ref();
       break;
@@ -413,54 +407,16 @@ b.parse(t.image);
     throw new Error("Missing return statement in function");
 }
 
-  final public Name lexerRef() throws ParseException {String name;
-    jj_consume_token(LBRACE);
-    name = name();
-    jj_consume_token(RBRACE);
-{if ("" != null) return new Name(name,true);}
-    throw new Error("Missing return statement in function");
-}
-
+//token or rule
   final public Name ref() throws ParseException {String name;
-  Name ref;
-    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case IDENT:{
-      name = name();
-ref = new Name(name);
-      break;
-      }
-    case LBRACE:{
-      ref = lexerRef();
-      break;
-      }
-    default:
-      jj_la1[14] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
-{if ("" != null) return ref;}
+    name = name();
+{if ("" != null) return new Name(name);}
     throw new Error("Missing return statement in function");
 }
 
   final public String name() throws ParseException {Token token;
     token = jj_consume_token(IDENT);
 {if ("" != null) return token.image;}
-    throw new Error("Missing return statement in function");
-}
-
-  final public Node repeatNode() throws ParseException {Node node;
-    jj_consume_token(LBRACE);
-    node = rhs();
-    jj_consume_token(RBRACE);
-{if ("" != null) return new Regex(node, "*");}
-    throw new Error("Missing return statement in function");
-}
-
-  final public Node optionalNode() throws ParseException {Node node;
-    jj_consume_token(LBRACKET);
-    node = rhs();
-    jj_consume_token(RBRACKET);
-{if ("" != null) return new Regex(node, "?");}
     throw new Error("Missing return statement in function");
 }
 
@@ -503,6 +459,12 @@ ref = new Name(name);
     return false;
   }
 
+  private boolean jj_3R_9()
+ {
+    if (jj_scan_token(IDENT)) return true;
+    return false;
+  }
+
   private boolean jj_3_4()
  {
     if (jj_3R_9()) return true;
@@ -535,12 +497,6 @@ ref = new Name(name);
     return false;
   }
 
-  private boolean jj_3R_9()
- {
-    if (jj_scan_token(IDENT)) return true;
-    return false;
-  }
-
   /** Generated Token Manager. */
   public GParserTokenManager token_source;
   JavaCharStream jj_input_stream;
@@ -552,7 +508,7 @@ ref = new Name(name);
   private Token jj_scanpos, jj_lastpos;
   private int jj_la;
   private int jj_gen;
-  final private int[] jj_la1 = new int[15];
+  final private int[] jj_la1 = new int[14];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -560,10 +516,10 @@ ref = new Name(name);
 	   jj_la1_init_1();
 	}
 	private static void jj_la1_init_0() {
-	   jj_la1_0 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x7880000,0x1000,0x200000,0x0,0x0,0x80105000,0x38000000,0x80105000,0x4000,};
+	   jj_la1_0 = new int[] {0x0,0x0,0x0,0x0,0x80000000,0x80000000,0x5880000,0x1000,0x200000,0x0,0x80000000,0x40101000,0x38000000,0x40101000,};
 	}
 	private static void jj_la1_init_1() {
-	   jj_la1_1 = new int[] {0x40,0x14,0x80,0x100,0x101,0x1,0x0,0x0,0x0,0x20000,0x1,0x8122,0x0,0x8122,0x100,};
+	   jj_la1_1 = new int[] {0x10,0x6,0x20,0x40,0x40,0x0,0x0,0x0,0x0,0x8000,0x0,0x2049,0x0,0x2049,};
 	}
   final private JJCalls[] jj_2_rtns = new JJCalls[4];
   private boolean jj_rescan = false;
@@ -580,7 +536,7 @@ ref = new Name(name);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 14; i++) jj_la1[i] = -1;
 	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -595,7 +551,7 @@ ref = new Name(name);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 14; i++) jj_la1[i] = -1;
 	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -606,7 +562,7 @@ ref = new Name(name);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 14; i++) jj_la1[i] = -1;
 	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -625,7 +581,7 @@ ref = new Name(name);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 14; i++) jj_la1[i] = -1;
 	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -635,7 +591,7 @@ ref = new Name(name);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 14; i++) jj_la1[i] = -1;
 	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -645,7 +601,7 @@ ref = new Name(name);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 15; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 14; i++) jj_la1[i] = -1;
 	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -776,12 +732,12 @@ ref = new Name(name);
   /** Generate ParseException. */
   public ParseException generateParseException() {
 	 jj_expentries.clear();
-	 boolean[] la1tokens = new boolean[50];
+	 boolean[] la1tokens = new boolean[48];
 	 if (jj_kind >= 0) {
 	   la1tokens[jj_kind] = true;
 	   jj_kind = -1;
 	 }
-	 for (int i = 0; i < 15; i++) {
+	 for (int i = 0; i < 14; i++) {
 	   if (jj_la1[i] == jj_gen) {
 		 for (int j = 0; j < 32; j++) {
 		   if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -793,7 +749,7 @@ ref = new Name(name);
 		 }
 	   }
 	 }
-	 for (int i = 0; i < 50; i++) {
+	 for (int i = 0; i < 48; i++) {
 	   if (la1tokens[i]) {
 		 jj_expentry = new int[1];
 		 jj_expentry[0] = i;

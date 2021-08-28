@@ -1,5 +1,5 @@
-initial=0
-final=2
+initial = 0
+final = 2
 0 -> 1 , "
 1 -> 1 , [^"\]
 1 -> 2 , "

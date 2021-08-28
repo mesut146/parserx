@@ -6,9 +6,8 @@ import java.util.Objects;
 //rule or token symbol
 public class Name extends Node {
 
-    public static boolean tokenBrace = false;
     public String name;
-    public boolean isToken;//if we reference to a token
+    public boolean isToken;
     public ArrayList<Name> args = new ArrayList<>();
     public boolean factored;
 
@@ -29,22 +28,14 @@ public class Name extends Node {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(varString());
-        if (isToken && tokenBrace) {
-            sb.append("{").append(name);
-            if (factored) {
-                sb.append("(").append(name).append(")");
-            }
-            sb.append("}");
+        sb.append(name);
+        if (factored) {
+            sb.append("(").append(name).append(")");
         }
-        else {
-            sb.append(name);
-            if (factored) {
-                sb.append("(").append(name).append(")");
-            }
-            if (!args.isEmpty()) {
-                sb.append("(").append(NodeList.join(args, ", ")).append(")");
-            }
+        if (!args.isEmpty()) {
+            sb.append("(").append(NodeList.join(args, ", ")).append(")");
         }
+
         return sb.toString();
     }
 
