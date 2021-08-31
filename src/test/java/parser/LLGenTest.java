@@ -21,7 +21,7 @@ public class LLGenTest {
     }
 
     @Test
-    public void model() throws Exception {
+    public void ast() throws Exception {
         Tree tree = Tree.makeTree(Env.getResFile("model.g"));
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();

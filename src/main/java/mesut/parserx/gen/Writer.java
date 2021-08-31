@@ -13,6 +13,7 @@ public class Writer {
     }
 
     public String getString() {
+        w.flush();
         return baos.toString();
     }
 

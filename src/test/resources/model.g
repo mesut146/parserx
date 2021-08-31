@@ -9,5 +9,5 @@ token{
   y: "y";
 }
 
-A: (a | b c) c*;
-
+A: (a | B c) c* a b a (a | b | %epsilon);
+B: b b;

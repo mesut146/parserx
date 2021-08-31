@@ -81,7 +81,7 @@ TOKEN :
 | < QUES: "?">
 | < TILDE: "~">//read until
 | < HASH: "#">
-| < EMPTY: "%empty" | "ε">
+| < EMPTY: "%empty" | "%epsilon" | "ε">
 }
 
 TOKEN:
