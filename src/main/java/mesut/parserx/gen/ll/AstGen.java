@@ -138,6 +138,7 @@ public class AstGen {
         }
     }
 
+    //make incremental variable name with class scoped
     public String vName(Name name, String cls) {
         Map<String, Integer> map = varCount.get(cls);
         if (map == null) {

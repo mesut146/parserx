@@ -1,11 +1,6 @@
 package mesut.parserx.dfa;
 
-import mesut.parserx.gen.PrepareLexer;
 import mesut.parserx.nodes.*;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Stack;
 
 //nfa from grammar
 public class NFABuilder {
@@ -21,8 +16,7 @@ public class NFABuilder {
     }
 
     public NFA build() {
-        tree = new PrepareLexer(tree).prepare();
-        CharClass.makeDistinctRanges(tree);
+        new AlphabetBuilder(tree).build();
         nfa = new NFA(100);
         nfa.tree = tree;
         for (TokenDecl decl : tree.tokens) {
@@ -57,16 +51,13 @@ public class NFABuilder {
             p = insert(Dot.bracket, start);
         }
         else if (node.isBracket()) {
-            Bracket b = node.asBracket().normalize();
-            int end = nfa.newState();
+            Bracket b = node.asBracket();//already normalized
+            int end = p.end = nfa.newState();
             //in order to have only one end state we add epsilons?
             for (int i = 0; i < b.size(); i++) {
                 Range rn = b.ranges.get(i);
-                int left = rn.start;
-                int right = rn.end;
-                nfa.addTransitionRange(start, end, left, right);
+                nfa.addTransitionRange(start, end, rn.start, rn.end);
             }
-            p.end = end;
         }
         else if (node.isSequence()) {
             Sequence seq = node.asSequence();
@@ -120,37 +111,28 @@ public class NFABuilder {
             p.end = insert(tree.getToken(name.name).regex, start).end;
         }
         else if (node instanceof Until) {
-            Node r = ((Until) node).node;
-            if (!r.isString()) {
+            Until until = (Until) node;
+            Node reg = until.node;
+            if (!reg.isString()) {
                 throw new RuntimeException("until node only supports strings");
             }
             //firstly add as normal string
-            int ns = nfa.newState();
-            nfa.addEpsilon(start, ns);
-            p.end = insert(r, ns).end;
-            //trace all transitions and negate them
-            Stack<Integer> stack = new Stack<>();
-            stack.add(ns);
-            Set<Transition> done = new HashSet<>();
-            while (!stack.isEmpty()) {
-                for (Transition tr : nfa.get(stack.pop())) {
-                    if (done.contains(tr)) continue;
-                    Node c = nfa.getAlphabet().getRegex(tr.input);
-                    Bracket bracket = new Bracket();
-                    bracket.add(c);
-                    bracket.negate = true;
-
-                    /*bracket.normalize();
-                    bracket.clear();
-                    bracket.addAll(bracket.rangeNodes);*/
-                    int id = nfa.getAlphabet().addRegex(bracket);
-                    done.add(nfa.addTransition(tr.target, ns, id));
-                    stack.add(tr.target);
+            int ns;
+            int st = start;
+            int i = 0;
+            for (char ch : reg.asString().value.toCharArray()) {
+                ns = p.end = nfa.newState();
+                nfa.addTransitionRange(st, ns, ch, ch);
+                //add negated transitions
+                for (Range r : until.brackets.get(i).getRanges()) {
+                    nfa.addTransitionRange(st, start, r.start, r.end);
                 }
+                st = ns;
+                i++;
             }
         }
         else {
-            throw new RuntimeException("invalid node: " + node);
+            throw new RuntimeException("invalid node: " + node.getClass() + " , " + node);
         }
         return p;
     }

@@ -1,4 +1,4 @@
-include "javaLexer-jls.g"
+include "lexer-jls.g"
 //https://docs.oracle.com/javase/specs/jls/se16/html/jls-15.html
 
 
@@ -799,7 +799,7 @@ FieldAccess:
 
 //15.12. Method Invocation Expressions
 MethodInvocation:
-   MethodName "(" [ArgumentList] ")"
+   MethodName "(" ArgumentList? ")"
  | TypeName "." TypeArguments? Identifier "(" ArgumentList? ")"
  | ExpressionName "." TypeArguments? Identifier "(" ArgumentList? ")"
  | Primary "." TypeArguments? Identifier "(" ArgumentList? ")"
@@ -863,9 +863,7 @@ CastExpression:
 //15.17. Multiplicative Operators
 MultiplicativeExpression:
    UnaryExpression
- | MultiplicativeExpression "*" UnaryExpression
- | MultiplicativeExpression "/" UnaryExpression
- | MultiplicativeExpression "%" UnaryExpression;
+ | MultiplicativeExpression ("*" | "/" | "%") UnaryExpression;
 
 //15.17.2. Division Operator /
 //15.17.3. Remainder Operator %
@@ -873,8 +871,7 @@ MultiplicativeExpression:
 //15.18. Additive Operators
 AdditiveExpression:
    MultiplicativeExpression
- | AdditiveExpression "+" MultiplicativeExpression
- | AdditiveExpression "-" MultiplicativeExpression;
+ | AdditiveExpression ("+" | "-") MultiplicativeExpression;
 
 
 //15.18.1. String Concatenation Operator +
@@ -883,9 +880,7 @@ AdditiveExpression:
 //15.19. Shift Operators
 ShiftExpression:
    AdditiveExpression
- | ShiftExpression "<<" AdditiveExpression
- | ShiftExpression ">>" AdditiveExpression
- | ShiftExpression ">>>" AdditiveExpression;
+ | ShiftExpression ("<<" | ">>" | ">>>") AdditiveExpression;
 
 
 //15.20. Relational Operators

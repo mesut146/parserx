@@ -289,8 +289,8 @@ public class LLRec {
                 code.append("}");
             }
         }
-        else {
-            //throw new RuntimeException("unexpected " + node);
+        else if(!node.isEpsilon()){
+            throw new RuntimeException("unexpected " + node);
         }
     }
 

@@ -22,7 +22,8 @@ public class LLGenTest {
 
     @Test
     public void ast() throws Exception {
-        Tree tree = Tree.makeTree(Env.getResFile("model.g"));
+        //Tree tree = Tree.makeTree(Env.getResFile("model.g"));
+        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/resources/java/parser-jls.g"));
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         LLRec gen = new LLRec(tree, options);

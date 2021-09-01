@@ -6,63 +6,55 @@ token{
     BooleanLiteral = "true" | "false";
     NullLiteral = "null";
 
-    IntegerLiteral: DecimalIntegerLiteral | HexIntegerLiteral |OctalIntegerLiteral | BinaryIntegerLiteral;
-    DecimalIntegerLiteral:  DecimalNumeral IntegerTypeSuffix?;
-    HexIntegerLiteral:  HexNumeral IntegerTypeSuffix?;
-    OctalIntegerLiteral:  OctalNumeral IntegerTypeSuffix?;
-    BinaryIntegerLiteral:  BinaryNumeral IntegerTypeSuffix?;
-    IntegerTypeSuffix: [Ll];
+    IntegerLiteral: DecimalIntegerLiteral | HexIntegerLiteral | OctalIntegerLiteral | BinaryIntegerLiteral;
+    #DecimalIntegerLiteral:  DecimalNumeral IntegerTypeSuffix?;
+    #HexIntegerLiteral:  HexNumeral IntegerTypeSuffix?;
+    #OctalIntegerLiteral:  OctalNumeral IntegerTypeSuffix?;
+    #BinaryIntegerLiteral:  BinaryNumeral IntegerTypeSuffix?;
+    #IntegerTypeSuffix: [Ll];
 
-    DecimalNumeral:  "0" | NonZeroDigit Digits? | NonZeroDigit Underscores Digits;
-    NonZeroDigit: [0-9];
-    Digits: Digit | Digit DigitsAndUnderscores? Digit;
-    Digit: "0" | NonZeroDigit;
-    DigitsAndUnderscores:  DigitOrUnderscore DigitOrUnderscore*;
-    DigitOrUnderscore:  Digit | "_" ;
-    Underscores:  "_" "_"*;
+    #DecimalNumeral:  "0" | NonZeroDigit Digits? | NonZeroDigit Underscores Digits;
+    #NonZeroDigit: [0-9];
+    #Digits: Digit | Digit DigitsAndUnderscores? Digit;
+    #Digit: "0" | NonZeroDigit;
+    #DigitsAndUnderscores:  DigitOrUnderscore DigitOrUnderscore*;
+    #DigitOrUnderscore:  Digit | "_" ;
+    #Underscores:  "_" "_"*;
 
-    HexNumeral:  "0" "x" HexDigits | "0" "X" HexDigits;
-    HexDigits:  HexDigit | HexDigit HexDigitsAndUnderscores? HexDigit;
-    HexDigit: [0-9a-fA-F];
-    HexDigitsAndUnderscores: HexDigitOrUnderscore {HexDigitOrUnderscore};
-    HexDigitOrUnderscore:  HexDigit | "_";
+    #HexNumeral:  "0" "x" HexDigits | "0" "X" HexDigits;
+    #HexDigits:  HexDigit | HexDigit HexDigitsAndUnderscores? HexDigit;
+    #HexDigit: [0-9a-fA-F];
+    #HexDigitsAndUnderscores: HexDigitOrUnderscore HexDigitOrUnderscore*;
+    #HexDigitOrUnderscore:  HexDigit | "_";
 
-    OctalNumeral:  "0" OctalDigits | "0" Underscores OctalDigits;
-    OctalDigits:  OctalDigit | OctalDigit OctalDigitsAndUnderscores? OctalDigit;
-    OctalDigit: [0-7];
-    OctalDigitsAndUnderscores: OctalDigitOrUnderscore OctalDigitOrUnderscore*;
-    OctalDigitOrUnderscore: OctalDigit | "_";
+    #OctalNumeral:  "0" OctalDigits | "0" Underscores OctalDigits;
+    #OctalDigits:  OctalDigit | OctalDigit OctalDigitsAndUnderscores? OctalDigit;
+    #OctalDigit: [0-7];
+    #OctalDigitsAndUnderscores: OctalDigitOrUnderscore OctalDigitOrUnderscore*;
+    #OctalDigitOrUnderscore: OctalDigit | "_";
 
-    BinaryNumeral:  "0" "b" BinaryDigits | "0" "B" BinaryDigits;
-    BinaryDigits:  BinaryDigit | BinaryDigit BinaryDigitsAndUnderscores? BinaryDigit;
-    BinaryDigit: [01];
-    BinaryDigitsAndUnderscores:  BinaryDigitOrUnderscore BinaryDigitOrUnderscore*;
-    BinaryDigitOrUnderscore:  BinaryDigit | "_";
+    #BinaryNumeral:  "0" [bB] BinaryDigits;
+    #BinaryDigits:  BinaryDigit | BinaryDigit BinaryDigitsAndUnderscores? BinaryDigit;
+    #BinaryDigit: [01];
+    #BinaryDigitsAndUnderscores:  BinaryDigitOrUnderscore BinaryDigitOrUnderscore*;
+    #BinaryDigitOrUnderscore:  BinaryDigit | "_";
 
-    FloatingPointLiteral:  DecimalFloatingPointLiteral | HexadecimalFloatingPointLiteral;
-    DecimalFloatingPointLiteral:
+    #FloatingPointLiteral:  DecimalFloatingPointLiteral | HexadecimalFloatingPointLiteral;
+    #DecimalFloatingPointLiteral:
        Digits "." Digits? ExponentPart? FloatTypeSuffix?
      | "." Digits ExponentPart? FloatTypeSuffix?
      | Digits ExponentPart FloatTypeSuffix?
      | Digits ExponentPart? FloatTypeSuffix;
-    ExponentPart:
-    ExponentIndicator SignedInteger;
-    ExponentIndicator: [eE];
-    SignedInteger:  Sign? Digits;
-    Sign: [+-];
-    FloatTypeSuffix: [fFdD];
+    #ExponentPart: [eE] SignedInteger;
+    #SignedInteger:  [+-]? Digits;
+    #FloatTypeSuffix: [fFdD];
 
-    HexadecimalFloatingPointLiteral: HexSignificand BinaryExponent FloatTypeSuffix?;
-    HexSignificand:  HexNumeral "."? | "0" [xX] HexDigits? "." HexDigits;
-    BinaryExponent:  BinaryExponentIndicator SignedInteger;
-    BinaryExponentIndicator: [pP];
-
+    #HexadecimalFloatingPointLiteral: HexSignificand BinaryExponent FloatTypeSuffix?;
+    #HexSignificand:  HexNumeral "."? | "0" [xX] HexDigits? "." HexDigits;
+    #BinaryExponent:  [pP] SignedInteger;
 }
 
 token{
-    #LETTER = [a-zA-Z]; //todo need unicode
-    #DIGIT = [0-9];
-
     ABSTRACT_KEYWORD = "abstract";
     ASSERT_KEYWORD = "assert";
     BOOLEAN_KEYWORD = "boolean";
@@ -127,7 +119,8 @@ token{
     VOLATILE_KEYWORD = "volatile";
     YIELD_KW = "yield";
 
-    Identifier = {LETTER} ({LETTER} | {DIGIT} | "_")*;
+    #LETTER = [a-zA-Z]; //todo need unicode
+    Identifier = LETTER (LETTER | Digit | "_")*;
 
     DOT = ".";
     COMMA = ",";
@@ -191,8 +184,7 @@ token{
 }
 
 skip{
-    #LINE_COMMENT = "//" [^\r\n]*;
-    #BLOCK_COMMENT = "/*" ([^*]* | "*" [^/]*) "/";
-    COMMENT = {LINE_COMMENT} | {BLOCK_COMMENT};
+    LINE_COMMENT = "//" [^\r\n]*;
+    BLOCK_COMMENT = "/*" ([^*]* | "*" [^/]*) "/";
     WS = [\s\r\n\t];
 }

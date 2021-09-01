@@ -6,8 +6,8 @@ import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Range;
 import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
-import mesut.parserx.utils.Utils;
 import mesut.parserx.utils.UnicodeUtils;
+import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +19,7 @@ public class LexerGenerator {
     public HashMap<String, Integer> idMap = new HashMap<>();//name -> id
     Options options;
     NFA dfa;
+    Template template;
 
     public LexerGenerator(NFA dfa, Options options) {
         this.dfa = dfa;
@@ -31,7 +32,7 @@ public class LexerGenerator {
     }
 
     public void generate() throws IOException {
-        Template template = new Template("lexer.java.template");
+        template = new Template("lexer.java.template");
         if (options.packageName == null) {
             template.set("package", "");
         }
@@ -41,7 +42,7 @@ public class LexerGenerator {
         template.set("lexer_class", options.lexerClass);
         template.set("token_class", options.tokenClass);
         template.set("next_token", options.lexerFunction);
-        makeTables(template);
+        makeTables();
 
         File file = new File(options.outDir, options.lexerClass + ".java");
         Utils.write(template.toString(), file);
@@ -51,16 +52,16 @@ public class LexerGenerator {
     }
 
 
-    void makeTables(Template template) {
-        makeTrans(template);
-        nameAndId(template);
+    void makeTables() {
+        makeTrans();
+        nameAndId();
         template.set("final_list", NodeList.join(makeIntArr(dfa.accepting), ","));
         template.set("skip_list", NodeList.join(makeIntArr(dfa.isSkip), ","));
 
-        cmap(template);
+        cmap();
     }
 
-    private void nameAndId(Template template) {
+    private void nameAndId() {
         //generate name and id list
         int id = 1;
 
@@ -74,7 +75,7 @@ public class LexerGenerator {
         for (int state = dfa.initial; state <= dfa.lastState; state++) {
             //make id for token
             String name = dfa.names[state];
-            if (name != null && dfa.isAccepting(state)) {
+            if (name != null && dfa.isAccepting(state) && !dfa.isSkip[state]) {
                 idArr[state] = idMap.get(name);
             }
         }
@@ -93,7 +94,7 @@ public class LexerGenerator {
         template.set("id_list", idWriter.getString());
     }
 
-    private void cmap(Template template) {
+    private void cmap() {
         Writer cmapWriter = new Writer();
         cmapWriter.print("\"");
         for (Iterator<Range> it = dfa.getAlphabet().getRanges(); it.hasNext(); ) {
@@ -111,7 +112,7 @@ public class LexerGenerator {
         template.set("cMap", cmapWriter.getString());
     }
 
-    void makeTrans(Template template) {
+    void makeTrans() {
         Writer transWriter = new Writer();
         String indent = "        ";
         transWriter.print("\n");
@@ -186,7 +187,6 @@ public class LexerGenerator {
         template.set("token_class", options.tokenClass);
 
         Utils.write(template.toString(), out);
-
         System.out.println("token class generated to " + out);
     }
 }

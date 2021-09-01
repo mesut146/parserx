@@ -86,13 +86,6 @@ public class NodeList extends Node implements Iterable<Node> {
         list.clear();
     }
 
-    public Node normal() {
-        if (list.size() == 1) {
-            return first();
-        }
-        return this;
-    }
-
     @Override
     public Iterator<Node> iterator() {
         return list.iterator();

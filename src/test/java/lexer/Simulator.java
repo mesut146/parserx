@@ -1,34 +1,21 @@
 package lexer;
 
-import common.Env;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
 import mesut.parserx.nodes.Range;
-import org.junit.Test;
-import mesut.parserx.utils.Utils;
 
-import java.io.FileInputStream;
 import java.util.List;
 
 public class Simulator {
     int pos;
+    NFA dfa;
+    int lastState;
 
-    @Test
-    public void dfa() {
-        try {
-            NFA dfa = NFA.makeDFA(Env.getJavaLexer());
-
-            char[] input = Utils.read(new FileInputStream(Env.getFile2("/java/a.java"))).toCharArray();
-            pos = 0;
-            for (int i = 0; i < 100; i++) {
-                nextToken(dfa, input);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public Simulator(NFA dfa) {
+        this.dfa = dfa;
     }
 
-    void nextToken(NFA dfa, char[] input) {
+    public int nextToken(char[] input) {
         int curState = dfa.initial;
         StringBuilder buffer = new StringBuilder();
         while (true) {
@@ -41,10 +28,10 @@ public class Simulator {
             }
             int next = getState(curState, ch, dfa);
             if (next == -1 || ch == '\0') {
-                System.out.println("token=" + buffer.toString());
+                System.out.println("token=" + buffer);
                 buffer.setLength(0);
                 pos--;
-                return;
+                return 0;
             }
             else {
                 curState = next;
@@ -64,5 +51,13 @@ public class Simulator {
             }
         }
         return -1;
+    }
+
+    public void simulate(String s) {
+        char[] input = s.toCharArray();
+        pos = 0;
+        while (nextToken(input) != -1) {
+
+        }
     }
 }

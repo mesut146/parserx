@@ -1,6 +1,6 @@
 package mesut.parserx.nodes;
 
-import mesut.parserx.dfa.CharClass;
+import mesut.parserx.dfa.Alphabet;
 import mesut.parserx.utils.UnicodeUtils;
 
 import java.util.*;
@@ -120,20 +120,18 @@ public class Bracket extends NodeList {
 
     public List<Range> negateAll() {
         if (debug) System.out.println("negating " + this);
-        List<Range> res;
-        List<Range> ranges;
-        ranges = getRanges();
-        sort(ranges);
-        if (debug) System.out.println("sorted=" + ranges);
-        res = mergeRanges(ranges);
+        List<Range> rangeList = getRanges();
+        sort(rangeList);
+        if (debug) System.out.println("sorted=" + rangeList);
+        List<Range> res = mergeRanges(rangeList);
         if (debug) System.out.println("merged=" + res);
-        ranges.clear();
-        ranges.addAll(res);
+        rangeList.clear();
+        rangeList.addAll(res);
         res.clear();
         //negate distinct ranges
-        int last = CharClass.min;
-        for (int i = 0; i < ranges.size(); i++) {
-            Range range = ranges.get(i);
+        int last = Alphabet.min;
+        for (int i = 0; i < rangeList.size(); i++) {
+            Range range = rangeList.get(i);
             if (range.start < last) {
                 //intersect
                 last = range.end + 1;
@@ -141,7 +139,7 @@ public class Bracket extends NodeList {
             res.add(new Range(last, range.start - 1));
             last = range.end + 1;
         }
-        res.add(new Range(last, CharClass.max));
+        res.add(new Range(last, Alphabet.max));
         if (debug) System.out.println("negated=" + res);
         return res;
     }
@@ -219,12 +217,7 @@ public class Bracket extends NodeList {
         if (ranges == null) {
             ranges = new ArrayList<>();
             for (Node node : this) {
-                if (node.isRange()) {
-                    ranges.add(node.asRange());
-                }
-                else {
-                    throw new RuntimeException();
-                }
+                ranges.add(node.asRange());
             }
         }
         return ranges;

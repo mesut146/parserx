@@ -40,6 +40,20 @@ public class SimpleTransformer {
         else if (node.isString()) {
             return transformString(node.asString(), parent);
         }
+        else if (node instanceof Until) {
+            return transformUntil(((Until) node), parent);
+        }
+        else if (node instanceof Dot) {
+            return transformDot(((Dot) node), parent);
+        }
+        return node;
+    }
+
+    public Node transformDot(Dot node, Node parent) {
+        return node;
+    }
+
+    public Node transformUntil(Until node, Node parent) {
         return node;
     }
 

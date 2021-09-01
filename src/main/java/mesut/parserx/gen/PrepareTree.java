@@ -5,6 +5,7 @@ import mesut.parserx.nodes.*;
 public class PrepareTree extends SimpleTransformer {
     Tree tree;
     RuleDecl curRule;
+    TokenDecl curToken;
 
     public PrepareTree(Tree tree) {
         this.tree = tree;
@@ -16,6 +17,11 @@ public class PrepareTree extends SimpleTransformer {
     }
 
     public void check() {
+        for (TokenDecl decl : tree.tokens) {
+            curToken = decl;
+            transformToken(decl);
+        }
+        curToken = null;
         for (RuleDecl decl : tree.rules) {
             curRule = decl;
             transformRule(decl);
@@ -31,27 +37,41 @@ public class PrepareTree extends SimpleTransformer {
         else {
             TokenDecl decl = tree.getToken(node.name);
             if (decl == null) {
-                throw new RuntimeException("invalid reference: " + node.name + " in " + curRule.name);
+                throw new RuntimeException("invalid reference: " + node.name + " in " + getDecl());
             }
             else {
-                if (decl.isSkip) {
+                if (decl.isSkip && curRule != null) {
                     throw new RuntimeException("skip token inside production is not allowed");
                 }
                 node.isToken = true;
+                if (curToken != null) {
+                    return decl.regex;
+                }
             }
         }
         return node;
     }
 
+    String getDecl() {
+        return curRule != null ? curRule.name : curToken.tokenName;
+    }
+
     @Override
     public Node transformString(StringNode node, Node parent) {
-        String val = node.value;
-        TokenDecl decl = tree.getTokenByValue(val);
-        if (decl == null) {
-            throw new RuntimeException("unknown string token: " + val + " in " + curRule.name);
+        if (node.value.isEmpty()) {
+            System.out.println("empty string replaced by epsilon in " + getDecl());
+            return new Epsilon();
         }
-        //replace
-        return decl.ref();
+        if (curRule != null) {
+            String val = node.value;
+            TokenDecl decl = tree.getTokenByValue(val);
+            if (decl == null) {
+                throw new RuntimeException("unknown string token: " + val + " in " + getDecl());
+            }
+            //replace
+            return decl.ref();
+        }
+        return node;
     }
 }
 

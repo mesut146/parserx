@@ -42,6 +42,7 @@ public class Tree {
             GParser parser = new GParser(new StringReader(grammar));
             return parser.tree(path).prepare();
         } catch (Exception e) {
+            e.addSuppressed(new RuntimeException(path.getAbsolutePath()));
             throw new RuntimeException(e);
         }
     }
