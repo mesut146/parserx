@@ -15,10 +15,18 @@ import java.io.File;
 public class FactorTest {
 
     @Test
+    public void factor2() {
+        Tree tree = Env.makeRule("A: a b | B c | d e | f;\n" +
+                "B: a x | d y | x;");
+        new Factor(tree).handle();
+        System.out.println(tree);
+    }
+
+    @Test
     public void helper() {
         Tree tree = Env.makeRule("A: (a | b)* c | (a | d)+ e | c c;");
         RuleDecl decl = tree.rules.get(0);
-        System.out.println(Helper.firstMap(decl.rhs,tree));
+        System.out.println(Helper.firstMap(decl.rhs, tree));
     }
 
     @Test

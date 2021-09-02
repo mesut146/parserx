@@ -80,12 +80,12 @@ public class Helper {
 
     public static Map<Name, Integer> firstMap(Node node, Tree tree) {
         Map<Name, Integer> map = new HashMap<>();
-        firstMap(node, tree, true, map);
+        firstMap(node, null, tree, true, map);
         return map;
     }
 
     //freq of first set of regex
-    public static void firstMap(Node node, Tree tree, boolean rec, Map<Name, Integer> map) {
+    public static void firstMap(Node node, Node parent, Tree tree, boolean rec, Map<Name, Integer> map) {
         if (node.isName()) {
             Name name = node.asName();
             if (name.factored) return;
@@ -98,40 +98,40 @@ public class Helper {
             else {
                 map.put(name, 1);
                 if (rec && name.isRule()) {
-                    firstMap(tree.getRule(name).rhs, tree, rec, map);
+                    firstMap(tree.getRule(name).rhs, null, tree, rec, map);
                 }
             }
         }
         else if (node.isOr()) {
             for (Node ch : node.asOr()) {
-                firstMap(ch, tree, rec, map);
+                firstMap(ch, node, tree, rec, map);
             }
         }
         else if (node.isSequence()) {
             Sequence seq = node.asSequence();
             for (Node ch : seq) {
-                firstMap(ch, tree, rec, map);
+                firstMap(ch, node, tree, rec, map);
                 if (!canBeEmpty(ch, tree)) {
                     break;
                 }
             }
         }
         else if (node.isGroup()) {
-            firstMap(node.asGroup().node, tree, rec, map);
+            firstMap(node.asGroup().node, node, tree, rec, map);
         }
         else if (node.isRegex()) {
             Regex regex = node.asRegex();
             if (!regex.isOptional()) {
                 //infinite
                 Map<Name, Integer> tmp = new HashMap<>();
-                firstMap(regex.node, tree, rec, tmp);
+                firstMap(regex.node, node, tree, rec, tmp);
                 for (Map.Entry<Name, Integer> entry : tmp.entrySet()) {
                     entry.setValue(Integer.MAX_VALUE);
                 }
                 map.putAll(tmp);
             }
             else {
-                firstMap(regex.node, tree, rec, map);
+                firstMap(regex.node, node, tree, rec, map);
             }
         }
     }

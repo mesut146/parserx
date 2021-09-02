@@ -178,6 +178,13 @@ public class Factor extends SimpleTransformer {
                         zeroDecl.rhs = tmp.zero.normal();
                         tree.addRule(zeroDecl);
                     }
+                    //replace old
+                    if (tmp.zero != null) {
+                        decl.rhs = new Or(Sequence.of(sym, oneName), zeroName);
+                    }
+                    else {
+                        decl.rhs = Sequence.of(sym, oneName);
+                    }
                 }
             }
         }

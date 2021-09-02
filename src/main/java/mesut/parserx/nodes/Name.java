@@ -10,6 +10,7 @@ public class Name extends Node {
     public boolean isToken;
     public ArrayList<Name> args = new ArrayList<>();
     public boolean factored;
+    public boolean no;
 
     public Name(String name) {
         this.name = name;

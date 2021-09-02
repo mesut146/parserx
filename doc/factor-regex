@@ -1,5 +1,6 @@
 A: (a | b)* c | (a | d)+ e;
 
+A: a a* (e | b (a | b)* c | d (a | d)* e) | c | b (a | b)* c | d (a | d)* e;
 
 A: (a | b) (a | b)* c | c | (a | d) (a | d)* e;
 
