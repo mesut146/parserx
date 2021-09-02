@@ -2,19 +2,29 @@ package mesut.parserx.nodes;
 
 public class SimpleTransformer {
 
+    public RuleDecl curRule;
+    public TokenDecl curToken;
+
     public void transformAll(Tree tree) {
+        for (TokenDecl decl : tree.tokens) {
+            transformToken(decl);
+        }
         for (RuleDecl decl : tree.rules) {
             transformRule(decl);
         }
     }
 
     public RuleDecl transformRule(RuleDecl decl) {
+        curRule = decl;
         decl.rhs = transformNode(decl.rhs, decl);
+        curRule = null;
         return decl;
     }
 
     public TokenDecl transformToken(TokenDecl decl) {
+        curToken = decl;
         decl.regex = transformNode(decl.regex, decl);
+        curToken = null;
         return decl;
     }
 

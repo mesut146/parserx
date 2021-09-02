@@ -1,9 +1,6 @@
 package mesut.parserx.gen.ll;
 
-import mesut.parserx.gen.CodeWriter;
-import mesut.parserx.gen.EbnfToBnf;
-import mesut.parserx.gen.Helper;
-import mesut.parserx.gen.Options;
+import mesut.parserx.gen.*;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
@@ -39,6 +36,40 @@ public class LLRec {
             return regex.node.isName();
         }
         return node.isName();
+    }
+
+    void check() {
+        new SimpleTransformer() {
+            @Override
+            public Node transformOr(Or or, Node parent) {
+                for (int i = 0; i < or.size(); i++) {
+                    Set<Name> s1 = Helper.first(or.get(i), tree, true);
+                    for (int j = i + 1; j < or.size(); j++) {
+                        Set<Name> s2 = Helper.first(or.get(j), tree, true);
+                        Name sym = Factor.conf(s1, s2);
+                        if (sym != null) {
+                            throw new RuntimeException("factorization needed for " + curRule.name);
+                        }
+                    }
+                }
+                return or;
+            }
+
+            @Override
+            public Node transformSequence(Sequence s, Node parent) {
+                Node A = s.first();
+                if (Helper.canBeEmpty(A, tree)) {
+                    Node B = Helper.trim(s);
+                    Set<Name> s1 = Helper.first(A, tree, true);
+                    Set<Name> s2 = Helper.first(B, tree, true);
+                    Name sym = Factor.conf(s1, s2);
+                    if (sym != null) {
+                        throw new RuntimeException("factorization needed for " + curRule.name);
+                    }
+                }
+                return s;
+            }
+        }.transformAll(tree);
     }
 
     void indent(String data) {
@@ -289,7 +320,7 @@ public class LLRec {
                 code.append("}");
             }
         }
-        else if(!node.isEpsilon()){
+        else if (!node.isEpsilon()) {
             throw new RuntimeException("unexpected " + node);
         }
     }

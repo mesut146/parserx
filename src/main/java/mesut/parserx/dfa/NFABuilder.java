@@ -116,7 +116,6 @@ public class NFABuilder {
             if (!reg.isString()) {
                 throw new RuntimeException("until node only supports strings");
             }
-            //firstly add as normal string
             int ns;
             int st = start;
             int i = 0;

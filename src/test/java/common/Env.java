@@ -1,7 +1,11 @@
 package common;
 
+import mesut.parserx.grammar.GParser;
+import mesut.parserx.nodes.*;
+
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URL;
 
 public class Env {
@@ -44,5 +48,27 @@ public class Env {
             throw new Exception(name + " not found");
         }
         return new File(url.getPath());
+    }
+
+    public static Tree makeRule(String grammar) {
+        grammar += " ";
+        try {
+            GParser parser = new GParser(new StringReader(grammar));
+            final Tree tree = parser.tree(null);
+            new SimpleTransformer() {
+                @Override
+                public Node transformName(Name node, Node parent) {
+                    if (tree.getRule(node) == null) {
+                        node.isToken = true;
+                        //add fake token
+                        tree.tokens.add(new TokenDecl(node.name));
+                    }
+                    return node;
+                }
+            }.transformAll(tree);
+            return tree;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

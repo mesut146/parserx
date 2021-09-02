@@ -1,10 +1,13 @@
 package mesut.parserx.nodes;
 
+import mesut.parserx.gen.ll.AstInfo;
+
 //base class used in grammar file
 public abstract class Node {
 
     public String varName;//variable name
     public String label;//name in alternation
+    public AstInfo astInfo = new AstInfo();
 
     public boolean isSequence() {
         return this instanceof Sequence;

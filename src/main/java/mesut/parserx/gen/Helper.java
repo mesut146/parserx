@@ -90,7 +90,10 @@ public class Helper {
             Name name = node.asName();
             if (name.factored) return;
             if (map.containsKey(name)) {
-                map.put(name, map.get(name) + 1);
+                int i = map.get(name);
+                if (i != Integer.MAX_VALUE) {//limit
+                    map.put(name, i + 1);
+                }
             }
             else {
                 map.put(name, 1);
@@ -117,7 +120,19 @@ public class Helper {
             firstMap(node.asGroup().node, tree, rec, map);
         }
         else if (node.isRegex()) {
-            firstMap(node.asRegex().node, tree, rec, map);
+            Regex regex = node.asRegex();
+            if (!regex.isOptional()) {
+                //infinite
+                Map<Name, Integer> tmp = new HashMap<>();
+                firstMap(regex.node, tree, rec, tmp);
+                for (Map.Entry<Name, Integer> entry : tmp.entrySet()) {
+                    entry.setValue(Integer.MAX_VALUE);
+                }
+                map.putAll(tmp);
+            }
+            else {
+                firstMap(regex.node, tree, rec, map);
+            }
         }
     }
 

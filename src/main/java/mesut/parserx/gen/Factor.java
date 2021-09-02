@@ -22,6 +22,21 @@ public class Factor extends SimpleTransformer {
         return new Name(name.name + "_" + NodeList.join(name.args, "_"), false);
     }
 
+    //return common sym in two set
+    public static Name conf(Set<Name> s1, Set<Name> s2) {
+        Set<Name> copy = new HashSet<>(s1);
+        copy.retainAll(s2);
+        //rule has higher priority
+        for (Name name : copy) {
+            if (!name.isEpsilon() && name.isRule()) return name;
+        }
+        //token finally
+        for (Name name : copy) {
+            if (!name.isEpsilon()) return name;
+        }
+        return null;
+    }
+
     //factor or
     @Override
     public Node transformOr(Or or, Node parent) {
@@ -65,7 +80,7 @@ public class Factor extends SimpleTransformer {
             return node;
         }
         //A B needs factoring if A can be empty
-        //A B -> A_noeps B | B
+        //A B -> A_no_eps B | A(A) B
         Node A = s.first();
         if (Helper.canBeEmpty(A, tree)) {
             Node B = Helper.trim(s);
@@ -73,7 +88,8 @@ public class Factor extends SimpleTransformer {
             Set<Name> s2 = Helper.first(B, tree, true);
             Name sym = conf(s1, s2);
             if (sym != null) {
-                return transformOr(new Or(Sequence.of(new Epsilons(tree).trim(A), B), B), parent);
+                Node trimmed = new Epsilons(tree).trim(A);
+                return transformOr(new Or(Sequence.of(trimmed, B), B), parent);
             }
         }
         return s;
@@ -99,21 +115,6 @@ public class Factor extends SimpleTransformer {
 
     private void factorRule(RuleDecl decl) {
         decl.rhs = transformNode(decl.rhs, decl);
-    }
-
-    //return common sym in two set
-    Name conf(Set<Name> s1, Set<Name> s2) {
-        Set<Name> copy = new HashSet<>(s1);
-        copy.retainAll(s2);
-        //rule has higher priority
-        for (Name name : copy) {
-            if (!name.isEpsilon() && name.isRule()) return name;
-        }
-        //token finally
-        for (Name name : copy) {
-            if (!name.isEpsilon()) return name;
-        }
-        return null;
     }
 
     //pull a single token 'sym' and store result in info

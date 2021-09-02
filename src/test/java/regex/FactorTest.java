@@ -3,14 +3,23 @@ package regex;
 import common.Env;
 import mesut.parserx.gen.Epsilons;
 import mesut.parserx.gen.Factor;
+import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Or;
+import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
 
 import java.io.File;
 
 public class FactorTest {
+
+    @Test
+    public void helper() {
+        Tree tree = Env.makeRule("A: (a | b)* c | (a | d)+ e | c c;");
+        RuleDecl decl = tree.rules.get(0);
+        System.out.println(Helper.firstMap(decl.rhs,tree));
+    }
 
     @Test
     public void eps() throws Exception {
