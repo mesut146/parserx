@@ -208,16 +208,16 @@ public class Helper {
 
     //put back terminals as string nodes for good visuals
     public static void revert(final Tree tree) {
-        final SimpleTransformer transformer = new SimpleTransformer() {
+        SimpleTransformer transformer = new SimpleTransformer(tree) {
             @Override
             public Node transformName(Name node, Node parent) {
                 if (node.isToken) {
-                    Node rhs = tree.getToken(node.name).regex;
+                    Node rhs = tree.getToken(node.name).rhs;
                     if (rhs.isString()) {
                         return rhs;
                     }
                 }
-                return super.transformName(node, parent);
+                return node;
             }
         };
         for (RuleDecl ruleDecl : tree.rules) {

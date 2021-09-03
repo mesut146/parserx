@@ -10,10 +10,9 @@ import java.util.Set;
 public class AlphabetBuilder extends SimpleTransformer {
     Set<Range> ranges;
     List<Bracket> brackets;
-    Tree tree;
 
     public AlphabetBuilder(Tree tree) {
-        this.tree = tree;
+        super(tree);
     }
 
     //normalize bracket by r1

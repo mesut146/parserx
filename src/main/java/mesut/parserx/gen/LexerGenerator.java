@@ -67,7 +67,7 @@ public class LexerGenerator {
 
         for (TokenDecl decl : dfa.tree.tokens) {
             if (decl.isSkip) continue;
-            idMap.put(decl.tokenName, id++);
+            idMap.put(decl.name, id++);
         }
 
         int[] idArr = new int[dfa.lastState + 1];//state->id

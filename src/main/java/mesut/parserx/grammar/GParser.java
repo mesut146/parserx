@@ -123,9 +123,8 @@ frag=true;
     declSeparator();
     rhs = rhs();
     jj_consume_token(SEMI);
-decl=new TokenDecl(name);
+decl=new TokenDecl(name,rhs);
     decl.fragment=frag;
-    decl.regex = rhs;
     if(skip){tree.addSkip(decl);}
     else{tree.addToken(decl);}
 }
@@ -484,16 +483,16 @@ b.parse(t.image);
     return false;
   }
 
-  private boolean jj_3_3()
- {
-    if (jj_3R_8()) return true;
-    return false;
-  }
-
   private boolean jj_3_1()
  {
     if (jj_scan_token(KEYWORD_TOKEN)) return true;
     if (jj_scan_token(LBRACE)) return true;
+    return false;
+  }
+
+  private boolean jj_3_3()
+ {
+    if (jj_3R_8()) return true;
     return false;
   }
 

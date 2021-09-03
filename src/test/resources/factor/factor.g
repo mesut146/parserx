@@ -1,16 +1,4 @@
-token{
- a:"";
- b:"";
- c:"";
- d:"";
- e:"";
- m:"m";
- n:"n";
- p:"p";
- x:"x";
- y:"y";
-
-}
+include "common.g"
 
 //enhanced
 /*

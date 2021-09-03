@@ -3,6 +3,7 @@ package mesut.parserx.nodes;
 import mesut.parserx.dfa.Alphabet;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.NFABuilder;
+import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.grammar.GParser;
 import mesut.parserx.utils.Utils;
@@ -18,10 +19,10 @@ public class Tree {
     public List<RuleDecl> rules = new ArrayList<>();
     public List<RuleDecl> hiddenRules = new ArrayList<>();
     public Name start;
-    public File file = null;
+    public File file;
     public Alphabet alphabet = new Alphabet();
     public List<TokenDecl> tokens = new ArrayList<>();
-    public boolean mergeRules = false;
+    public boolean mergeRules = false;//make ors if true
     List<File> includes = new ArrayList<>();
 
     public Tree() {
@@ -60,7 +61,7 @@ public class Tree {
     static int indexOf(List<TokenDecl> list, String name) {
         int i = 0;
         for (TokenDecl decl : list) {
-            if (decl.tokenName.equals(name)) {
+            if (decl.name.equals(name)) {
                 return i;
             }
             i++;
@@ -75,8 +76,12 @@ public class Tree {
 
     //merge two grammar files(lexer,parser)
     void mergeWith(Tree other) {
-        tokens.addAll(other.tokens);
-        rules.addAll(other.rules);
+        for (TokenDecl decl : other.tokens) {
+            addToken(decl);
+        }
+        for (RuleDecl decl : other.rules) {
+            addRule(decl);
+        }
     }
 
     public void addInclude(String path) {
@@ -95,7 +100,7 @@ public class Tree {
     }
 
     public void addToken(TokenDecl token) {
-        if (indexOf(token.tokenName) != -1) {
+        if (indexOf(token.name) != -1) {
             throw new RuntimeException("token " + token + " already exists");
         }
         tokens.add(token);
@@ -129,7 +134,7 @@ public class Tree {
     //find token by string literal
     public TokenDecl getTokenByValue(String val) {
         for (TokenDecl decl : tokens) {
-            if (decl.regex.isString() && decl.regex.asString().value.equals(val)) {
+            if (decl.rhs.isString() && decl.rhs.asString().value.equals(val)) {
                 return decl;
             }
         }
@@ -223,6 +228,11 @@ public class Tree {
             }
         }
         return list;
+    }
+
+    public Tree revert() {
+        Helper.revert(this);
+        return this;
     }
 
 }

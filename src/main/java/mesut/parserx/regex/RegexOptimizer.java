@@ -4,30 +4,31 @@ import mesut.parserx.nodes.*;
 
 //normalize & optimize regex
 //merges sequences,ors,single length strings
-public class RegexOptimizer extends Transformer {
+public class RegexOptimizer extends SimpleTransformer {
     Node regex;
 
     public RegexOptimizer(Node regex) {
+        super(null);
         this.regex = regex;
     }
 
     public Node optimize() {
-        return transformNode(regex);
+        return transformNode(regex, null);
     }
 
     @Override
-    public Node transformNode(Node node) {
+    public Node transformNode(Node node, Node parent) {
         node = node.normal();//merge
-        return super.transformNode(node);
+        return super.transformNode(node, parent);
     }
 
     //shrink or into bracket by combining single length strings
     @Override
-    public Node transformOr(Or node) {
+    public Node transformOr(Or node, Node parent) {
         Or newNode = new Or();
         Bracket bracket = new Bracket();
         for (Node ch : node) {
-            ch = transformNode(ch);
+            ch = transformNode(ch, node);
             if (ch.isString() && ch.asString().value.length() == 1) {
                 bracket.add(ch.asString().value.charAt(0));
             }
@@ -47,11 +48,11 @@ public class RegexOptimizer extends Transformer {
 
     //shrink sequence by merging consecutive strings
     @Override
-    public Node transformSequence(Sequence node) {
+    public Node transformSequence(Sequence node, Node parent) {
         StringBuilder sb = new StringBuilder();
         Sequence res = new Sequence();
         for (int i = 0; i < node.size(); i++) {
-            Node n = transformNode(node.get(i));
+            Node n = transformNode(node.get(i), node);
             if (n.isString()) {
                 sb.append(n.asString().value);
             }

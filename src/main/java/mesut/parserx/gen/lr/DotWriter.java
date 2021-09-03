@@ -29,8 +29,8 @@ public class DotWriter {
             //tokens
             for (Name token : tokens) {
                 TokenDecl decl = generator.tree.getToken(token.name);
-                if (decl != null && decl.regex.isString()) {
-                    writer.print("<TD>" + decl.regex + "</TD>");
+                if (decl != null && decl.rhs.isString()) {
+                    writer.print("<TD>" + decl.rhs + "</TD>");
                 }
                 else {
                     writer.print("<TD>" + token.name + "</TD>");

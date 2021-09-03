@@ -14,6 +14,7 @@ public class RuleDecl extends Node {
     public int index;
     public List<Name> args = new ArrayList<>();
     public boolean hidden = false;//if true rule has no effect
+    public Name original;//ast type in case it is modified
 
     public RuleDecl() {
     }

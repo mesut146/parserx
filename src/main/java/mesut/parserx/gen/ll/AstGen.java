@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+//generate ast file and astinfo per node
 public class AstGen {
     Tree tree;
     CodeWriter astWriter = new CodeWriter(true);
@@ -50,20 +51,22 @@ public class AstGen {
     void model(RuleDecl decl) {
         classes = new CodeWriter(true);
         astWriter.append(String.format("public static class %s{", decl.name));
-        model(decl.rhs, decl.name, astWriter);
+        model(decl.rhs, decl.name, "res", astWriter);
         astWriter.all(classes.get());
         astWriter.append("}");
     }
 
-    private void model(Node node, String parentClass, CodeWriter parent) {
+    private void model(Node node, String parentClass, String outerVar, CodeWriter parent) {
+        node.astInfo.outerVar = outerVar;
         if (node.isSequence()) {
             for (Node ch : node.asSequence()) {
-                model(ch, parentClass, parent);
+                model(ch, parentClass, outerVar, parent);
             }
         }
         else if (node.isName()) {
             Name name = node.asName();
             String vname = vName(name, parentClass);
+            name.astInfo.varName = vname;
             if (name.isToken) {
                 parent.append(String.format("public Token %s;", vname));
             }
@@ -77,7 +80,7 @@ public class AstGen {
             for (final Node ch : node.asOr()) {
                 if (ch.isEpsilon()) continue;
                 if (LLRec.isSimple(ch)) {
-                    model(ch, parentClass, parent);
+                    model(ch, parentClass, outerVar, parent);
                 }
                 else {
                     String clsName = Utils.camel(parentClass) + num;
@@ -85,9 +88,10 @@ public class AstGen {
 
                     CodeWriter c = new CodeWriter(true);
                     c.append(String.format("public static class %s{", clsName));
-                    model(ch, clsName, c);
+                    model(ch, clsName, parentClass.toLowerCase(), c);
                     c.append("}");
                     classes.all(c.get());
+                    ch.astInfo.varName = parentClass.toLowerCase();
                 }
                 num++;
             }
@@ -96,7 +100,7 @@ public class AstGen {
             Regex regex = node.asRegex();
             Node ch = regex.node;
             if (regex.isOptional()) {
-                model(ch, parentClass, parent);
+                model(ch, parentClass, outerVar, parent);
             }
             else {
                 if (ch.isName()) {
@@ -115,7 +119,7 @@ public class AstGen {
                     parent.append(String.format("public List<%s> %s = new ArrayList<>();", cls, var));
                     CodeWriter c = new CodeWriter(true);
                     c.append("public static class " + cls + "{");
-                    model(ch.asGroup().node, cls, c);
+                    model(ch.asGroup().node, cls, var, c);
                     c.append("}");
                     classes.all(c.get());
                 }
@@ -129,7 +133,7 @@ public class AstGen {
 
             CodeWriter c = new CodeWriter(true);
             c.append("public static class " + cls + "{");
-            model(group.node, cls, c);
+            model(group.node, cls, var, c);
             c.append("}");
             classes.all(c.get());
         }

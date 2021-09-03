@@ -28,9 +28,9 @@ public class NFABuilder {
     }
 
     public void addRegex(TokenDecl decl) {
-        Pair p = insert(decl.regex, nfa.initial);
+        Pair p = insert(decl.rhs, nfa.initial);
         nfa.setAccepting(p.end, true);
-        nfa.names[p.end] = decl.tokenName;
+        nfa.names[p.end] = decl.name;
         nfa.isSkip[p.end] = decl.isSkip;
     }
 
@@ -108,7 +108,7 @@ public class NFABuilder {
         else if (node.isName()) {//?
             //we have lexer ref just replace with target's regex
             Name name = node.asName();
-            p.end = insert(tree.getToken(name.name).regex, start).end;
+            p.end = insert(tree.getToken(name.name).rhs, start).end;
         }
         else if (node instanceof Until) {
             Until until = (Until) node;

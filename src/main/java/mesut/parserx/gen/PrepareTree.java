@@ -3,12 +3,9 @@ package mesut.parserx.gen;
 import mesut.parserx.nodes.*;
 
 public class PrepareTree extends SimpleTransformer {
-    Tree tree;
-    RuleDecl curRule;
-    TokenDecl curToken;
 
     public PrepareTree(Tree tree) {
-        this.tree = tree;
+        super(tree);
     }
 
     //check rule , token, string references
@@ -17,15 +14,7 @@ public class PrepareTree extends SimpleTransformer {
     }
 
     public void check() {
-        for (TokenDecl decl : tree.tokens) {
-            curToken = decl;
-            transformToken(decl);
-        }
-        curToken = null;
-        for (RuleDecl decl : tree.rules) {
-            curRule = decl;
-            transformRule(decl);
-        }
+        transformAll();
     }
 
     @Override
@@ -45,7 +34,7 @@ public class PrepareTree extends SimpleTransformer {
                 }
                 node.isToken = true;
                 if (curToken != null) {
-                    return decl.regex;
+                    return decl.rhs;
                 }
             }
         }
@@ -53,7 +42,7 @@ public class PrepareTree extends SimpleTransformer {
     }
 
     String getDecl() {
-        return curRule != null ? curRule.name : curToken.tokenName;
+        return curRule != null ? curRule.name : curToken.name;
     }
 
     @Override

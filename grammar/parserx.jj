@@ -160,9 +160,8 @@ void tokenDecl(Tree tree,boolean skip):
 {
   ("#"{frag=true;})? name = name() declSeparator() rhs = rhs() ";"
   {
-    decl=new TokenDecl(name);
+    decl=new TokenDecl(name,rhs);
     decl.fragment=frag;
-    decl.regex = rhs;
     if(skip){tree.addSkip(decl);}
     else{tree.addToken(decl);}
   }

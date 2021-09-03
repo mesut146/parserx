@@ -6,6 +6,7 @@ import mesut.parserx.nodes.Node;
 public class AstInfo {
     String code;
     String varName;
+    String outerVar;
     Node old;
     boolean isFactor;//no assign
     Name factor;//

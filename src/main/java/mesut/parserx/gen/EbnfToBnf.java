@@ -28,18 +28,20 @@ public class EbnfToBnf {
 
     public static Tree combineOr(Tree input) {
         Tree res = new Tree(input);
-        Map<String, Or> map = new HashMap<>();
-        for (RuleDecl ruleDecl : input.rules) {
-            Or or = map.get(ruleDecl.name);
+        Map<Name, Or> map = new HashMap<>();
+        for (RuleDecl decl : input.rules) {
+            Or or = map.get(decl.ref());
             if (or == null) {
                 or = new Or();
-                map.put(ruleDecl.name, or);
+                map.put(decl.ref(), or);
             }
-            or.add(ruleDecl.rhs);
+            or.add(decl.rhs);
         }
         res.rules.clear();
-        for (Map.Entry<String, Or> entry : map.entrySet()) {
-            res.addRule(new RuleDecl(entry.getKey(), entry.getValue().normal()));
+        for (Map.Entry<Name, Or> entry : map.entrySet()) {
+            RuleDecl decl = entry.getKey().makeRule();
+            decl.rhs = entry.getValue().normal();
+            res.addRule(decl);
         }
         return res;
     }

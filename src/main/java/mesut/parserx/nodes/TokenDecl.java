@@ -2,25 +2,25 @@ package mesut.parserx.nodes;
 
 public class TokenDecl extends Node {
 
-    public String tokenName;
+    public String name;
     public boolean fragment = false;
     public boolean isSkip = false;
-    public Node regex;
+    public Node rhs;
 
-    public TokenDecl(String tokenName) {
-        this(tokenName, null);
+    public TokenDecl(String name) {
+        this(name, null);
     }
 
-    public TokenDecl(String tokenName, Node regex) {
-        if (tokenName.equals("EOF")) {
+    public TokenDecl(String name, Node rhs) {
+        if (name.equals("EOF")) {
             throw new RuntimeException("token name 'EOF' is reserved use another");
         }
-        this.tokenName = tokenName;
-        this.regex = regex;
+        this.name = name;
+        this.rhs = rhs;
     }
 
     public Name ref() {
-        return new Name(tokenName, true);
+        return new Name(name, true);
     }
 
     @Override
@@ -29,9 +29,9 @@ public class TokenDecl extends Node {
         if (fragment) {
             sb.append("#");
         }
-        sb.append(tokenName);
+        sb.append(name);
         sb.append(" = ");
-        sb.append(regex);
+        sb.append(rhs);
         return sb.toString();
     }
 

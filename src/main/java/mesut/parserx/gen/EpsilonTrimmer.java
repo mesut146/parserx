@@ -9,11 +9,10 @@ import java.util.List;
 //convert epsilons to '?'
 //or eliminate them by expanding
 public class EpsilonTrimmer extends SimpleTransformer {
-    Tree tree;
     boolean modified;
 
     public EpsilonTrimmer(Tree tree) {
-        this.tree = tree;
+        super(tree);
     }
 
     public static Tree trim(Tree input) {

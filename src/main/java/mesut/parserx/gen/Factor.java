@@ -9,13 +9,12 @@ import java.util.Set;
 public class Factor extends SimpleTransformer {
 
     public static boolean keepFactor = true;
-    Tree tree;
     HashMap<Name, PullInfo> cache = new HashMap<>();
     boolean modified;
     RuleDecl curRule;
 
     public Factor(Tree tree) {
-        this.tree = tree;
+        super(tree);
     }
 
     public static Name encode(Name name) {
@@ -55,6 +54,7 @@ public class Factor extends SimpleTransformer {
                 if (sym != null) {
                     System.out.printf("factoring %s in %s\n", sym, curRule.name);
                     modified = true;
+                    //todo find sym on both and set astinfo.factor=true
                     PullInfo info = pull(or, sym);
                     Node one = Sequence.of(sym, info.one);
                     if (info.zero == null) {
@@ -163,7 +163,6 @@ public class Factor extends SimpleTransformer {
                 Name oneName = name.copy();
                 oneName.args.add(sym);
 
-                info.zero = zeroName;
                 info.one = oneName;
 
                 if (tree.getRule(zeroName) == null && tree.getRule(oneName) == null) {
@@ -177,6 +176,7 @@ public class Factor extends SimpleTransformer {
                         RuleDecl zeroDecl = zeroName.makeRule();
                         zeroDecl.rhs = tmp.zero.normal();
                         tree.addRule(zeroDecl);
+                        info.zero = zeroName;
                     }
                     //replace old
                     if (tmp.zero != null) {
@@ -214,15 +214,17 @@ public class Factor extends SimpleTransformer {
         if (Helper.start(A, sym, tree)) {
             PullInfo p1 = pull(A, sym);
             if (Helper.canBeEmpty(A, tree)) {
+                Node no = new Epsilons(tree).trim(A);
                 if (Helper.start(B, sym, tree)) {
-                    Node no = new Epsilons(tree).trim(A);
                     //A B = A_noe B | B
                     return pull(new Or(Sequence.of(no, B), B), sym);
                 }
                 else {
                     //A B = (sym A1 | A0) B = sym A1 B | A0 B
-                    info.zero = Sequence.of(p1.zero, B);
-                    info.one = Sequence.of(p1.one, B);
+                    //A B = A_eps B | B = sym A_eps(sym) B | A_eps_no_sym | B
+                    return pull(new Or(Sequence.of(no, B), B), sym);
+                    //info.zero = Sequence.of(p1.zero, B);
+                    //info.one = Sequence.of(p1.one, B);
                 }
             }
             else {

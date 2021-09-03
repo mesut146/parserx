@@ -39,7 +39,7 @@ public class LLRec {
     }
 
     void check() {
-        new SimpleTransformer() {
+        new SimpleTransformer(tree) {
             @Override
             public Node transformOr(Or or, Node parent) {
                 for (int i = 0; i < or.size(); i++) {
@@ -69,7 +69,7 @@ public class LLRec {
                 }
                 return s;
             }
-        }.transformAll(tree);
+        }.transformAll();
     }
 
     void indent(String data) {
@@ -88,7 +88,7 @@ public class LLRec {
         sb.append(String.format("  List<%s> list = new ArrayList<>();\n", options.tokenClass));
         sb.append(String.format(" %s lexer;\n", options.lexerClass));
 
-        sb.append(String.format("  public %s(%s lexer) throws java.io.IOException{\n    this.lexer = lexer;\n  fill();\n  }\n", options.parserClass, options.lexerClass));
+        sb.append(String.format("  public %s(%s lexer) throws java.io.IOException{\n    this.lexer = lexer;\n    fill();\n  }\n", options.parserClass, options.lexerClass));
 
         writeConsume();
         writePop();
@@ -171,7 +171,7 @@ public class LLRec {
         int id = 1;
         for (TokenDecl decl : tree.tokens) {
             if (decl.isSkip) continue;
-            c.append(String.format("public static final int %s = %d;", decl.tokenName, id));
+            c.append(String.format("public static final int %s = %d;", decl.name, id));
             id++;
         }
 
@@ -258,66 +258,90 @@ public class LLRec {
         else if (node.isName()) {
             Name name = node.asName();
             if (name.factored) {
-                throw new RuntimeException("factored ref");
+                //throw new RuntimeException("factored ref");
             }
-            String vname = astGen.vName(name, outerCls);
+            String rhs;
             if (name.isRule()) {
-                String args = "";
                 if (!name.args.isEmpty()) {
-                    throw new RuntimeException("ref with args");
+                    //throw new RuntimeException("ref with args");
                 }
-                if (isArr) {
-                    code.append(String.format("%s.%s.add(%s(%s));", outerVar, vname, name.name, args));
-                }
-                else {
-                    code.append(String.format("%s.%s = %s(%s);", outerVar, vname, name.name, args));
-                }
+                rhs = name.name + "(" + ")";
+            }
+            else {
+                rhs = "consume(" + tokens + "." + name.name + ")";
+            }
+            if (name.astInfo.isFactor) {
+                String type = name.isToken ? "Token" : name.name;
+                code.append(String.format("%s %s = %s;", type, node.astInfo.varName, rhs));
             }
             else {
                 if (isArr) {
-                    code.append(String.format("%s.%s.add(consume(%s.%s));", outerVar, vname, tokens, name.name));
+                    code.append(String.format("%s.%s.add(%s);", node.astInfo.outerVar, node.astInfo.varName, rhs));
                 }
                 else {
-                    code.append(String.format("%s.%s = consume(%s.%s);", outerVar, vname, tokens, name.name));
+                    code.append(String.format("%s.%s = %s;", node.astInfo.outerVar, node.astInfo.varName, rhs));
                 }
             }
         }
         else if (node.isRegex()) {
             Regex regex = node.asRegex();
+            Set<Name> set = Helper.first(node, tree, true, false, true);
             if (regex.isOptional()) {
-                beginSwitch(regex.node);
-                write(regex.node, outerVar, outerCls, flagCount, firstCount, false);
-                endSwitch("");
+                if (set.size() == 1) {
+                    code.append(String.format("if(%s == %s.%s){", peekExpr(), tokens, set.iterator().next()));
+                    write(regex.node, outerVar, outerCls, flagCount, firstCount, true);
+                    code.append("}");
+                }
+                else {
+                    beginSwitch(set);
+                    write(regex.node, outerVar, outerCls, flagCount, firstCount, false);
+                    endSwitch("");
+                }
             }
             else if (regex.isStar()) {
-                flagCount++;
-                String flagStr = "flag";
-                if (flagCount > 1) flagStr += flagCount;
-                code.append(String.format("boolean %s = true;", flagStr));
-                code.append(String.format("while(%s){", flagStr));
-                String def = flagStr + " = false;\n";
-                beginSwitch(regex.node);
-                write(regex.node, outerVar, outerCls, flagCount, firstCount, true);
-                endSwitch(def);
-                code.append("}");
+                if (set.size() == 1) {
+                    code.append(String.format("while(%s == %s.%s){", peekExpr(), tokens, set.iterator().next()));
+                    write(regex.node, outerVar, outerCls, flagCount, firstCount, true);
+                    code.append("}");
+                }
+                else {
+                    flagCount++;
+                    String flagStr = "flag";
+                    if (flagCount > 1) flagStr += flagCount;
+                    code.append(String.format("boolean %s = true;", flagStr));
+                    code.append(String.format("while(%s){", flagStr));
+                    String def = flagStr + " = false;\n";
+                    beginSwitch(set);
+                    write(regex.node, outerVar, outerCls, flagCount, firstCount, true);
+                    endSwitch(def);
+                    code.append("}");
+                }
             }
             else {
                 //plus
-                flagCount++;
-                firstCount++;
-                String flagStr = "flag";
-                String firstStr = "first";
-                if (flagCount > 1) flagStr += flagCount;
-                if (firstCount > 1) firstStr += firstCount;
-                code.append(String.format("boolean %s = true;", flagStr));
-                code.append(String.format("boolean %s = true;", firstStr));
-                code.append(String.format("while(%s){", flagStr));
-                String def = String.format("if(!%s)  %s = false;\n" + "else  throw new RuntimeException(\"unexpected token: \"+peek());", firstStr, flagStr);
-                beginSwitch(regex.node);
-                write(regex.node, outerVar, outerCls, flagCount, firstCount, true);
-                endSwitch(def);
-                code.append("first = false;\n");
-                code.append("}");
+                if (set.size() == 1) {
+                    code.append("do{");
+                    write(regex.node, outerVar, outerCls, flagCount, firstCount, true);
+                    code.down();
+                    code.append(String.format("}while(%s == %s.%s);", peekExpr(), tokens, set.iterator().next()));
+                }
+                else {
+                    flagCount++;
+                    firstCount++;
+                    String flagStr = "flag";
+                    String firstStr = "first";
+                    if (flagCount > 1) flagStr += flagCount;
+                    if (firstCount > 1) firstStr += firstCount;
+                    code.append(String.format("boolean %s = true;", flagStr));
+                    code.append(String.format("boolean %s = true;", firstStr));
+                    code.append(String.format("while(%s){", flagStr));
+                    String def = String.format("if(!%s)  %s = false;\n" + "else  throw new RuntimeException(\"unexpected token: \"+peek());", firstStr, flagStr);
+                    beginSwitch(set);
+                    write(regex.node, outerVar, outerCls, flagCount, firstCount, true);
+                    endSwitch(def);
+                    code.append("first = false;\n");
+                    code.append("}");
+                }
             }
         }
         else if (!node.isEpsilon()) {
@@ -326,9 +350,9 @@ public class LLRec {
     }
 
 
-    void beginSwitch(Node node) {
+    void beginSwitch(Set<Name> set) {
         code.append("switch(" + peekExpr() + "){");
-        for (Name token : Helper.first(node, tree, true, false, true)) {
+        for (Name token : set) {
             code.append(String.format("case %s.%s:", tokens, token));
         }
         code.append("{");

@@ -55,7 +55,7 @@ public class Env {
         try {
             GParser parser = new GParser(new StringReader(grammar));
             final Tree tree = parser.tree(null);
-            new SimpleTransformer() {
+            new SimpleTransformer(tree) {
                 @Override
                 public Node transformName(Name node, Node parent) {
                     if (tree.getRule(node) == null) {
@@ -65,7 +65,7 @@ public class Env {
                     }
                     return node;
                 }
-            }.transformAll(tree);
+            }.transformAll();
             return tree;
         } catch (Exception e) {
             throw new RuntimeException(e);

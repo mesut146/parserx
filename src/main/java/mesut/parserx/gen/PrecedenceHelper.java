@@ -35,8 +35,8 @@ public class PrecedenceHelper {
 
     String getOp(Name name) {
         TokenDecl tok = tree.getToken(name.name);
-        if (tok.regex.isString()) {
-            return tok.regex.asString().value;
+        if (tok.rhs.isString()) {
+            return tok.rhs.asString().value;
         }
         return null;
     }
@@ -166,7 +166,7 @@ public class PrecedenceHelper {
     String getName(Or ops) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < ops.size(); i++) {
-            sb.append(tree.getTokenByValue(ops.get(i).asString().value).tokenName);
+            sb.append(tree.getTokenByValue(ops.get(i).asString().value).name);
             if (i < ops.size() - 1) sb.append("_");
         }
         if (ops.size() == 1) {
