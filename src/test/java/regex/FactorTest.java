@@ -4,7 +4,6 @@ import common.Env;
 import mesut.parserx.gen.Epsilons;
 import mesut.parserx.gen.Factor;
 import mesut.parserx.gen.Helper;
-import mesut.parserx.gen.ll.LLRec;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.RuleDecl;
@@ -19,7 +18,7 @@ public class FactorTest {
     public void factor2() {
         Tree tree = Env.makeRule("A: a b | B c | d e | f;\n" +
                 "B: a x | d y | x;");
-        new Factor(tree).handle();
+        new Factor(tree).factorize();
         System.out.println(tree);
     }
 
@@ -57,7 +56,7 @@ public class FactorTest {
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/factoring/1.g"));
         Factor factor = new Factor(tree);
         Factor.keepFactor = false;
-        factor.handle();
+        factor.factorize();
         System.out.println(tree);
     }
 
@@ -65,7 +64,7 @@ public class FactorTest {
     public void java() throws Exception {
         Tree tree = Tree.makeTree(Env.getFile2("java/parser-jls.g"));
         Factor factor = new Factor(tree);
-        factor.handle();
+        factor.factorize();
         System.out.println(tree);
     }
 }

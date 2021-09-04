@@ -11,11 +11,7 @@ public class PrecedenceHelper {
     RuleDecl rule;
 
     public PrecedenceHelper(Tree tree) {
-        this.tree = tree;
-        EbnfToBnf.combine_or = true;
-        EbnfToBnf.expand_or = false;
-        EbnfToBnf.expandGroup = false;
-        this.tree = EbnfToBnf.transform(tree);
+        this.tree = EbnfToBnf.combineOr(tree);
     }
 
     public Tree transform() {

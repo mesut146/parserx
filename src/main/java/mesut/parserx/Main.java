@@ -88,7 +88,7 @@ public class Main {
             else if (cmd.contains("-factor")) {
                 Tree tree = Tree.makeTree(input);
                 Factor.keepFactor = false;
-                new Factor(tree).handle();
+                new Factor(tree).factorize();
                 if (output == null) {
                     output = new File(tree.file + "-out.g");
                 }

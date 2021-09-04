@@ -9,8 +9,6 @@ public class Name extends Node {
     public String name;
     public boolean isToken;
     public ArrayList<Name> args = new ArrayList<>();
-    public boolean factored;
-    public boolean no;
 
     public Name(String name) {
         this.name = name;
@@ -30,13 +28,13 @@ public class Name extends Node {
         StringBuilder sb = new StringBuilder();
         sb.append(varString());
         sb.append(name);
-        if (factored) {
+        if (astInfo.factored) {
             sb.append("(").append(name).append(")");
         }
         if (!args.isEmpty()) {
             sb.append("(").append(NodeList.join(args, ", ")).append(")");
         }
-
+        sb.append(astInfo);
         return sb.toString();
     }
 

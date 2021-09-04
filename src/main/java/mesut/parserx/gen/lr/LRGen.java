@@ -1,7 +1,6 @@
 package mesut.parserx.gen.lr;
 
 import mesut.parserx.gen.EbnfToBnf;
-import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
@@ -65,10 +64,9 @@ public abstract class LRGen<T extends LrItemSet> {
     }
 
     void prepare() {
-        PrepareTree.checkReferences(tree);//todo remove
         EbnfToBnf.rhsSequence = true;
         tree = EbnfToBnf.transform(tree);
-        PrepareTree.checkReferences(tree);
+        tree.prepare();
 
         start = makeStart(tree);
         first = new LrItem(start, 0);

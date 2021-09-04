@@ -12,6 +12,8 @@ Ag1(a): a(a) b;
 Ag1_no_a: null;
 Ag2(a): a(a) d;
 Ag2_no_a: null;
+Ag1: a Ag1(a);
+Ag2: a Ag2(a);
 A: a (Ag1(a) Ag1* c | Ag2(a) e) | c | e;
 
 A A(){

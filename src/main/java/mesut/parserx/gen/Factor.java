@@ -52,6 +52,8 @@ public class Factor extends SimpleTransformer {
                 Set<Name> s2 = Helper.first(or.get(j), tree, true);
                 Name sym = conf(s1, s2);
                 if (sym != null) {
+                    sym = sym.copy();
+                    sym.astInfo.isFactor = true;
                     System.out.printf("factoring %s in %s\n", sym, curRule.name);
                     modified = true;
                     //todo find sym on both and set astinfo.factor=true
@@ -95,20 +97,18 @@ public class Factor extends SimpleTransformer {
         return s;
     }
 
-    public void handle() {
-        while (true) {
+    public void factorize() {
+        for (int i = 0; i < tree.rules.size(); ) {
+            RuleDecl decl = tree.rules.get(i);
+            curRule = decl;
             modified = false;
-            for (int i = 0; i < tree.rules.size(); i++) {
-                RuleDecl decl = tree.rules.get(i);
-                curRule = decl;
-                factorRule(decl);
-                if (modified) {
-                    //restart if any modification happens
-                    break;
-                }
+            factorRule(decl);
+            if (modified) {
+                //restart if any modification happens
+                i = 0;
             }
-            if (!modified) {
-                break;
+            else {
+                i++;
             }
         }
     }
@@ -122,7 +122,7 @@ public class Factor extends SimpleTransformer {
     //A0=part doesn't start with sym
     //A1=part after sym
     public PullInfo pull(Node node, Name sym) {
-        if (sym.factored) {
+        if (sym.astInfo.factored) {
             throw new RuntimeException("factored sym");
         }
         //System.out.println("pull:" + node + " sym:" + sym);
@@ -135,7 +135,9 @@ public class Factor extends SimpleTransformer {
             if (name.equals(sym)) {
                 if (keepFactor) {
                     name = name.copy();
-                    name.factored = true;
+                    name.astInfo = node.astInfo.copy();
+                    //todo
+                    name.astInfo.factored = true;
                     info.one = name;
                 }
                 else {
@@ -158,10 +160,12 @@ public class Factor extends SimpleTransformer {
                     //encode args
                     zeroName = encode(name);
                 }
-
                 zeroName.name += "_no_" + sym.name;
+                zeroName.astInfo = name.astInfo.copy();
+
                 Name oneName = name.copy();
                 oneName.args.add(sym);
+                oneName.astInfo = name.astInfo.copy();
 
                 info.one = oneName;
 
@@ -239,7 +243,7 @@ public class Factor extends SimpleTransformer {
         }
         else {
             //A empty,B starts
-            if (A.isName() && A.asName().factored) {
+            if (A.isName() && A.asName().astInfo.factored) {
                 PullInfo tmp = pull(B, sym);
                 if (tmp.zero != null)
                     info.zero = Sequence.of(A, tmp.zero);

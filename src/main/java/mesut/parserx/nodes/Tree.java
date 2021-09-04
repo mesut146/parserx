@@ -235,4 +235,9 @@ public class Tree {
         return this;
     }
 
+    //todo debug
+    public void printRules() {
+        System.out.println(NodeList.join(rules, "\n"));
+        System.out.println("---------------------");
+    }
 }

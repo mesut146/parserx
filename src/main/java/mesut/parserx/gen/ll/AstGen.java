@@ -58,6 +58,7 @@ public class AstGen {
 
     private void model(Node node, String parentClass, String outerVar, CodeWriter parent) {
         node.astInfo.outerVar = outerVar;
+        node.astInfo.outerCls = parentClass;
         if (node.isSequence()) {
             for (Node ch : node.asSequence()) {
                 model(ch, parentClass, outerVar, parent);
@@ -104,13 +105,10 @@ public class AstGen {
             }
             else {
                 if (ch.isName()) {
-                    String nm = vName(ch.asName(), parentClass);
-                    if (ch.asName().isToken) {
-                        parent.append(String.format("public List<Token> %s = new ArrayList<>();", nm));
-                    }
-                    else {
-                        parent.append(String.format("public List<%s> %s = new ArrayList<>();", ch, nm));
-                    }
+                    String vname = vName(ch.asName(), parentClass);
+                    String type = ch.asName().isToken ? "Token" : ch.asName().name;
+                    parent.append(String.format("public List<%s> %s = new ArrayList<>();", type, vname));
+                    ch.astInfo.varName = vname;
                 }
                 else {
                     //group

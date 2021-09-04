@@ -55,4 +55,9 @@ public class CodeWriter {
     public String get() {
         return sb.toString();
     }
+
+    @Override
+    public String toString() {
+        return sb.toString();
+    }
 }

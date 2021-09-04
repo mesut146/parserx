@@ -46,7 +46,7 @@ public class Helper {
     public static void first(Node node, Tree tree, boolean rec, Set<Name> set) {
         if (node.isName()) {
             Name name = node.asName();
-            if (name.factored) return;
+            if (name.astInfo.factored) return;
             if (set.add(name)) {
                 if (rec && name.isRule()) {
                     first(tree.getRule(name).rhs, tree, rec, set);
@@ -88,7 +88,7 @@ public class Helper {
     public static void firstMap(Node node, Node parent, Tree tree, boolean rec, Map<Name, Integer> map) {
         if (node.isName()) {
             Name name = node.asName();
-            if (name.factored) return;
+            if (name.astInfo.factored) return;
             if (map.containsKey(name)) {
                 int i = map.get(name);
                 if (i != Integer.MAX_VALUE) {//limit
@@ -172,7 +172,7 @@ public class Helper {
 
     public static boolean canBeEmpty(Node node, Tree tree, Set<Name> set) {
         if (node.isName()) {
-            if (node.asName().factored) return true;//acts as epsilon
+            if (node.asName().astInfo.factored) return true;//acts as epsilon
             if (node.asName().isRule() && set.add(node.asName())) {
                 return canBeEmpty(tree.getRule(node.asName()).rhs, tree, set);
             }

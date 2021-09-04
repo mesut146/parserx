@@ -19,10 +19,10 @@ public class LLGenTest {
     public void normalize() throws Exception {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
-        Tree tree = Tree.makeTree(Env.getResFile("factor/factor-group.g"));
-        new Normalizer(tree).normalize();
-        new Factor(tree).handle();
-        System.out.println(tree);
+        Tree tree = Tree.makeTree(Env.getResFile("factor/group.g"));
+        //new Normalizer(tree).normalize();
+        //new Factor(tree).factorize();
+        //System.out.println(tree);
         new LLRec(tree, options).gen();
     }
 

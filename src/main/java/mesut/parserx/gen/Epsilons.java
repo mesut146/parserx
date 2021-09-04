@@ -75,7 +75,7 @@ public class Epsilons {
         }
         else if (node.isName()) {
             Name name = node.asName();
-            if (name.factored) {
+            if (name.astInfo.factored) {
                 return name;
             }
 

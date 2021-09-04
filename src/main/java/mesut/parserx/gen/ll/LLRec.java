@@ -12,7 +12,7 @@ import java.util.Set;
 public class LLRec {
     public Options options;
     Tree tree;
-    StringBuilder sb = new StringBuilder();
+    CodeWriter sb = new CodeWriter(true);
     CodeWriter code = new CodeWriter(true);
     String curRule;
     int groupCount;
@@ -22,12 +22,6 @@ public class LLRec {
     public LLRec(Tree tree, Options options) {
         this.tree = tree;
         this.options = options;
-    }
-
-    public static void indent(String data, StringBuilder sb) {
-        for (String line : data.split("\n")) {
-            sb.append("  ").append(line).append("\n");
-        }
     }
 
     public static boolean isSimple(Node node) {
@@ -73,52 +67,76 @@ public class LLRec {
     }
 
     void indent(String data) {
-        indent(data, sb);
+        sb.all(data);
     }
 
     public void gen() throws IOException {
-        tree = EbnfToBnf.combineOr(tree);
-        sb.append("import java.util.List;\n");
-        sb.append("import java.util.ArrayList;\n");
+        prepare();
+        sb.append("import java.util.List;");
+        sb.append("import java.util.ArrayList;");
         if (options.packageName != null) {
-            sb.append(String.format("import %s.%s;\n", options.packageName, options.astClass));
+            sb.append(String.format("import %s.%s;", options.packageName, options.astClass));
         }
-        sb.append("\n");
-        sb.append("public class ").append(options.parserClass).append("{\n");
-        sb.append(String.format("  List<%s> list = new ArrayList<>();\n", options.tokenClass));
-        sb.append(String.format(" %s lexer;\n", options.lexerClass));
+        sb.append("");
+        sb.append(String.format("public class %s{", options.parserClass));
+        sb.append(String.format("List<%s> list = new ArrayList<>();", options.tokenClass));
+        sb.append(String.format("%s lexer;", options.lexerClass));
+        sb.append("");
 
-        sb.append(String.format("  public %s(%s lexer) throws java.io.IOException{\n    this.lexer = lexer;\n    fill();\n  }\n", options.parserClass, options.lexerClass));
+        sb.append(String.format("public %s(%s lexer) throws java.io.IOException{", options.parserClass, options.lexerClass));
+
+        sb.all("this.lexer = lexer;\nfill();\n}");
+        sb.append("");
 
         writeConsume();
         writePop();
         writePeek();
         writeFill();
 
-        astGen = new AstGen(tree, options);
-        astGen.genAst();
-        astGen.varCount.clear();
-
         for (RuleDecl decl : tree.rules) {
             if (!decl.hidden) {
                 curRule = decl.name;
                 gen(decl);
+                code.append("");
             }
         }
-        indent(code.get(), sb);
+        sb.all(code.get());
         sb.append("}");
 
         File file = new File(options.outDir, options.parserClass + ".java");
 
-        Utils.write(sb.toString(), file);
+        Utils.write(sb.get(), file);
         System.out.println("parser file generated to " + file);
         genTokenType();
+    }
+
+    private void prepare() throws IOException {
+        tree = EbnfToBnf.combineOr(tree);
+        new Normalizer(tree).normalize();
+        astGen = new AstGen(tree, options);
+        astGen.genAst();
+        astGen.varCount.clear();
+        tree.printRules();
+        new Factor(tree).factorize();
+        tree.printRules();
     }
 
     void gen(RuleDecl decl) {
         groupCount = 1;
         String type = options.astClass + "." + decl.name;
-        code.append(String.format("public %s %s(%s){", type, decl.name, NodeList.join(decl.args, ", ")));
+        String params = "";
+        int i = 0;
+        for (Name arg : decl.args) {
+            if (i > 0) params += ", ";
+            if (arg.isToken) {
+                params += "Token " + arg.name;
+            }
+            else {
+                params += arg.name + " " + arg.name;
+            }
+            i++;
+        }
+        code.append(String.format("public %s %s(%s){", type, decl.name, params));
         code.append(String.format("%s res = new %s();", type, type));
         write(decl.rhs, "res", type, 0, 0, false);
         code.append("return res;");
@@ -257,13 +275,13 @@ public class LLRec {
         }
         else if (node.isName()) {
             Name name = node.asName();
-            if (name.factored) {
-                //throw new RuntimeException("factored ref");
+            if (name.astInfo.factored) {
+                throw new RuntimeException("factored ref");
             }
             String rhs;
             if (name.isRule()) {
                 if (!name.args.isEmpty()) {
-                    //throw new RuntimeException("ref with args");
+                    throw new RuntimeException("ref with args");
                 }
                 rhs = name.name + "(" + ")";
             }
