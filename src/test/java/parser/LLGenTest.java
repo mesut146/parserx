@@ -1,12 +1,10 @@
 package parser;
 
 import common.Env;
-import mesut.parserx.gen.Factor;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.VisitorGenerator;
 import mesut.parserx.gen.ll.LLRec;
-import mesut.parserx.gen.ll.Normalizer;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
 
@@ -19,7 +17,7 @@ public class LLGenTest {
     public void normalize() throws Exception {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
-        Tree tree = Tree.makeTree(Env.getResFile("factor/group.g"));
+        Tree tree = Tree.makeTree(Env.getResFile("ll/norm.g"));
         //new Normalizer(tree).normalize();
         //new Factor(tree).factorize();
         //System.out.println(tree);

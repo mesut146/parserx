@@ -29,7 +29,7 @@ public class Normalizer extends SimpleTransformer {
     @Override
     public Node transformGroup(Group node, Node parent) {
         String cls = curRule.original.name + "g" + groupCount;
-        //String varName = "g" + groupCount++;
+        String varName = "g" + groupCount;
         groupCount++;
         RuleDecl tmp = new RuleDecl(cls, node.node);
         tmp.original = curRule.original;
@@ -37,6 +37,9 @@ public class Normalizer extends SimpleTransformer {
         new Normalizer(tree) {{
             groupCount = Normalizer.this.groupCount;
         }}.transformRule(tmp);
-        return tmp.ref();
+        Name ref = tmp.ref();
+        ref.astInfo.varName = varName;
+        ref.astInfo.isGroup = true;
+        return ref;
     }
 }

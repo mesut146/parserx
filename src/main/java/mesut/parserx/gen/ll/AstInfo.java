@@ -8,6 +8,7 @@ public class AstInfo {
     public String outerCls;
     public boolean isFactor;//no assign
     public boolean factored;//epsilon
+    public boolean isGroup;
     String code;
     Node old;
     boolean isArr;
@@ -32,7 +33,7 @@ public class AstInfo {
             sb.append("factor");
         }
         else {
-            sb.append(String.format("var=%s cls=%s", varName, outerCls));
+            sb.append(String.format("var=%s cls=%s v2=%s", varName, outerCls, outerVar));
         }
         sb.append('}');
         return sb.toString();

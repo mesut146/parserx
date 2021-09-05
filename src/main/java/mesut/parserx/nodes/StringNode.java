@@ -9,7 +9,6 @@ import java.util.Objects;
 //can be in lexer or parser part
 public class StringNode extends Node {
 
-    public static boolean print_quote = true;
     public String value;
 
     public StringNode() {
@@ -25,10 +24,7 @@ public class StringNode extends Node {
 
     @Override
     public String toString() {
-        if (print_quote) {
-            return varString() + "\"" + UnicodeUtils.escapeString(value) + "\"";
-        }
-        return varString() + value.replaceAll("^\\*|[^\\\\]\\*", "x");
+        return varString() + "\"" + UnicodeUtils.escapeString(value) + "\"";
     }
 
     @Override

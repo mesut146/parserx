@@ -53,7 +53,6 @@ public class RegexBuilderTest {
     @Test
     @Ignore
     public void build() throws Exception {
-        StringNode.print_quote = false;
         //NFA nfa = NfaReader.read(Env.getResFile("fsm/comment.nfa"));
         NFA nfa = NfaReader.read(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/regex/in.nfa"));
         RegexBuilder regexBuilder = new RegexBuilder(nfa);

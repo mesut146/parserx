@@ -15,7 +15,6 @@ public class LLRec {
     CodeWriter sb = new CodeWriter(true);
     CodeWriter code = new CodeWriter(true);
     String curRule;
-    int groupCount;
     String tokens = "Tokens";
     AstGen astGen;
 
@@ -113,16 +112,17 @@ public class LLRec {
     private void prepare() throws IOException {
         tree = EbnfToBnf.combineOr(tree);
         new Normalizer(tree).normalize();
+        //System.out.println("normalized");
+        //tree.printRules();
         astGen = new AstGen(tree, options);
         astGen.genAst();
         astGen.varCount.clear();
         tree.printRules();
-        new Factor(tree).factorize();
-        tree.printRules();
+        /*new Factor(tree).factorize();
+        tree.printRules();*/
     }
 
     void gen(RuleDecl decl) {
-        groupCount = 1;
         String type = options.astClass + "." + decl.name;
         String params = "";
         int i = 0;
@@ -225,11 +225,12 @@ public class LLRec {
                     write(ch, outerVar, outerCls, flagCount, firstCount, false);
                 }
                 else {
-                    String varl = outerCls.toLowerCase() + (i + 1);
+                    //which
+                    String varl = ch.astInfo.varName;
                     String cls = Utils.camel(outerCls) + (i + 1);
-                    String type = options.astClass + "." + curRule + "." + cls;
-                    code.append(String.format("%s %s = new %s();\n", type, varl, type));
-                    code.append(String.format("%s.%s = %s;\n", outerVar, varl, varl));
+                    String type = options.astClass + "." + curRule + "." + ch.astInfo.outerCls;
+                    code.append(String.format("%s %s = new %s();", type, varl, type));
+                    code.append(String.format("%s.%s = %s;", outerVar, varl, varl));
                     write(ch, varl, cls, flagCount, firstCount, arr(ch));
                 }
                 code.append("break;");
@@ -255,7 +256,7 @@ public class LLRec {
             code.append("}");
         }
         else if (node.isGroup()) {
-            String var = "g" + groupCount++;
+            String var = node.astInfo.varName;
             String cls = curRule + var;
             String type = options.astClass + "." + curRule + "." + cls;
             code.append(String.format("%s %s = new %s();", type, var, type));
@@ -306,7 +307,7 @@ public class LLRec {
             Set<Name> set = Helper.first(node, tree, true, false, true);
             if (regex.isOptional()) {
                 if (set.size() == 1) {
-                    code.append(String.format("if(%s == %s.%s){", peekExpr(), tokens, set.iterator().next()));
+                    code.append(String.format("if(%s == %s.%s){", peekExpr(), tokens, set.iterator().next().name));
                     write(regex.node, outerVar, outerCls, flagCount, firstCount, true);
                     code.append("}");
                 }
@@ -318,7 +319,7 @@ public class LLRec {
             }
             else if (regex.isStar()) {
                 if (set.size() == 1) {
-                    code.append(String.format("while(%s == %s.%s){", peekExpr(), tokens, set.iterator().next()));
+                    code.append(String.format("while(%s == %s.%s){", peekExpr(), tokens, set.iterator().next().name));
                     write(regex.node, outerVar, outerCls, flagCount, firstCount, true);
                     code.append("}");
                 }
@@ -341,7 +342,7 @@ public class LLRec {
                     code.append("do{");
                     write(regex.node, outerVar, outerCls, flagCount, firstCount, true);
                     code.down();
-                    code.append(String.format("}while(%s == %s.%s);", peekExpr(), tokens, set.iterator().next()));
+                    code.append(String.format("}while(%s == %s.%s);", peekExpr(), tokens, set.iterator().next().name));
                 }
                 else {
                     flagCount++;
@@ -371,7 +372,7 @@ public class LLRec {
     void beginSwitch(Set<Name> set) {
         code.append("switch(" + peekExpr() + "){");
         for (Name token : set) {
-            code.append(String.format("case %s.%s:", tokens, token));
+            code.append(String.format("case %s.%s:", tokens, token.name));
         }
         code.append("{");
     }

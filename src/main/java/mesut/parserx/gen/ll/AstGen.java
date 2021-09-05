@@ -67,7 +67,9 @@ public class AstGen {
         else if (node.isName()) {
             Name name = node.asName();
             String vname = vName(name, parentClass);
-            name.astInfo.varName = vname;
+            if (name.astInfo.varName == null) {
+                name.astInfo.varName = vname;
+            }
             if (name.isToken) {
                 parent.append(String.format("public Token %s;", vname));
             }
@@ -81,18 +83,21 @@ public class AstGen {
             for (final Node ch : node.asOr()) {
                 if (ch.isEpsilon()) continue;
                 if (LLRec.isSimple(ch)) {
+                    //todo vname
+                    //ch.astInfo.varName = parentClass.toLowerCase() + num;
                     model(ch, parentClass, outerVar, parent);
                 }
                 else {
                     String clsName = Utils.camel(parentClass) + num;
+                    String v = parentClass.toLowerCase() + num;
                     parent.append(String.format("%s %s%d;", clsName, parentClass.toLowerCase(), num));
 
                     CodeWriter c = new CodeWriter(true);
                     c.append(String.format("public static class %s{", clsName));
-                    model(ch, clsName, parentClass.toLowerCase(), c);
+                    model(ch, clsName, v, c);
                     c.append("}");
                     classes.all(c.get());
-                    ch.astInfo.varName = parentClass.toLowerCase();
+                    ch.astInfo.varName = v;
                 }
                 num++;
             }
@@ -105,10 +110,15 @@ public class AstGen {
             }
             else {
                 if (ch.isName()) {
-                    String vname = vName(ch.asName(), parentClass);
+                    String vname = ch.astInfo.varName;
+                    if (vname == null) {
+                        vname = vName(ch.asName(), parentClass);
+                        ch.astInfo.varName = vname;
+                    }
+                    ch.astInfo.outerCls = parentClass;
+                    ch.astInfo.outerVar = outerVar;
                     String type = ch.asName().isToken ? "Token" : ch.asName().name;
                     parent.append(String.format("public List<%s> %s = new ArrayList<>();", type, vname));
-                    ch.astInfo.varName = vname;
                 }
                 else {
                     //group
