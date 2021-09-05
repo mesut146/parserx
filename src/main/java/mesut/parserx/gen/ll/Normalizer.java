@@ -14,7 +14,9 @@ public class Normalizer extends SimpleTransformer {
     public void normalize() {
         for (int i = 0; i < tree.rules.size(); i++) {
             groupCount = 1;
-            transformRule(tree.rules.get(i));
+            RuleDecl decl = tree.rules.get(i);
+            decl.retType = decl.ref();
+            transformRule(decl);
         }
     }
 
@@ -33,6 +35,7 @@ public class Normalizer extends SimpleTransformer {
         groupCount++;
         RuleDecl tmp = new RuleDecl(cls, node.node);
         tmp.original = curRule.original;
+        tmp.retType = tmp.ref();
         tree.addRule(tmp);
         new Normalizer(tree) {{
             groupCount = Normalizer.this.groupCount;

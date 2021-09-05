@@ -46,7 +46,7 @@ public class Helper {
     public static void first(Node node, Tree tree, boolean rec, Set<Name> set) {
         if (node.isName()) {
             Name name = node.asName();
-            if (name.astInfo.factored) return;
+            if (name.astInfo.isFactored) return;
             if (set.add(name)) {
                 if (rec && name.isRule()) {
                     first(tree.getRule(name).rhs, tree, rec, set);
@@ -88,7 +88,7 @@ public class Helper {
     public static void firstMap(Node node, Node parent, Tree tree, boolean rec, Map<Name, Integer> map) {
         if (node.isName()) {
             Name name = node.asName();
-            if (name.astInfo.factored) return;
+            if (name.astInfo.isFactored) return;
             if (map.containsKey(name)) {
                 int i = map.get(name);
                 if (i != Integer.MAX_VALUE) {//limit
@@ -136,35 +136,53 @@ public class Helper {
         }
     }
 
-    public static void follow(Name name, Tree tree, Set<Name> set) {
-        if (set.contains(name)) return;
-        for (RuleDecl rule : tree.rules) {
-            Node rhs = rule.rhs;
-            if (rhs.isSequence()) {
-                Sequence s = rhs.asSequence();
-                int i = s.indexOf(name);
-                if (i == -1) continue;
-                if (i < s.size() - 1) {
-                    Name next = (Name) s.get(i + 1);
-                    if (next.isToken) {
-                        //R: a A b
-                        //FO(A)=b
-                        set.add(next);
-                    }
-                    else {
-                        //R: a A B
-                        //FO(A)=FI(B)
-                        first(next, tree, true, set);
-                    }
+    public static List<Name> firstList(Node node, Tree tree) {
+        List<Name> list = new ArrayList<>();
+        firstList(node, tree, list);
+        return list;
+    }
+
+    public static void firstList(Node node, Tree tree, List<Name> list) {
+        //same ref
+        if (node.isName()) {
+            Name name = node.asName();
+            if (name.isToken) {
+                list.add(name);
+            }
+            else {
+                //todo recursion
+                list.add(name);
+                if (first(node, tree, false).contains(name)) {
+
                 }
                 else {
-                    //FO(B)=FO(A)
-                    //A: aB
-                    follow(rule.ref(), tree, set);
+
                 }
             }
         }
+        else if (node.isOr()) {
+            for (Node ch : node.asOr()) {
+                firstList(ch, tree, list);
+            }
+        }
+        else if (node.isSequence()) {
+            for (Node ch : node.asSequence()) {
+                firstList(ch, tree, list);
+                if (!canBeEmpty(ch, tree)) {
+                    break;
+                }
+            }
+        }
+        else if (node.isGroup()) {
+            firstList(node.asGroup().node, tree, list);
+        }
+        else if (node.isRegex()) {
+            Regex r = node.asRegex();
+            firstList(r.node, tree, list);
+
+        }
     }
+
 
     public static boolean canBeEmpty(Node node, Tree tree) {
         return canBeEmpty(node, tree, new HashSet<Name>());
@@ -172,7 +190,7 @@ public class Helper {
 
     public static boolean canBeEmpty(Node node, Tree tree, Set<Name> set) {
         if (node.isName()) {
-            if (node.asName().astInfo.factored) return true;//acts as epsilon
+            if (node.asName().astInfo.isFactored) return true;//acts as epsilon
             if (node.asName().isRule() && set.add(node.asName())) {
                 return canBeEmpty(tree.getRule(node.asName()).rhs, tree, set);
             }

@@ -28,7 +28,7 @@ public class Name extends Node {
         StringBuilder sb = new StringBuilder();
         sb.append(varString());
         sb.append(name);
-        if (astInfo.factored) {
+        if (astInfo.isFactored) {
             sb.append("(").append(name).append(")");
         }
         if (!args.isEmpty()) {

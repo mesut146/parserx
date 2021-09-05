@@ -5,10 +5,11 @@ import mesut.parserx.nodes.Node;
 public class AstInfo {
     public String varName;
     public String outerVar;
-    public String outerCls;
+    public Type outerCls;
     public boolean isFactor;//no assign
-    public boolean factored;//epsilon
+    public boolean isFactored;//epsilon
     public boolean isGroup;
+    public boolean isFactorGroup;//follows a factor
     String code;
     Node old;
     boolean isArr;
@@ -19,7 +20,7 @@ public class AstInfo {
         res.outerVar = outerVar;
         res.outerCls = outerCls;
         res.isFactor = isFactor;
-        res.factored = factored;
+        res.isFactored = isFactored;
         res.code = code;
         res.old = old;
         res.isArr = isArr;

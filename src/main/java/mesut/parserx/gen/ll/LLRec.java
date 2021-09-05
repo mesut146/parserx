@@ -109,40 +109,6 @@ public class LLRec {
         genTokenType();
     }
 
-    private void prepare() throws IOException {
-        tree = EbnfToBnf.combineOr(tree);
-        new Normalizer(tree).normalize();
-        //System.out.println("normalized");
-        //tree.printRules();
-        astGen = new AstGen(tree, options);
-        astGen.genAst();
-        astGen.varCount.clear();
-        tree.printRules();
-        /*new Factor(tree).factorize();
-        tree.printRules();*/
-    }
-
-    void gen(RuleDecl decl) {
-        String type = options.astClass + "." + decl.name;
-        String params = "";
-        int i = 0;
-        for (Name arg : decl.args) {
-            if (i > 0) params += ", ";
-            if (arg.isToken) {
-                params += "Token " + arg.name;
-            }
-            else {
-                params += arg.name + " " + arg.name;
-            }
-            i++;
-        }
-        code.append(String.format("public %s %s(%s){", type, decl.name, params));
-        code.append(String.format("%s res = new %s();", type, type));
-        write(decl.rhs, "res", type, 0, 0, false);
-        code.append("return res;");
-        code.append("}");
-    }
-
     void writeFill() {
         String s = "void fill() throws java.io.IOException{\n" +
                 "  while(true){\n" +
@@ -204,12 +170,42 @@ public class LLRec {
         return "peek().type";
     }
 
-
-    boolean arr(Node node) {
-        return node.isStar() || node.isPlus();
+    private void prepare() throws IOException {
+        tree = EbnfToBnf.combineOr(tree);
+        new Normalizer(tree).normalize();
+        //System.out.println("normalized");
+        //tree.printRules();
+        astGen = new AstGen(tree, options);
+        astGen.genAst();
+        astGen.varCount.clear();
+        tree.printRules();
+        new Factor(tree).factorize();
+        tree.printRules();
     }
 
-    void write(Node node, String outerVar, String outerCls, int flagCount, int firstCount, boolean isArr) {
+    void gen(RuleDecl decl) {
+        Type type = new Type(options.astClass, decl.retType.name);
+        String params = "";
+        int i = 0;
+        for (Name arg : decl.args) {
+            if (i > 0) params += ", ";
+            if (arg.isToken) {
+                params += "Token " + arg.name;
+            }
+            else {
+                params += arg.name + " " + arg.name;
+            }
+            i++;
+        }
+        code.append(String.format("public %s %s(%s){", type, decl.name, params));
+        code.append(String.format("%s res = new %s();", type, type));
+        write(decl.rhs, "res", type, 0, 0, false);
+        code.append("return res;");
+        code.append("}");
+    }
+
+
+    void write(Node node, String outerVar, Type outerCls, int flagCount, int firstCount, boolean isArr) {
         if (node.isOr()) {
             Or or = node.asOr();
             code.append(String.format("switch(%s){", peekExpr()));
@@ -227,11 +223,11 @@ public class LLRec {
                 else {
                     //which
                     String varl = ch.astInfo.varName;
-                    String cls = Utils.camel(outerCls) + (i + 1);
-                    String type = options.astClass + "." + curRule + "." + ch.astInfo.outerCls;
+                    Type cls = new Type(Utils.camel(outerCls.name) + (i + 1));//todo scope
+                    Type type = ch.astInfo.outerCls;
                     code.append(String.format("%s %s = new %s();", type, varl, type));
                     code.append(String.format("%s.%s = %s;", outerVar, varl, varl));
-                    write(ch, varl, cls, flagCount, firstCount, arr(ch));
+                    write(ch, varl, cls, flagCount, firstCount, ch.isStar() || ch.isPlus());
                 }
                 code.append("break;");
                 code.append("}");
@@ -256,17 +252,21 @@ public class LLRec {
             code.append("}");
         }
         else if (node.isGroup()) {
-            String var = node.astInfo.varName;
-            String cls = curRule + var;
-            String type = options.astClass + "." + curRule + "." + cls;
-            code.append(String.format("%s %s = new %s();", type, var, type));
-            if (isArr) {
-                code.append(String.format("%s.%s.add(%s);", outerVar, var, var));
+            if (!node.astInfo.isFactorGroup) {
+                String var = node.astInfo.varName;
+                Type cls = new Type(outerCls, curRule + var);
+                code.append(String.format("%s %s = new %s();", cls, var, cls));
+                if (isArr) {
+                    code.append(String.format("%s.%s.add(%s);", outerVar, var, var));
+                }
+                else {
+                    code.append(String.format("%s.%s = %s;", outerVar, var, var));
+                }
+                write(node.asGroup().node, var, cls, flagCount, firstCount, false);
             }
             else {
-                code.append(String.format("%s.%s = %s;", outerVar, var, var));
+                write(node.asGroup().node, outerVar, outerCls, flagCount, firstCount, false);
             }
-            write(node.asGroup().node, var, cls, flagCount, firstCount, false);
         }
         else if (node.isSequence()) {
             Sequence s = node.asSequence();
@@ -276,31 +276,44 @@ public class LLRec {
         }
         else if (node.isName()) {
             Name name = node.asName();
-            if (name.astInfo.factored) {
-                throw new RuntimeException("factored ref");
-            }
-            String rhs;
-            if (name.isRule()) {
-                if (!name.args.isEmpty()) {
-                    throw new RuntimeException("ref with args");
+            if (name.astInfo.isFactored) {
+                if (name.astInfo.code != null) {
+                    code.all(name.astInfo.code);
                 }
-                rhs = name.name + "(" + ")";
+                //todo factor name dynamic
+                code.append(String.format("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.name));
+                //throw new RuntimeException("factored ref");
             }
             else {
-                rhs = "consume(" + tokens + "." + name.name + ")";
-            }
-            if (name.astInfo.isFactor) {
-                String type = name.isToken ? "Token" : name.name;
-                code.append(String.format("%s %s = %s;", type, node.astInfo.varName, rhs));
-            }
-            else {
-                if (isArr) {
-                    code.append(String.format("%s.%s.add(%s);", node.astInfo.outerVar, node.astInfo.varName, rhs));
+                String rhs;
+                if (name.isRule()) {
+                    String args = "";
+                    if (!name.args.isEmpty()) {
+                        if (name.args.size() > 1) {
+                            throw new RuntimeException("more than one factor");
+                        }
+                        args = name.args.get(0).name;
+                        //throw new RuntimeException("ref with args");
+                    }
+                    rhs = name.name + "(" + args + ")";
                 }
                 else {
-                    code.append(String.format("%s.%s = %s;", node.astInfo.outerVar, node.astInfo.varName, rhs));
+                    rhs = "consume(" + tokens + "." + name.name + ")";
+                }
+                if (name.astInfo.isFactor) {
+                    String type = name.isToken ? "Token" : name.name;
+                    code.append(String.format("%s %s = %s;", type, node.astInfo.varName, rhs));
+                }
+                else {
+                    if (isArr) {
+                        code.append(String.format("%s.%s.add(%s);", node.astInfo.outerVar, node.astInfo.varName, rhs));
+                    }
+                    else {
+                        code.append(String.format("%s.%s = %s;", node.astInfo.outerVar, node.astInfo.varName, rhs));
+                    }
                 }
             }
+
         }
         else if (node.isRegex()) {
             Regex regex = node.asRegex();

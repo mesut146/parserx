@@ -9,7 +9,6 @@ import mesut.parserx.nodes.Tree;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 
 public class LLGenTest {
 
@@ -36,9 +35,8 @@ public class LLGenTest {
     }
 
     @Test
-    public void factored() throws IOException {
-        Tree tree = Env.makeRule("A: a b | B c | d e | f;\n" +
-                "B: a x | d y | x;");
+    public void factored() throws Exception {
+        Tree tree = Tree.makeTree(Env.getResFile("factor/single.g"));
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         LLRec gen = new LLRec(tree, options);

@@ -1,6 +1,7 @@
 package mesut.parserx.gen.ll;
 
 import mesut.parserx.gen.CodeWriter;
+import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.Options;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
@@ -8,6 +9,7 @@ import mesut.parserx.utils.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 //generate ast file and astinfo per node
@@ -51,12 +53,13 @@ public class AstGen {
     void model(RuleDecl decl) {
         classes = new CodeWriter(true);
         astWriter.append(String.format("public static class %s{", decl.name));
-        model(decl.rhs, decl.name, "res", astWriter);
+        Type type = new Type(options.astClass, decl.name);
+        model(decl.rhs, type, "res", astWriter);
         astWriter.all(classes.get());
         astWriter.append("}");
     }
 
-    private void model(Node node, String parentClass, String outerVar, CodeWriter parent) {
+    private void model(Node node, Type parentClass, String outerVar, CodeWriter parent) {
         node.astInfo.outerVar = outerVar;
         node.astInfo.outerCls = parentClass;
         if (node.isSequence()) {
@@ -66,15 +69,16 @@ public class AstGen {
         }
         else if (node.isName()) {
             Name name = node.asName();
-            String vname = vName(name, parentClass);
-            if (name.astInfo.varName == null) {
+            String vname = name.astInfo.varName;
+            if (vname == null) {
+                vname = vName(name, parentClass.toString());
                 name.astInfo.varName = vname;
             }
             if (name.isToken) {
                 parent.append(String.format("public Token %s;", vname));
             }
             else {
-                parent.append(String.format("public %s %s;", name, vname));
+                parent.append(String.format("public %s %s;", name.name, vname));
             }
         }
         else if (node.isOr()) {
@@ -82,18 +86,29 @@ public class AstGen {
             int num = 1;
             for (final Node ch : node.asOr()) {
                 if (ch.isEpsilon()) continue;
+                //in case of factorization pre-write some code
+                List<Name> list = Helper.firstList(ch, tree);
+                Type clsName = new Type(parentClass, Utils.camel(parentClass.name) + num);
+                String v = parentClass.name.toLowerCase() + num;
+                for (Name la : list) {
+                    String code = String.format("%s.which = %d;\n", outerVar, num);
+                    if (!LLRec.isSimple(ch)) {
+                        code += String.format("%s %s = %s.%s = new %s();", clsName, v, outerVar, v, clsName);
+                    }
+                    la.astInfo.code = code;
+                    ch.astInfo.code = code;
+                }
+
                 if (LLRec.isSimple(ch)) {
                     //todo vname
                     //ch.astInfo.varName = parentClass.toLowerCase() + num;
                     model(ch, parentClass, outerVar, parent);
                 }
                 else {
-                    String clsName = Utils.camel(parentClass) + num;
-                    String v = parentClass.toLowerCase() + num;
-                    parent.append(String.format("%s %s%d;", clsName, parentClass.toLowerCase(), num));
+                    parent.append(String.format("%s %s;", clsName.name, v));
 
                     CodeWriter c = new CodeWriter(true);
-                    c.append(String.format("public static class %s{", clsName));
+                    c.append(String.format("public static class %s{", clsName.name));
                     model(ch, clsName, v, c);
                     c.append("}");
                     classes.all(c.get());
@@ -112,7 +127,7 @@ public class AstGen {
                 if (ch.isName()) {
                     String vname = ch.astInfo.varName;
                     if (vname == null) {
-                        vname = vName(ch.asName(), parentClass);
+                        vname = vName(ch.asName(), parentClass.toString());
                         ch.astInfo.varName = vname;
                     }
                     ch.astInfo.outerCls = parentClass;
@@ -123,10 +138,10 @@ public class AstGen {
                 else {
                     //group
                     String var = "g" + groupCount++;
-                    String cls = curRule + var;
-                    parent.append(String.format("public List<%s> %s = new ArrayList<>();", cls, var));
+                    Type cls = new Type(parentClass, curRule + var);
+                    parent.append(String.format("public List<%s> %s = new ArrayList<>();", cls.name, var));
                     CodeWriter c = new CodeWriter(true);
-                    c.append("public static class " + cls + "{");
+                    c.append("public static class " + cls.name + "{");
                     model(ch.asGroup().node, cls, var, c);
                     c.append("}");
                     classes.all(c.get());
@@ -136,11 +151,11 @@ public class AstGen {
         else if (node.isGroup()) {
             Group group = node.asGroup();
             String var = "g" + groupCount++;
-            String cls = curRule + var;
-            parent.append(String.format("public %s %s;", cls, var));
+            Type cls = new Type(parentClass, curRule + var);
+            parent.append(String.format("public %s %s;", cls.name, var));
 
             CodeWriter c = new CodeWriter(true);
-            c.append("public static class " + cls + "{");
+            c.append("public static class " + cls.name + "{");
             model(group.node, cls, var, c);
             c.append("}");
             classes.all(c.get());

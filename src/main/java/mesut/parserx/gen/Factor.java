@@ -122,7 +122,7 @@ public class Factor extends SimpleTransformer {
     //A0=part doesn't start with sym
     //A1=part after sym
     public PullInfo pull(Node node, Name sym) {
-        if (sym.astInfo.factored) {
+        if (sym.astInfo.isFactored) {
             throw new RuntimeException("factored sym");
         }
         //System.out.println("pull:" + node + " sym:" + sym);
@@ -137,7 +137,7 @@ public class Factor extends SimpleTransformer {
                     name = name.copy();
                     name.astInfo = node.astInfo.copy();
                     //todo
-                    name.astInfo.factored = true;
+                    name.astInfo.isFactored = true;
                     info.one = name;
                 }
                 else {
@@ -179,6 +179,7 @@ public class Factor extends SimpleTransformer {
                     if (tmp.zero != null) {
                         RuleDecl zeroDecl = zeroName.makeRule();
                         zeroDecl.rhs = tmp.zero.normal();
+                        zeroDecl.original = name;
                         tree.addRule(zeroDecl);
                         info.zero = zeroName;
                     }
@@ -243,7 +244,7 @@ public class Factor extends SimpleTransformer {
         }
         else {
             //A empty,B starts
-            if (A.isName() && A.asName().astInfo.factored) {
+            if (A.isName() && A.asName().astInfo.isFactored) {
                 PullInfo tmp = pull(B, sym);
                 if (tmp.zero != null)
                     info.zero = Sequence.of(A, tmp.zero);
