@@ -1,5 +1,6 @@
 package mesut.parserx.gen;
 
+import mesut.parserx.gen.ll.AstInfo;
 import mesut.parserx.nodes.*;
 
 import java.util.HashMap;
@@ -12,6 +13,7 @@ public class Factor extends SimpleTransformer {
     HashMap<Name, PullInfo> cache = new HashMap<>();
     boolean modified;
     RuleDecl curRule;
+    int factorCount;
 
     public Factor(Tree tree) {
         super(tree);
@@ -52,13 +54,17 @@ public class Factor extends SimpleTransformer {
                 Set<Name> s2 = Helper.first(or.get(j), tree, true);
                 Name sym = conf(s1, s2);
                 if (sym != null) {
+                    AstInfo astInfo = sym.astInfo.copy();
                     sym = sym.copy();
+                    sym.astInfo = astInfo;
                     sym.astInfo.isFactor = true;
                     System.out.printf("factoring %s in %s\n", sym, curRule.name);
                     modified = true;
                     //todo find sym on both and set astinfo.factor=true
                     PullInfo info = pull(or, sym);
-                    Node one = Sequence.of(sym, info.one);
+                    Group g = new Group(info.one);
+                    g.astInfo.isFactorGroup = true;
+                    Node one = Sequence.of(sym, g);
                     if (info.zero == null) {
                         return one;
                     }
@@ -174,12 +180,13 @@ public class Factor extends SimpleTransformer {
 
                     RuleDecl oneDecl = oneName.makeRule();
                     oneDecl.rhs = tmp.one.normal();
+                    oneDecl.retType = name;
                     tree.addRule(oneDecl);
 
                     if (tmp.zero != null) {
                         RuleDecl zeroDecl = zeroName.makeRule();
                         zeroDecl.rhs = tmp.zero.normal();
-                        zeroDecl.original = name;
+                        zeroDecl.retType = name;
                         tree.addRule(zeroDecl);
                         info.zero = zeroName;
                     }

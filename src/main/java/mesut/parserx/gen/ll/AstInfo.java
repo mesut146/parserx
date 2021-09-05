@@ -11,8 +11,6 @@ public class AstInfo {
     public boolean isGroup;
     public boolean isFactorGroup;//follows a factor
     String code;
-    Node old;
-    boolean isArr;
 
     public AstInfo copy() {
         AstInfo res = new AstInfo();
@@ -22,8 +20,6 @@ public class AstInfo {
         res.isFactor = isFactor;
         res.isFactored = isFactored;
         res.code = code;
-        res.old = old;
-        res.isArr = isArr;
         return res;
     }
 
@@ -31,11 +27,9 @@ public class AstInfo {
     public String toString() {
         StringBuilder sb = new StringBuilder("{");
         if (isFactor) {
-            sb.append("factor");
+            sb.append("factor ");
         }
-        else {
-            sb.append(String.format("var=%s cls=%s v2=%s", varName, outerCls, outerVar));
-        }
+        sb.append(String.format("var=%s cls=%s v2=%s", varName, outerCls, outerVar));
         sb.append('}');
         return sb.toString();
     }

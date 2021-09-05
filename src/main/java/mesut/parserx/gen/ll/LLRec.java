@@ -216,7 +216,6 @@ public class LLRec {
                     code.append(String.format("case %s.%s:", tokens, la.name));
                 }
                 code.append("{");
-                code.append(String.format("%s.which = %s;", outerVar, i + 1));
                 if (isSimple(ch)) {
                     write(ch, outerVar, outerCls, flagCount, firstCount, false);
                 }
@@ -225,8 +224,8 @@ public class LLRec {
                     String varl = ch.astInfo.varName;
                     Type cls = new Type(Utils.camel(outerCls.name) + (i + 1));//todo scope
                     Type type = ch.astInfo.outerCls;
-                    code.append(String.format("%s %s = new %s();", type, varl, type));
-                    code.append(String.format("%s.%s = %s;", outerVar, varl, varl));
+                    //code.append(String.format("%s %s = new %s();", type, varl, type));
+                    //code.append(String.format("%s.%s = %s;", outerVar, varl, varl));
                     write(ch, varl, cls, flagCount, firstCount, ch.isStar() || ch.isPlus());
                 }
                 code.append("break;");
@@ -276,10 +275,10 @@ public class LLRec {
         }
         else if (node.isName()) {
             Name name = node.asName();
+            if (name.astInfo.code != null && !name.astInfo.isFactor) {
+                code.all(name.astInfo.code);
+            }
             if (name.astInfo.isFactored) {
-                if (name.astInfo.code != null) {
-                    code.all(name.astInfo.code);
-                }
                 //todo factor name dynamic
                 code.append(String.format("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.name));
                 //throw new RuntimeException("factored ref");
