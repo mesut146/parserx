@@ -3,6 +3,7 @@ package mesut.parserx.gen;
 import mesut.parserx.gen.ll.AstInfo;
 import mesut.parserx.nodes.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,7 +21,12 @@ public class Factor extends SimpleTransformer {
     }
 
     public static Name encode(Name name) {
-        return new Name(name.name + "_" + NodeList.join(name.args, "_"), false);
+        boolean t = Name.debug;
+        Name.debug = false;
+        Name res = new Name(name.name + "_" + NodeList.join(name.args, "_"), false);
+        res.args = new ArrayList<>(name.args);
+        Name.debug = t;
+        return res;
     }
 
     //return common sym in two set
@@ -285,7 +291,9 @@ public class Factor extends SimpleTransformer {
                 zero.add(ch);
             }
         }
-        info.zero = zero.normal();
+        if (zero.size() > 0) {
+            info.zero = zero.normal();
+        }
         info.one = one.normal();
         return info;
     }

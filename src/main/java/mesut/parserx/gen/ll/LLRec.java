@@ -334,11 +334,12 @@ public class LLRec {
             if (name.isRule()) {
                 String args = "";
                 if (!name.args.isEmpty()) {
-                    if (name.args.size() > 1) {
-                        throw new RuntimeException("more than one factor");
+                    for (int i = 0; i < name.args.size(); i++) {
+                        args += name.args.get(i).name;
+                        if (i < name.args.size() - 1) {
+                            args += ",";
+                        }
                     }
-                    args = name.args.get(0).name;
-                    //throw new RuntimeException("ref with args");
                 }
                 rhs = name.name + "(" + args + ")";
             }
