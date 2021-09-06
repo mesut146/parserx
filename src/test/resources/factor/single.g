@@ -7,6 +7,17 @@ B: a d | e;
 A: a (B(a) b | a(a) c) | B_no_a b;
 B(a): a(a) d;
 B_no_a: e;
+B: a B(a) | B_no_a;
+
+B B(){
+ B res;
+ switch(peek().type){
+  case a:
+   Token a = consume(a);
+   B(a);
+  case e:
+ }
+}
 
 B B(Token a){
  B res = new B();

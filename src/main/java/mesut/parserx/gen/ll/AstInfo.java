@@ -1,7 +1,5 @@
 package mesut.parserx.gen.ll;
 
-import mesut.parserx.nodes.Node;
-
 public class AstInfo {
     public String varName;
     public String outerVar;
@@ -10,7 +8,8 @@ public class AstInfo {
     public boolean isFactored;//epsilon
     public boolean isGroup;
     public boolean isFactorGroup;//follows a factor
-    String code;
+    public boolean isInLoop;
+    public String code;
 
     public AstInfo copy() {
         AstInfo res = new AstInfo();
@@ -19,6 +18,7 @@ public class AstInfo {
         res.outerCls = outerCls;
         res.isFactor = isFactor;
         res.isFactored = isFactored;
+        res.isInLoop = isInLoop;
         res.code = code;
         return res;
     }
@@ -30,6 +30,9 @@ public class AstInfo {
             sb.append("factor ");
         }
         sb.append(String.format("var=%s cls=%s v2=%s", varName, outerCls, outerVar));
+        if (code != null) {
+            sb.append(" code=").append(code.replace("\n", "\\n"));
+        }
         sb.append('}');
         return sb.toString();
     }

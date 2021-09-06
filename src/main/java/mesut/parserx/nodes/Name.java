@@ -6,6 +6,7 @@ import java.util.Objects;
 //rule or token symbol
 public class Name extends Node {
 
+    public static boolean debug = false;
     public String name;
     public boolean isToken;
     public ArrayList<Name> args = new ArrayList<>();
@@ -34,7 +35,8 @@ public class Name extends Node {
         if (!args.isEmpty()) {
             sb.append("(").append(NodeList.join(args, ", ")).append(")");
         }
-        sb.append(astInfo);
+        if (debug)
+            sb.append(astInfo);
         return sb.toString();
     }
 

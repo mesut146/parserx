@@ -8,7 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 
-// la(1) recursive descent parser generator
+// ll(1) recursive descent parser generator
 public class LLRec {
     public Options options;
     Tree tree;
@@ -17,6 +17,8 @@ public class LLRec {
     String curRule;
     String tokens = "Tokens";
     AstGen astGen;
+    int flagCount;
+    int firstCount;
 
     public LLRec(Tree tree, Options options) {
         this.tree = tree;
@@ -181,203 +183,228 @@ public class LLRec {
         tree.printRules();
         new Factor(tree).factorize();
         tree.printRules();
+
+        new LexerGenerator(tree, options).generate();
     }
 
     void gen(RuleDecl decl) {
         Type type = new Type(options.astClass, decl.retType.name);
-        String params = "";
+        StringBuilder params = new StringBuilder();
         int i = 0;
         for (Name arg : decl.args) {
-            if (i > 0) params += ", ";
+            if (i > 0) params.append(", ");
             if (arg.isToken) {
-                params += "Token " + arg.name;
+                params.append("Token ").append(arg.name);
             }
             else {
-                params += arg.name + " " + arg.name;
+                params.append(arg.name).append(" ").append(arg.name);
             }
             i++;
         }
         code.append(String.format("public %s %s(%s){", type, decl.name, params));
         code.append(String.format("%s res = new %s();", type, type));
-        write(decl.rhs, "res", type, 0, 0, false);
+        flagCount = 0;
+        firstCount = 0;
+
+        write(decl.rhs);
+
         code.append("return res;");
         code.append("}");
     }
 
 
-    void write(Node node, String outerVar, Type outerCls, int flagCount, int firstCount, boolean isArr) {
+    void write(Node node) {
+        if (node.astInfo.code != null && !node.astInfo.isFactor) {
+            code.all(node.astInfo.code);
+        }
         if (node.isOr()) {
             Or or = node.asOr();
-            code.append(String.format("switch(%s){", peekExpr()));
-            for (int i = 0; i < or.size(); i++) {
-                Node ch = or.get(i);
-                Set<Name> set = Helper.first(ch, tree, true, false, true);
-                for (Name la : set) {
-                    code.append(String.format("case %s.%s:", tokens, la.name));
-                }
-                code.append("{");
-                if (isSimple(ch)) {
-                    write(ch, outerVar, outerCls, flagCount, firstCount, false);
-                }
-                else {
-                    //which
-                    String varl = ch.astInfo.varName;
-                    Type cls = new Type(Utils.camel(outerCls.name) + (i + 1));//todo scope
-                    Type type = ch.astInfo.outerCls;
-                    //code.append(String.format("%s %s = new %s();", type, varl, type));
-                    //code.append(String.format("%s.%s = %s;", outerVar, varl, varl));
-                    write(ch, varl, cls, flagCount, firstCount, ch.isStar() || ch.isPlus());
-                }
-                code.append("break;");
-                code.append("}");
-            }
-            if (!Helper.canBeEmpty(node, tree)) {
-                code.append("default:{");
-                StringBuilder arr = new StringBuilder();
-                boolean first = true;
-                for (Name nm : Helper.first(or, tree, true)) {
-                    if (!first) {
-                        arr.append(",");
-                    }
-                    arr.append(nm);
-                    first = false;
-                }
-                code.append(String.format("throw new RuntimeException(\"expecting one of [%s] got: \"+peek());", arr));
-                code.append("}");
-            }
-            else {
-
-            }
-            code.append("}");
+            writeOr(or);
         }
         else if (node.isGroup()) {
-            if (!node.astInfo.isFactorGroup) {
-                String var = node.astInfo.varName;
-                Type cls = new Type(outerCls, curRule + var);
-                code.append(String.format("%s %s = new %s();", cls, var, cls));
-                if (isArr) {
-                    code.append(String.format("%s.%s.add(%s);", outerVar, var, var));
-                }
-                else {
-                    code.append(String.format("%s.%s = %s;", outerVar, var, var));
-                }
-                write(node.asGroup().node, var, cls, flagCount, firstCount, false);
-            }
-            else {
-                write(node.asGroup().node, outerVar, outerCls, flagCount, firstCount, false);
-            }
+            Group group = node.asGroup();
+            writeGroup(node, group);
         }
         else if (node.isSequence()) {
             Sequence s = node.asSequence();
             for (int i = 0; i < s.size(); i++) {
-                write(s.get(i), outerVar, outerCls, flagCount, firstCount, false);
+                write(s.get(i));
             }
         }
         else if (node.isName()) {
             Name name = node.asName();
-            if (name.astInfo.code != null && !name.astInfo.isFactor) {
-                code.all(name.astInfo.code);
-            }
-            if (name.astInfo.isFactored) {
-                //todo factor name dynamic
-                code.append(String.format("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.name));
-                //throw new RuntimeException("factored ref");
-            }
-            else {
-                String rhs;
-                if (name.isRule()) {
-                    String args = "";
-                    if (!name.args.isEmpty()) {
-                        if (name.args.size() > 1) {
-                            throw new RuntimeException("more than one factor");
-                        }
-                        args = name.args.get(0).name;
-                        //throw new RuntimeException("ref with args");
-                    }
-                    rhs = name.name + "(" + args + ")";
-                }
-                else {
-                    rhs = "consume(" + tokens + "." + name.name + ")";
-                }
-                if (name.astInfo.isFactor) {
-                    String type = name.isToken ? "Token" : name.name;
-                    code.append(String.format("%s %s = %s;", type, node.astInfo.varName, rhs));
-                }
-                else {
-                    if (isArr) {
-                        code.append(String.format("%s.%s.add(%s);", node.astInfo.outerVar, node.astInfo.varName, rhs));
-                    }
-                    else {
-                        code.append(String.format("%s.%s = %s;", node.astInfo.outerVar, node.astInfo.varName, rhs));
-                    }
-                }
-            }
-
+            writeName(name);
         }
         else if (node.isRegex()) {
             Regex regex = node.asRegex();
-            Set<Name> set = Helper.first(node, tree, true, false, true);
-            if (regex.isOptional()) {
-                if (set.size() == 1) {
-                    code.append(String.format("if(%s == %s.%s){", peekExpr(), tokens, set.iterator().next().name));
-                    write(regex.node, outerVar, outerCls, flagCount, firstCount, true);
-                    code.append("}");
-                }
-                else {
-                    beginSwitch(set);
-                    write(regex.node, outerVar, outerCls, flagCount, firstCount, false);
-                    endSwitch("");
-                }
-            }
-            else if (regex.isStar()) {
-                if (set.size() == 1) {
-                    code.append(String.format("while(%s == %s.%s){", peekExpr(), tokens, set.iterator().next().name));
-                    write(regex.node, outerVar, outerCls, flagCount, firstCount, true);
-                    code.append("}");
-                }
-                else {
-                    flagCount++;
-                    String flagStr = "flag";
-                    if (flagCount > 1) flagStr += flagCount;
-                    code.append(String.format("boolean %s = true;", flagStr));
-                    code.append(String.format("while(%s){", flagStr));
-                    String def = flagStr + " = false;\n";
-                    beginSwitch(set);
-                    write(regex.node, outerVar, outerCls, flagCount, firstCount, true);
-                    endSwitch(def);
-                    code.append("}");
-                }
-            }
-            else {
-                //plus
-                if (set.size() == 1) {
-                    code.append("do{");
-                    write(regex.node, outerVar, outerCls, flagCount, firstCount, true);
-                    code.down();
-                    code.append(String.format("}while(%s == %s.%s);", peekExpr(), tokens, set.iterator().next().name));
-                }
-                else {
-                    flagCount++;
-                    firstCount++;
-                    String flagStr = "flag";
-                    String firstStr = "first";
-                    if (flagCount > 1) flagStr += flagCount;
-                    if (firstCount > 1) firstStr += firstCount;
-                    code.append(String.format("boolean %s = true;", flagStr));
-                    code.append(String.format("boolean %s = true;", firstStr));
-                    code.append(String.format("while(%s){", flagStr));
-                    String def = String.format("if(!%s)  %s = false;\n" + "else  throw new RuntimeException(\"unexpected token: \"+peek());", firstStr, flagStr);
-                    beginSwitch(set);
-                    write(regex.node, outerVar, outerCls, flagCount, firstCount, true);
-                    endSwitch(def);
-                    code.append("first = false;\n");
-                    code.append("}");
-                }
-            }
+            writeRegex(regex);
         }
         else if (!node.isEpsilon()) {
             throw new RuntimeException("unexpected " + node);
         }
+    }
+
+    private void writeRegex(Regex regex) {
+        Set<Name> set = Helper.first(regex, tree, true, false, true);
+        regex.node.astInfo.isInLoop = regex.isStar() || regex.isPlus();
+        if (regex.isOptional()) {
+            if (set.size() == 1) {
+                code.append(String.format("if(%s == %s.%s){", peekExpr(), tokens, set.iterator().next().name));
+                write(regex.node);
+                code.append("}");
+            }
+            else {
+                beginSwitch(set);
+                write(regex.node);
+                endSwitch("");
+            }
+        }
+        else if (regex.isStar()) {
+            if (set.size() == 1) {
+                code.append(String.format("while(%s == %s.%s){", peekExpr(), tokens, set.iterator().next().name));
+                write(regex.node);
+                code.append("}");
+            }
+            else {
+                flagCount++;
+                String flagStr = "flag";
+                if (flagCount > 1) flagStr += flagCount;
+                code.append(String.format("boolean %s = true;", flagStr));
+                code.append(String.format("while(%s){", flagStr));
+                String def = flagStr + " = false;\n";
+                beginSwitch(set);
+                write(regex.node);
+                endSwitch(def);
+                code.append("}");
+            }
+        }
+        else {
+            //plus
+            if (set.size() == 1) {
+                code.append("do{");
+                write(regex.node);
+                code.down();
+                code.append(String.format("}while(%s == %s.%s);", peekExpr(), tokens, set.iterator().next().name));
+            }
+            else {
+                flagCount++;
+                firstCount++;
+                String flagStr = "flag";
+                String firstStr = "first";
+                if (flagCount > 1) flagStr += flagCount;
+                if (firstCount > 1) firstStr += firstCount;
+                code.append(String.format("boolean %s = true;", flagStr));
+                code.append(String.format("boolean %s = true;", firstStr));
+                code.append(String.format("while(%s){", flagStr));
+                String def = String.format("if(!%s)  %s = false;\n" + "else  throw new RuntimeException(\"unexpected token: \"+peek());", firstStr, flagStr);
+                beginSwitch(set);
+                write(regex.node);
+                endSwitch(def);
+                code.append("first = false;\n");
+                code.append("}");
+            }
+        }
+    }
+
+    private void writeName(Name name) {
+//        if (name.astInfo.code != null && !name.astInfo.isFactor) {
+//            code.all(name.astInfo.code);
+//        }
+        if (name.astInfo.isFactored) {
+            //todo factor name dynamic
+            //naming?
+            if (name.astInfo.isInLoop) {
+                code.append(String.format("%s.%s.add(%s);", name.astInfo.outerVar, name.astInfo.varName, name.name));
+            }
+            else {
+                code.append(String.format("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.name));
+            }
+            //throw new RuntimeException("factored ref");
+        }
+        else {
+            String rhs;
+            if (name.isRule()) {
+                String args = "";
+                if (!name.args.isEmpty()) {
+                    if (name.args.size() > 1) {
+                        throw new RuntimeException("more than one factor");
+                    }
+                    args = name.args.get(0).name;
+                    //throw new RuntimeException("ref with args");
+                }
+                rhs = name.name + "(" + args + ")";
+            }
+            else {
+                rhs = "consume(" + tokens + "." + name.name + ")";
+            }
+            if (name.astInfo.isFactor) {
+                String type = name.isToken ? "Token" : name.name;
+                code.append(String.format("%s %s = %s;", type, name.astInfo.varName, rhs));
+            }
+            else {
+                if (name.astInfo.isInLoop) {
+                    code.append(String.format("%s.%s.add(%s);", name.astInfo.outerVar, name.astInfo.varName, rhs));
+                }
+                else {
+                    code.append(String.format("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, rhs));
+                }
+            }
+        }
+    }
+
+    private void writeGroup(Node node, Group group) {
+        if (!node.astInfo.isFactorGroup) {
+            String var = group.astInfo.varName;
+            code.append(String.format("%s %s = new %s();", group.astInfo.outerCls, var, group.astInfo.outerCls));
+            if (group.astInfo.isInLoop) {
+                code.append(String.format("%s.%s.add(%s);", group.astInfo.outerVar, var, var));
+            }
+            else {
+                code.append(String.format("%s.%s = %s;", group.astInfo.outerVar, var, var));
+            }
+            write(group.node);
+        }
+        else {
+            write(group.node);
+        }
+    }
+
+    private void writeOr(Or or) {
+        code.append(String.format("switch(%s){", peekExpr()));
+        for (int i = 0; i < or.size(); i++) {
+            Node ch = or.get(i);
+            Set<Name> set = Helper.first(ch, tree, true, false, true);
+            for (Name la : set) {
+                code.append(String.format("case %s.%s:", tokens, la.name));
+            }
+            code.append("{");
+            if (isSimple(ch)) {
+                write(ch);
+            }
+            else {
+                //which
+                //Type cls = new Type(outerCls, Utils.camel(outerCls.name) + (i + 1));//todo scope
+                // ch.isStar() || ch.isPlus()
+                write(ch);
+            }
+            code.append("break;");
+            code.append("}");
+        }
+        if (!Helper.canBeEmpty(or, tree)) {
+            code.append("default:{");
+            StringBuilder arr = new StringBuilder();
+            boolean first = true;
+            for (Name nm : Helper.first(or, tree, true)) {
+                if (!first) {
+                    arr.append(",");
+                }
+                arr.append(nm);
+                first = false;
+            }
+            code.append(String.format("throw new RuntimeException(\"expecting one of [%s] got: \"+peek());", arr));
+            code.append("}");
+        }
+        code.append("}");
     }
 
 

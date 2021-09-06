@@ -90,14 +90,15 @@ public class AstGen {
                 List<Name> list = Helper.firstList(ch, tree);
                 Type clsName = new Type(parentClass, Utils.camel(parentClass.name) + num);
                 String v = parentClass.name.toLowerCase() + num;
-                for (Name la : list) {
-                    String code = String.format("%s.which = %d;\n", outerVar, num);
-                    if (!LLRec.isSimple(ch)) {
-                        code += String.format("%s %s = %s.%s = new %s();", clsName, v, outerVar, v, clsName);
-                    }
-                    la.astInfo.code = code;
-                    ch.astInfo.code = code;
+
+                String code = String.format("%s.which = %d;\n", outerVar, num);
+                if (!LLRec.isSimple(ch)) {
+                    code += String.format("%s %s = %s.%s = new %s();", clsName, v, outerVar, v, clsName);
                 }
+                ch.astInfo.code = code;
+                /*for (Name la : list) {
+                    //la.astInfo.code = code;
+                }*/
 
                 if (LLRec.isSimple(ch)) {
                     //todo vname
@@ -124,6 +125,7 @@ public class AstGen {
                 model(ch, parentClass, outerVar, parent);
             }
             else {
+                ch.astInfo.isInLoop = true;
                 if (ch.isName()) {
                     String vname = ch.astInfo.varName;
                     if (vname == null) {
@@ -152,6 +154,7 @@ public class AstGen {
             Group group = node.asGroup();
             String var = "g" + groupCount++;
             Type cls = new Type(parentClass, curRule + var);
+            group.astInfo.varName = var;
             parent.append(String.format("public %s %s;", cls.name, var));
 
             CodeWriter c = new CodeWriter(true);

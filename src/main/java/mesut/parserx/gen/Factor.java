@@ -58,6 +58,7 @@ public class Factor extends SimpleTransformer {
                     sym = sym.copy();
                     sym.astInfo = astInfo;
                     sym.astInfo.isFactor = true;
+                    sym.astInfo.code = null;
                     System.out.printf("factoring %s in %s\n", sym, curRule.name);
                     modified = true;
                     //todo find sym on both and set astinfo.factor=true
@@ -181,22 +182,24 @@ public class Factor extends SimpleTransformer {
                     RuleDecl oneDecl = oneName.makeRule();
                     oneDecl.rhs = tmp.one.normal();
                     oneDecl.retType = name;
+                    //oneDecl.isSplit = true;
                     tree.addRule(oneDecl);
 
                     if (tmp.zero != null) {
                         RuleDecl zeroDecl = zeroName.makeRule();
                         zeroDecl.rhs = tmp.zero.normal();
                         zeroDecl.retType = name;
+                        //zeroDecl.isSplit = true;
                         tree.addRule(zeroDecl);
                         info.zero = zeroName;
                     }
                     //replace old
-                    if (tmp.zero != null) {
+                    /*if (tmp.zero != null) {
                         decl.rhs = new Or(Sequence.of(sym, oneName), zeroName);
                     }
                     else {
                         decl.rhs = Sequence.of(sym, oneName);
-                    }
+                    }*/
                 }
             }
         }
@@ -253,8 +256,9 @@ public class Factor extends SimpleTransformer {
             //A empty,B starts
             if (A.isName() && A.asName().astInfo.isFactored) {
                 PullInfo tmp = pull(B, sym);
-                if (tmp.zero != null)
+                if (tmp.zero != null) {
                     info.zero = Sequence.of(A, tmp.zero);
+                }
                 info.one = Sequence.of(A, tmp.one);
             }
             else {

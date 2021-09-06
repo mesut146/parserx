@@ -36,7 +36,7 @@ public class LLGenTest {
 
     @Test
     public void factored() throws Exception {
-        Tree tree = Tree.makeTree(Env.getResFile("factor/single.g"));
+        Tree tree = Tree.makeTree(Env.getResFile("factor/list.g"));
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         LLRec gen = new LLRec(tree, options);
