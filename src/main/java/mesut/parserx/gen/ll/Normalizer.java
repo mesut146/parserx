@@ -42,7 +42,6 @@ public class Normalizer extends SimpleTransformer {
         }}.transformRule(tmp);
         Name ref = tmp.ref();
         ref.astInfo.varName = varName;
-        ref.astInfo.isGroup = true;
         return ref;
     }
 }

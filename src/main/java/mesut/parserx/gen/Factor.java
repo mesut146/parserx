@@ -58,7 +58,7 @@ public class Factor extends SimpleTransformer {
                     sym = sym.copy();
                     sym.astInfo = astInfo;
                     sym.astInfo.isFactor = true;
-                    sym.astInfo.code = null;
+                    //sym.astInfo.code = null;
                     System.out.printf("factoring %s in %s\n", sym, curRule.name);
                     modified = true;
                     //todo find sym on both and set astinfo.factor=true
@@ -141,10 +141,11 @@ public class Factor extends SimpleTransformer {
             Name name = node.asName();
             if (name.equals(sym)) {
                 if (keepFactor) {
+                    AstInfo astInfo = node.astInfo.copy();
                     name = name.copy();
-                    name.astInfo = node.astInfo.copy();
-                    //todo
+                    name.astInfo = astInfo;
                     name.astInfo.isFactored = true;
+                    //todo
                     info.one = name;
                 }
                 else {
@@ -229,23 +230,15 @@ public class Factor extends SimpleTransformer {
         if (Helper.start(A, sym, tree)) {
             PullInfo p1 = pull(A, sym);
             if (Helper.canBeEmpty(A, tree)) {
+                //A B = A_noe B | B
                 Node no = new Epsilons(tree).trim(A);
-                if (Helper.start(B, sym, tree)) {
-                    //A B = A_noe B | B
-                    return pull(new Or(Sequence.of(no, B), B), sym);
-                }
-                else {
-                    //A B = (sym A1 | A0) B = sym A1 B | A0 B
-                    //A B = A_eps B | B = sym A_eps(sym) B | A_eps_no_sym | B
-                    return pull(new Or(Sequence.of(no, B), B), sym);
-                    //info.zero = Sequence.of(p1.zero, B);
-                    //info.one = Sequence.of(p1.one, B);
-                }
+                Sequence se = new Sequence(no, B);
+                info = pull(new Or(se, B), sym);
             }
             else {
                 //A no empty
                 //(a A1 | A0) B
-                //E1: A1 B , E0: A0 B
+                //a A1 B | A0 B
                 if (p1.zero != null) {
                     info.zero = makeSeq(p1.zero, B);
                 }
@@ -264,9 +257,13 @@ public class Factor extends SimpleTransformer {
             else {
                 //A B=A_noe B | B
                 Node no = new Epsilons(tree).trim(A);
-                return pull(new Or(Sequence.of(no, B), B), sym);
+                info = pull(new Or(Sequence.of(no, B), B), sym);
             }
         }
+        /*if (info.zero != null) {
+            info.zero.astInfo.code = s.astInfo.code;
+        }
+        info.one.astInfo.code = s.astInfo.code;*/
         return info;
     }
 

@@ -7,6 +7,7 @@ import mesut.parserx.utils.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
+import java.util.Stack;
 
 // ll(1) recursive descent parser generator
 public class LLRec {
@@ -19,6 +20,7 @@ public class LLRec {
     AstGen astGen;
     int flagCount;
     int firstCount;
+    Stack<Boolean> choiceWrote = new Stack<>();
 
     public LLRec(Tree tree, Options options) {
         this.tree = tree;
@@ -214,9 +216,6 @@ public class LLRec {
 
 
     void write(Node node) {
-        if (node.astInfo.code != null && !node.astInfo.isFactor) {
-            code.all(node.astInfo.code);
-        }
         if (node.isOr()) {
             Or or = node.asOr();
             writeOr(or);
@@ -227,9 +226,11 @@ public class LLRec {
         }
         else if (node.isSequence()) {
             Sequence s = node.asSequence();
+            choiceWrote.push(false);
             for (int i = 0; i < s.size(); i++) {
                 write(s.get(i));
             }
+            choiceWrote.pop();
         }
         else if (node.isName()) {
             Name name = node.asName();
@@ -307,9 +308,16 @@ public class LLRec {
     }
 
     private void writeName(Name name) {
-//        if (name.astInfo.code != null && !name.astInfo.isFactor) {
-//            code.all(name.astInfo.code);
-//        }
+        if (name.astInfo.code != null && !name.astInfo.isFactor) {
+            if (choiceWrote.isEmpty()) {
+                code.all(name.astInfo.code);
+            }
+            else if (!choiceWrote.peek()) {
+                code.all(name.astInfo.code);
+                choiceWrote.pop();
+                choiceWrote.push(true);
+            }
+        }
         if (name.astInfo.isFactored) {
             //todo factor name dynamic
             //naming?

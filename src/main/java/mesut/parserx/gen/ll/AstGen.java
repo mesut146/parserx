@@ -87,7 +87,6 @@ public class AstGen {
             for (final Node ch : node.asOr()) {
                 if (ch.isEpsilon()) continue;
                 //in case of factorization pre-write some code
-                List<Name> list = Helper.firstList(ch, tree);
                 Type clsName = new Type(parentClass, Utils.camel(parentClass.name) + num);
                 String v = parentClass.name.toLowerCase() + num;
 
@@ -96,9 +95,10 @@ public class AstGen {
                     code += String.format("%s %s = %s.%s = new %s();", clsName, v, outerVar, v, clsName);
                 }
                 ch.astInfo.code = code;
-                /*for (Name la : list) {
-                    //la.astInfo.code = code;
-                }*/
+                List<Name> list = Helper.firstList(ch, tree);
+                for (Name la : list) {
+                    la.astInfo.code = code;
+                }
 
                 if (LLRec.isSimple(ch)) {
                     //todo vname

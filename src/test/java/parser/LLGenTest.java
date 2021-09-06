@@ -5,6 +5,7 @@ import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.VisitorGenerator;
 import mesut.parserx.gen.ll.LLRec;
+import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
 
@@ -40,6 +41,7 @@ public class LLGenTest {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         LLRec gen = new LLRec(tree, options);
+        Name.debug = true;
         gen.gen();
     }
 

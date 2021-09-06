@@ -36,9 +36,6 @@ public class Or extends NodeList {
         boolean simp = isSimple();
         for (Iterator<Node> it = list.iterator(); it.hasNext(); ) {
             Node node = it.next();
-            if (node.astInfo.code != null) {
-                sb.append(" code ");
-            }
             sb.append(node);
             if (node.label != null) {
                 sb.append(" #").append(node.label);
@@ -65,14 +62,10 @@ public class Or extends NodeList {
 
     public Node normal() {
         normalCh();
-        if (size() == 0) {
-            return null;
-        }
         if (size() == 1) {
             return first().normal();
         }
         Or s = new Or();
-        s.astInfo = astInfo;
         for (Node ch : this) {
             if (ch.isOr()) {
                 s.addAll(ch.asOr().list);

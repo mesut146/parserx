@@ -6,7 +6,6 @@ public class AstInfo {
     public Type outerCls;
     public boolean isFactor;//no assign
     public boolean isFactored;//epsilon
-    public boolean isGroup;
     public boolean isFactorGroup;//follows a factor
     public boolean isInLoop;
     public String code;
@@ -31,7 +30,7 @@ public class AstInfo {
         }
         sb.append(String.format("var=%s cls=%s v2=%s", varName, outerCls, outerVar));
         if (code != null) {
-            sb.append(" code=").append(code.replace("\n", "\\n"));
+            sb.append(" code");
         }
         sb.append('}');
         return sb.toString();

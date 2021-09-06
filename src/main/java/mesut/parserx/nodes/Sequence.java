@@ -30,9 +30,6 @@ public class Sequence extends NodeList {
         if (size() == 1) {
             return first();
         }
-        if (size() == 0) {
-            throw new RuntimeException();
-        }
         Sequence s = new Sequence();
         for (Node ch : this) {
             if (ch.isSequence()) {
