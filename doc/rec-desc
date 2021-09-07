@@ -1,38 +1,6 @@
 Normalizer
 AstGen, gen AstInfo
+left direct
 Factor, modify AstInfo
-Left, modify AstInfo
+Left indirect, modify AstInfo
 LLRec
-
-------group
-A: (a | b) c;
-
-class A{
-  Ag1 g1;
-  Token c;
-
-  class Ag1{
-    int which;
-    Token a;
-    Token b;
-  }
-}
-
-A A(){
-  A res = new A();
-  Ag1 g1 = new Ag1();
-  res.g1 = g1;
-  switch(peek()){
-    case a:
-      g1.a = consume(a);
-    case b:
-      g1.b = consume(b);
-    default:
-      throw err;
-  }
-  return res;
-}
-
-
------group
-A: (a | b)+ c;

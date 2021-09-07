@@ -58,6 +58,7 @@ public class Name extends Node {
     public Name copy() {
         Name res = new Name(name, isToken);
         res.args = new ArrayList<>(args);
+        res.astInfo = astInfo.copy();
         return res;
     }
 

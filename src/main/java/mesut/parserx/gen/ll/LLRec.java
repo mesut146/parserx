@@ -21,7 +21,6 @@ public class LLRec {
     AstGen astGen;
     int flagCount;
     int firstCount;
-    boolean hasFactor;
     Stack<Boolean> choiceWrote = new Stack<>();
 
     public LLRec(Tree tree, Options options) {
@@ -52,21 +51,6 @@ public class LLRec {
                     }
                 }
                 return or;
-            }
-
-            @Override
-            public Node transformSequence(Sequence s, Node parent) {
-                Node A = s.first();
-                if (Helper.canBeEmpty(A, tree)) {
-                    Node B = Helper.trim(s);
-                    List<Name> s1 = Helper.firstList(A, tree);
-                    List<Name> s2 = Helper.firstList(B, tree);
-                    List<Name> sym = Factor.common(s1, s2);
-                    if (sym != null) {
-                        throw new RuntimeException("factorization needed for " + curRule.name);
-                    }
-                }
-                return s;
             }
         }.transformAll();
     }
@@ -157,14 +141,13 @@ public class LLRec {
             c.append("");
         }
         c.append("public class " + tokens + "{");
-
+        c.append("public static final int EOF = 0;");
         int id = 1;
         for (TokenDecl decl : tree.tokens) {
             if (decl.isSkip) continue;
             c.append(String.format("public static final int %s = %d;", decl.name, id));
             id++;
         }
-
         c.append("}");
         File file = new File(options.outDir, tokens + ".java");
         Utils.write(c.get(), file);
@@ -218,6 +201,9 @@ public class LLRec {
 
 
     void write(Node node) {
+        if (node.astInfo.code != null) {
+            code.all(node.astInfo.code);
+        }
         if (node.isOr()) {
             Or or = node.asOr();
             writeOr(or);
@@ -232,7 +218,6 @@ public class LLRec {
             for (int i = 0; i < s.size(); i++) {
                 write(s.get(i));
             }
-            choiceWrote.pop();
         }
         else if (node.isName()) {
             Name name = node.asName();
@@ -310,15 +295,8 @@ public class LLRec {
     }
 
     private void writeName(Name name) {
-        if (name.astInfo.code != null && !name.astInfo.isFactor) {
-            if (choiceWrote.isEmpty()) {
-                code.all(name.astInfo.code);
-            }
-            else if (!choiceWrote.peek()) {
-                code.all(name.astInfo.code);
-                choiceWrote.pop();
-                choiceWrote.push(true);
-            }
+        if (name.astInfo.isFactored && name.astInfo.isFactor) {
+            return;
         }
         if (name.astInfo.isFactored) {
             if (name.astInfo.isInLoop) {
@@ -379,26 +357,38 @@ public class LLRec {
 
     private void writeOr(Or or) {
         code.append(String.format("switch(%s){", peekExpr()));
+        Node empty = null;
         for (int i = 0; i < or.size(); i++) {
-            Node ch = or.get(i);
+            final Node ch = or.get(i);
             Set<Name> set = Helper.first(ch, tree, true, false, true);
-            for (Name la : set) {
-                code.append(String.format("case %s.%s:", tokens, la.name));
-            }
-            code.append("{");
-            if (isSimple(ch)) {
-                write(ch);
+            if (!set.isEmpty()) {
+                for (Name la : set) {
+                    code.append(String.format("case %s.%s:", tokens, la.name));
+                }
+                code.append("{");
+                if (isSimple(ch)) {
+                    write(ch);
+                }
+                else {
+                    //which
+                    write(ch);
+                }
+                code.append("break;");
+                code.append("}");
+                if (Helper.canBeEmpty(ch, tree)) {
+                    empty = ch;
+                }
             }
             else {
-                //which
-                //Type cls = new Type(outerCls, Utils.camel(outerCls.name) + (i + 1));//todo scope
-                // ch.isStar() || ch.isPlus()
-                write(ch);
+                empty = ch;
             }
-            code.append("break;");
+        }
+        if (empty != null) {
+            code.append("default:{");
+            write(empty);
             code.append("}");
         }
-        if (!Helper.canBeEmpty(or, tree)) {
+        else if (!Helper.canBeEmpty(or, tree)) {
             code.append("default:{");
             StringBuilder arr = new StringBuilder();
             boolean first = true;

@@ -1,5 +1,6 @@
 include "../common.g"
 
+//two factor two rule
 A: a b | B c | d e | f;
 B: a x | d y | x;
 
@@ -61,13 +62,6 @@ A A(){
 A: a b | B b | d e | C c | f;
 B: a x | x;
 C: d x | x;
-
-//diff ref same factor
-A: a b | B b | C c | f;
-B: a x | x;
-C: a y | y;
-
-
 
 
 */

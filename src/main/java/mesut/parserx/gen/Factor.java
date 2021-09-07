@@ -1,17 +1,19 @@
 package mesut.parserx.gen;
 
-import mesut.parserx.gen.ll.AstInfo;
 import mesut.parserx.nodes.*;
+import mesut.parserx.utils.CountingMap2;
 
 import java.util.*;
 
 public class Factor extends SimpleTransformer {
 
     public static boolean keepFactor = true;
+    public static boolean debug = false;
+    public static boolean factorSequence = true;
     HashMap<Name, PullInfo> cache = new HashMap<>();
     boolean modified;
     RuleDecl curRule;
-    Map<Name, Integer> factorCount = new HashMap<>();
+    CountingMap2<RuleDecl, Name> factorCount = new CountingMap2<>();
 
     public Factor(Tree tree) {
         super(tree);
@@ -107,16 +109,7 @@ public class Factor extends SimpleTransformer {
     }
 
     String factorName(Name sym) {
-        if (factorCount.containsKey(sym)) {
-            int i = factorCount.get(sym);
-            i++;
-            factorCount.put(sym, i);
-            return sym + "f" + i;
-        }
-        else {
-            factorCount.put(sym, 1);
-            return sym + "f1";
-        }
+        return sym.name + "f" + factorCount.get(curRule, sym);
     }
 
     //factor or
@@ -135,14 +128,22 @@ public class Factor extends SimpleTransformer {
                 List<Name> s2 = Helper.firstList(or.get(j), tree);
                 List<Name> symList = common(s1, s2);
                 if (symList != null) {
-                    Name sym = symList.get(i);
-                    //AstInfo astInfo = sym.astInfo.copy();//todo why?
+                    Name sym = symList.get(0);
                     sym = sym.copy();
                     sym.astInfo.isFactor = true;
                     sym.astInfo.factorName = factorName(sym);
-                    System.out.printf("factoring %s in %s\n", sym, curRule.name);
+                    if (debug)
+                        System.out.printf("factoring %s in %s\n", sym, curRule.name);
                     modified = true;
-                    PullInfo info = pull(or, sym);
+                    PullInfo info = pullOr(or, sym);
+                    /*if (info.one.isOr()) {
+                        for (Node ch : info.one.asOr()) {
+                            ch.astInfo.code = or.get(i).astInfo.code;
+                        }
+                    }
+                    else {
+                        info.one.astInfo.code = or.get(i).astInfo.code;
+                    }*/
                     Group g = new Group(info.one);
                     g.astInfo.isFactorGroup = true;
                     Node one = Sequence.of(sym, g);
@@ -162,6 +163,9 @@ public class Factor extends SimpleTransformer {
     @Override
     public Node transformSequence(Sequence s, Node parent) {
         Node node = super.transformSequence(s, parent);
+        if (!factorSequence) {
+            return node;
+        }
         if (node.isSequence()) {
             s = node.asSequence();
         }
@@ -169,7 +173,7 @@ public class Factor extends SimpleTransformer {
             return node;
         }
         //A B needs factoring if A can be empty
-        //A B -> A_no_eps B | A(A) B
+        //A B -> A_no_eps B | B
         Node A = s.first();
         if (Helper.canBeEmpty(A, tree)) {
             Node B = Helper.trim(s);
@@ -192,6 +196,7 @@ public class Factor extends SimpleTransformer {
             if (modified) {
                 //restart if any modification happens
                 i = 0;
+                if (debug) System.out.println(decl);
             }
             else {
                 i++;
@@ -220,9 +225,7 @@ public class Factor extends SimpleTransformer {
             Name name = node.asName();
             if (name.equals(sym)) {
                 if (keepFactor) {
-                    AstInfo astInfo = name.astInfo.copy();
                     name = name.copy();
-                    name.astInfo = astInfo;
                     name.astInfo.isFactored = true;
                     name.astInfo.factorName = sym.astInfo.factorName;
                     //todo
@@ -253,7 +256,6 @@ public class Factor extends SimpleTransformer {
 
                 Name oneName = name.copy();
                 oneName.args.add(sym);
-                oneName.astInfo = name.astInfo.copy();
 
                 info.one = oneName;
 
@@ -302,7 +304,7 @@ public class Factor extends SimpleTransformer {
         return info;
     }
 
-    PullInfo pullSeq(Sequence s, Name sym) {
+    PullInfo pullSeq(final Sequence s, Name sym) {
         PullInfo info = new PullInfo();
         //E=A B
         Node A = s.first();
@@ -312,17 +314,22 @@ public class Factor extends SimpleTransformer {
             if (Helper.canBeEmpty(A, tree)) {
                 //A B = A_noe B | B
                 Node no = new Epsilons(tree).trim(A);
-                Sequence se = new Sequence(no, B);
-                info = pull(new Or(se, B), sym);
+                Node B1 = B.copy();
+                Node B2 = B.copy();
+                //B2.astInfo.code = s.astInfo.code;
+                Sequence se = new Sequence(no, B1);
+                se.astInfo.code = s.astInfo.code;
+                info = pullOr(new Or(se, B2), sym);
             }
             else {
                 //A no empty
                 //(a A1 | A0) B
                 //a A1 B | A0 B
                 if (p1.zero != null) {
-                    info.zero = makeSeq(p1.zero, B);
+                    info.zero = Sequence.of(p1.zero, B);
                 }
-                info.one = makeSeq(p1.one, B);
+                info.one = Sequence.of(p1.one, B);
+                info.one.astInfo.code = s.astInfo.code;
             }
         }
         else {
@@ -331,13 +338,25 @@ public class Factor extends SimpleTransformer {
                 PullInfo tmp = pull(B, sym);
                 if (tmp.zero != null) {
                     info.zero = Sequence.of(A, tmp.zero);
+                    if (s.astInfo.code != null) {
+                        info.zero.astInfo.code = s.astInfo.code;
+                    }
+                    else {
+                        info.zero.astInfo.code = tmp.zero.astInfo.code;
+                    }
                 }
                 info.one = Sequence.of(A, tmp.one);
+                if (s.astInfo.code != null) {
+                    info.one.astInfo.code = s.astInfo.code;
+                }
+                else {
+                    info.one.astInfo.code = tmp.one.astInfo.code;
+                }
             }
             else {
                 //A B=A_noe B | B
                 Node no = new Epsilons(tree).trim(A);
-                info = pull(new Or(Sequence.of(no, B), B), sym);
+                info = pullOr(new Or(Sequence.of(no, B), B), sym);
             }
         }
         /*if (info.zero != null) {
@@ -357,8 +376,10 @@ public class Factor extends SimpleTransformer {
             if (Helper.start(ch, sym, tree)) {
                 PullInfo pi = pull(ch, sym);
                 one.add(pi.one);
+                pi.one.astInfo.code = ch.astInfo.code;
                 if (pi.zero != null) {
                     zero.add(pi.zero);
+                    pi.zero.astInfo.code = ch.astInfo.code;
                 }
             }
             else {
@@ -367,8 +388,10 @@ public class Factor extends SimpleTransformer {
         }
         if (zero.size() > 0) {
             info.zero = zero.normal();
+            //info.zero = zero;
         }
         info.one = one.normal();
+        //info.one = one;
         return info;
     }
 
@@ -391,21 +414,11 @@ public class Factor extends SimpleTransformer {
             return pull(s.normal(), sym);
         }
         else {
-            //A*=A+?-A+|€
+            //A* = A+ | €
             Regex plus = new Regex(regex.node, "+");
             return pull(new Or(plus, new Epsilon()), sym);
         }
         return info;
-    }
-
-    Node makeSeq(Node n1, Node n2) {
-        if (n1 == null) {
-            return n2.normal();
-        }
-        if (n2 == null) {
-            return n1.normal();
-        }
-        return new Sequence(n1, n2).normal();
     }
 
     public static class PullInfo {

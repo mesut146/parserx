@@ -2,7 +2,9 @@ package mesut.parserx.gen;
 
 import mesut.parserx.nodes.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 //transform ebnf to bnf
@@ -27,7 +29,11 @@ public class EbnfToBnf {
     public static Tree combineOr(Tree input) {
         Tree res = new Tree(input);
         Map<Name, Or> map = new HashMap<>();
+        //preserve rule order
+        List<Name> order = new ArrayList<>();
         for (RuleDecl decl : input.rules) {
+            if (!order.contains(decl.ref()))
+                order.add(decl.ref());
             Or or = map.get(decl.ref());
             if (or == null) {
                 or = new Or();
@@ -36,9 +42,9 @@ public class EbnfToBnf {
             or.add(decl.rhs);
         }
         res.rules.clear();
-        for (Map.Entry<Name, Or> entry : map.entrySet()) {
-            RuleDecl decl = entry.getKey().makeRule();
-            decl.rhs = entry.getValue().normal();
+        for (Name name : order) {
+            RuleDecl decl = name.makeRule();
+            decl.rhs = map.get(name).normal();
             res.addRule(decl);
         }
         return res;

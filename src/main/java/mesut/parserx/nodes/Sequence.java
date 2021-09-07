@@ -42,6 +42,7 @@ public class Sequence extends NodeList {
                 s.add(ch);
             }
         }
+        s.astInfo = astInfo.copy();
         return s;
     }
 

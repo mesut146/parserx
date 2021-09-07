@@ -1,0 +1,67 @@
+package parser;
+
+import common.Env;
+import mesut.parserx.gen.Options;
+import mesut.parserx.gen.ll.LLRec;
+import mesut.parserx.nodes.Tree;
+
+import java.io.*;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+
+public class Tester {
+
+    public static void check(Tree tree, String rule, String... in) throws Exception {
+        Options options = new Options();
+        options.outDir = Env.dotDir().getAbsolutePath();
+        LLRec gen = new LLRec(tree, options);
+        gen.gen();
+
+        File out = new File(options.outDir, "out");
+        if (out.exists()) {
+            Files.walkFileTree(out.toPath(), new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return super.visitFile(file, attrs);
+                }
+            });
+            out.delete();
+        }
+        out.mkdir();
+
+        ProcessBuilder builder = new ProcessBuilder("javac", "-d", "./out", "Parser.java", "Tester.java");
+        builder.directory(new File(options.outDir));
+        builder.redirectErrorStream(true);
+        Process p = builder.start();
+        if (p.waitFor() != 0) {
+            System.out.println(read(p.getInputStream()));
+            throw new RuntimeException("cant compile");
+        }
+
+        for (String s : in) {
+            ProcessBuilder runner = new ProcessBuilder("java", "-cp", "./", "Tester", rule, s);
+            runner.directory(out);
+            runner.redirectErrorStream(true);
+            Process p2 = runner.start();
+            System.out.println(read(p2.getInputStream()));
+            if (p2.waitFor() != 0) {
+                throw new RuntimeException();
+            }
+        }
+    }
+
+    static String read(InputStream in) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
+        String line = null;
+        while ((line = br.readLine()) != null) {
+            sb.append(line).append("\n");
+        }
+        return sb.toString();
+    }
+
+}

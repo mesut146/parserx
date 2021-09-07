@@ -71,4 +71,8 @@ public class Env {
             throw new RuntimeException(e);
         }
     }
+
+    public static Tree tree(String res) throws Exception {
+        return Tree.makeTree(getResFile(res));
+    }
 }

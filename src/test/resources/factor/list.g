@@ -2,7 +2,12 @@ include "../common.g"
 
 A: a b | a* c;
 
+
 /*
+A: 1 a b | 2 a* c;
+A: a (1 a[a] b | 2 a[a] a* c) | 2 c;
+
+
 A: a (a[a] b | a[a] a* c) | c;
 
 A A(){

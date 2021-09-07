@@ -78,6 +78,53 @@ public class Helper {
         }
     }
 
+    public static void firstLoop(Node node, Tree tree, Set<Item> set) {
+        if (node.isName()) {
+            Name name = node.asName();
+            if (name.astInfo.isFactored) return;
+            if (name.isRule()) {
+                firstLoop(tree.getRule(name).rhs, tree, set);
+            }
+        }
+        else if (node.isOr()) {
+            for (Node ch : node.asOr()) {
+                firstLoop(ch, tree, set);
+            }
+        }
+        else if (node.isSequence()) {
+            Sequence seq = node.asSequence();
+            for (Node ch : seq) {
+                firstLoop(ch, tree, set);
+                if (!canBeEmpty(ch, tree)) {
+                    break;
+                }
+            }
+        }
+        else if (node.isGroup()) {
+            firstLoop(node.asGroup().node, tree, set);
+        }
+        else if (node.isRegex()) {
+            Regex regex = node.asRegex();
+            if (regex.isPlus() || regex.isStar()) {
+                if (regex.node.isName()) {
+                    if (regex.node.asName().isRule()) {
+                        //?? first after
+                    }
+                    Item item = new Item();
+                    item.isStar = regex.isStar();
+                    item.isPlus = regex.isPlus();
+                    item.name = regex.node.asName();
+                }
+                else {
+                    firstLoop(node.asRegex().node, tree, set);
+                }
+            }
+        }
+        else if (node.isEpsilon()) {
+            //set.add(((Epsilon) node));
+        }
+    }
+
     public static Map<Name, Integer> firstMap(Node node, Tree tree) {
         Map<Name, Integer> map = new HashMap<>();
         firstMap(node, null, tree, true, map);
@@ -186,7 +233,6 @@ public class Helper {
         }
     }
 
-
     public static boolean canBeEmpty(Node node, Tree tree) {
         return canBeEmpty(node, tree, new HashSet<Name>());
     }
@@ -244,5 +290,11 @@ public class Helper {
         for (RuleDecl ruleDecl : tree.rules) {
             transformer.transformRule(ruleDecl);
         }
+    }
+
+    static class Item {
+        boolean isStar;
+        boolean isPlus;
+        Name name;
     }
 }
