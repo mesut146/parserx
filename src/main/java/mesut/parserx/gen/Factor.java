@@ -5,8 +5,8 @@ import mesut.parserx.nodes.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 
 public class Factor extends SimpleTransformer {
 
@@ -14,7 +14,7 @@ public class Factor extends SimpleTransformer {
     HashMap<Name, PullInfo> cache = new HashMap<>();
     boolean modified;
     RuleDecl curRule;
-    int factorCount;
+    Map<Name, Integer> factorCount = new HashMap<>();
 
     public Factor(Tree tree) {
         super(tree);
@@ -29,19 +29,67 @@ public class Factor extends SimpleTransformer {
         return res;
     }
 
-    //return common sym in two set
-    public static Name conf(Set<Name> s1, Set<Name> s2) {
-        Set<Name> copy = new HashSet<>(s1);
-        copy.retainAll(s2);
-        //rule has higher priority
-        for (Name name : copy) {
-            if (!name.isEpsilon() && name.isRule()) return name;
+    //return common sym in two list with all instances
+    public static List<Name> common(List<Name> s1, List<Name> s2) {
+        List<Name> common1 = new ArrayList<>();
+        List<Name> common2 = new ArrayList<>();
+        for (Name n1 : s1) {
+            for (Name n2 : s2) {
+                if (n1.equals(n2)) {
+                    common1.add(n1);
+                    common2.add(n2);
+                }
+            }
         }
-        //token finally
-        for (Name name : copy) {
-            if (!name.isEpsilon()) return name;
+        //find rule
+        List<Name> res = new ArrayList<>();
+        List<Name> res2 = new ArrayList<>();
+        for (int i = 0; i < common1.size(); i++) {
+            Name n = common1.get(i);
+            if (!n.isEpsilon()) {
+                //collect same symbols
+                for (Name n1 : common1) {
+                    if (n1.equals(n)) {
+                        if (n.isRule()) {
+                            res.add(n1);
+                        }
+                        else {
+                            res2.add(n1);
+                        }
+                    }
+                }
+                for (Name n2 : common2) {
+                    if (n2.equals(n)) {
+                        if (n.isRule()) {
+                            res.add(n2);
+                        }
+                        else {
+                            res2.add(n2);
+                        }
+                    }
+                }
+                if (!res.isEmpty()) {
+                    return res;
+                }
+                if (!res2.isEmpty()) {
+                    return res2;
+                }
+            }
         }
         return null;
+    }
+
+    String factorName(Name sym) {
+        if (factorCount.containsKey(sym)) {
+            int i = factorCount.get(sym);
+            i++;
+            factorCount.put(sym, i);
+            return sym + "f" + i;
+        }
+        else {
+            factorCount.put(sym, 1);
+            return sym + "f1";
+        }
     }
 
     //factor or
@@ -55,19 +103,24 @@ public class Factor extends SimpleTransformer {
             return node;
         }
         for (int i = 0; i < or.size(); i++) {
-            Set<Name> s1 = Helper.first(or.get(i), tree, true);
+            List<Name> s1 = Helper.firstList(or.get(i), tree);
             for (int j = i + 1; j < or.size(); j++) {
-                Set<Name> s2 = Helper.first(or.get(j), tree, true);
-                Name sym = conf(s1, s2);
-                if (sym != null) {
-                    AstInfo astInfo = sym.astInfo.copy();
+                List<Name> s2 = Helper.firstList(or.get(j), tree);
+                List<Name> symList = common(s1, s2);
+                if (symList != null) {
+                    Name sym = symList.get(i);
+                    //AstInfo astInfo = sym.astInfo.copy();//todo why?
                     sym = sym.copy();
-                    sym.astInfo = astInfo;
                     sym.astInfo.isFactor = true;
+                    sym.astInfo.factorName = factorName(sym);
+                    /*for (Name sym0 : symList) {
+                        //sym0.astInfo = astInfo;
+                        sym0.astInfo.isFactored = true;//may be not all
+                        sym0.astInfo.factorName = factorName(sym);
+                    }*/
                     //sym.astInfo.code = null;
                     System.out.printf("factoring %s in %s\n", sym, curRule.name);
                     modified = true;
-                    //todo find sym on both and set astinfo.factor=true
                     PullInfo info = pull(or, sym);
                     Group g = new Group(info.one);
                     g.astInfo.isFactorGroup = true;
@@ -99,10 +152,9 @@ public class Factor extends SimpleTransformer {
         Node A = s.first();
         if (Helper.canBeEmpty(A, tree)) {
             Node B = Helper.trim(s);
-            Set<Name> s1 = Helper.first(A, tree, true);
-            Set<Name> s2 = Helper.first(B, tree, true);
-            Name sym = conf(s1, s2);
-            if (sym != null) {
+            List<Name> s1 = Helper.firstList(A, tree);
+            List<Name> s2 = Helper.firstList(B, tree);
+            if (common(s1, s2) != null) {
                 Node trimmed = new Epsilons(tree).trim(A);
                 return transformOr(new Or(Sequence.of(trimmed, B), B), parent);
             }
@@ -147,10 +199,11 @@ public class Factor extends SimpleTransformer {
             Name name = node.asName();
             if (name.equals(sym)) {
                 if (keepFactor) {
-                    AstInfo astInfo = node.astInfo.copy();
+                    AstInfo astInfo = name.astInfo.copy();
                     name = name.copy();
                     name.astInfo = astInfo;
                     name.astInfo.isFactored = true;
+                    name.astInfo.factorName = sym.astInfo.factorName;
                     //todo
                     info.one = name;
                 }

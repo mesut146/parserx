@@ -6,6 +6,7 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
@@ -40,10 +41,10 @@ public class LLRec {
             @Override
             public Node transformOr(Or or, Node parent) {
                 for (int i = 0; i < or.size(); i++) {
-                    Set<Name> s1 = Helper.first(or.get(i), tree, true);
+                    List<Name> s1 = Helper.firstList(or.get(i), tree);
                     for (int j = i + 1; j < or.size(); j++) {
-                        Set<Name> s2 = Helper.first(or.get(j), tree, true);
-                        Name sym = Factor.conf(s1, s2);
+                        List<Name> s2 = Helper.firstList(or.get(j), tree);
+                        List<Name> sym = Factor.common(s1, s2);
                         if (sym != null) {
                             throw new RuntimeException("factorization needed for " + curRule.name);
                         }
@@ -57,9 +58,9 @@ public class LLRec {
                 Node A = s.first();
                 if (Helper.canBeEmpty(A, tree)) {
                     Node B = Helper.trim(s);
-                    Set<Name> s1 = Helper.first(A, tree, true);
-                    Set<Name> s2 = Helper.first(B, tree, true);
-                    Name sym = Factor.conf(s1, s2);
+                    List<Name> s1 = Helper.firstList(A, tree);
+                    List<Name> s2 = Helper.firstList(B, tree);
+                    List<Name> sym = Factor.common(s1, s2);
                     if (sym != null) {
                         throw new RuntimeException("factorization needed for " + curRule.name);
                     }
@@ -319,15 +320,12 @@ public class LLRec {
             }
         }
         if (name.astInfo.isFactored) {
-            //todo factor name dynamic
-            //naming?
             if (name.astInfo.isInLoop) {
-                code.append(String.format("%s.%s.add(%s);", name.astInfo.outerVar, name.astInfo.varName, name.name));
+                code.append(String.format("%s.%s.add(%s);", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName));
             }
             else {
-                code.append(String.format("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.name));
+                code.append(String.format("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName));
             }
-            //throw new RuntimeException("factored ref");
         }
         else {
             String rhs;
@@ -348,7 +346,7 @@ public class LLRec {
             }
             if (name.astInfo.isFactor) {
                 String type = name.isToken ? "Token" : name.name;
-                code.append(String.format("%s %s = %s;", type, name.astInfo.varName, rhs));
+                code.append(String.format("%s %s = %s;", type, name.astInfo.factorName, rhs));
             }
             else {
                 if (name.astInfo.isInLoop) {

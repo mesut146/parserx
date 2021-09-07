@@ -15,5 +15,4 @@ B: a (b (A(a,b) d | a[a] b[b] e) | A_a_no_b(a) d)
 A(a,b): a[a] b[b] c
 A_a_no_b(a): a[a] d
 
-
 */

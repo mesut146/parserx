@@ -145,6 +145,7 @@ public class Helper {
     public static void firstList(Node node, Tree tree, List<Name> list) {
         //same ref
         if (node.isName()) {
+            if (node.astInfo.isFactored) return;
             Name name = node.asName();
             if (name.isToken) {
                 list.add(name);

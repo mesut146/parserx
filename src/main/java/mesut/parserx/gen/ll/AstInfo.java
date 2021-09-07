@@ -9,6 +9,7 @@ public class AstInfo {
     public boolean isFactorGroup;//follows a factor
     public boolean isInLoop;
     public String code;
+    public String factorName;
 
     public AstInfo copy() {
         AstInfo res = new AstInfo();
@@ -19,6 +20,7 @@ public class AstInfo {
         res.isFactored = isFactored;
         res.isInLoop = isInLoop;
         res.code = code;
+        res.factorName = factorName;
         return res;
     }
 
