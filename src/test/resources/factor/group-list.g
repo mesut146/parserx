@@ -7,14 +7,9 @@ A = Ag1* c | Ag2? e;
 Ag1 = a b;
 Ag2 = a d;
 
-A: a (Ag1(a) Ag1* c | Ag2(a) e) | Ag1_no_a Ag1* c | c | Ag2_no_a e | e;
-Ag1(a): a(a) b;
-Ag1_no_a: null;
-Ag2(a): a(a) d;
-Ag2_no_a: null;
-Ag1: a Ag1(a);
-Ag2: a Ag2(a);
 A: a (Ag1(a) Ag1* c | Ag2(a) e) | c | e;
+Ag1(a): a(a) b;
+Ag2(a): a(a) d;
 
 A A(){
  A res;

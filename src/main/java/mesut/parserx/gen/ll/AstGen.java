@@ -95,7 +95,7 @@ public class AstGen {
                     code += String.format("%s %s = %s.%s = new %s();", clsName, v, outerVar, v, clsName);
                 }
                 ch.astInfo.code = code;
-                List<Name> list = Helper.firstList(ch, tree);
+                List<Name> list = Helper.firstList(ch, tree, false);
                 for (Name la : list) {
                     la.astInfo.code = code;
                 }

@@ -21,6 +21,7 @@ public class LLRec {
     AstGen astGen;
     int flagCount;
     int firstCount;
+    boolean hasFactor;
     Stack<Boolean> choiceWrote = new Stack<>();
 
     public LLRec(Tree tree, Options options) {

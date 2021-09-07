@@ -137,13 +137,16 @@ public class Helper {
     }
 
     public static List<Name> firstList(Node node, Tree tree) {
+        return firstList(node, tree, true);
+    }
+
+    public static List<Name> firstList(Node node, Tree tree, boolean rec) {
         List<Name> list = new ArrayList<>();
-        firstList(node, tree, list);
+        firstList(node, tree, rec, list);
         return list;
     }
 
-    public static void firstList(Node node, Tree tree, List<Name> list) {
-        //same ref
+    public static void firstList(Node node, Tree tree, boolean rec, List<Name> list) {
         if (node.isName()) {
             if (node.astInfo.isFactored) return;
             Name name = node.asName();
@@ -151,31 +154,34 @@ public class Helper {
                 list.add(name);
             }
             else {
+                //same ref
                 //todo recursion
                 list.add(name);
-                RuleDecl decl = tree.getRule(name);
-                firstList(decl.rhs, tree, list);
+                if (rec) {
+                    RuleDecl decl = tree.getRule(name);
+                    firstList(decl.rhs, tree, rec, list);
+                }
             }
         }
         else if (node.isOr()) {
             for (Node ch : node.asOr()) {
-                firstList(ch, tree, list);
+                firstList(ch, tree, rec, list);
             }
         }
         else if (node.isSequence()) {
             for (Node ch : node.asSequence()) {
-                firstList(ch, tree, list);
+                firstList(ch, tree, rec, list);
                 if (!canBeEmpty(ch, tree)) {
                     break;
                 }
             }
         }
         else if (node.isGroup()) {
-            firstList(node.asGroup().node, tree, list);
+            firstList(node.asGroup().node, tree, rec, list);
         }
         else if (node.isRegex()) {
             Regex r = node.asRegex();
-            firstList(r.node, tree, list);
+            firstList(r.node, tree, rec, list);
 
         }
     }
