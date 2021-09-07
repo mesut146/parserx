@@ -262,14 +262,14 @@ public class Factor extends SimpleTransformer {
 
                     RuleDecl oneDecl = oneName.makeRule();
                     oneDecl.rhs = tmp.one.normal();
-                    oneDecl.retType = name;
+                    oneDecl.retType = decl.retType;
                     //oneDecl.isSplit = true;
                     tree.addRule(oneDecl);
 
                     if (tmp.zero != null) {
                         RuleDecl zeroDecl = zeroName.makeRule();
                         zeroDecl.rhs = tmp.zero.normal();
-                        zeroDecl.retType = name;
+                        zeroDecl.retType = decl.retType;
                         //zeroDecl.isSplit = true;
                         tree.addRule(zeroDecl);
                         info.zero = zeroName;
