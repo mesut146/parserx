@@ -153,12 +153,8 @@ public class Helper {
             else {
                 //todo recursion
                 list.add(name);
-                if (first(node, tree, false).contains(name)) {
-
-                }
-                else {
-
-                }
+                RuleDecl decl = tree.getRule(name);
+                firstList(decl.rhs, tree, list);
             }
         }
         else if (node.isOr()) {

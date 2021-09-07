@@ -197,10 +197,10 @@ public class LLRec {
         for (Name arg : decl.args) {
             if (i > 0) params.append(", ");
             if (arg.isToken) {
-                params.append("Token ").append(arg.name);
+                params.append("Token ").append(arg.astInfo.factorName);
             }
             else {
-                params.append(arg.name).append(" ").append(arg.name);
+                params.append(arg.name).append(" ").append(arg.astInfo.factorName);
             }
             i++;
         }
@@ -333,7 +333,7 @@ public class LLRec {
                 String args = "";
                 if (!name.args.isEmpty()) {
                     for (int i = 0; i < name.args.size(); i++) {
-                        args += name.args.get(i).name;
+                        args += name.args.get(i).astInfo.factorName;
                         if (i < name.args.size() - 1) {
                             args += ",";
                         }

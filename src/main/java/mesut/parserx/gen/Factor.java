@@ -3,10 +3,7 @@ package mesut.parserx.gen;
 import mesut.parserx.gen.ll.AstInfo;
 import mesut.parserx.nodes.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Factor extends SimpleTransformer {
 
@@ -26,6 +23,24 @@ public class Factor extends SimpleTransformer {
         Name res = new Name(name.name + "_" + NodeList.join(name.args, "_"), false);
         res.args = new ArrayList<>(name.args);
         Name.debug = t;
+        return res;
+    }
+
+    public static Name common(Set<Name> s1, Set<Name> s2) {
+        Set<Name> copy = new HashSet<>(s1);
+        copy.retainAll(s2);
+        //rule has higher priority
+        Name res = null;
+        for (Name name : copy) {
+            if (!name.isEpsilon()) {
+                if (name.isRule()) {
+                    return name;
+                }
+                else {
+                    res = name;
+                }
+            }
+        }
         return res;
     }
 
@@ -79,6 +94,18 @@ public class Factor extends SimpleTransformer {
         return null;
     }
 
+    public Name commonSym(Node n1, Node n2) {
+        Set<Name> s1 = Helper.first(n1, tree, true);
+        Set<Name> s2 = Helper.first(n2, tree, true);
+        return common(s1, s2);
+    }
+
+    public List<Name> commonList(Node n1, Node n2) {
+        List<Name> s1 = Helper.firstList(n1, tree);
+        List<Name> s2 = Helper.firstList(n2, tree);
+        return common(s1, s2);
+    }
+
     String factorName(Name sym) {
         if (factorCount.containsKey(sym)) {
             int i = factorCount.get(sym);
@@ -113,12 +140,6 @@ public class Factor extends SimpleTransformer {
                     sym = sym.copy();
                     sym.astInfo.isFactor = true;
                     sym.astInfo.factorName = factorName(sym);
-                    /*for (Name sym0 : symList) {
-                        //sym0.astInfo = astInfo;
-                        sym0.astInfo.isFactored = true;//may be not all
-                        sym0.astInfo.factorName = factorName(sym);
-                    }*/
-                    //sym.astInfo.code = null;
                     System.out.printf("factoring %s in %s\n", sym, curRule.name);
                     modified = true;
                     PullInfo info = pull(or, sym);
