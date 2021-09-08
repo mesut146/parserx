@@ -2,7 +2,7 @@ package parser;
 
 import common.Env;
 import mesut.parserx.gen.Options;
-import mesut.parserx.gen.ll.LLRec;
+import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.nodes.Tree;
 
 import java.io.*;
@@ -17,7 +17,7 @@ public class Tester {
     public static void check(Tree tree, String rule, String... in) throws Exception {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
-        LLRec gen = new LLRec(tree, options);
+        RecDescent gen = new RecDescent(tree, options);
         gen.gen();
 
         File out = new File(options.outDir, "out");

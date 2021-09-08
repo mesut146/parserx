@@ -1,28 +1,21 @@
 A: (a | b)* c | (a | d)+ e;
 
-A: a a* (e | b (a | b)* c | d (a | d)* e) | c | b (a | b)* c | d (a | d)* e;
-
-A: (a | b) (a | b)* c | c | (a | d) (a | d)* e;
-
-A: a (a | b)* c | a (a | d)* e | b (a | b)* c | c | d (a | d)* e;
-
-A: a ((a | b)* c | (a | d)* e) | b (a | b)* c | c | d (a | d)* e;
-
-
 A: B* c | D+ e;
+
+B* = (a B(a) | B_no_a)* = a* B_no_a B*
+
+
 B: a | b;
 D: a | d;
 
-A: B B* c | c | D D* e;
-A: a (B* c | D* e) | c | B_no_a B* c | D_no_a D* e;
-A: a E | c | B_no_a B* c | D_no_a D* e;
-E: B* c | D* e;
-E: B B* c | c | D D* e | e;
-E: a (B* c | D* e) | e | B_no_a B* c | D_no_a D* e;
-E: a E | e | B_no_a B* c | D_no_a D* e;
-E: a* (e | B_no_a B* c | D_no_a D* e);
+A: a (B(a) B* c | D(a) D* e) | B_no_a B* c | D_no_a D* e | c;
+B(a): a(a)
+D(a): a(a)
 
-A: a a* (e | B_no_a B* c | D_no_a D* e) | c | B_no_a B* c | D_no_a D* e;
+A: a X | B_no_a B* c | D_no_a D* e | c;
+X: B(a) B* c | D(a) D* e;
+X: a (B(a) B(a) B* c | D(a) D(a) D* e) | B(a) B_no_a B* c | D(a) D_no_a D* e | c | e;
+X: a X | B(a) B_no_a B* c | D(a) D_no_a D* e | c | e;
+X: a* (B(a) B_no_a B* c | D(a) D_no_a D* e | c | e);
 
-A: a a* (e | b (a | b)* c | d (a | d)* e) | c | b (a | b)* c | d (a | d)* e;
-
+A: a a* (B(a) B_no_a B* c | D(a) D_no_a D* e | c | e) | B_no_a B* c | D_no_a D* e | c;

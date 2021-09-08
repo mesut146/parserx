@@ -2,7 +2,7 @@ package parser;
 
 import common.Env;
 import mesut.parserx.gen.*;
-import mesut.parserx.gen.ll.LLRec;
+import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
@@ -19,18 +19,7 @@ public class LLGenTest {
         //new Normalizer(tree).normalize();
         //new Factor(tree).factorize();
         //System.out.println(tree);
-        new LLRec(tree, options).gen();
-    }
-
-    @Test
-    public void ast() throws Exception {
-        //Tree tree = Tree.makeTree(Env.getResFile("model.g"));
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/resources/java/parser-jls.g"));
-        Options options = new Options();
-        options.outDir = Env.dotDir().getAbsolutePath();
-        LLRec gen = new LLRec(tree, options);
-        gen.gen();
-        new LexerGenerator(tree, options).generate();
+        new RecDescent(tree, options).gen();
     }
 
     @Test
@@ -67,7 +56,7 @@ public class LLGenTest {
 
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
-        LLRec gen = new LLRec(tree, options);
+        RecDescent gen = new RecDescent(tree, options);
         Name.debug = false;
         Factor.debug = true;
         gen.gen();
@@ -79,7 +68,7 @@ public class LLGenTest {
         options.outDir = Env.dotDir().getAbsolutePath();
         Tree tree = Tree.makeTree(Env.getResFile("calc-1.g"));
         new LexerGenerator(tree, options).generate();
-        LLRec gen = new LLRec(tree, options);
+        RecDescent gen = new RecDescent(tree, options);
         gen.gen();
     }
 
@@ -92,5 +81,17 @@ public class LLGenTest {
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/parserx.g"));
         VisitorGenerator visitorGenerator = new VisitorGenerator(tree, options);
         visitorGenerator.generate();
+    }
+
+    @Test
+    public void recursion() throws Exception {
+        Factor.factorSequence = false;
+        Factor.debug = true;
+        Tree tree = Env.tree("rec/direct.g");
+        //new Recursion(tree).all();
+        Options options = new Options();
+        options.outDir = Env.dotDir().getAbsolutePath();
+        RecDescent rec = new RecDescent(tree, options);
+        rec.gen();
     }
 }

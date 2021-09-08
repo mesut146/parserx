@@ -1,7 +1,7 @@
 token{
  BOOLEAN: "true" | "false";
  OPTIONS: "options";
- TOKEN: "token";
+ TOKEN: "token" | "tokens";
  SKIP: "skip";
  INCLUDE: "include";
  START: "@start";
@@ -46,7 +46,7 @@ tree: includeStatement* (tokenBlock  | skipBlock)* startDecl? ruleDecl*;
 includeStatement: "include" STRING;
 startDecl: "@start" "=" name;
 
-tokenBlock: "token" "{" tokenDecl* "}";
+tokenBlock: ("token" | "tokens)" "{" tokenDecl* "}";
 skipBlock: "skip" "{" tokenDecl* "}";
 
 

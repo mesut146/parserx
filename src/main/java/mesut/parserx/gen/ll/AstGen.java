@@ -1,7 +1,6 @@
 package mesut.parserx.gen.ll;
 
 import mesut.parserx.gen.CodeWriter;
-import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.Options;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
@@ -9,7 +8,6 @@ import mesut.parserx.utils.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 //generate ast file and astinfo per node
@@ -91,7 +89,7 @@ public class AstGen {
                 String v = parentClass.name.toLowerCase() + num;
 
                 String code = String.format("%s.which = %d;\n", outerVar, num);
-                if (!LLRec.isSimple(ch)) {
+                if (!RecDescent.isSimple(ch)) {
                     code += String.format("%s %s = %s.%s = new %s();", clsName, v, outerVar, v, clsName);
                 }
                 ch.astInfo.code = code;
@@ -100,7 +98,7 @@ public class AstGen {
                     la.astInfo.code = code;
                 }*/
 
-                if (LLRec.isSimple(ch)) {
+                if (RecDescent.isSimple(ch)) {
                     //todo vname
                     //ch.astInfo.varName = parentClass.toLowerCase() + num;
                     model(ch, parentClass, outerVar, parent);

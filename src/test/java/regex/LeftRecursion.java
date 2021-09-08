@@ -4,6 +4,7 @@ import common.Env;
 import mesut.parserx.gen.EbnfToBnf;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.LeftRecursive;
+import mesut.parserx.gen.Recursion;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.RuleDecl;
@@ -13,6 +14,13 @@ import org.junit.Test;
 import java.io.File;
 
 public class LeftRecursion {
+
+    @Test
+    public void withAst() throws Exception {
+        Tree tree = Env.tree("rec/direct.g");
+        new Recursion(tree).all();
+        tree.printRules();
+    }
 
     @Test
     public void remove() throws Exception {

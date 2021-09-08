@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.Stack;
 
 // ll(1) recursive descent parser generator
-public class LLRec {
+public class RecDescent {
     public Options options;
     Tree tree;
     CodeWriter sb = new CodeWriter(true);
@@ -23,7 +23,7 @@ public class LLRec {
     int firstCount;
     Stack<Boolean> choiceWrote = new Stack<>();
 
-    public LLRec(Tree tree, Options options) {
+    public RecDescent(Tree tree, Options options) {
         this.tree = tree;
         this.options = options;
     }
@@ -170,6 +170,8 @@ public class LLRec {
         tree.printRules();
         new Factor(tree).factorize();
         tree.printRules();
+
+        new Recursion(tree).all();
 
         new LexerGenerator(tree, options).generate();
     }

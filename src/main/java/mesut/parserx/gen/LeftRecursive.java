@@ -7,7 +7,6 @@ import java.util.*;
 //remove left recursions
 public class LeftRecursive {
     public Tree tree;
-    Map<String, Node> cache = new HashMap<>();
 
     public LeftRecursive(Tree tree) {
         this.tree = tree;

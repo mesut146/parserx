@@ -123,12 +123,11 @@ public class Factor extends SimpleTransformer {
             return node;
         }
         for (int i = 0; i < or.size(); i++) {
-            List<Name> s1 = Helper.firstList(or.get(i), tree);
+            Set<Name> s1 = Helper.first(or.get(i), tree, true);
             for (int j = i + 1; j < or.size(); j++) {
-                List<Name> s2 = Helper.firstList(or.get(j), tree);
-                List<Name> symList = common(s1, s2);
-                if (symList != null) {
-                    Name sym = symList.get(0);
+                Set<Name> s2 = Helper.first(or.get(j), tree, true);
+                Name sym = common(s1, s2);
+                if (sym != null) {
                     sym = sym.copy();
                     sym.astInfo.isFactor = true;
                     sym.astInfo.factorName = factorName(sym);
@@ -136,14 +135,6 @@ public class Factor extends SimpleTransformer {
                         System.out.printf("factoring %s in %s\n", sym, curRule.name);
                     modified = true;
                     PullInfo info = pullOr(or, sym);
-                    /*if (info.one.isOr()) {
-                        for (Node ch : info.one.asOr()) {
-                            ch.astInfo.code = or.get(i).astInfo.code;
-                        }
-                    }
-                    else {
-                        info.one.astInfo.code = or.get(i).astInfo.code;
-                    }*/
                     Group g = new Group(info.one);
                     g.astInfo.isFactorGroup = true;
                     Node one = Sequence.of(sym, g);
@@ -177,8 +168,8 @@ public class Factor extends SimpleTransformer {
         Node A = s.first();
         if (Helper.canBeEmpty(A, tree)) {
             Node B = Helper.trim(s);
-            List<Name> s1 = Helper.firstList(A, tree);
-            List<Name> s2 = Helper.firstList(B, tree);
+            Set<Name> s1 = Helper.first(A, tree, true);
+            Set<Name> s2 = Helper.first(B, tree, true);
             if (common(s1, s2) != null) {
                 Node trimmed = new Epsilons(tree).trim(A);
                 return transformOr(new Or(Sequence.of(trimmed, B), B), parent);
@@ -205,7 +196,9 @@ public class Factor extends SimpleTransformer {
     }
 
     private void factorRule(RuleDecl decl) {
-        decl.rhs = transformNode(decl.rhs, decl);
+        if (!Helper.start(decl.rhs, decl.ref(), tree)) {
+            decl.rhs = transformNode(decl.rhs, decl);
+        }
     }
 
     //pull a single token 'sym' and store result in info
@@ -236,54 +229,7 @@ public class Factor extends SimpleTransformer {
                 }
             }
             else if (name.isRule()) {
-                if (cache.containsKey(name)) {
-                    return cache.get(name);
-                }
-                cache.put(name, info);
-                RuleDecl decl = tree.getRule(name);
-                //check if already pulled before
-
-                Name zeroName;
-                if (name.args.isEmpty()) {
-                    zeroName = new Name(name.name, false);
-                }
-                else {
-                    //encode args
-                    zeroName = encode(name);
-                }
-                zeroName.name += "_no_" + sym.name;
-                zeroName.astInfo = name.astInfo.copy();
-
-                Name oneName = name.copy();
-                oneName.args.add(sym);
-
-                info.one = oneName;
-
-                if (tree.getRule(zeroName) == null && tree.getRule(oneName) == null) {
-                    PullInfo tmp = pull(decl.rhs, sym);
-
-                    RuleDecl oneDecl = oneName.makeRule();
-                    oneDecl.rhs = tmp.one.normal();
-                    oneDecl.retType = decl.retType;
-                    //oneDecl.isSplit = true;
-                    tree.addRule(oneDecl);
-
-                    if (tmp.zero != null) {
-                        RuleDecl zeroDecl = zeroName.makeRule();
-                        zeroDecl.rhs = tmp.zero.normal();
-                        zeroDecl.retType = decl.retType;
-                        //zeroDecl.isSplit = true;
-                        tree.addRule(zeroDecl);
-                        info.zero = zeroName;
-                    }
-                    //replace old
-                    /*if (tmp.zero != null) {
-                        decl.rhs = new Or(Sequence.of(sym, oneName), zeroName);
-                    }
-                    else {
-                        decl.rhs = Sequence.of(sym, oneName);
-                    }*/
-                }
+                info = pullRule(name, sym);
             }
         }
         else if (node.isGroup()) {
@@ -300,6 +246,53 @@ public class Factor extends SimpleTransformer {
         }
         else {
             throw new RuntimeException("invalid node: " + node.getClass());
+        }
+        return info;
+    }
+
+    //pull sym from rule
+    PullInfo pullRule(Name name, Name sym) {
+        PullInfo info = new PullInfo();
+        if (cache.containsKey(name)) {
+            return cache.get(name);
+        }
+        cache.put(name, info);
+        RuleDecl decl = tree.getRule(name);
+        //check if already pulled before
+
+        Name zeroName;
+        if (name.args.isEmpty()) {
+            zeroName = new Name(name.name, false);
+        }
+        else {
+            //encode args
+            zeroName = encode(name);
+        }
+        zeroName.name += "_no_" + sym.name;
+        zeroName.astInfo = name.astInfo.copy();
+
+        Name oneName = name.copy();
+        oneName.args.add(sym);
+
+        info.one = oneName;
+
+        if (tree.getRule(zeroName) == null && tree.getRule(oneName) == null) {
+            PullInfo tmp = pull(decl.rhs, sym);
+
+            RuleDecl oneDecl = oneName.makeRule();
+            oneDecl.rhs = tmp.one.normal();
+            oneDecl.retType = decl.retType;
+            //oneDecl.isSplit = true;
+            tree.addRule(oneDecl);
+
+            if (tmp.zero != null) {
+                RuleDecl zeroDecl = zeroName.makeRule();
+                zeroDecl.rhs = tmp.zero.normal();
+                zeroDecl.retType = decl.retType;
+                //zeroDecl.isSplit = true;
+                tree.addRule(zeroDecl);
+                info.zero = zeroName;
+            }
         }
         return info;
     }
