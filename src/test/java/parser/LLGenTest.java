@@ -87,11 +87,18 @@ public class LLGenTest {
     public void recursion() throws Exception {
         Factor.factorSequence = false;
         Factor.debug = true;
-        Tree tree = Env.tree("rec/direct.g");
+        //Tree tree = Env.tree("rec/direct.g");
+        Tree tree = Env.tree("rec/indirect.g");
         //new Recursion(tree).all();
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         RecDescent rec = new RecDescent(tree, options);
         rec.gen();
+    }
+
+    @Test
+    public void recursionAll() throws Exception {
+        Factor.debug = false;
+        Tester.check(Env.tree("rec/direct.g"), "A", "c","ca","cb","caa","cab","cba","cbb");
     }
 }

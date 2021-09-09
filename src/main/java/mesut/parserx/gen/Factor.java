@@ -20,11 +20,17 @@ public class Factor extends SimpleTransformer {
     }
 
     public static Name encode(Name name) {
-        boolean t = Name.debug;
-        Name.debug = false;
-        Name res = new Name(name.name + "_" + NodeList.join(name.args, "_"), false);
+        StringBuilder sb = new StringBuilder(name.name);
+        sb.append("_");
+        for (int i = 0; i < name.args.size(); i++) {
+            //todo arg of arg?
+            sb.append(name.args.get(i).name);
+            if (i < name.args.size() - 1) {
+                sb.append("_");
+            }
+        }
+        Name res = new Name(sb.toString(), false);
         res.args = new ArrayList<>(name.args);
-        Name.debug = t;
         return res;
     }
 
@@ -129,12 +135,12 @@ public class Factor extends SimpleTransformer {
                 Name sym = common(s1, s2);
                 if (sym != null) {
                     sym = sym.copy();
-                    sym.astInfo.isFactor = true;
-                    sym.astInfo.factorName = factorName(sym);
+                    //sym.astInfo.isFactor = true;
+                    //sym.astInfo.factorName = factorName(sym);
                     if (debug)
                         System.out.printf("factoring %s in %s\n", sym, curRule.name);
                     modified = true;
-                    PullInfo info = pullOr(or, sym);
+                    PullInfo info = pull(or, sym);
                     Group g = new Group(info.one);
                     g.astInfo.isFactorGroup = true;
                     Node one = Sequence.of(sym, g);
@@ -209,9 +215,12 @@ public class Factor extends SimpleTransformer {
         if (sym.astInfo.isFactored) {
             throw new RuntimeException("factored sym");
         }
-        //System.out.println("pull:" + node + " sym:" + sym);
         if (!Helper.first(node, tree, true).contains(sym)) {
             throw new RuntimeException("can't pull " + sym + " from " + node);
+        }
+        if (sym.astInfo.factorName == null) {
+            sym.astInfo.isFactor = true;
+            sym.astInfo.factorName = factorName(sym);
         }
         PullInfo info = new PullInfo();
         if (node.isName()) {
@@ -254,7 +263,8 @@ public class Factor extends SimpleTransformer {
     PullInfo pullRule(Name name, Name sym) {
         PullInfo info = new PullInfo();
         if (cache.containsKey(name)) {
-            return cache.get(name);
+            throw new RuntimeException("cached factor " + name);
+            //return cache.get(name);
         }
         cache.put(name, info);
         RuleDecl decl = tree.getRule(name);
@@ -270,8 +280,10 @@ public class Factor extends SimpleTransformer {
         }
         zeroName.name += "_no_" + sym.name;
         zeroName.astInfo = name.astInfo.copy();
+        zeroName.astInfo.isPrimary = true;
 
         Name oneName = name.copy();
+        oneName.astInfo = name.astInfo.copy();
         oneName.args.add(sym);
 
         info.one = oneName;
@@ -282,14 +294,12 @@ public class Factor extends SimpleTransformer {
             RuleDecl oneDecl = oneName.makeRule();
             oneDecl.rhs = tmp.one.normal();
             oneDecl.retType = decl.retType;
-            //oneDecl.isSplit = true;
             tree.addRule(oneDecl);
 
             if (tmp.zero != null) {
                 RuleDecl zeroDecl = zeroName.makeRule();
                 zeroDecl.rhs = tmp.zero.normal();
                 zeroDecl.retType = decl.retType;
-                //zeroDecl.isSplit = true;
                 tree.addRule(zeroDecl);
                 info.zero = zeroName;
             }
@@ -312,7 +322,7 @@ public class Factor extends SimpleTransformer {
                 //B2.astInfo.code = s.astInfo.code;
                 Sequence se = new Sequence(no, B1);
                 se.astInfo.code = s.astInfo.code;
-                info = pullOr(new Or(se, B2), sym);
+                info = pull(new Or(se, B2), sym);
             }
             else {
                 //A no empty
@@ -349,7 +359,13 @@ public class Factor extends SimpleTransformer {
             else {
                 //A B=A_noe B | B
                 Node no = new Epsilons(tree).trim(A);
-                info = pullOr(new Or(Sequence.of(no, B), B), sym);
+                Node se = Sequence.of(no, B);
+                se.astInfo = s.astInfo.copy();
+                Name sym0 = sym.copy();
+                sym0.astInfo.code = s.astInfo.code;
+                Node B2 = B.copy();
+                B2.astInfo.code = s.astInfo.code;
+                info = pullOr(new Or(se, B2), sym0);
             }
         }
         /*if (info.zero != null) {

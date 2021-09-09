@@ -4,6 +4,7 @@ import common.Env;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.nodes.Tree;
+import mesut.parserx.utils.Utils;
 
 import java.io.*;
 import java.nio.file.FileVisitResult;
@@ -15,6 +16,11 @@ import java.nio.file.attribute.BasicFileAttributes;
 public class Tester {
 
     public static void check(Tree tree, String rule, String... in) throws Exception {
+        File tester = new File(Env.dotDir(), "Tester.java");
+        if (!tester.exists()) {
+            Utils.write(Utils.read(Env.getResFile("Tester.java.1")), tester);
+        }
+
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         RecDescent gen = new RecDescent(tree, options);

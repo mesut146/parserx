@@ -1,0 +1,17 @@
+import java.io.*;
+import java.lang.reflect.*;
+
+class Tester{
+
+  public static void main(String[] a) throws Exception{
+    String rule=a[0];
+    String in=a[1];
+    
+    Lexer l = new Lexer(new StringReader(in));
+    Parser p = new Parser(l);
+    Method m = Parser.class.getDeclaredMethod(rule);
+    System.out.println(m.invoke(p));
+  }
+
+
+}

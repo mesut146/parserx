@@ -4,10 +4,12 @@ public class AstInfo {
     public String varName;
     public String outerVar;
     public Type outerCls;
+    public Type type;
     public boolean isFactor;//no assign
     public boolean isFactored;//epsilon
     public boolean isFactorGroup;//follows a factor
     public boolean isInLoop;
+    public boolean isPrimary;//recursion left
     public String code;
     public String factorName;
 
@@ -21,6 +23,8 @@ public class AstInfo {
         res.isInLoop = isInLoop;
         res.code = code;
         res.factorName = factorName;
+        res.isPrimary = isPrimary;
+        res.type = type;
         return res;
     }
 

@@ -1,9 +1,6 @@
 package mesut.parserx.gen;
 
-import mesut.parserx.nodes.Regex;
-import mesut.parserx.nodes.RuleDecl;
-import mesut.parserx.nodes.Sequence;
-import mesut.parserx.nodes.Tree;
+import mesut.parserx.nodes.*;
 
 public class Recursion {
     Tree tree;
@@ -24,9 +21,14 @@ public class Recursion {
     public void handle(RuleDecl decl) {
         //A= A A(A) | A_no_A
         //A= A_no_A A(A)*
-        Factor.PullInfo info = new Factor(tree).pullRule(decl.ref(), decl.ref());
+        Name sym = decl.ref();
+        sym.astInfo.outerVar = "res";
+        //sym.astInfo.isFactor = true;
+        //sym.astInfo.factorName =;
+        Factor.PullInfo info = new Factor(tree).pullRule(sym, sym);
         decl.rhs = Sequence.of(info.zero, new Regex(info.one, "*"));
-        //TOdo ast
+        decl.isRecursive = true;
+        //todo ast
     }
 
 }

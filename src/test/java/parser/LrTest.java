@@ -50,7 +50,7 @@ public class LrTest {
         //file = Env.getResFile("lr1/calc2.g");
         //file = Env.getFile2("lr1/simple.g");
         //file = Env.getResFile("rec/cyc.g");
-        file = Env.getFile2("lr1/calc3.g");
+        file = Env.getResFile("lr1/calc3.g");
         //file = Env.getFile2("javaParser.g");
         Tree tree = Tree.makeTree(file);
         Lr0Generator generator = new Lr0Generator(Env.dotDir().getAbsolutePath(), tree);
@@ -63,7 +63,7 @@ public class LrTest {
     public void lr1() throws Exception {
         File file;
         //file = Env.getFile2("lr1/calc2.g");
-        file = Env.getFile2("lr1/calc3.g");
+        file = Env.getResFile("lr1/calc3.g");
         //file = Env.getFile2("lr1/simple.g");
         //file = Env.getFile2("lr0/simple.g");
         //file = Env.getFile2("lr1/lr1.g");

@@ -35,10 +35,6 @@ public class Env {
         return Env.getResFile("/javaLexer.g");
     }
 
-    public static File getFile2(String name) {
-        return new File(testRes, name);
-    }
-
     public static File getResFile(String name) throws Exception {
         if (!name.startsWith("/")) {
             name = "/" + name;
@@ -61,7 +57,7 @@ public class Env {
                     if (tree.getRule(node) == null) {
                         node.isToken = true;
                         //add fake token
-                        tree.tokens.add(new TokenDecl(node.name));
+                        tree.tokens.add(new TokenDecl(node.name, new StringNode(node.name)));
                     }
                     return node;
                 }

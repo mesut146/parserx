@@ -76,6 +76,12 @@ public class AstGen {
                 parent.append(String.format("public Token %s;", vname));
             }
             else {
+                if (tree.getRule(name) != null) {
+                    name.astInfo.type = new Type(options.astClass, name.name);
+                }
+                else {
+                    //name.astInfo.type = new Type();
+                }
                 parent.append(String.format("public %s %s;", name.name, vname));
             }
         }
@@ -84,19 +90,15 @@ public class AstGen {
             int num = 1;
             for (final Node ch : node.asOr()) {
                 if (ch.isEpsilon()) continue;
-                //in case of factorization pre-write some code
                 Type clsName = new Type(parentClass, Utils.camel(parentClass.name) + num);
                 String v = parentClass.name.toLowerCase() + num;
 
+                //in case of factorization pre-write some code
                 String code = String.format("%s.which = %d;\n", outerVar, num);
                 if (!RecDescent.isSimple(ch)) {
                     code += String.format("%s %s = %s.%s = new %s();", clsName, v, outerVar, v, clsName);
                 }
                 ch.astInfo.code = code;
-                /*List<Name> list = Helper.firstList(ch, tree, false);
-                for (Name la : list) {
-                    la.astInfo.code = code;
-                }*/
 
                 if (RecDescent.isSimple(ch)) {
                     //todo vname

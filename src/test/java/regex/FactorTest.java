@@ -62,7 +62,7 @@ public class FactorTest {
 
     @Test
     public void java() throws Exception {
-        Tree tree = Tree.makeTree(Env.getFile2("java/parser-jls.g"));
+        Tree tree = Tree.makeTree(Env.getResFile("java/parser-jls.g"));
         Factor factor = new Factor(tree);
         factor.factorize();
         System.out.println(tree);

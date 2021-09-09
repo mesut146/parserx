@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-import java.util.Stack;
 
 // ll(1) recursive descent parser generator
 public class RecDescent {
@@ -16,12 +15,11 @@ public class RecDescent {
     Tree tree;
     CodeWriter sb = new CodeWriter(true);
     CodeWriter code = new CodeWriter(true);
-    String curRule;
+    RuleDecl curRule;
     String tokens = "Tokens";
     AstGen astGen;
     int flagCount;
     int firstCount;
-    Stack<Boolean> choiceWrote = new Stack<>();
 
     public RecDescent(Tree tree, Options options) {
         this.tree = tree;
@@ -84,7 +82,7 @@ public class RecDescent {
 
         for (RuleDecl decl : tree.rules) {
             if (!decl.hidden) {
-                curRule = decl.name;
+                curRule = decl;
                 gen(decl);
                 code.append("");
             }
@@ -168,16 +166,18 @@ public class RecDescent {
         astGen.genAst();
         astGen.varCount.clear();
         tree.printRules();
-        new Factor(tree).factorize();
-        tree.printRules();
-
+        System.out.println("removing recursion");
         new Recursion(tree).all();
+        tree.printRules();
+        /*new Factor(tree).factorize();
+        tree.printRules();*/
+
 
         new LexerGenerator(tree, options).generate();
     }
 
     void gen(RuleDecl decl) {
-        Type type = new Type(options.astClass, decl.retType.name);
+        Type type = new Type(options.astClass, decl.retType.name);//todo decl.type
         StringBuilder params = new StringBuilder();
         int i = 0;
         for (Name arg : decl.args) {
@@ -186,7 +186,7 @@ public class RecDescent {
                 params.append("Token ").append(arg.astInfo.factorName);
             }
             else {
-                params.append(arg.name).append(" ").append(arg.astInfo.factorName);
+                params.append(String.format("%s.%s %s", options.astClass, arg.name, arg.astInfo.factorName));
             }
             i++;
         }
@@ -195,7 +195,12 @@ public class RecDescent {
         flagCount = 0;
         firstCount = 0;
 
-        write(decl.rhs);
+        if (decl.isRecursive) {
+            write(decl.rhs);
+        }
+        else {
+            write(decl.rhs);
+        }
 
         code.append("return res;");
         code.append("}");
@@ -216,7 +221,6 @@ public class RecDescent {
         }
         else if (node.isSequence()) {
             Sequence s = node.asSequence();
-            choiceWrote.push(false);
             for (int i = 0; i < s.size(); i++) {
                 write(s.get(i));
             }
@@ -308,15 +312,23 @@ public class RecDescent {
                 code.append(String.format("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName));
             }
         }
+        else if (curRule.isRecursive) {
+            if (name.astInfo.isPrimary) {
+                code.append(String.format("%s = %s();", name.astInfo.outerVar, name.name));
+            }
+            else {
+                code.append(String.format("%s = %s(%s);", name.astInfo.outerVar, name.name, name.astInfo.outerVar));
+            }
+        }
         else {
             String rhs;
             if (name.isRule()) {
-                String args = "";
+                StringBuilder args = new StringBuilder();
                 if (!name.args.isEmpty()) {
                     for (int i = 0; i < name.args.size(); i++) {
-                        args += name.args.get(i).astInfo.factorName;
+                        args.append(name.args.get(i).astInfo.factorName);
                         if (i < name.args.size() - 1) {
-                            args += ",";
+                            args.append(",");
                         }
                     }
                 }

@@ -1,5 +1,7 @@
 package mesut.parserx.nodes;
 
+import mesut.parserx.gen.ll.Type;
+
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -10,6 +12,7 @@ public class Name extends Node {
     public String name;
     public boolean isToken;
     public ArrayList<Name> args = new ArrayList<>();
+    public Type type;//rules have type
 
     public Name(String name) {
         this.name = name;

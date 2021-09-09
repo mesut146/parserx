@@ -28,6 +28,9 @@ public class Sequence extends NodeList {
     public Node normal() {
         normalCh();
         if (size() == 1) {
+            if (astInfo.code != null) {
+                throw new RuntimeException("norm with code");
+            }
             return first();
         }
         Sequence s = new Sequence();
