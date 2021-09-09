@@ -166,11 +166,12 @@ public class RecDescent {
         astGen.genAst();
         astGen.varCount.clear();
         tree.printRules();
-        System.out.println("removing recursion");
+        Recursion.debug = true;
         new Recursion(tree).all();
         tree.printRules();
-        /*new Factor(tree).factorize();
-        tree.printRules();*/
+        Factor.debug = true;
+        new Factor(tree).factorize();
+        tree.printRules();
 
 
         new LexerGenerator(tree, options).generate();

@@ -294,12 +294,14 @@ public class Factor extends SimpleTransformer {
             RuleDecl oneDecl = oneName.makeRule();
             oneDecl.rhs = tmp.one.normal();
             oneDecl.retType = decl.retType;
+            oneDecl.isRecursive = decl.isRecursive;
             tree.addRule(oneDecl);
 
             if (tmp.zero != null) {
                 RuleDecl zeroDecl = zeroName.makeRule();
                 zeroDecl.rhs = tmp.zero.normal();
                 zeroDecl.retType = decl.retType;
+                zeroDecl.isRecursive = decl.isRecursive;
                 tree.addRule(zeroDecl);
                 info.zero = zeroName;
             }
@@ -317,10 +319,9 @@ public class Factor extends SimpleTransformer {
             if (Helper.canBeEmpty(A, tree)) {
                 //A B = A_noe B | B
                 Node no = new Epsilons(tree).trim(A);
-                Node B1 = B.copy();
                 Node B2 = B.copy();
-                //B2.astInfo.code = s.astInfo.code;
-                Sequence se = new Sequence(no, B1);
+                B2.astInfo.code = s.astInfo.code;
+                Sequence se = new Sequence(no, B.copy());
                 se.astInfo.code = s.astInfo.code;
                 info = pull(new Or(se, B2), sym);
             }
@@ -330,6 +331,7 @@ public class Factor extends SimpleTransformer {
                 //a A1 B | A0 B
                 if (p1.zero != null) {
                     info.zero = Sequence.of(p1.zero, B);
+                    info.zero.astInfo.code = s.astInfo.code;
                 }
                 info.one = Sequence.of(p1.one, B);
                 info.one.astInfo.code = s.astInfo.code;
