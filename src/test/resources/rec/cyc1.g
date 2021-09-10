@@ -6,6 +6,12 @@ A: B b | c;
 B: A a | d;
 
 /*
+A: A a b | d b | c;
+A: (d b | c) (a b)*;
+
+*/
+
+/*
 //factor c,d
 A = c (B(c) b | c(c)) | B_no_c b;
 B = d (A(d) a | d(d)) | A_no_d a;
@@ -17,10 +23,14 @@ A(d) = B_no_c(d) b;
 A_no_d = c (B(c) b | c[c]);
 
 A(c): A(c) a b | c[c];
-A(c): A_c_no_c(c) A_c(c,A(c));
+B(c): B(c) b a | c[c] a;
+
+A(c): A_c_no_A_c(c) A_c(c,A(c))*;
 A(c): c[c] (a b)*
 A_c(c,A_c(c)): B(c,A_c(c)) b;
+A_c_no_A_c(c): B_c_no_A_c(c) b | c[c];
 B(c,A_c(c)): A(c)[A(c)] a;
+B_c_no_A_c(c): A(c)[A(c)] a;
 
 B_no_c: B_no_c(B_no_c) B_no_c_no_B_no_c(B_no_c)*;
 B_no_c(B_no_c): A_no_c(B_no_c) a;

@@ -1,7 +1,5 @@
 package mesut.parserx.nodes;
 
-import mesut.parserx.gen.ll.Type;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,9 +14,9 @@ public class RuleDecl extends Node {
     public int index;
     public List<Name> args = new ArrayList<>();
     public boolean hidden = false;//if true rule has no effect
-    public Name original;//where its separated
     public Name retType;//ast type in case it is modified
     public boolean isRecursive;
+    public boolean isOriginal;
 
     public RuleDecl() {
     }

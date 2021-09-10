@@ -11,6 +11,7 @@ public class Factor extends SimpleTransformer {
     public static boolean debug = false;
     public static boolean factorSequence = true;
     public static boolean allowRecursion = false;
+    public boolean any;
     HashMap<String, PullInfo> cache = new HashMap<>();
     boolean modified;
     RuleDecl curRule;
@@ -125,6 +126,7 @@ public class Factor extends SimpleTransformer {
             modified = false;
             factorRule(decl);
             if (modified) {
+                any = true;
                 //restart if any modification happens
                 i = 0;
                 if (debug) {

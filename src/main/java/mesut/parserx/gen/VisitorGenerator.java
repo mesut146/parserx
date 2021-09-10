@@ -18,6 +18,10 @@ public class VisitorGenerator {
         writer = new CodeWriter(true);
     }
 
+    String ruleType(RuleDecl decl) {
+        return options.astClass + "." + decl.name;
+    }
+
     public void generate() throws IOException {
         String className = options.parserClass + "Visitor";
         if (options.packageName != null) {
@@ -25,17 +29,14 @@ public class VisitorGenerator {
             writer.append("");
         }
         if (options.astClass != null) {
-            if (options.packageName == null) {
-                writer.append("import static" + options.astClass + ".*;");
-            }
-            else {
-                writer.append("import static" + options.packageName + "." + options.astClass + ".*;");
+            if (options.packageName != null) {
+                writer.append("import " + options.packageName + "." + options.astClass + ";");
             }
         }
         writer.append(String.format("public class %s<R,P>{", className));
         writer.append("");
         for (RuleDecl decl : tree.rules) {
-            writer.append(String.format("public R visit%s(%s node, P p){", Utils.camel(decl.name), decl.name));
+            writer.append(String.format("public R visit%s(%s node, P p){", Utils.camel(decl.name), ruleType(decl)));
             writer.append("return null;");
             writer.append("}");
             writer.append("");

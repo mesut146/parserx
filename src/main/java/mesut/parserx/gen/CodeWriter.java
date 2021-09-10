@@ -1,6 +1,7 @@
 package mesut.parserx.gen;
 
 public class CodeWriter {
+    static int count = 4;
     public boolean auto;
     StringBuilder sb = new StringBuilder();
     int level = 0;
@@ -12,10 +13,13 @@ public class CodeWriter {
     }
 
     void init() {
-        indent = "";
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < level; i++) {
-            indent += " ";
+            for (int j = 0; j < count; j++) {
+                sb.append(" ");
+            }
         }
+        indent = sb.toString();
     }
 
     public void append(String line) {

@@ -100,12 +100,28 @@ public class LLGenTest {
     }
 
     @Test
+    public void parserx() throws Exception {
+        Factor.factorSequence = false;
+        Factor.debug = true;
+        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/parserx.g"));
+        Options options = new Options();
+        options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/itself";
+        options.packageName = "itself";
+
+        VisitorGenerator visit = new VisitorGenerator(tree, options);
+        visit.generate();
+
+        RecDescent rec = new RecDescent(tree, options);
+        rec.gen();
+    }
+
+    @Test
     public void recursionAll() throws Exception {
         Factor.debug = true;
         //Tester.check(Env.tree("rec/direct.g"), "A", "c","ca","cb","caa","cab","cba","cbb");
         //Tester.check(Env.tree("rec/direct2.g"), "A", "c", "cb", "cca", "ccba");
         //Tester.check(Env.tree("rec/direct-double.g"), "A", "b","bba","bbbaa");
         //Tester.check(Env.tree("rec/cyc1.g"), "A", "c","db","cab");
-        Tester.check(Env.tree("rec/cyc1.g"), "B", "d","ca","dba");
+        Tester.check(Env.tree("rec/cyc1.g"), "B", "d", "ca", "dba");
     }
 }

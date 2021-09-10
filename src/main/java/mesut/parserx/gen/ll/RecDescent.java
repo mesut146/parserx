@@ -39,6 +39,10 @@ public class RecDescent {
 
     public void gen() throws IOException {
         prepare();
+        if (options.packageName != null) {
+            sb.append("package " + options.packageName + ";");
+            sb.append("");
+        }
         sb.append("import java.util.List;");
         sb.append("import java.util.ArrayList;");
         if (options.packageName != null) {
@@ -146,10 +150,16 @@ public class RecDescent {
         Recursion.debug = true;
         Factor.allowRecursion = true;
         Factor.debug = true;
-        new Factor(tree).factorize();
-        tree.printRules();
-        new Recursion(tree).all();
-        tree.printRules();
+        Factor factor = new Factor(tree);
+        factor.factorize();
+        if (factor.any) {
+            tree.printRules();
+        }
+        Recursion recursion = new Recursion(tree);
+        recursion.all();
+        if (recursion.any) {
+            tree.printRules();
+        }
 
         new LexerGenerator(tree, options).generate();
     }

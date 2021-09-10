@@ -137,6 +137,13 @@ public class Tree {
             if (decl.rhs.isString() && decl.rhs.asString().value.equals(val)) {
                 return decl;
             }
+            else if (decl.rhs.isOr()) {
+                for (Node ch : decl.rhs.asOr()) {
+                    if (ch.isString() && ch.asString().value.equals(val)) {
+                        return decl;
+                    }
+                }
+            }
         }
         return null;
     }

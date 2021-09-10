@@ -8,8 +8,6 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 //generate ast file and astinfo per node
 public class AstGen {
@@ -56,6 +54,10 @@ public class AstGen {
         Type type = new Type(options.astClass, decl.name);
         model(decl.rhs, type, "res", astWriter);
         astWriter.all(classes.get());
+        if (decl.isOriginal) {
+            astWriter.append(String.format("public <R,P> R accept(%sVisitor<R,P> visitor, P arg){", options.parserClass));
+            astWriter.all(String.format("return visitor.visit%s(this, arg);\n}", Utils.camel(decl.name)));
+        }
         astWriter.append("}");
     }
 

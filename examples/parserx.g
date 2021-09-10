@@ -8,7 +8,7 @@ token{
  EPSILON: "%epsilon" | "ε";
  IDENT: [a-zA-Z_] [a-zA-Z0-9_]*;
  BRACKET: "[" ~"]";
- STRING: "\"" ([^\r\n\\] | "\\" .)* "\"";
+ STRING: "\"" ([^\r\n\\"] | "\\" .)* "\"";
  NUMBER: [0-9]+;
 }
 
@@ -21,20 +21,19 @@ token{
  PLUS: "+";
  QUES: "?";
  POW: "^";
- EQ: "=";
  SEPARATOR: ":" | "=" | ":=" | "::=" | "->";
  TILDE: "~";
  HASH: "#";
  COMMA: ",";
  OR: "|";
  DOT: ".";
+ SEMI: ";";
 }
 
 skip{
   LINE_COMMENT: "//" [^\n]*;
   BLOCK_COMMENT: "/*" ([^*] | "*" [^/])* "*/";
   WS: [ \n\r\t]+;
-
 }
 
 optionsBlock: "options" "{" option* "}";
@@ -44,14 +43,14 @@ option: IDENT "=" (NUMBER | BOOLEAN);
 tree: includeStatement* (tokenBlock  | skipBlock)* startDecl? ruleDecl*;
 
 includeStatement: "include" STRING;
-startDecl: "@start" "=" name;
+startDecl: "@start" SEPARATOR name;
 
-tokenBlock: ("token" | "tokens)" "{" tokenDecl* "}";
+tokenBlock: ("token" | "tokens") "{" tokenDecl* "}";
 skipBlock: "skip" "{" tokenDecl* "}";
 
 
-tokenDecl= "#"? name SEPARATOR rhs;
-ruleDecl= name args? SEPARATOR rhs;
+tokenDecl= "#"? name SEPARATOR rhs ";";
+ruleDecl= name args? SEPARATOR rhs ";";
 args: "(" name ("," name)* ")";
 
 rhs: sequence ("|" sequence)*;

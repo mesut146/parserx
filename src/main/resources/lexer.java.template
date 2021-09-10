@@ -15,6 +15,7 @@ public class $lexer_class$ {
     static final int EOF = 0;
     Reader reader;
     int yypos = 0;//pos in file
+    int yyline = 1;
     int yychar;
     int bufSize = 10000;
     int bufPos = bufSize;//pos in buffer
@@ -87,14 +88,23 @@ public class $lexer_class$ {
         int curState = INITIAL;
         int lastState = -1;
         int startPos = yypos;
+        int startLine = yyline;
         yychar = yybuf[bufPos];
         if (yychar == EOF) return new Token(EOF, "EOF");
         while (true) {
             yychar = yybuf[bufPos];
             if(yychar == EOF){
-              curState = -1;
+                curState = -1;
             }else{
-              curState = trans[curState][cMap[yychar]];
+                curState = trans[curState][cMap[yychar]];
+                if(yychar == '\n'){
+                    yyline++;
+                }
+                else if(yychar == '\r'){
+                    if(yybuf[bufPos + 1] == '\n'){
+                        yyline++;
+                    }
+                }
             }
             if (curState == -1) {
                 if (lastState != -1) {
@@ -102,6 +112,7 @@ public class $lexer_class$ {
                         Token token = new Token(ids[lastState], getText());
                         token.offset = startPos;
                         token.name = names[lastState];
+                        token.line = startLine;
                         bufStart = bufPos;
                         return token;
                     }
@@ -110,7 +121,7 @@ public class $lexer_class$ {
                     if (getBit(skip, lastState)) return $next_token$();
                 }
                 else {
-                    throw new IOException("invalid input=" + yychar + " yybuf= " + getText());
+                    throw new IOException("invalid input=" + (char)yychar + "(" + yychar + ") " + " yybuf= " + getText());
                 }
             }
             else {

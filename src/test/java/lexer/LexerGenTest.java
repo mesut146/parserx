@@ -5,33 +5,34 @@ import mesut.parserx.dfa.NFA;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
+import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.UnicodeUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 
 @Ignore
 public class LexerGenTest {
 
-    public static void generateLexer(File grammar) throws Exception {
-        NFA nfa = NFA.makeNFA(grammar);
-        NFA dfa = NFA.makeDFA(grammar);
-        String outDir;
-        outDir = Env.testJava + "/gen";
-        //outDir = Main.javaDir;
-        generateTest(dfa, outDir);
-    }
-
-    static void generateTest(NFA dfa, String outDir) throws IOException {
+    static void generateTest(NFA dfa) throws IOException {
         Options options = new Options();
-        options.outDir = outDir;
+        options.outDir = Env.dotDir().getAbsolutePath();
         options.lexerClass = "GeneratedLexer";
         options.packageName = "gen";
         LexerGenerator generator = new LexerGenerator(dfa, options);
         generator.generate();
+    }
+
+    @Test
+    public void generateLexer() throws Exception {
+        Tree tree = Env.tree("str.g");
+        Options options = new Options();
+        options.outDir = Env.dotDir().getAbsolutePath();
+        LexerGenerator gen = new LexerGenerator(tree, options);
+        gen.generate();
     }
 
     @Test
@@ -47,16 +48,10 @@ public class LexerGenTest {
     @Ignore
     public void all() throws Exception {
         NFA dfa = NFA.makeDFA(Env.getJavaLexer());
-        File dump = new File("/home/mesut/IdeaProjects/parserx/src/test/resources/java/javaLexer.txt");
-        dfa.dump(new PrintWriter(dump));
-        dfa.getAlphabet().dump(new File("/home/mesut/IdeaProjects/parserx/src/test/resources/java/javaLexer-alphabet.txt"));
-        //new Analyze(dfa).analyze();
-        String outDir;
-        //outDir = Env.testJava + "/gen";
-        //outDir = "/home/mesut/IdeaProjects/parserx/src/test/resources/java";
-        outDir = "/home/mesut/IdeaProjects/parserx/src/test/java/gen";
-        //outDir = Main.javaDir;
-        generateTest(dfa, outDir);
+        File dump = new File(Env.dotDir(), "javaLexer.txt");
+        dfa.dump(new FileWriter(dump));
+        dfa.getAlphabet().dump(new File(Env.dotDir(), "alphabet.txt"));
+        generateTest(dfa);
     }
 
 

@@ -3,6 +3,7 @@ public class $token_class${
     public int type;
     public String value;
     public int offset;
+    public int line;
     public String name;//token name that's declared in grammar
 
     public $token_class$(){}
@@ -17,6 +18,6 @@ public class $token_class${
     }
 
     public String toString(){
-        return value + " type = " + type;
+        return String.format("'%s' [name = %s line = %s]",value, name, line);
     }
 }

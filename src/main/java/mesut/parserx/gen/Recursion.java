@@ -4,6 +4,7 @@ import mesut.parserx.nodes.*;
 
 public class Recursion {
     public static boolean debug = false;
+    public boolean any;
     Tree tree;
 
     public Recursion(Tree tree) {
@@ -14,6 +15,7 @@ public class Recursion {
         for (int i = 0; i < tree.rules.size(); ) {
             RuleDecl decl = tree.rules.get(i++);
             if (Helper.first(decl.rhs, tree, true).contains(decl.ref())) {
+                any = true;
                 if (debug) {
                     System.out.println("removing recursion on " + decl);
                 }

@@ -8,7 +8,7 @@ token
   LPAREN = "(";
   RPAREN = ")";
   #DIGIT = [0-9];
-  NUMBER = {DIGIT}+ ("." {DIGIT}+)?;
+  NUMBER = DIGIT+ ("." DIGIT+)?;
 }
 
 //productions
