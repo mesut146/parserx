@@ -3,6 +3,7 @@ package mesut.parserx.gen.ll;
 import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.Options;
 import mesut.parserx.nodes.*;
+import mesut.parserx.utils.CountingMap2;
 import mesut.parserx.utils.Utils;
 
 import java.io.File;
@@ -17,7 +18,7 @@ public class AstGen {
     CodeWriter classes;
     Options options;
     //class name -> map of node -> count
-    Map<String, Map<String, Integer>> varCount = new HashMap<>();
+    CountingMap2<String, String> varCount = new CountingMap2<>();
     int groupCount;
     String curRule;
 
@@ -46,6 +47,7 @@ public class AstGen {
         File file = new File(options.outDir, options.astClass + ".java");
         Utils.write(astWriter.get(), file);
         System.out.println("writing " + file);
+        varCount.clear();
     }
 
     void model(RuleDecl decl) {
@@ -170,21 +172,10 @@ public class AstGen {
 
     //make incremental variable name with class scoped
     public String vName(Name name, String cls) {
-        Map<String, Integer> map = varCount.get(cls);
-        if (map == null) {
-            map = new HashMap<>();
-            varCount.put(cls, map);
-        }
-        Integer i = map.get(name.name);
-        if (i == null) {
-            i = 1;
-        }
-        map.put(name.name, i + 1);
+        int i = varCount.get(cls, name.name);
         if (i == 1) {
             return name.name;
         }
-        else {
-            return name.name + i;
-        }
+        return name.name + i;
     }
 }

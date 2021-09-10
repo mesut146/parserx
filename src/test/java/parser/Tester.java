@@ -55,7 +55,7 @@ public class Tester {
             Process p2 = runner.start();
             System.out.println(read(p2.getInputStream()));
             if (p2.waitFor() != 0) {
-                throw new RuntimeException();
+                throw new RuntimeException("err for input " + s);
             }
         }
     }

@@ -1,22 +1,20 @@
-token{
-  a:"";
-  b:"";
-  c:"";
-  e:"";
-  r1:"";
-  r2:"";
-}
+include "../common.g"
 
 @start = E;
+
 E: A a | B c c;
 A: B b | C c;
-B: A | E e | r1;
-C: B b | r2;
-
+B: A | E e | x;
+C: B b | y;
 
 /*
-B: A | A a e | r1;
-B: B b | C c | (B b | C c) a e | r1;
-B: (C c | C c a) e | r1) (b | b a e)*;
+E(E): A(E) a | B(E) c c;
+E_no_E: A_no_E a | B_no_E c c;
+A(E): B(E) b | C(E) c;
+A_no_E: B_no_E b | C_no_E c;
+B(E): A(E) | E[E] e;
+B_no_E: A_no_E | x;
+C(E): B(E) b;
+C_no_E: y;
 
 */

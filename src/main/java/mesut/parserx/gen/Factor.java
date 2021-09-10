@@ -10,7 +10,8 @@ public class Factor extends SimpleTransformer {
     public static boolean keepFactor = true;
     public static boolean debug = false;
     public static boolean factorSequence = true;
-    HashMap<Name, PullInfo> cache = new HashMap<>();
+    public static boolean allowRecursion = false;
+    HashMap<String, PullInfo> cache = new HashMap<>();
     boolean modified;
     RuleDecl curRule;
     CountingMap2<RuleDecl, Name> factorCount = new CountingMap2<>();
@@ -69,34 +70,33 @@ public class Factor extends SimpleTransformer {
         List<Name> res2 = new ArrayList<>();
         for (int i = 0; i < common1.size(); i++) {
             Name n = common1.get(i);
-            if (!n.isEpsilon()) {
-                //collect same symbols
-                for (Name n1 : common1) {
-                    if (n1.equals(n)) {
-                        if (n.isRule()) {
-                            res.add(n1);
-                        }
-                        else {
-                            res2.add(n1);
-                        }
+            if (n.isEpsilon()) continue;
+            //collect same symbols
+            for (Name n1 : common1) {
+                if (n1.equals(n)) {
+                    if (n.isRule()) {
+                        res.add(n1);
+                    }
+                    else {
+                        res2.add(n1);
                     }
                 }
-                for (Name n2 : common2) {
-                    if (n2.equals(n)) {
-                        if (n.isRule()) {
-                            res.add(n2);
-                        }
-                        else {
-                            res2.add(n2);
-                        }
+            }
+            for (Name n2 : common2) {
+                if (n2.equals(n)) {
+                    if (n.isRule()) {
+                        res.add(n2);
+                    }
+                    else {
+                        res2.add(n2);
                     }
                 }
-                if (!res.isEmpty()) {
-                    return res;
-                }
-                if (!res2.isEmpty()) {
-                    return res2;
-                }
+            }
+            if (!res.isEmpty()) {
+                return res;
+            }
+            if (!res2.isEmpty()) {
+                return res2;
             }
         }
         return null;
@@ -116,6 +116,32 @@ public class Factor extends SimpleTransformer {
 
     String factorName(Name sym) {
         return sym.name + "f" + factorCount.get(curRule, sym);
+    }
+
+    public void factorize() {
+        for (int i = 0; i < tree.rules.size(); ) {
+            RuleDecl decl = tree.rules.get(i);
+            curRule = decl;
+            modified = false;
+            factorRule(decl);
+            if (modified) {
+                //restart if any modification happens
+                i = 0;
+                if (debug) {
+                    tree.printRules();
+                    //System.out.println(decl);
+                }
+            }
+            else {
+                i++;
+            }
+        }
+    }
+
+    private void factorRule(RuleDecl decl) {
+        if (allowRecursion || !Helper.start(decl.rhs, decl.ref(), tree)) {
+            decl.rhs = transformNode(decl.rhs, decl);
+        }
     }
 
     //factor or
@@ -184,29 +210,6 @@ public class Factor extends SimpleTransformer {
         return s;
     }
 
-    public void factorize() {
-        for (int i = 0; i < tree.rules.size(); ) {
-            RuleDecl decl = tree.rules.get(i);
-            curRule = decl;
-            modified = false;
-            factorRule(decl);
-            if (modified) {
-                //restart if any modification happens
-                i = 0;
-                if (debug) System.out.println(decl);
-            }
-            else {
-                i++;
-            }
-        }
-    }
-
-    private void factorRule(RuleDecl decl) {
-        if (!Helper.start(decl.rhs, decl.ref(), tree)) {
-            decl.rhs = transformNode(decl.rhs, decl);
-        }
-    }
-
     //pull a single token 'sym' and store result in info
     //A: sym A1 | A0
     //A0=part doesn't start with sym
@@ -261,12 +264,14 @@ public class Factor extends SimpleTransformer {
 
     //pull sym from rule
     PullInfo pullRule(Name name, Name sym) {
+        System.out.println("pullRule " + name + " sym=" + sym);
         PullInfo info = new PullInfo();
-        if (cache.containsKey(name)) {
-            throw new RuntimeException("cached factor " + name);
-            //return cache.get(name);
+        String key = name + "-" + sym;
+        if (cache.containsKey(key)) {
+            //throw new RuntimeException("cached factor " + name);
+            return cache.get(key);
         }
-        cache.put(name, info);
+        cache.put(key, info);
         RuleDecl decl = tree.getRule(name);
         //check if already pulled before
 

@@ -6,7 +6,6 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 
 // ll(1) recursive descent parser generator
@@ -32,25 +31,6 @@ public class RecDescent {
             return regex.node.isName();
         }
         return node.isName();
-    }
-
-    void check() {
-        new SimpleTransformer(tree) {
-            @Override
-            public Node transformOr(Or or, Node parent) {
-                for (int i = 0; i < or.size(); i++) {
-                    List<Name> s1 = Helper.firstList(or.get(i), tree);
-                    for (int j = i + 1; j < or.size(); j++) {
-                        List<Name> s2 = Helper.firstList(or.get(j), tree);
-                        List<Name> sym = Factor.common(s1, s2);
-                        if (sym != null) {
-                            throw new RuntimeException("factorization needed for " + curRule.name);
-                        }
-                    }
-                }
-                return or;
-            }
-        }.transformAll();
     }
 
     void indent(String data) {
@@ -160,19 +140,16 @@ public class RecDescent {
     private void prepare() throws IOException {
         tree = EbnfToBnf.combineOr(tree);
         new Normalizer(tree).normalize();
-        //System.out.println("normalized");
-        //tree.printRules();
         astGen = new AstGen(tree, options);
         astGen.genAst();
-        astGen.varCount.clear();
         tree.printRules();
         Recursion.debug = true;
-        new Recursion(tree).all();
-        tree.printRules();
+        Factor.allowRecursion = true;
         Factor.debug = true;
         new Factor(tree).factorize();
         tree.printRules();
-
+        new Recursion(tree).all();
+        tree.printRules();
 
         new LexerGenerator(tree, options).generate();
     }
@@ -206,7 +183,6 @@ public class RecDescent {
         code.append("return res;");
         code.append("}");
     }
-
 
     void write(Node node) {
         if (node.astInfo.code != null) {

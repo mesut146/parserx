@@ -239,7 +239,7 @@ public class Helper {
 
     public static boolean canBeEmpty(Node node, Tree tree, Set<Name> set) {
         if (node.isName()) {
-            if (node.asName().astInfo.isFactored) return true;//acts as epsilon
+            if (node.astInfo.isFactored) return true;//acts as epsilon
             if (node.asName().isRule() && set.add(node.asName())) {
                 return canBeEmpty(tree.getRule(node.asName()).rhs, tree, set);
             }
