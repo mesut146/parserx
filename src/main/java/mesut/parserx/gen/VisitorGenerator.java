@@ -23,6 +23,33 @@ public class VisitorGenerator {
     }
 
     public void generate() throws IOException {
+        //genInterface();
+        genImpl();
+    }
+
+    void genInterface() throws IOException {
+        String className = options.parserClass + "Visitor";
+        if (options.packageName != null) {
+            writer.append("package " + options.packageName + ";");
+            writer.append("");
+        }
+        if (options.astClass != null) {
+            if (options.packageName != null) {
+                writer.append("import " + options.packageName + "." + options.astClass + ";");
+            }
+        }
+        writer.append(String.format("public interface %s<R,P>{", className));
+        writer.append("");
+        for (RuleDecl decl : tree.rules) {
+            writer.append(String.format("R visit%s(%s node, P p);", Utils.camel(decl.name), ruleType(decl)));
+        }
+        writer.append("}");
+
+        File file = new File(options.outDir, className + ".java");
+        Utils.write(writer.get(), file);
+    }
+
+    void genImpl() throws IOException {
         String className = options.parserClass + "Visitor";
         if (options.packageName != null) {
             writer.append("package " + options.packageName + ";");

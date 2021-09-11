@@ -325,7 +325,7 @@ public class RecDescent {
                 rhs = "consume(" + tokens + "." + name.name + ")";
             }
             if (name.astInfo.isFactor) {
-                String type = name.isToken ? "Token" : name.name;
+                String type = name.isToken ? "Token" : (options.astClass + "." + name.name);
                 code.append(String.format("%s %s = %s;", type, name.astInfo.factorName, rhs));
             }
             else {

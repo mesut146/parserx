@@ -1,6 +1,5 @@
 package mesut.parserx.nodes;
 
-import mesut.parserx.grammar.ParseException;
 import mesut.parserx.utils.UnicodeUtils;
 
 import java.util.Objects;
@@ -18,7 +17,7 @@ public class StringNode extends Node {
         this.value = value;
     }
 
-    public static StringNode from(String str) throws ParseException {
+    public static StringNode from(String str) {
         return new StringNode(UnicodeUtils.fromEscaped(UnicodeUtils.trimQuotes(str)));
     }
 

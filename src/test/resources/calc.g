@@ -13,7 +13,7 @@ token
 
 //productions
 
-@start = expr ;
+@start = expr;
 expr = add | term | pow;
 add = (term | pow) ("+" | "-") expr;
 mul = (unary | NUMBER | pow) ("*" | "/") (term | pow);
@@ -23,4 +23,6 @@ unary =  atom | "-" expr | "+" expr;
 
 atom = NUMBER | par;
 par = "(" expr ")";
+
+asd: {"+"} "+";
 

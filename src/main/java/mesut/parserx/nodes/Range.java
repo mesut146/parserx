@@ -34,10 +34,16 @@ public class Range extends Node implements Comparable<Range> {
     @Override
     public String toString() {
         if (start == end) {
+            if (start == '\"' || start == '\'') {
+                return "" + (char) start;
+            }
+            else if (UnicodeUtils.isSpecial(start)) {
+                return UnicodeUtils.escapeUnicode(start);
+            }
             return UnicodeUtils.printChar(start);
         }
-        if (Character.isAlphabetic(start) && Character.isAlphabetic(end)) {
-            return UnicodeUtils.printChar(start) + "-" + UnicodeUtils.printChar(end);
+        if (UnicodeUtils.isPrintableChar((char) start) && UnicodeUtils.isPrintableChar((char) end)) {
+            return (char) start + "-" + (char) end;
         }
         return UnicodeUtils.escapeUnicode(start) + "-" + UnicodeUtils.escapeUnicode(end);
     }

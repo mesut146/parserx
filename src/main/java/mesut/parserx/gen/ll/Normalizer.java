@@ -48,7 +48,13 @@ public class Normalizer extends SimpleTransformer {
         map.put(cls, original);
         tree.addRule(tmp);
         Name ref = tmp.ref();
-        ref.astInfo.varName = "g" + groupCount++;
+        if (node.varName != null) {
+            ref.astInfo.varName = node.varName;
+        }
+        else {
+            ref.astInfo.varName = "g" + groupCount;
+        }
+        groupCount++;
         return ref;
     }
 

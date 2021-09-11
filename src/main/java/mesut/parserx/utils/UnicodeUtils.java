@@ -18,16 +18,13 @@ public class UnicodeUtils {
         escapeMap.put('\\', '\\');
         escapeMap.put('s', ' ');
         //meta chars
-        escapeMap.put('*', '*');
-        escapeMap.put('+', '+');
-        escapeMap.put('?', '?');
+        //escapeMap.put('*', '*');
+        //escapeMap.put('+', '+');
+        //escapeMap.put('?', '?');
         escapeMapSimple.putAll(escapeMap);
         escapeMapSimple.remove('s');
         //escapeMapSimple.remove('\\');
         escapeMapSimple.remove('\'');
-        escapeMapSimple.remove('*');
-        escapeMapSimple.remove('+');
-        escapeMapSimple.remove('?');
     }
 
     //get escaped char to real char

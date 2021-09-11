@@ -101,7 +101,7 @@ public class LLGenTest {
 
     @Test
     public void parserx() throws Exception {
-        Factor.factorSequence = false;
+        Factor.factorSequence = true;
         Factor.debug = true;
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/parserx.g"));
         Options options = new Options();

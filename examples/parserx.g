@@ -43,7 +43,7 @@ option: IDENT "=" (NUMBER | BOOLEAN);
 tree: includeStatement* (tokenBlock  | skipBlock)* startDecl? ruleDecl*;
 
 includeStatement: "include" STRING;
-startDecl: "@start" SEPARATOR name;
+startDecl: "@start" SEPARATOR name ";";
 
 tokenBlock: ("token" | "tokens") "{" tokenDecl* "}";
 skipBlock: "skip" "{" tokenDecl* "}";
@@ -54,9 +54,9 @@ ruleDecl= name args? SEPARATOR rhs ";";
 args: "(" name ("," name)* ")";
 
 rhs: sequence ("|" sequence)*;
-sequence: regex+;
-regex: simple ("*" | "+" | "?")?;
-simple: group | ref | stringNode | bracketNode | untilNode | dotNode | EPSILON;
+sequence: regex+ label=("#" name)?;
+regex: (name "=")? simple ("*" | "+" | "?")?;
+simple: group | ref | stringNode | bracketNode | untilNode | dotNode | EPSILON | repeatNode;
 
 group: "(" rhs ")";
 stringNode: STRING;
@@ -65,3 +65,8 @@ untilNode: "~" regex;
 dotNode: ".";
 ref: name;
 name: IDENT;
+repeatNode: "{" rhs "}";
+
+test: "+" #lbl1
+    | "*" #lbl2;
+
