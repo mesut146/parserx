@@ -1,8 +1,8 @@
 package regex;
 
 import common.Env;
-import mesut.parserx.gen.Epsilons;
-import mesut.parserx.gen.Factor;
+import mesut.parserx.gen.transform.Epsilons;
+import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Or;

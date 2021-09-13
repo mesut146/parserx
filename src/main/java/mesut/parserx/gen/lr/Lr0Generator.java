@@ -2,7 +2,7 @@ package mesut.parserx.gen.lr;
 
 import mesut.parserx.nodes.Tree;
 
-public class Lr0Generator extends LRGen<Lr0ItemSet> {
+public class Lr0Generator extends LRTableGen<Lr0ItemSet> {
 
     public Lr0Generator(String dir, Tree tree) {
         this.dir = dir;

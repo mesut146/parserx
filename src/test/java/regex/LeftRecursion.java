@@ -1,10 +1,10 @@
 package regex;
 
 import common.Env;
-import mesut.parserx.gen.EbnfToBnf;
+import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.Helper;
-import mesut.parserx.gen.LeftRecursive;
-import mesut.parserx.gen.Recursion;
+import mesut.parserx.gen.transform.LeftRecursive;
+import mesut.parserx.gen.transform.Recursion;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.RuleDecl;

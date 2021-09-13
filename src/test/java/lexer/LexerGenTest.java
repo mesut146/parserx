@@ -31,7 +31,8 @@ public class LexerGenTest {
         Tree tree = Env.tree("str.g");
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
-        LexerGenerator gen = new LexerGenerator(tree, options);
+        tree.options = options;
+        LexerGenerator gen = new LexerGenerator(tree);
         gen.generate();
     }
 

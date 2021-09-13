@@ -1,5 +1,6 @@
-package mesut.parserx.gen;
+package mesut.parserx.gen.transform;
 
+import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
 public class Epsilons {
@@ -7,6 +8,10 @@ public class Epsilons {
 
     public Epsilons(Tree tree) {
         this.tree = tree;
+    }
+
+    public static Node trim(Node node, Tree tree) {
+        return new Epsilons(tree).trim(node);
     }
 
     //trim major epsilon so that result is at least one token long

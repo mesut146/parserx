@@ -26,9 +26,9 @@ public class LexerGenerator {
         this.options = options;
     }
 
-    public LexerGenerator(Tree tree, Options options) {
+    public LexerGenerator(Tree tree) {
         this.dfa = tree.makeNFA().dfa();
-        this.options = options;
+        this.options = tree.options;
     }
 
     public void generate() throws IOException {
@@ -50,7 +50,6 @@ public class LexerGenerator {
 
         writeTokenClass();
     }
-
 
     void makeTables() {
         makeTrans();

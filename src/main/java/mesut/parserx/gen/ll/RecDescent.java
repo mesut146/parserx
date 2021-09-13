@@ -1,6 +1,9 @@
 package mesut.parserx.gen.ll;
 
 import mesut.parserx.gen.*;
+import mesut.parserx.gen.transform.EbnfToBnf;
+import mesut.parserx.gen.transform.Factor;
+import mesut.parserx.gen.transform.Recursion;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
@@ -20,9 +23,9 @@ public class RecDescent {
     int flagCount;
     int firstCount;
 
-    public RecDescent(Tree tree, Options options) {
+    public RecDescent(Tree tree) {
         this.tree = tree;
-        this.options = options;
+        this.options = tree.options;
     }
 
     public static boolean isSimple(Node node) {
@@ -144,7 +147,7 @@ public class RecDescent {
     private void prepare() throws IOException {
         tree = EbnfToBnf.combineOr(tree);
         new Normalizer(tree).normalize();
-        astGen = new AstGen(tree, options);
+        astGen = new AstGen(tree);
         astGen.genAst();
         tree.printRules();
         Recursion.debug = true;
@@ -161,7 +164,7 @@ public class RecDescent {
             tree.printRules();
         }
 
-        new LexerGenerator(tree, options).generate();
+        new LexerGenerator(tree).generate();
     }
 
     void gen(RuleDecl decl) {

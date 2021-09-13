@@ -1,7 +1,10 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.gen.EbnfToBnf;
-import mesut.parserx.nodes.*;
+import mesut.parserx.gen.transform.EbnfToBnf;
+import mesut.parserx.nodes.Name;
+import mesut.parserx.nodes.RuleDecl;
+import mesut.parserx.nodes.Sequence;
+import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 
 import java.io.File;
@@ -10,53 +13,28 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
 //lr table generator
-public abstract class LRGen<T extends LrItemSet> {
+public abstract class LRTableGen<T extends LrItemSet> {
     public static Name dollar = new Name("$", true);//eof
+    public int acc = 1;
     Tree tree;
     RuleDecl start;
     String dir;
     LrDFA<T> table = new LrDFA<>();
     LrItem first;
 
-    public static RuleDecl makeStart(Tree tree) {
+    public void makeStart() {
         if (tree.start == null) {
             throw new RuntimeException("no start rule is defined");
         }
-        List<RuleDecl> list = tree.getRules(tree.start.name);
-        boolean create = false;
-        if (list.size() == 1) {
-            //if start rule is already simple don't create new one
-            Node rhs = list.get(0).rhs;
-            if (rhs.isSequence()) {
-                Node r = rhs.asSequence().normal();
-                if (!r.isName()) {
-                    create = true;
-                }
-            }
-        }
-        else {
-            create = true;
-        }
-        if (create) {
-            //regex start node,create new one
-            String name = "START$";
-            if (tree.start.name.equals(name)) {
-                throw new RuntimeException("start name already exist");
-            }
-            RuleDecl start = new RuleDecl(name, Sequence.of(tree.start));
-            tree.addRule(start);
-            tree.start = start.ref();
-            return start;
-        }
-        return list.get(0);
+        start = new RuleDecl("@start", new Sequence(tree.start));
+        tree.addRule(start);
     }
 
     public File tableDotFile() {
-        return new File(dir, Utils.newName(tree.file.getName(), "-table.dot"));
+        return new File(tree.options.outDir, Utils.newName(tree.file.getName(), "-table.dot"));
     }
 
     public void writeTableDot() {
@@ -68,7 +46,7 @@ public abstract class LRGen<T extends LrItemSet> {
         tree = EbnfToBnf.transform(tree);
         tree.prepare();
 
-        start = makeStart(tree);
+        makeStart();
         first = new LrItem(start, 0);
     }
 
@@ -144,6 +122,9 @@ public abstract class LRGen<T extends LrItemSet> {
                         queue.add(targetSet);
                         log(from, curSet, toFirst, targetSet, symbol);
                     }
+                }
+                if (curSet == firstSet && symbol.equals(tree.start)) {
+                    acc = table.getId(targetSet);
                 }
             }
             System.out.println("-----------------");
@@ -222,7 +203,7 @@ public abstract class LRGen<T extends LrItemSet> {
     public void writeDot(PrintWriter dotWriter) {
         if (dotWriter == null) {
             try {
-                dotWriter = new PrintWriter(new File(dir, Utils.newName(tree.file.getName(), ".dot")));
+                dotWriter = new PrintWriter(new File(tree.options.outDir, Utils.newName(tree.file.getName(), ".dot")));
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 return;

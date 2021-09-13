@@ -1,9 +1,8 @@
 package parser;
 
 import common.Env;
-import mesut.parserx.gen.Options;
 import mesut.parserx.gen.lr.CodeGen;
-import mesut.parserx.gen.lr.LRGen;
+import mesut.parserx.gen.lr.LRTableGen;
 import mesut.parserx.gen.lr.Lr0Generator;
 import mesut.parserx.gen.lr.Lr1Generator;
 import mesut.parserx.nodes.Tree;
@@ -29,7 +28,7 @@ public class LrTest {
         }
     }
 
-    void dots(LRGen gen, File file) throws IOException {
+    void dots(LRTableGen<?> gen, File file) throws IOException {
         gen.writeTableDot();
         gen.writeGrammar(Env.dotFile(file.getName() + "2"));
 
@@ -71,13 +70,24 @@ public class LrTest {
         //file = Env.getFile2("lr1/rr.g");
         Tree tree = Tree.makeTree(file);
         //Lr1ItemSet.mergeLa = true;
-        Lr1Generator generator = new Lr1Generator(Env.dotDir().getAbsolutePath(), tree);
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        Lr1Generator generator = new Lr1Generator(tree);
         generator.generate();
         generator.merge();
         dots(generator, file);
-        Options options = new Options();
-        options.outDir = Env.dotDir().getAbsolutePath();
-        CodeGen codeGen = new CodeGen(generator, options);
+        CodeGen codeGen = new CodeGen(generator,false);
+        codeGen.gen();
+    }
+
+    @Test
+    public void real() throws Exception {
+        Tree tree = Env.tree("lr1/calc3.g");
+        tree.options.packageName = "lr";
+        tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lr";
+        Lr1Generator generator = new Lr1Generator(tree);
+        generator.generate();
+        generator.merge();
+        CodeGen codeGen = new CodeGen(generator,false);
         codeGen.gen();
     }
 }

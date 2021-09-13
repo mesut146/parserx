@@ -21,23 +21,6 @@ public class Lr1ItemSet extends LrItemSet {
         this(new ArrayList<>(Collections.singletonList(kernel)), tree);
     }
 
-    @Override
-    public void closure() {
-        if (all.isEmpty()) {
-            all.addAll(kernel);
-            for (LrItem item : kernel) {
-                closure(item);
-            }
-        }
-    }
-
-    @Override
-    public void closure(LrItem it) {
-        if (it.isDotNonTerminal()) {
-            closure(it.getDotNode(), it);
-        }
-    }
-
     public void closure(Name node, LrItem sender) {
         if (node.isToken) {
             throw new RuntimeException("closure error on node: " + node + ", was expecting rule");
@@ -89,7 +72,7 @@ public class Lr1ItemSet extends LrItemSet {
         }
         all.add(item);
         if (item.isDotNonTerminal() && !item.getDotNode().equals(node)) {
-            closure(item);
+            closure(item.getDotNode(), item);
         }
     }
 

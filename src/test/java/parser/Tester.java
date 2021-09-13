@@ -1,7 +1,6 @@
 package parser;
 
 import common.Env;
-import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
@@ -20,13 +19,12 @@ public class Tester {
         if (!tester.exists()) {
             Utils.write(Utils.read(Env.getResFile("Tester.java.1")), tester);
         }
-
-        Options options = new Options();
-        options.outDir = Env.dotDir().getAbsolutePath();
-        RecDescent gen = new RecDescent(tree, options);
+        String outDir = Env.dotDir().getAbsolutePath();
+        tree.options.outDir = outDir;
+        RecDescent gen = new RecDescent(tree);
         gen.gen();
 
-        File out = new File(options.outDir, "out");
+        File out = new File(outDir, "out");
         if (out.exists()) {
             Files.walkFileTree(out.toPath(), new SimpleFileVisitor<Path>() {
                 @Override
@@ -40,7 +38,7 @@ public class Tester {
         out.mkdir();
 
         ProcessBuilder builder = new ProcessBuilder("javac", "-d", "./out", "Parser.java", "Tester.java");
-        builder.directory(new File(options.outDir));
+        builder.directory(new File(outDir));
         builder.redirectErrorStream(true);
         Process p = builder.start();
         if (p.waitFor() != 0) {

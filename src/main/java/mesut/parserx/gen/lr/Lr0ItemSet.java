@@ -12,41 +12,22 @@ public class Lr0ItemSet extends LrItemSet {
         super(kernel, tree);
     }
 
-    public void closure() {
-        if (all.isEmpty()) {
-            all.addAll(kernel);
-            for (LrItem item : kernel) {
+    public void closure(Name node, LrItem it) {
+        if (node.isToken) {
+            throw new RuntimeException("closure symbol is token: " + node + "in " + it);
+        }
+        List<RuleDecl> ruleDecl = tree.getRules(node.name);
+        for (RuleDecl decl : ruleDecl) {
+            LrItem item = new LrItem(decl, 0);
+            if (!all.contains(item)) {
+                all.add(item);
+                if (kernel.contains(item)) {
+                    //todo
+                }
                 if (item.isDotNonTerminal()) {
                     closure(item.getDotNode(), item);
                 }
             }
-        }
-    }
-
-    @Override
-    public void closure(LrItem it) {
-
-    }
-
-    public void closure(Name node, LrItem it) {
-        if (!node.isToken) {
-            List<RuleDecl> ruleDecl = tree.getRules(node.name);
-            for (RuleDecl decl : ruleDecl) {
-                LrItem item = new LrItem(decl, 0);
-                if (!all.contains(item)) {
-                    all.add(item);
-                    if (kernel.contains(item)) {
-                        //todo
-                    }
-                    if (item.isDotNonTerminal()) {
-                        closure(item.getDotNode(), item);
-                    }
-                }
-            }
-
-        }
-        else {
-            throw new RuntimeException("closure error on node: " + node);
         }
     }
 

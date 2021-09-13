@@ -1,8 +1,6 @@
 import common.Env;
-import mesut.parserx.gen.EbnfToBnf;
 import mesut.parserx.gen.Helper;
-import mesut.parserx.gen.PrecedenceHelper;
-import mesut.parserx.gen.PrepareTree;
+import mesut.parserx.gen.transform.PrecedenceHelper;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;

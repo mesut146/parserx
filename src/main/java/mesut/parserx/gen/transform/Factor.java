@@ -1,5 +1,7 @@
-package mesut.parserx.gen;
+package mesut.parserx.gen.transform;
 
+import mesut.parserx.gen.Helper;
+import mesut.parserx.gen.transform.Epsilons;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
 
@@ -265,7 +267,7 @@ public class Factor extends SimpleTransformer {
     }
 
     //pull sym from rule
-    PullInfo pullRule(Name name, Name sym) {
+    public PullInfo pullRule(Name name, Name sym) {
         System.out.println("pullRule " + name + " sym=" + sym);
         PullInfo info = new PullInfo();
         String key = name + "-" + sym;

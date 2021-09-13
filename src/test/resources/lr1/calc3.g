@@ -9,8 +9,6 @@ token
 //productions
 
 @start = E;
-E: N;
-E: N "+" E;
-E: "(" E ")";
+E: N | N "+" E | "(" E ")";
 
 

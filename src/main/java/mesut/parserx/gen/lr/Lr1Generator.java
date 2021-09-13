@@ -6,10 +6,9 @@ import mesut.parserx.nodes.Tree;
 import java.util.*;
 
 
-public class Lr1Generator extends LRGen<Lr1ItemSet> {
+public class Lr1Generator extends LRTableGen<Lr1ItemSet> {
 
-    public Lr1Generator(String dir, Tree tree) {
-        this.dir = dir;
+    public Lr1Generator( Tree tree) {
         this.tree = tree;
     }
 

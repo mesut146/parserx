@@ -1,28 +1,49 @@
+$package$
 import java.util.*;
+import java.io.*;
 
 public class $parser_class${
     Stack<Symbol> stack = new Stack<>();
     Stack<Integer> states = new Stack<>();
     $lexer_class$ lexer;
     static int[] rhs_sizes = {$rhs_sizes$};
-    static int[] ruleIds = {$ruleIds$};//rule id -> symbol id
-    static int[][] table = unpackTable(table_packed);
+    //rule id -> symbol id
+    static int[] ruleIds = {$ruleIds$};
     static String table_packed = $table_packed$;
+    static int[][] table = unpackTable(table_packed,$state_count$,$symbol_count$);
 
     public $parser_class$($lexer_class$ lexer){
         this.lexer = lexer;
     }
 
-    static int[][] unpackTable(String s){
-
-
+    static int[][] unpackTable(String s,int states,int symbols){
+      int[][] table = new int[states][symbols];
+      int state = 0;
+      for(int i = 0 ; i < s.length();){
+        int sc = s.charAt(i++);//shift count
+        while(sc-- > 0){
+          int symbol = s.charAt(i++);
+          int target = s.charAt(i++);
+          table[state][symbol] = target;
+        }
+        int rc = s.charAt(i++);//reduce count
+        while(rc-- > 0){
+          int act = s.charAt(i++);
+          int symc = s.charAt(i++);
+          while(symc-- > 0){
+            table[state][s.charAt(i++)] = -act;
+          }
+        }
+        state++;
+      }
+      return table;
     }
 
-    Symbol next(){
-    return new Symbol(lexer.$lexer_method$);
+    Symbol next() throws IOException{
+        return new Symbol(lexer.$lexer_method$());
     }
 
-    public void parse(){
+    public void parse() throws IOException{
         Symbol symbol = next();
         states.push(0);//initial state
         int state = 0;
@@ -39,10 +60,11 @@ public class $parser_class${
           }
           if(action > 0){
             //shift
+            System.out.printf("shift to %s with %s\n",state,symbol);
             stack.push(symbol);
             states.push(action);
-            state = action;
             symbol = next();
+            action = table[action][symbol.id];
           }
           else{
             //-action is rule index
@@ -68,11 +90,11 @@ class Symbol{
     public int id;
 
     public Symbol(int id){
-      this.id = id;
+        this.id = id;
     }
-     public Symbol($token_class$ token){
-       this.token = token;
-       this.id = token.type;
-       this.name = token.value;
-     }
+    public Symbol($token_class$ token){
+        this.token = token;
+        this.id = token.type;
+        this.name = token.value;
+    }
 }

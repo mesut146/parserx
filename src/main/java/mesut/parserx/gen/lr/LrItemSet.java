@@ -64,9 +64,22 @@ public abstract class LrItemSet {
         return list;
     }
 
-    public abstract void closure();
+    public void closure() {
+        if (all.isEmpty()) {
+            all.addAll(kernel);
+            for (LrItem item : kernel) {
+                if (item.isDotNonTerminal()) {
+                    closure(item.getDotNode(), item);
+                }
+            }
+        }
+    }
 
-    public abstract void closure(LrItem it);
+    public void closure(LrItem it) {
+        if (it.isDotNonTerminal()) {
+            closure(it.getDotNode(), it);
+        }
+    }
 
     public abstract void closure(Name node, LrItem sender);
 

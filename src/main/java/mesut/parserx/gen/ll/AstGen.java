@@ -20,9 +20,9 @@ public class AstGen {
     int groupCount;
     String curRule;
 
-    public AstGen(Tree tree, Options options) {
+    public AstGen(Tree tree) {
         this.tree = tree;
-        this.options = options;
+        this.options = tree.options;
     }
 
     void genAst() throws IOException {
@@ -90,6 +90,7 @@ public class AstGen {
                     name.astInfo.type = new Type(options.astClass, name.name);
                 }
                 else {
+                    //or child not visible
                     //name.astInfo.type = new Type();
                 }
                 parent.append(String.format("public %s %s;", name.name, vname));

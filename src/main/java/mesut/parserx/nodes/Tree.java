@@ -4,6 +4,7 @@ import mesut.parserx.dfa.Alphabet;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.NFABuilder;
 import mesut.parserx.gen.Helper;
+import mesut.parserx.gen.Options;
 import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.grammar.GParser;
 import mesut.parserx.utils.Utils;
@@ -16,13 +17,13 @@ import java.util.List;
 //the grammar file for both lexer and parser
 public class Tree {
 
+    public List<TokenDecl> tokens = new ArrayList<>();
     public List<RuleDecl> rules = new ArrayList<>();
     public List<RuleDecl> hiddenRules = new ArrayList<>();
+    public Options options = new Options();
     public Name start;
     public File file;
     public Alphabet alphabet = new Alphabet();
-    public List<TokenDecl> tokens = new ArrayList<>();
-    public boolean mergeRules = false;//make ors if true
     List<File> includes = new ArrayList<>();
 
     public Tree() {
@@ -34,6 +35,7 @@ public class Tree {
         includes = tree.includes;
         file = tree.file;
         tokens = tree.tokens;
+        options = tree.options;
     }
 
     public static Tree makeTree(File path) {
@@ -112,21 +114,6 @@ public class Tree {
     }
 
     public void addRule(RuleDecl rule) {
-        if (!mergeRules && getRule(rule.ref()) != null) {
-            throw new RuntimeException(String.format("rule %s already exists", rule.name));
-        }
-        if (mergeRules) {
-            RuleDecl prev = getRule(rule.ref());
-            Or or;
-            if (prev.rhs.isOr()) {
-                or = prev.rhs.asOr();
-            }
-            else {
-                or = new Or(prev.rhs);
-            }
-            or.add(rule.rhs);
-            prev.rhs = or;
-        }
         rule.index = rules.size();
         rules.add(rule);
     }

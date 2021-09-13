@@ -1,6 +1,6 @@
 package regex;
 
-import mesut.parserx.gen.EpsilonTrimmer;
+import mesut.parserx.gen.transform.EpsilonTrimmer;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.Tree;

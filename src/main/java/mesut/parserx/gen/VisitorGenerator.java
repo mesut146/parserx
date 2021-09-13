@@ -12,9 +12,9 @@ public class VisitorGenerator {
     Options options;
     CodeWriter writer;
 
-    public VisitorGenerator(Tree tree, Options options) {
+    public VisitorGenerator(Tree tree) {
         this.tree = tree;
-        this.options = options;
+        this.options = tree.options;
         writer = new CodeWriter(true);
     }
 

@@ -9,12 +9,12 @@ import java.util.List;
 
 public class DotWriter {
 
-    public static void table(LRGen generator, boolean writeRules) {
+    public static void table(LRTableGen generator, boolean writeRules) {
         try {
             PrintWriter writer = new PrintWriter(generator.tableDotFile());
             LrDFA<?> table = generator.table;
             List<Name> tokens = table.tokens;
-            tokens.add(LRGen.dollar);
+            tokens.add(LRTableGen.dollar);
 
             writer.println("digraph G{");
             writer.println("rankdir = TD");
@@ -81,7 +81,7 @@ public class DotWriter {
                         else {
                             //lr1
                             if (item.lookAhead.contains(token)) {
-                                if (item.lookAhead.contains(LRGen.dollar) && name.equals(start)) {
+                                if (item.lookAhead.contains(LRTableGen.dollar) && name.equals(start)) {
                                     writer.print("accept");
                                 }
                                 else {

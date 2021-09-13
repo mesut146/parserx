@@ -3,6 +3,8 @@ package parser;
 import common.Env;
 import mesut.parserx.gen.*;
 import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.transform.Epsilons;
+import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
@@ -16,10 +18,11 @@ public class LLGenTest {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         Tree tree = Tree.makeTree(Env.getResFile("ll/norm.g"));
+        tree.options = options;
         //new Normalizer(tree).normalize();
         //new Factor(tree).factorize();
         //System.out.println(tree);
-        new RecDescent(tree, options).gen();
+        new RecDescent(tree).gen();
     }
 
     @Test
@@ -56,7 +59,8 @@ public class LLGenTest {
 
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
-        RecDescent gen = new RecDescent(tree, options);
+        tree.options = options;
+        RecDescent gen = new RecDescent(tree);
         Name.debug = false;
         Factor.debug = true;
         gen.gen();
@@ -67,8 +71,9 @@ public class LLGenTest {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         Tree tree = Tree.makeTree(Env.getResFile("calc-1.g"));
-        new LexerGenerator(tree, options).generate();
-        RecDescent gen = new RecDescent(tree, options);
+        tree.options = options;
+        new LexerGenerator(tree).generate();
+        RecDescent gen = new RecDescent(tree);
         gen.gen();
     }
 
@@ -79,7 +84,8 @@ public class LLGenTest {
         options.parserClass = "Test";
         //Tree tree = Tree.makeTree(Env.getResFile("calc-1.g"));
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/parserx.g"));
-        VisitorGenerator visitorGenerator = new VisitorGenerator(tree, options);
+        tree.options = options;
+        VisitorGenerator visitorGenerator = new VisitorGenerator(tree);
         visitorGenerator.generate();
     }
 
@@ -95,7 +101,8 @@ public class LLGenTest {
         //new Recursion(tree).all();
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
-        RecDescent rec = new RecDescent(tree, options);
+        tree.options = options;
+        RecDescent rec = new RecDescent(tree);
         rec.gen();
     }
 
@@ -107,11 +114,12 @@ public class LLGenTest {
         Options options = new Options();
         options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/itself";
         options.packageName = "itself";
+        tree.options = options;
 
-        VisitorGenerator visit = new VisitorGenerator(tree, options);
+        VisitorGenerator visit = new VisitorGenerator(tree);
         visit.generate();
 
-        RecDescent rec = new RecDescent(tree, options);
+        RecDescent rec = new RecDescent(tree);
         rec.gen();
     }
 
