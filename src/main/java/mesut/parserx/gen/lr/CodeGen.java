@@ -43,8 +43,6 @@ public class CodeGen {
         template.set("lexer_method", options.lexerFunction);
         template.set("token_class", options.tokenClass);
         genIds();
-        template.set("state_count", String.valueOf(dfa.lastId + 1));
-        template.set("symbol_count", String.valueOf(dfa.tokens.size() + dfa.rules.size()));
         ruleId(template);
         writeTable(template);
         File file = new File(options.outDir, options.parserClass + ".java");
@@ -96,9 +94,32 @@ public class CodeGen {
 
     void writeTable(Template template) {
         StringBuilder sb = new StringBuilder();
-
-        lexerGenerator.idMap.put("EOF", 0);
         sb.append("\"");
+
+        sb.append(pack(dfa.lastId + 1));//state count,width
+        sb.append(pack(dfa.tokens.size() + dfa.rules.size() + 2));//symbol count,height
+
+        //write accept
+        sb.append(pack(gen.acc));
+        LrItemSet acc = dfa.getSet(gen.acc);
+        if (islr0) {
+            //all tokens acc
+            sb.append(pack(dfa.tokens.size()));
+            for (Name tok : dfa.tokens) {
+                sb.append(pack(getId(tok)));
+            }
+        }
+        else {
+            sb.append(pack(1));
+            for (LrItem item : acc.kernel) {
+                if (item.hasReduce() && item.rule.name.equals(gen.start.name) && item.lookAhead.contains(LRTableGen.dollar)) {
+                    sb.append(pack(getId(EOF)));
+                    break;
+                }
+            }
+        }
+
+
         for (int state = 0; state <= dfa.lastId; state++) {
             //write shifts
             List<? extends LrTransition<?>> shifts = dfa.getTrans(state);
@@ -110,30 +131,21 @@ public class CodeGen {
             }
             //write reduces
             List<LrItem> list = dfa.getSet(state).getReduce();
-            sb.append(pack(list.size()));//reduce count
+            int count = list.size();//reduce count
+            if (acc == dfa.getSet(state)) {
+                count--;
+            }
+            sb.append(pack(count));
             for (LrItem reduce : list) {
+                if (reduce.rule.name.equals(gen.start.name)) {
+                    continue;
+                }
                 int action = reduce.rule.index;
                 sb.append(pack(action));
                 sb.append(pack(reduce.lookAhead.size()));
                 for (Name sym : reduce.lookAhead) {
                     sb.append(pack(getId(sym)));
                 }
-                if (reduce.rule.name.equals(gen.start.name) && reduce.lookAhead.contains(LRTableGen.dollar)) {
-                    System.out.println("acc");
-                    sb.append(pack(Integer.MAX_VALUE));
-                }
-            }
-        }
-        //write accept
-        LrItemSet acc = dfa.getSet(gen.acc);
-        if (islr0) {
-            for (Name tok : dfa.tokens) {
-                sb.append(pack(getId(tok)));
-            }
-        }
-        else {
-            for (Name la : acc.all.get(0).lookAhead) {
-                sb.append(pack(getId(la)));
             }
         }
 

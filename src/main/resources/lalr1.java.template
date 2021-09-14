@@ -6,32 +6,41 @@ public class $parser_class${
     Stack<Symbol> stack = new Stack<>();
     Stack<Integer> states = new Stack<>();
     $lexer_class$ lexer;
+    //rule index -> rhs size
     static int[] rhs_sizes = {$rhs_sizes$};
-    //rule id -> symbol id
+    //rule index -> symbol id
     static int[] ruleIds = {$ruleIds$};
     static String table_packed = $table_packed$;
-    static int[][] table = unpackTable(table_packed,$state_count$,$symbol_count$);
+    static int[][] table = unpackTable(table_packed);
 
     public $parser_class$($lexer_class$ lexer){
         this.lexer = lexer;
     }
 
-    static int[][] unpackTable(String s,int states,int symbols){
+    static int[][] unpackTable(String s){
+      int i = 0;
+      int states = s.charAt(i++);
+      int symbols = s.charAt(i++);
       int[][] table = new int[states][symbols];
+      int acc_state = s.charAt(i++);
+      int acc_count = s.charAt(i++);
+      while(acc_count-- > 0){
+        table[acc_state][s.charAt(i++)] = 3;
+      }
       int state = 0;
-      for(int i = 0 ; i < s.length();){
+      while(i < s.length()){
         int sc = s.charAt(i++);//shift count
         while(sc-- > 0){
           int symbol = s.charAt(i++);
           int target = s.charAt(i++);
-          table[state][symbol] = target;
+          table[state][symbol] = (target << 2) | 1;
         }
         int rc = s.charAt(i++);//reduce count
         while(rc-- > 0){
-          int act = s.charAt(i++);
-          int symc = s.charAt(i++);
+          int act = s.charAt(i++);//rule index
+          int symc = s.charAt(i++);//symbol count
           while(symc-- > 0){
-            table[state][s.charAt(i++)] = -act;
+            table[state][s.charAt(i++)] = (act << 2) | 2;
           }
         }
         state++;
@@ -47,37 +56,42 @@ public class $parser_class${
         Symbol symbol = next();
         states.push(0);//initial state
         int state = 0;
-        int action = table[state][symbol.id];
 
         while(true){
+          int action = table[state][symbol.id];
           if(action == 0){
             System.out.println("error");
             return;
           }
-          if(action == Integer.MAX_VALUE){
-            System.out.println("accept");
-            return;
-          }
-          if(action > 0){
+          if((action & 3) == 1){
             //shift
-            System.out.printf("shift to %s with %s\n",state,symbol);
+            action >>= 2;
+            System.out.printf("shift to %s with %s\n",action,symbol);
             stack.push(symbol);
             states.push(action);
             symbol = next();
-            action = table[action][symbol.id];
+            state = action;
           }
-          else{
-            //-action is rule index
-            int size = rhs_sizes[-action];
+          else if((action & 3) == 2){
+            //reduce
+            action >>= 2;
+            System.out.println("reduced "+action);
+            //action is rule index
+            int size = rhs_sizes[action];
             while(size-- > 0){
               stack.pop();
               states.pop();
             }
-            symbol = new Symbol(ruleIds[-action]);
-            stack.push(symbol);
-            int from = states.peek();
-            action = table[from][symbol.id];
-            System.out.println("reduced "+(-action));
+            symbol = new Symbol(ruleIds[action]);
+            //stack.push(symbol);
+            state = states.peek();
+            System.out.println("state = " + state);
+            //todo call ast builder
+          }
+          else{
+            System.out.println("accept");
+            System.out.println(stack.pop());
+            return;
           }
         }
     }
@@ -95,6 +109,6 @@ class Symbol{
     public Symbol($token_class$ token){
         this.token = token;
         this.id = token.type;
-        this.name = token.value;
+        this.name = token.name;
     }
 }

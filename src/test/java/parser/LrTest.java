@@ -28,13 +28,13 @@ public class LrTest {
         }
     }
 
-    void dots(LRTableGen<?> gen, File file) throws IOException {
+    void dots(LRTableGen<?> gen, String name) throws IOException {
         gen.writeTableDot();
-        gen.writeGrammar(Env.dotFile(file.getName() + "2"));
+        gen.writeGrammar(Env.dotFile(name + "2"));
 
         dot(gen.tableDotFile());
 
-        File dot = Env.dotFile(Utils.newName(file.getName(), ".dot"));
+        File dot = Env.dotFile(Utils.newName(name, ".dot"));
         gen.writeDot(new PrintWriter(dot));
         dot(dot);
     }
@@ -54,7 +54,7 @@ public class LrTest {
         Tree tree = Tree.makeTree(file);
         Lr0Generator generator = new Lr0Generator(Env.dotDir().getAbsolutePath(), tree);
         generator.generate();
-        dots(generator, file);
+        dots(generator, file.getName());
     }
 
     @Test
@@ -68,14 +68,15 @@ public class LrTest {
         //file = Env.getFile2("lr1/lr1.g");
         //file = Env.getResFile("rec/cyc.g");
         //file = Env.getFile2("lr1/rr.g");
-        Tree tree = Tree.makeTree(file);
+        //Tree tree = Tree.makeTree(file);
+        Tree tree = Env.tree("lr1/test.g");
         //Lr1ItemSet.mergeLa = true;
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         Lr1Generator generator = new Lr1Generator(tree);
         generator.generate();
         generator.merge();
-        dots(generator, file);
-        CodeGen codeGen = new CodeGen(generator,false);
+        dots(generator, tree.file.getName());
+        CodeGen codeGen = new CodeGen(generator, false);
         codeGen.gen();
     }
 
@@ -87,7 +88,7 @@ public class LrTest {
         Lr1Generator generator = new Lr1Generator(tree);
         generator.generate();
         generator.merge();
-        CodeGen codeGen = new CodeGen(generator,false);
+        CodeGen codeGen = new CodeGen(generator, false);
         codeGen.gen();
     }
 }
