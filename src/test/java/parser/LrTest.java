@@ -52,7 +52,7 @@ public class LrTest {
         file = Env.getResFile("lr1/calc3.g");
         //file = Env.getFile2("javaParser.g");
         Tree tree = Tree.makeTree(file);
-        Lr0Generator generator = new Lr0Generator(Env.dotDir().getAbsolutePath(), tree);
+        Lr0Generator generator = new Lr0Generator(tree);
         generator.generate();
         dots(generator, file.getName());
     }
@@ -81,6 +81,19 @@ public class LrTest {
     }
 
     @Test
+    public void pred() throws Exception {
+        Tree tree = Env.tree("lr1/pred.g");
+        tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lr";
+        tree.options.packageName = "lr";
+        Lr1Generator generator = new Lr1Generator(tree);
+        generator.generate();
+        //generator.merge();
+        //dots(generator, tree.file.getName());
+        CodeGen codeGen = new CodeGen(generator, false);
+        codeGen.gen();
+    }
+
+    @Test
     public void real() throws Exception {
         Tree tree = Env.tree("lr1/calc3.g");
         tree.options.packageName = "lr";
@@ -90,5 +103,15 @@ public class LrTest {
         generator.merge();
         CodeGen codeGen = new CodeGen(generator, false);
         codeGen.gen();
+    }
+
+    @Test
+    public void lookahead() throws Exception {
+        //Tree tree = Env.tree("lr1/la.g");
+        Tree tree = Env.tree("lr1/pred.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        Lr1Generator generator = new Lr1Generator(tree);
+        generator.generate();
+        dots(generator, tree.file.getName());
     }
 }

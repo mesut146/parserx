@@ -12,6 +12,7 @@ public class $parser_class${
     static int[] ruleIds = {$ruleIds$};
     static String table_packed = $table_packed$;
     static int[][] table = unpackTable(table_packed);
+    public static boolean debug = false;
 
     public $parser_class$($lexer_class$ lexer){
         this.lexer = lexer;
@@ -60,13 +61,12 @@ public class $parser_class${
         while(true){
           int action = table[state][symbol.id];
           if(action == 0){
-            System.out.println("error");
-            return;
+            throw new RuntimeException("error");
           }
           if((action & 3) == 1){
             //shift
             action >>= 2;
-            System.out.printf("shift to %s with %s\n",action,symbol);
+            if(debug)System.out.printf("shift to %s with %s\n",action,symbol);
             stack.push(symbol);
             states.push(action);
             symbol = next();
@@ -75,17 +75,24 @@ public class $parser_class${
           else if((action & 3) == 2){
             //reduce
             action >>= 2;
-            System.out.println("reduced "+action);
+            if(debug)System.out.println("reduced "+action);
             //action is rule index
             int size = rhs_sizes[action];
+            Symbol[] rhs = new Symbol[size];
             while(size-- > 0){
-              stack.pop();
+              rhs[size] = stack.pop();
               states.pop();
             }
-            symbol = new Symbol(ruleIds[action]);
-            //stack.push(symbol);
+            Symbol tmp = new Symbol(ruleIds[action]);
+            tmp.children = Arrays.asList(rhs);;
+            stack.push(tmp);
             state = states.peek();
-            System.out.println("state = " + state);
+            if(debug)System.out.println("state = " + state);
+            int act = table[state][tmp.id];
+            act >>= 2;
+            if(debug)System.out.println("goto " + act);
+            state = act;
+            states.push(state);
             //todo call ast builder
           }
           else{
@@ -100,8 +107,9 @@ public class $parser_class${
 //a token or a rule
 class Symbol{
     $token_class$ token;
-    String name;
+    public String name;
     public int id;
+    public List<Symbol> children = new ArrayList<>();
 
     public Symbol(int id){
         this.id = id;
@@ -111,4 +119,29 @@ class Symbol{
         this.id = token.type;
         this.name = token.name;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if(token != null){
+          sb.append(token.value);
+        }
+        else{
+          for(Symbol ch : children){
+            sb.append(ch);
+          }
+        }
+        return sb.toString();
+    }
+
+    /*@Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Symbol{");
+        sb.append("id=").append(id);
+        sb.append(", token=").append(token);
+        sb.append(", name='").append(name).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }*/
+
 }

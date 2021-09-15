@@ -67,11 +67,16 @@ public class Lr1ItemSet extends LrItemSet {
     }
 
     void addItem(LrItem item, Name node) {
-        if (all.contains(item)) {
-            return;
+        for (LrItem prev : all) {
+            if (prev.isSame(item)) {
+                //merge la
+                prev.lookAhead.addAll(item.lookAhead);
+                return;
+            }
         }
         all.add(item);
-        if (item.isDotNonTerminal() && !item.getDotNode().equals(node)) {
+        //!item.getDotNode().equals(node)
+        if (item.isDotNonTerminal()) {
             closure(item.getDotNode(), item);
         }
     }
@@ -82,19 +87,16 @@ public class Lr1ItemSet extends LrItemSet {
         Set<Name> list = new HashSet<>();
         for (RuleDecl decl : tree.getRules(name.name)) {
             Sequence node = decl.rhs.asSequence();
-            handleFirst(node.get(0).asName(), list);
+            Name first = node.get(0).asName();
+            if (first.isToken) {
+                list.add(first);
+            }
+            else {
+                //todo prevent left recursion
+                list.addAll(first(first));
+            }
         }
         return list;
-    }
-
-    void handleFirst(Name node, Set<Name> list) {
-        if (node.asName().isToken) {
-            list.add(node);
-        }
-        else {
-            //todo prevent left recursion
-            list.addAll(first(node));
-        }
     }
 
 }

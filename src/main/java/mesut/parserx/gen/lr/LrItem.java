@@ -98,6 +98,7 @@ public class LrItem {
         return Objects.equals(rule, item.rule) && lookAhead.equals(item.lookAhead);
     }
 
+    //without lookahead
     public boolean isSame(LrItem other) {
         return dotPos == other.dotPos && Objects.equals(rule, other.rule);
     }

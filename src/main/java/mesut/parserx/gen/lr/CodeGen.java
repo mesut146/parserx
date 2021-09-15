@@ -97,7 +97,7 @@ public class CodeGen {
         sb.append("\"");
 
         sb.append(pack(dfa.lastId + 1));//state count,width
-        sb.append(pack(dfa.tokens.size() + dfa.rules.size() + 2));//symbol count,height
+        sb.append(pack(gen.tree.tokens.size() + dfa.rules.size() + 2));//symbol count,height
 
         //write accept
         sb.append(pack(gen.acc));

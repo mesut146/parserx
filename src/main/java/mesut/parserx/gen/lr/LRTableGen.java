@@ -21,7 +21,6 @@ public abstract class LRTableGen<T extends LrItemSet> {
     public int acc = 1;
     Tree tree;
     RuleDecl start;
-    String dir;
     LrDFA<T> table = new LrDFA<>();
     LrItem first;
 
@@ -129,7 +128,7 @@ public abstract class LRTableGen<T extends LrItemSet> {
             }
             System.out.println("-----------------");
         }
-        checkAll();
+        //checkAll();
     }
 
     void log(LrItem from, LrItemSet curSet, LrItem toFirst, LrItemSet targetSet, Name symbol) {
