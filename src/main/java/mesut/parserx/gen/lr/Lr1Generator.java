@@ -8,7 +8,7 @@ import java.util.*;
 
 public class Lr1Generator extends LRTableGen<Lr1ItemSet> {
 
-    public Lr1Generator( Tree tree) {
+    public Lr1Generator(Tree tree) {
         this.tree = tree;
     }
 

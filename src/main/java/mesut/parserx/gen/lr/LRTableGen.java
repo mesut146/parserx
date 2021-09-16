@@ -19,9 +19,9 @@ import java.util.Queue;
 public abstract class LRTableGen<T extends LrItemSet> {
     public static Name dollar = new Name("$", true);//eof
     public int acc = 1;
+    public LrDFA<T> table = new LrDFA<>();
     Tree tree;
     RuleDecl start;
-    LrDFA<T> table = new LrDFA<>();
     LrItem first;
 
     public void makeStart() {
@@ -135,7 +135,7 @@ public abstract class LRTableGen<T extends LrItemSet> {
         System.out.printf("%s (%d)%s to (%d)%s\n", symbol, table.getId(curSet), from, table.getId(targetSet), toFirst);
     }
 
-    void checkAll() {
+    public void checkAll() {
         for (LrItemSet set : table.itemSets) {
             check(set);
         }

@@ -12,7 +12,7 @@ public class LrDFA<T extends LrItemSet> {
     public List<Name> tokens = new ArrayList<>();
     public List<Name> rules = new ArrayList<>();
     int lastId = -1;
-    List<T> itemSets = new ArrayList<>();//todo idMap.keys()
+    List<T> itemSets = new ArrayList<>();
     Map<LrItemSet, Integer> idMap = new HashMap<>();//item set -> state id
 
     public void addTransition(T from, T to, Name symbol) {

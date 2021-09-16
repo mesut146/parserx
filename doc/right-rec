@@ -1,0 +1,22 @@
+E: a E | b;
+
+E: a* b;
+
+E E(){
+ E res = new E();
+ List<a> l = new ArrayList<>();
+ while(peek().type in a){
+   l.add(a());
+ }
+ res.which = 2;
+ res.b = b();
+ for(a a:reverse(l)){
+   E tmp = new E();
+   tmp.which = 1;
+   E1 e1 = tmp.e1 new E1();
+   e1.a = a;
+   e1.E = res;
+   res = tmp;
+ }
+ return res;
+}

@@ -22,13 +22,16 @@ public class CodeWriter {
         indent = sb.toString();
     }
 
-    public void append(String line) {
+    public void append(String line, Object... args) {
         if (line.isEmpty()) {
             sb.append("\n");
             return;
         }
         if (auto && line.endsWith("}")) {
             down();
+        }
+        if (args.length != 0) {
+            line = String.format(line, args);
         }
         sb.append(indent).append(line).append("\n");
         if (auto && line.endsWith("{")) {

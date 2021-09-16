@@ -1,10 +1,8 @@
 package parser;
 
 import common.Env;
-import mesut.parserx.gen.lr.CodeGen;
-import mesut.parserx.gen.lr.LRTableGen;
-import mesut.parserx.gen.lr.Lr0Generator;
-import mesut.parserx.gen.lr.Lr1Generator;
+import mesut.parserx.gen.LexerGenerator;
+import mesut.parserx.gen.lr.*;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 import org.junit.Ignore;
@@ -106,6 +104,17 @@ public class LrTest {
     }
 
     @Test
+    public void assoc() throws Exception {
+        Tree tree = Env.tree("lr1/assoc.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        Lr1Generator generator = new Lr1Generator(tree);
+        generator.generate();
+        generator.merge();
+        //generator.checkAll();
+        dots(generator, tree.file.getName());
+    }
+
+    @Test
     public void lookahead() throws Exception {
         //Tree tree = Env.tree("lr1/la.g");
         Tree tree = Env.tree("lr1/pred.g");
@@ -113,5 +122,21 @@ public class LrTest {
         Lr1Generator generator = new Lr1Generator(tree);
         generator.generate();
         dots(generator, tree.file.getName());
+    }
+
+    @Test
+    public void stateCode() throws Exception {
+        Tree tree = Env.tree("lr1/calc3.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        Lr1Generator dfaGen = new Lr1Generator(tree);
+        dfaGen.generate();
+        dfaGen.merge();
+        dots(dfaGen, tree.file.getName());
+        LrDFA dfa = dfaGen.table;
+        LexerGenerator lexerGenerator = new LexerGenerator(tree);
+        lexerGenerator.generate();
+        StateCodeGen gen = new StateCodeGen(dfa, dfaGen);
+        gen.lexerGenerator = lexerGenerator;
+        gen.gen();
     }
 }

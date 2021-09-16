@@ -1,5 +1,6 @@
 package mesut.parserx.gen.lr;
 
+import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Sequence;
@@ -25,32 +26,30 @@ public class Lr1ItemSet extends LrItemSet {
         if (node.isToken) {
             throw new RuntimeException("closure error on node: " + node + ", was expecting rule");
         }
+        Set<Name> laList = new HashSet<>();
+        //lookahead
+        //first(follow(node),sender la)
+        if (sender.getDotNode2() != null) {
+            Name la = sender.getDotNode2();
+            if (la.isToken) {
+                laList.add(la);
+            }
+            else {
+                //first of la becomes follow
+                laList.addAll(first(la));
+            }
+        }
+        if (laList.isEmpty()) {
+            //first of sender
+            laList.addAll(sender.lookAhead);
+            //laList.add(sender.lookAhead.get(0));
+        }
         //get rules
         List<RuleDecl> rules = tree.getRules(node.name);
         for (RuleDecl decl : rules) {
-            Set<Name> laList = new HashSet<>();
-            //page 261
-            //lookahead
-            //first(follow(node),sender la)
-            if (sender.getDotNode2() != null) {
-                Name la = sender.getDotNode2();
-                if (la.isToken) {
-                    laList.add(la);
-                }
-                else {
-                    //first of la becomes follow
-                    laList.addAll(first(la));
-                }
-            }
-
-            if (laList.isEmpty()) {
-                //first of sender
-                laList.addAll(sender.lookAhead);
-                //laList.add(sender.lookAhead.get(0));
-            }
             if (mergeLa) {
                 LrItem newItem = new LrItem(decl, 0);
-                newItem.lookAhead = laList;
+                newItem.lookAhead = new HashSet<>(laList);
                 newItem.gotoSet = this;
                 addItem(newItem, node);
             }
@@ -87,14 +86,15 @@ public class Lr1ItemSet extends LrItemSet {
         Set<Name> list = new HashSet<>();
         for (RuleDecl decl : tree.getRules(name.name)) {
             Sequence node = decl.rhs.asSequence();
-            Name first = node.get(0).asName();
+            Helper.first(node, tree, true, false, true);
+            /*Name first = node.get(0).asName();
             if (first.isToken) {
                 list.add(first);
             }
             else {
                 //todo prevent left recursion
                 list.addAll(first(first));
-            }
+            }*/
         }
         return list;
     }
