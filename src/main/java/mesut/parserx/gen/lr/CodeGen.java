@@ -12,18 +12,16 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 
 public class CodeGen {
     public Options options;
     LrDFA<?> dfa;
     LRTableGen<?> gen;
-    HashMap<Name, Integer> ids = new HashMap<>();
-    Name EOF = new Name("EOF", true);
     List<RuleDecl> all;
     LexerGenerator lexerGenerator;
     boolean islr0;
+    IdMap idMap;
 
     public CodeGen(LRTableGen<?> gen, boolean islr0) {
         this.gen = gen;
@@ -34,6 +32,7 @@ public class CodeGen {
     public void gen() throws IOException {
         lexerGenerator = new LexerGenerator(gen.tree);
         lexerGenerator.generate();
+        idMap = lexerGenerator.idMap;
 
         this.dfa = gen.table;
         Template template = new Template("lalr1.java.template");
@@ -42,7 +41,6 @@ public class CodeGen {
         template.set("lexer_class", options.lexerClass);
         template.set("lexer_method", options.lexerFunction);
         template.set("token_class", options.tokenClass);
-        genIds();
         ruleId(template);
         writeTable(template);
         File file = new File(options.outDir, options.parserClass + ".java");
@@ -62,7 +60,7 @@ public class CodeGen {
             }
         });
         for (int i = 0; i < all.size(); i++) {
-            ruleIds.append(ids.get(all.get(i).ref()));
+            ruleIds.append(idMap.getId(all.get(i).ref()));
             sizes.append(all.get(i).rhs.asSequence().size());
             if (i < all.size() - 1) {
                 ruleIds.append(", ");
@@ -71,25 +69,6 @@ public class CodeGen {
         }
         template.set("ruleIds", ruleIds.toString());
         template.set("rhs_sizes", sizes.toString());
-    }
-
-    //symbol ids
-    void genIds() {
-        int id = lexerGenerator.idMap.size() + 1;
-        for (Name rule : dfa.rules) {
-            ids.put(rule, id++);
-        }
-        ids.put(gen.start.ref(), id);
-    }
-
-    int getId(Name name) {
-        if (name.isToken) {
-            if (name.name.equals("$")) {
-                return lexerGenerator.idMap.get("EOF");
-            }
-            return lexerGenerator.idMap.get(name.name);
-        }
-        return ids.get(name);
     }
 
     void writeTable(Template template) {
@@ -106,14 +85,14 @@ public class CodeGen {
             //all tokens acc
             sb.append(pack(dfa.tokens.size()));
             for (Name tok : dfa.tokens) {
-                sb.append(pack(getId(tok)));
+                sb.append(pack(idMap.getId(tok)));
             }
         }
         else {
             sb.append(pack(1));
             for (LrItem item : acc.kernel) {
                 if (item.hasReduce() && item.rule.name.equals(gen.start.name) && item.lookAhead.contains(LRTableGen.dollar)) {
-                    sb.append(pack(getId(EOF)));
+                    sb.append(pack(idMap.getId(IdMap.EOF)));
                     break;
                 }
             }
@@ -125,7 +104,7 @@ public class CodeGen {
             List<? extends LrTransition<?>> shifts = dfa.getTrans(state);
             sb.append(pack(shifts.size()));//shift count
             for (LrTransition<?> tr : shifts) {
-                sb.append(pack(getId(tr.symbol)));
+                sb.append(pack(idMap.getId(tr.symbol)));
                 int action = dfa.getId(tr.to);
                 sb.append(pack(action));
             }
@@ -144,7 +123,7 @@ public class CodeGen {
                 sb.append(pack(action));
                 sb.append(pack(reduce.lookAhead.size()));
                 for (Name sym : reduce.lookAhead) {
-                    sb.append(pack(getId(sym)));
+                    sb.append(pack(idMap.getId(sym)));
                 }
             }
         }
@@ -162,6 +141,7 @@ public class CodeGen {
     }
 
     public void writeSym() throws IOException {
+        //idMap.writeSym(options);
         StringBuilder sb = new StringBuilder();
 
         if (options.packageName != null) {
@@ -176,12 +156,12 @@ public class CodeGen {
             if (token.name.equals("$")) {
                 continue;
             }
-            sb.append(field(token.name, lexerGenerator.idMap.get(token.name)));
+            sb.append(field(token.name, idMap.getId(token)));
         }
         sb.append("  //rules\n");
         //sb.append(field(gen.start.name, ids.get(gen.start.ref())));
         for (Name rule : dfa.rules) {
-            sb.append(field(rule.name, ids.get(rule)));
+            sb.append(field(rule.name, idMap.getId(rule)));
         }
 
         sb.append("\n}");

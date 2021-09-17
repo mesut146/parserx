@@ -50,7 +50,7 @@ public class Lr1ItemSet extends LrItemSet {
             if (mergeLa) {
                 LrItem newItem = new LrItem(decl, 0);
                 newItem.lookAhead = new HashSet<>(laList);
-                newItem.gotoSet = this;
+                newItem.gotoSet.add(this);
                 addItem(newItem, node);
             }
             else {
@@ -58,7 +58,7 @@ public class Lr1ItemSet extends LrItemSet {
                 for (Name la : laList) {
                     LrItem newItem = new LrItem(decl, 0);
                     newItem.lookAhead.add(la);
-                    newItem.gotoSet = this;
+                    newItem.gotoSet.add(this);
                     addItem(newItem, node);
                 }
             }

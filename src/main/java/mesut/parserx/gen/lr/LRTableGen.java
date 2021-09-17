@@ -18,17 +18,18 @@ import java.util.Queue;
 //lr table generator
 public abstract class LRTableGen<T extends LrItemSet> {
     public static Name dollar = new Name("$", true);//eof
+    public static String startName = "%start";
     public int acc = 1;
     public LrDFA<T> table = new LrDFA<>();
+    public RuleDecl start;
     Tree tree;
-    RuleDecl start;
     LrItem first;
 
     public void makeStart() {
         if (tree.start == null) {
             throw new RuntimeException("no start rule is defined");
         }
-        start = new RuleDecl("@start", new Sequence(tree.start));
+        start = new RuleDecl(startName, new Sequence(tree.start));
         tree.addRule(start);
     }
 
@@ -85,13 +86,19 @@ public abstract class LRTableGen<T extends LrItemSet> {
             T curSet = queue.poll();
             //iterate items
             while (true) {
-                LrItem from = curSet.getItem();
-                if (from == null) break;
+                LrItem curItem = curSet.getItem();
+                if (curItem == null) break;
 
-                Name symbol = from.getDotNode();
+                Name symbol = curItem.getDotNode();
                 if (symbol == null) continue;
-                LrItem toFirst = new LrItem(from, from.dotPos + 1);
-                toFirst.gotoSet = from.gotoSet == null ? curSet : from.gotoSet;
+                LrItem toFirst = new LrItem(curItem, curItem.dotPos + 1);
+                //todo what is this mean
+                if (curItem.gotoSet.isEmpty()) {
+                    toFirst.gotoSet.add(curSet);
+                }
+                else {
+                    toFirst.gotoSet.addAll(curItem.gotoSet);
+                }
                 T targetSet = getSet(curSet, symbol);
                 if (targetSet == null) {
                     targetSet = getSet(toFirst);//find another set that has same core
@@ -109,7 +116,7 @@ public abstract class LRTableGen<T extends LrItemSet> {
                     }
                     table.addTransition(curSet, targetSet, symbol);
                     queue.add(targetSet);
-                    log(from, curSet, toFirst, targetSet, symbol);
+                    log(curItem, curSet, toFirst, targetSet, symbol);
                 }
                 else {
                     //check if item there
@@ -119,7 +126,7 @@ public abstract class LRTableGen<T extends LrItemSet> {
                         targetSet.addCore(toFirst);
                         table.addTransition(curSet, targetSet, symbol);
                         queue.add(targetSet);
-                        log(from, curSet, toFirst, targetSet, symbol);
+                        log(curItem, curSet, toFirst, targetSet, symbol);
                     }
                 }
                 if (curSet == firstSet && symbol.equals(tree.start)) {
@@ -128,7 +135,7 @@ public abstract class LRTableGen<T extends LrItemSet> {
             }
             System.out.println("-----------------");
         }
-        //checkAll();
+        checkAll();
     }
 
     void log(LrItem from, LrItemSet curSet, LrItem toFirst, LrItemSet targetSet, Name symbol) {

@@ -2,21 +2,21 @@ package mesut.parserx.gen;
 
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
+import mesut.parserx.gen.lr.IdMap;
+import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Range;
-import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.UnicodeUtils;
 import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
 public class LexerGenerator {
-    public HashMap<String, Integer> idMap = new HashMap<>();//name -> id
+    public IdMap idMap = new IdMap();
     Options options;
     NFA dfa;
     Template template;
@@ -62,12 +62,7 @@ public class LexerGenerator {
 
     private void nameAndId() {
         //generate name and id list
-        idMap.put("EOF", 0);
-        int id = 1;
-        for (TokenDecl decl : dfa.tree.tokens) {
-            if (decl.isSkip) continue;
-            idMap.put(decl.name, id++);
-        }
+        idMap.genSymbolIds(dfa.tree);
 
         int[] idArr = new int[dfa.lastState + 1];//state->id
 
@@ -75,7 +70,7 @@ public class LexerGenerator {
             //make id for token
             String name = dfa.names[state];
             if (name != null && dfa.isAccepting(state) && !dfa.isSkip[state]) {
-                idArr[state] = idMap.get(name);
+                idArr[state] = idMap.getId(new Name(name, true));
             }
         }
         //write name and id list

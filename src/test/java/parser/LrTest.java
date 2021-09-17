@@ -130,13 +130,13 @@ public class LrTest {
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         Lr1Generator dfaGen = new Lr1Generator(tree);
         dfaGen.generate();
-        dfaGen.merge();
+        //dfaGen.merge();
         dots(dfaGen, tree.file.getName());
-        LrDFA dfa = dfaGen.table;
         LexerGenerator lexerGenerator = new LexerGenerator(tree);
         lexerGenerator.generate();
-        StateCodeGen gen = new StateCodeGen(dfa, dfaGen);
-        gen.lexerGenerator = lexerGenerator;
+        StateCodeGen.debugState = true;
+        StateCodeGen.debugReduce = true;
+        StateCodeGen gen = new StateCodeGen(dfaGen.table, dfaGen, lexerGenerator.idMap);
         gen.gen();
     }
 }

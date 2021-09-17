@@ -84,6 +84,8 @@ public class Lr1Generator extends LRTableGen<Lr1ItemSet> {
                         set.addAll(i2.lookAhead);
                         i1.lookAhead = set;
                         i2.lookAhead = set;
+                        //goto sets
+                        i1.gotoSet.addAll(i2.gotoSet);
                     }
                     break;
                 }

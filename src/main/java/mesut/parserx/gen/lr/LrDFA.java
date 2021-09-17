@@ -13,7 +13,7 @@ public class LrDFA<T extends LrItemSet> {
     public List<Name> rules = new ArrayList<>();
     int lastId = -1;
     List<T> itemSets = new ArrayList<>();
-    Map<LrItemSet, Integer> idMap = new HashMap<>();//item set -> state id
+    HashMap<LrItemSet, Integer> idMap = new HashMap<>();//item set -> state id
 
     public void addTransition(T from, T to, Name symbol) {
         LrTransition<T> t = new LrTransition<>(from, to, symbol);
@@ -76,5 +76,7 @@ public class LrDFA<T extends LrItemSet> {
             return idMap.get(set);
         }*/
         return -1;
+
     }
+
 }

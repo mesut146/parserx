@@ -15,7 +15,7 @@ public class LrItem {
     public Set<Name> lookAhead = new HashSet<>();
     public RuleDecl rule;
     public int dotPos;
-    public LrItemSet gotoSet;
+    public Set<LrItemSet> gotoSet = new HashSet<>();
     int hash = -1;
 
     public LrItem(RuleDecl rule, int dotPos) {

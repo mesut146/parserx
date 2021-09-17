@@ -39,7 +39,10 @@ public class CodeWriter {
         }
     }
 
-    public void all(String s) {
+    public void all(String s, Object... args) {
+        if (args.length != 0) {
+            s = String.format(s, args);
+        }
         String[] arr = s.split("\n");
         for (int i = 0; i < arr.length; i++) {
             append(arr[i]);

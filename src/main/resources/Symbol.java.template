@@ -2,27 +2,13 @@ $package$
 import java.util.*;
 import java.io.*;
 
-public class $parser_class${
-    Stack<Symbol> stack = new Stack<>();
-    $lexer_class$ lexer;
-    public static boolean debug = false;
-
-    public $parser_class$($lexer_class$ lexer){
-        this.lexer = lexer;
-    }
-
-    Symbol next() throws IOException{
-        return new Symbol(lexer.$lexer_method$());
-    }
-
-}
-
 //a token or a rule
-class Symbol{
+public class Symbol{
     $token_class$ token;
     public String name;
     public int id;
-    public List<Symbol> children = new ArrayList<>();
+    public int index;
+    public ArrayList<Symbol> children = new ArrayList<>();
 
     public Symbol(int id){
         this.id = id;
