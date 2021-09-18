@@ -14,8 +14,9 @@ public class Lr1ItemSet extends LrItemSet {
     public static final boolean mergeLa = true;
 
     public Lr1ItemSet(List<LrItem> kernel, Tree tree) {
-        this.kernel.addAll(kernel);
-        this.tree = tree;
+        super(kernel, tree);
+        /*this.kernel.addAll(kernel);
+        this.tree = tree;*/
     }
 
     public Lr1ItemSet(LrItem kernel, Tree tree) {
@@ -50,7 +51,6 @@ public class Lr1ItemSet extends LrItemSet {
             if (mergeLa) {
                 LrItem newItem = new LrItem(decl, 0);
                 newItem.lookAhead = new HashSet<>(laList);
-                newItem.gotoSet.add(this);
                 addItem(newItem, node);
             }
             else {
@@ -58,7 +58,6 @@ public class Lr1ItemSet extends LrItemSet {
                 for (Name la : laList) {
                     LrItem newItem = new LrItem(decl, 0);
                     newItem.lookAhead.add(la);
-                    newItem.gotoSet.add(this);
                     addItem(newItem, node);
                 }
             }

@@ -91,7 +91,7 @@ TOKEN:
 //| <STRING_LITERAL: "\"" (~["\r","\n","\""] | "\\\"")* "\"">
 | <STRING_LITERAL: "\"" (~["\r","\n","\\","\""] | "\\" ~[])* "\"">
 | <INCLUDE_DIRECTIVE: "include">
-| <START_SIRECTIVE: "@start">
+| <START_SIRECTIVE: "%start">
 }
 
 TOKEN:

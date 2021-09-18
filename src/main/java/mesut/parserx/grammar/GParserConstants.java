@@ -135,7 +135,7 @@ public interface GParserConstants {
     "\"skip\"",
     "<STRING_LITERAL>",
     "\"include\"",
-    "\"@start\"",
+    "\"%start\"",
     "<IDENT>",
     "<CHAR>",
     "<DIGIT>",

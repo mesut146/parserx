@@ -22,6 +22,7 @@ public abstract class LRTableGen<T extends LrItemSet> {
     public int acc = 1;
     public LrDFA<T> table = new LrDFA<>();
     public RuleDecl start;
+    public boolean merge;
     Tree tree;
     LrItem first;
 
@@ -78,7 +79,7 @@ public abstract class LRTableGen<T extends LrItemSet> {
         Queue<T> queue = new LinkedList<>();//itemsets
 
         T firstSet = makeSet(first);
-        table.addId(firstSet);
+        table.addSet(firstSet);
         firstSet.closure();
         queue.add(firstSet);
 
@@ -92,26 +93,44 @@ public abstract class LRTableGen<T extends LrItemSet> {
                 Name symbol = curItem.getDotNode();
                 if (symbol == null) continue;
                 LrItem toFirst = new LrItem(curItem, curItem.dotPos + 1);
-                //todo what is this mean
-                if (curItem.gotoSet.isEmpty()) {
-                    toFirst.gotoSet.add(curSet);
-                }
-                else {
-                    toFirst.gotoSet.addAll(curItem.gotoSet);
-                }
-                T targetSet = getSet(curSet, symbol);
+                T targetSet = table.getTargetSet(curSet, symbol);
                 if (targetSet == null) {
-                    targetSet = getSet(toFirst);//find another set that has same core
+                    //find another set that has same core
+                    targetSet = getSet(toFirst);
                     if (targetSet == null) {
-                        targetSet = makeSet(toFirst);
-                        table.addId(targetSet);
-                        targetSet.closure();
+                        if (merge) {
+                            boolean merged = false;
+                            for (T set : table.itemSets) {
+                                for (LrItem item : set.kernel) {
+                                    if (item.isSame(toFirst)) {
+                                        //can merge
+                                        merged = true;
+                                        item.lookAhead.addAll(toFirst.lookAhead);
+                                        //todo carry la to closure
+                                        System.out.println("lalr merged");
+                                        targetSet = set;
+                                        break;
+                                    }
+                                }
+                                if (merged) break;
+                            }
+                            if (!merged) {
+                                targetSet = makeSet(toFirst);
+                                table.addSet(targetSet);
+                                targetSet.closure();
+                            }
+                        }
+                        else {
+                            targetSet = makeSet(toFirst);
+                            table.addSet(targetSet);
+                            targetSet.closure();
+                        }
                     }
                     else {
+                        //found a set that has same core
                         System.out.println("merge");
                         if (!targetSet.all.contains(toFirst)) {
                             targetSet.addCore(toFirst);
-                            //targetSet.addItem(toFirst);
                         }
                     }
                     table.addTransition(curSet, targetSet, symbol);
@@ -121,11 +140,26 @@ public abstract class LRTableGen<T extends LrItemSet> {
                 else {
                     //check if item there
                     if (!targetSet.all.contains(toFirst)) {
+                        if (merge) {
+                            boolean merged = false;
+                            for (LrItem item : targetSet.all) {
+                                if (item.isSame(toFirst)) {
+                                    item.lookAhead.addAll(toFirst.lookAhead);
+                                    merged = true;
+                                    break;
+                                }
+                            }
+                            if (!merged) {
+                                targetSet.addCore(toFirst);
+                                queue.add(targetSet);
+                            }
+                        }
+                        else {
+                            targetSet.addCore(toFirst);
+                            queue.add(targetSet);
+                            //table.addTransition(curSet, targetSet, symbol);
+                        }
                         //merge
-                        //targetSet.addItem(toFirst);
-                        targetSet.addCore(toFirst);
-                        table.addTransition(curSet, targetSet, symbol);
-                        queue.add(targetSet);
                         log(curItem, curSet, toFirst, targetSet, symbol);
                     }
                 }
@@ -139,7 +173,8 @@ public abstract class LRTableGen<T extends LrItemSet> {
     }
 
     void log(LrItem from, LrItemSet curSet, LrItem toFirst, LrItemSet targetSet, Name symbol) {
-        System.out.printf("%s (%d)%s to (%d)%s\n", symbol, table.getId(curSet), from, table.getId(targetSet), toFirst);
+        //System.out.printf("%s -> %s by %s\n", table.getId(curSet), table.getId(targetSet), symbol.name);
+        //System.out.printf("%s (%d)%s to (%d)%s\n", symbol, table.getId(curSet), from, table.getId(targetSet), toFirst);
     }
 
     public void checkAll() {
@@ -196,16 +231,6 @@ public abstract class LRTableGen<T extends LrItemSet> {
         return null;
     }
 
-    //if there exist another transition from this
-    T getSet(T from, Name symbol) {
-        for (LrTransition<T> tr : table.getTrans(from)) {
-            if (tr.from.equals(from) && tr.symbol.equals(symbol)) {
-                return tr.to;
-            }
-        }
-        return null;
-    }
-
     public void writeDot(PrintWriter dotWriter) {
         if (dotWriter == null) {
             try {
@@ -216,5 +241,33 @@ public abstract class LRTableGen<T extends LrItemSet> {
             }
         }
         DotWriter.writeDot(table, dotWriter);
+    }
+
+    public void genGoto() {
+        for (LrItemSet set : table.itemSets) {
+            for (LrItem item : set.all) {
+                if (item.dotPos != 0 || item.hasReduce()) continue;
+                //walk to reduce state of item and set goto
+                LrItemSet curSet = set;
+                LrItem curItem = item;
+                while (true) {
+                    curSet = table.getTargetSet((T) curSet, curItem.getDotNode());
+                    LrItem tmpItem = new LrItem(curItem.rule, curItem.dotPos + 1);
+                    //use tmp to get original item
+                    for (LrItem tmp : curSet.all) {
+                        if (tmp.isSame(tmpItem)) {
+                            curItem = tmp;
+                            break;
+                        }
+                    }
+                    if (curItem.hasReduce()) {
+                        //set goto
+                        curItem.gotoSet.add(set);
+                        System.out.println("set goto");
+                        break;
+                    }
+                }
+            }
+        }
     }
 }

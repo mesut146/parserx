@@ -127,11 +127,16 @@ public class LrTest {
     @Test
     public void stateCode() throws Exception {
         Tree tree = Env.tree("lr1/calc3.g");
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        //tree.options.outDir = Env.dotDir().getAbsolutePath();
+        tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lr";
+        tree.options.packageName = "lr";
+        LrDFA.debugTransition = true;
         Lr1Generator dfaGen = new Lr1Generator(tree);
+        dfaGen.merge = true;
         dfaGen.generate();
         //dfaGen.merge();
-        dots(dfaGen, tree.file.getName());
+        dfaGen.genGoto();
+        //dots(dfaGen, tree.file.getName());
         LexerGenerator lexerGenerator = new LexerGenerator(tree);
         lexerGenerator.generate();
         StateCodeGen.debugState = true;

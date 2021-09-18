@@ -27,7 +27,7 @@ public class StateCodeGen {
 
     public void gen() throws IOException {
         if (options.packageName != null) {
-            writer.append("package %;", options.packageName);
+            writer.append("package %s;", options.packageName);
             writer.append("");
         }
         writer.append("import java.util.*;");
@@ -148,6 +148,7 @@ public class StateCodeGen {
                     for (LrItemSet s : item.gotoSet) {
                         writer.append("case %d:{", dfa.getId(s));
                         writer.append("%s();", getName(getGoto(s, item.rule.ref())));
+                        writer.append("break;");
                         writer.append("}");
                     }
                     writer.append("}");

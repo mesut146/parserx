@@ -10,10 +10,8 @@ public abstract class LrItemSet {
     public Set<LrItem> kernel = new HashSet<>();
     public List<LrItem> all = new ArrayList<>();
     public Set<LrItem> done = new HashSet<>();
+    public int stateId = -1;
     Tree tree;
-
-    public LrItemSet() {
-    }
 
     public LrItemSet(List<LrItem> kernel, Tree tree) {
         this.kernel = new HashSet<>(kernel);
@@ -88,17 +86,17 @@ public abstract class LrItemSet {
         return NodeList.join(all, "\n");
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        LrItemSet itemSet = (LrItemSet) o;
-        return Objects.equals(kernel, itemSet.kernel);
-    }
-
-    @Override
-    public int hashCode() {
-        return kernel.hashCode();
-    }
+//    @Override
+//    public boolean equals(Object o) {
+//        if (this == o) return true;
+//        if (o == null || getClass() != o.getClass()) return false;
+//
+//        LrItemSet itemSet = (LrItemSet) o;
+//        return Objects.equals(kernel, itemSet.kernel);
+//    }
+//
+//    @Override
+//    public int hashCode() {
+//        return kernel.hashCode();
+//    }
 }

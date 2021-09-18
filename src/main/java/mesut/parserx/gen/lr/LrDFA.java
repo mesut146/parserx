@@ -5,15 +5,15 @@ import mesut.parserx.nodes.Name;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class LrDFA<T extends LrItemSet> {
+    public static boolean debugTransition = false;
     public List<LrTransition<T>>[] map = new List[100];
     public List<Name> tokens = new ArrayList<>();
     public List<Name> rules = new ArrayList<>();
     int lastId = -1;
     List<T> itemSets = new ArrayList<>();
-    HashMap<LrItemSet, Integer> idMap = new HashMap<>();//item set -> state id
+    HashMap<Integer, LrItemSet> idMap = new HashMap<>();//state id -> item set
 
     public void addTransition(T from, T to, Name symbol) {
         LrTransition<T> t = new LrTransition<>(from, to, symbol);
@@ -28,13 +28,14 @@ public class LrDFA<T extends LrItemSet> {
         if (symbol.isRule() && !rules.contains(symbol)) {
             rules.add(symbol);
         }
+        if (debugTransition) {
+            System.out.printf("%s -> %s by %s\n", getId(from), getId(to), symbol.name);
+        }
     }
 
     public LrItemSet getSet(int id) {
-        for (Map.Entry<LrItemSet, Integer> entry : idMap.entrySet()) {
-            if (entry.getValue().equals(id)) {
-                return entry.getKey();
-            }
+        if (idMap.containsKey(id)) {
+            return idMap.get(id);
         }
         throw new RuntimeException("can't find set from id:" + id);
     }
@@ -52,31 +53,44 @@ public class LrDFA<T extends LrItemSet> {
         return list;
     }
 
-    public void addId(T set) {
-        if (idMap.containsKey(set)) {
-            throw new RuntimeException("duplicate set " + set);
+    //if there exist another transition from this
+    public T getTargetSet(T from, Name symbol) {
+        for (LrTransition<T> tr : getTrans(from)) {
+            if (tr.symbol.equals(symbol)) {
+                return tr.to;
+            }
         }
-        idMap.put(set, ++lastId);
+        return null;
+    }
+
+    public void addSet(T set) {
+        if (getId(set) != -1) {
+            throw new RuntimeException("set already exists " + set);
+        }
+        set.stateId = ++lastId;
+        idMap.put(set.stateId, set);
         itemSets.add(set);
     }
 
     public void setId(LrItemSet set, int id) {
         if (getId(set) != -1) {
-            throw new RuntimeException("can't set id of pre-existing set");
+            throw new RuntimeException("can't set id of already-existing set");
         }
-        idMap.put(set, id);
+        set.stateId = id;
+        idMap.put(id, set);
     }
 
     public int getId(LrItemSet set) {
-        for (Map.Entry<LrItemSet, Integer> s : idMap.entrySet()) {
-            //== is needed bc kernel may change later so does hashcode
-            if (s.getKey() == set) return s.getValue();
-        }
-        /*if (idMap.containsKey(set)) {
-            return idMap.get(set);
-        }*/
-        return -1;
+        return set.stateId;
+    }
 
+    public boolean exist(LrItemSet set) {
+        for (LrItemSet other : itemSets) {
+            if (other == set) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

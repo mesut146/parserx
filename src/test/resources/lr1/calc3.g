@@ -8,7 +8,7 @@ token
 
 //productions
 
-@start = E;
+%start = E;
 E: N | N "+" E | "(" E ")";
 
 //E: (N "+")* (N | "(" E ")");

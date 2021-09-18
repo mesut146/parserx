@@ -19,6 +19,8 @@ private final int jjStopStringLiteralDfa_0(int pos, long active0){
    switch (pos)
    {
       case 0:
+         if ((active0 & 0x2000000000L) != 0L)
+            return 26;
          if ((active0 & 0xa0L) != 0L)
             return 2;
          if ((active0 & 0x10000L) != 0L)
@@ -93,6 +95,8 @@ private int jjMoveStringLiteralDfa0_0(){
    {
       case 35:
          return jjStopAtPos(0, 31);
+      case 37:
+         return jjMoveStringLiteralDfa1_0(0x2000000000L);
       case 39:
          return jjStopAtPos(0, 22);
       case 40:
@@ -120,8 +124,6 @@ private int jjMoveStringLiteralDfa0_0(){
          return jjStopAtPos(0, 23);
       case 63:
          return jjStopAtPos(0, 29);
-      case 64:
-         return jjMoveStringLiteralDfa1_0(0x2000000000L);
       case 91:
          return jjStartNfaWithStates_0(0, 16, 34);
       case 93:
@@ -421,6 +423,12 @@ private int jjMoveNfa_0(int startState, int curPos)
          {
             switch(jjstateSet[--i])
             {
+               case 26:
+                  if (curChar == 101)
+                     jjstateSet[jjnewStateCnt++] = 32;
+                  if (curChar == 101)
+                     jjstateSet[jjnewStateCnt++] = 25;
+                  break;
                case 3:
                   if ((0x7fffffe87fffffeL & l) != 0L)
                   {
@@ -513,10 +521,6 @@ private int jjMoveNfa_0(int startState, int curPos)
                case 25:
                   if (curChar == 109)
                      jjstateSet[jjnewStateCnt++] = 24;
-                  break;
-               case 26:
-                  if (curChar == 101)
-                     jjstateSet[jjnewStateCnt++] = 25;
                   break;
                case 27:
                   if (curChar == 110 && kind > 32)
@@ -735,7 +739,7 @@ public static final String[] jjstrLiteralImages = {
 "\51", "\173", "\175", "\133", "\135", "\73", "\72", "\56", "\54", "\47", "\75", 
 "\72\75", "\72\72\75", "\55\76", "\52", "\53", "\77", "\176", "\43", null, 
 "\164\157\153\145\156", "\163\153\151\160", null, "\151\156\143\154\165\144\145", 
-"\100\163\164\141\162\164", null, null, null, null, null, null, null, null, null, "\174", };
+"\45\163\164\141\162\164", null, null, null, null, null, null, null, null, null, "\174", };
 protected Token jjFillToken()
 {
    final Token t;
