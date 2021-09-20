@@ -136,7 +136,7 @@ public class LrTest {
         dfaGen.generate();
         //dfaGen.merge();
         dfaGen.genGoto();
-        //dots(dfaGen, tree.file.getName());
+        dots(dfaGen, tree.file.getName());
         LexerGenerator lexerGenerator = new LexerGenerator(tree);
         lexerGenerator.generate();
         StateCodeGen.debugState = true;

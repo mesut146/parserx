@@ -348,7 +348,7 @@ public class Factor extends SimpleTransformer {
         }
         else {
             //A empty,B starts
-            if (A.isName() && A.asName().astInfo.isFactored) {
+            if (A.isName() && A.astInfo.isFactored) {
                 PullInfo tmp = pull(B, sym);
                 if (tmp.zero != null) {
                     info.zero = Sequence.of(A, tmp.zero);

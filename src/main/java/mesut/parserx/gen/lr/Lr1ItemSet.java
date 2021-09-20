@@ -15,8 +15,6 @@ public class Lr1ItemSet extends LrItemSet {
 
     public Lr1ItemSet(List<LrItem> kernel, Tree tree) {
         super(kernel, tree);
-        /*this.kernel.addAll(kernel);
-        this.tree = tree;*/
     }
 
     public Lr1ItemSet(LrItem kernel, Tree tree) {
@@ -51,20 +49,20 @@ public class Lr1ItemSet extends LrItemSet {
             if (mergeLa) {
                 LrItem newItem = new LrItem(decl, 0);
                 newItem.lookAhead = new HashSet<>(laList);
-                addItem(newItem, node);
+                addItem0(newItem);
             }
             else {
                 //create per one
                 for (Name la : laList) {
                     LrItem newItem = new LrItem(decl, 0);
                     newItem.lookAhead.add(la);
-                    addItem(newItem, node);
+                    addItem0(newItem);
                 }
             }
         }
     }
 
-    void addItem(LrItem item, Name node) {
+    void addItem0(LrItem item) {
         for (LrItem prev : all) {
             if (prev.isSame(item)) {
                 //merge la
@@ -86,14 +84,6 @@ public class Lr1ItemSet extends LrItemSet {
         for (RuleDecl decl : tree.getRules(name.name)) {
             Sequence node = decl.rhs.asSequence();
             Helper.first(node, tree, true, false, true);
-            /*Name first = node.get(0).asName();
-            if (first.isToken) {
-                list.add(first);
-            }
-            else {
-                //todo prevent left recursion
-                list.addAll(first(first));
-            }*/
         }
         return list;
     }

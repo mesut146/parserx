@@ -102,11 +102,10 @@ public abstract class LRTableGen<T extends LrItemSet> {
                             boolean merged = false;
                             for (T set : table.itemSets) {
                                 for (LrItem item : set.kernel) {
-                                    if (item.isSame(toFirst)) {
+                                    if (item.isSame(toFirst) && !item.equals(toFirst)) {
                                         //can merge
                                         merged = true;
-                                        item.lookAhead.addAll(toFirst.lookAhead);
-                                        //todo carry la to closure
+                                        doMerge(toFirst, set);
                                         System.out.println("lalr merged");
                                         targetSet = set;
                                         break;
@@ -143,8 +142,9 @@ public abstract class LRTableGen<T extends LrItemSet> {
                         if (merge) {
                             boolean merged = false;
                             for (LrItem item : targetSet.all) {
-                                if (item.isSame(toFirst)) {
-                                    item.lookAhead.addAll(toFirst.lookAhead);
+                                if (item.isSame(toFirst) && !item.equals(toFirst)) {
+                                    doMerge(toFirst, targetSet);
+                                    System.out.println("lalr merged");
                                     merged = true;
                                     break;
                                 }
@@ -170,6 +170,40 @@ public abstract class LRTableGen<T extends LrItemSet> {
             System.out.println("-----------------");
         }
         checkAll();
+    }
+
+    void doMerge(LrItem item, LrItemSet set) {
+        for (LrItem old : set.all) {
+            if (old.isSame(item) && !old.equals(item)) {
+                old.lookAhead.addAll(item.lookAhead);
+                set.all.clear();
+                set.closure();
+                doTrans(set);
+                break;
+            }
+        }
+    }
+
+    //trace transitions and merge la
+    void doTrans(LrItemSet set) {
+        for (LrItem item : set.all) {
+            if (item.getDotNode() != null) {
+                LrItemSet target = table.getTargetSet((T) set, item.getDotNode());
+                if (target != null) {
+                    LrItem newItem = new LrItem(item, item.dotPos + 1);
+                    for (LrItem kernel : target.kernel) {
+                        if (kernel.isSame(newItem)) {
+                            kernel.lookAhead.addAll(item.lookAhead);
+                            target.all.clear();
+                            target.closure();
+                            doTrans(target);
+                            break;
+                        }
+                    }
+                    //doMerge(newItem, target);
+                }
+            }
+        }
     }
 
     void log(LrItem from, LrItemSet curSet, LrItem toFirst, LrItemSet targetSet, Name symbol) {

@@ -22,13 +22,6 @@ public abstract class LrItemSet {
         this(new ArrayList<>(Collections.singletonList(kernel)), tree);
     }
 
-    public void addItem(LrItem item) {
-        if (!all.contains(item)) {
-            all.add(item);
-            closure(item);
-        }
-    }
-
     public void addCore(LrItem item) {
         if (!all.contains(item)) {
             kernel.add(item);

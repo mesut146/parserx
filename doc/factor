@@ -1,5 +1,6 @@
 (a | b)* = a* b (a | b)*
 
+//----------------star
 A*: (a A(a) | A_no_a)*
 
 
@@ -8,11 +9,11 @@ A*: (a A(a))* A_no_a A*
 
 
 #if A(a) can be empty
-A*: (a (A_a_noe(a) | €) | A_no_a)*
 A*: (a A_a_noe(a) | a | A_no_a)*
 
 #if A_a_noe(a) has no a
 A*: a* (a A_a_noe(a) | A_no_a) A*
+//factor la
 
 A*: (a+ A_a_noe(a) | a* A_no_a) A*
 A*: (a (a* A_a_noe(a) | a* A_no_a) | A_no_a) A*
@@ -29,4 +30,13 @@ A*: (a a A(a,a) | a a A_a_no_a(a) | A_no_a)*
 
 A*: (a a)* (a a A_a_no_a(a) | A_no_a) A*
 
-A*: 
+A*:
+
+--------------plus
+A+: A* A
+a* A_no_a A* A | A_no_a A*
+a+ A_no_a A* A | A_no_a A* A | A_no_a A*
+a+ A_no_a A+ | A_no_a A+ | A_no_a A*
+
+A+: A A*
+a A(a) A* | A_no_a A*
