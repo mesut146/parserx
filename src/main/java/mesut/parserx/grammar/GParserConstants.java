@@ -67,25 +67,29 @@ public interface GParserConstants {
   /** RegularExpression Id. */
   int INCLUDE_DIRECTIVE = 36;
   /** RegularExpression Id. */
-  int START_SIRECTIVE = 37;
+  int START_DIRECTIVE = 37;
   /** RegularExpression Id. */
-  int IDENT = 38;
+  int LEFT_DIRECTIVE = 38;
   /** RegularExpression Id. */
-  int CHAR = 39;
+  int RIGHT_DIRECTIVE = 39;
   /** RegularExpression Id. */
-  int DIGIT = 40;
+  int IDENT = 40;
   /** RegularExpression Id. */
-  int HEX_DIGIT = 41;
+  int CHAR = 41;
   /** RegularExpression Id. */
-  int OCTAL_DIGIT = 42;
+  int DIGIT = 42;
   /** RegularExpression Id. */
-  int ESCAPED_HEX = 43;
+  int HEX_DIGIT = 43;
   /** RegularExpression Id. */
-  int ESCAPED_OCTAL = 44;
+  int OCTAL_DIGIT = 44;
   /** RegularExpression Id. */
-  int BRACKET_LIST = 45;
+  int ESCAPED_HEX = 45;
   /** RegularExpression Id. */
-  int INTEGER = 46;
+  int ESCAPED_OCTAL = 46;
+  /** RegularExpression Id. */
+  int BRACKET_LIST = 47;
+  /** RegularExpression Id. */
+  int INTEGER = 48;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -136,6 +140,8 @@ public interface GParserConstants {
     "<STRING_LITERAL>",
     "\"include\"",
     "\"%start\"",
+    "\"%left\"",
+    "\"%right\"",
     "<IDENT>",
     "<CHAR>",
     "<DIGIT>",

@@ -108,9 +108,10 @@ public class LrTest {
         Tree tree = Env.tree("lr1/assoc.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         Lr1Generator generator = new Lr1Generator(tree);
+        generator.merge = false;
         generator.generate();
-        generator.merge();
-        //generator.checkAll();
+        //generator.merge();
+        generator.checkAll();
         dots(generator, tree.file.getName());
     }
 
@@ -126,7 +127,8 @@ public class LrTest {
 
     @Test
     public void stateCode() throws Exception {
-        Tree tree = Env.tree("lr1/calc3.g");
+        //Tree tree = Env.tree("lr1/calc3.g");
+        Tree tree = Env.tree("lr1/assoc.g");
         //tree.options.outDir = Env.dotDir().getAbsolutePath();
         tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lr";
         tree.options.packageName = "lr";
@@ -134,6 +136,7 @@ public class LrTest {
         Lr1Generator dfaGen = new Lr1Generator(tree);
         dfaGen.merge = true;
         dfaGen.generate();
+        dfaGen.checkAll();
         //dfaGen.merge();
         dfaGen.genGoto();
         dots(dfaGen, tree.file.getName());

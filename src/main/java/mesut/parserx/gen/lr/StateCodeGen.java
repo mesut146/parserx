@@ -127,6 +127,7 @@ public class StateCodeGen {
                 else {
                     writer.append("Symbol tmp = new Symbol(%d);", idMap.getId(item.rule.ref()));
                     writer.append("tmp.name = \"%s\";", item.rule.name);
+                    writer.append("tmp.index = %s;", item.rule.index);
                     if (item.dotPos == 1) {
                         writer.append("tmp.children.add(stack.pop());");
                         writer.append("states.pop();");

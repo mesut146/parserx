@@ -91,7 +91,9 @@ TOKEN:
 //| <STRING_LITERAL: "\"" (~["\r","\n","\""] | "\\\"")* "\"">
 | <STRING_LITERAL: "\"" (~["\r","\n","\\","\""] | "\\" ~[])* "\"">
 | <INCLUDE_DIRECTIVE: "include">
-| <START_SIRECTIVE: "%start">
+| <START_DIRECTIVE: "%start">
+| <LEFT_DIRECTIVE: "%left">
+| <RIGHT_DIRECTIVE: "%right">
 }
 
 TOKEN:
@@ -118,7 +120,7 @@ Tree tree(File file):
   (includeStatement(tree))*
   (LOOKAHEAD("token" "{")tokenBlock(tree) | LOOKAHEAD("skip" "{")skipBlock(tree))*
   [startDecl(tree)]
-  (ruleDecl(tree))*
+  (ruleDecl(tree) | assocDecl(tree)) *
   {
     return tree;
   }
@@ -180,6 +182,18 @@ void declSeparator():
   "=" | ":" | ":=" | "->"
 }
 
+void assocDecl(Tree tree):
+{
+ Name nm;
+ Assoc res=new Assoc();
+}
+{
+  ("%left"{res.isLeft=true;} | "%right"{res.isLeft=false;}) (nm = ref(){ res.list.add(nm); })+ ";"
+  {
+    tree.assocList.add(res);
+  }
+}
+
 void ruleDecl(Tree tree):
 {
   RuleDecl decl=new RuleDecl();
@@ -209,7 +223,7 @@ List<Name> args():
 void startDecl(Tree tree):
 {}
 {
-  <START_SIRECTIVE> declSeparator() tree.start = ref() ";"
+  "%start" declSeparator() tree.start = ref() ";"
 }
 
 //or list

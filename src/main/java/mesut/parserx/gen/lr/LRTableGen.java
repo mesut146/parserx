@@ -1,19 +1,14 @@
 package mesut.parserx.gen.lr;
 
 import mesut.parserx.gen.transform.EbnfToBnf;
-import mesut.parserx.nodes.Name;
-import mesut.parserx.nodes.RuleDecl;
-import mesut.parserx.nodes.Sequence;
-import mesut.parserx.nodes.Tree;
+import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 //lr table generator
 public abstract class LRTableGen<T extends LrItemSet> {
@@ -22,7 +17,7 @@ public abstract class LRTableGen<T extends LrItemSet> {
     public int acc = 1;
     public LrDFA<T> table = new LrDFA<>();
     public RuleDecl start;
-    public boolean merge;
+    public boolean merge;//lalr
     Tree tree;
     LrItem first;
 
@@ -169,7 +164,7 @@ public abstract class LRTableGen<T extends LrItemSet> {
             }
             System.out.println("-----------------");
         }
-        checkAll();
+        //checkAll();
     }
 
     void doMerge(LrItem item, LrItemSet set) {
@@ -240,7 +235,34 @@ public abstract class LRTableGen<T extends LrItemSet> {
                 else {
                     if (i1.hasReduce() && !i2.hasReduce()) {
                         if (lr0 || i1.lookAhead.contains(i2.getDotNode())) {
-                            throw new RuntimeException("shift/reduce conflict " + table.getId(set) + "\n" + set);
+                            LrItemSet target = table.getTargetSet((T) set, i2.getDotNode());
+                            LrItem newItem = new LrItem(i2, i2.dotPos + 1);
+                            boolean removed = false;
+                            for (LrItem targetItem : target.all) {
+                                if (targetItem.isSame(newItem)) {
+                                    Assoc assoc = getAssoc(i2.getDotNode());
+                                    if (assoc == null) {
+                                        //prefer shift
+                                    }
+                                    else if (assoc.isLeft) {
+                                        //keep reduce,remove shift
+                                        removeItem(set, i2);
+                                        removed = true;
+                                    }
+                                    else {
+                                        //keep shift,remove reduce
+                                        i1.lookAhead.remove(i2.getDotNode());
+                                        if (i1.lookAhead.isEmpty()) {
+                                            removeItem(set, i1);
+                                        }
+                                        removed = true;
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!removed) {
+                                throw new RuntimeException("shift/reduce conflict " + table.getId(set) + "\n" + set);
+                            }
                         }
                     }
                     else if (!i1.hasReduce() && i2.hasReduce()) {
@@ -251,6 +273,45 @@ public abstract class LRTableGen<T extends LrItemSet> {
                 }
             }
         }
+    }
+
+    Assoc getAssoc(Name sym) {
+        for (Assoc assoc : tree.assocList) {
+            if (assoc.list.contains(sym)) {
+                return assoc;
+            }
+        }
+        return null;
+    }
+
+    void removeItem(LrItemSet set, LrItem item) {
+        //remove incoming and outgoing transitions
+        List<LrTransition> out = new ArrayList<>();
+        for (LrTransition tr : table.getTrans(set)) {
+            if (tr.symbol.equals(item.getDotNode())) {
+                out.add(tr);
+            }
+        }
+        if (out.size() == 1) {
+            //remove
+            table.getTrans(set).remove(out.get(0));
+        }
+        List<LrTransition> in = new ArrayList<>();
+        for (LrItemSet from : table.itemSets) {
+            for (LrTransition tr : table.getTrans(from)) {
+                if (tr.to == set) {
+                    LrItem prev = new LrItem(item, item.dotPos - 1);
+                    for (LrItem fromItem : from.all) {
+                        if (fromItem.isSame(prev)) {
+                            from.all.remove(fromItem);
+                            //in.add(tr);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        set.all.remove(item);
     }
 
     //get itemSet that contains item

@@ -24,6 +24,7 @@ public class Tree {
     public Name start;
     public File file;
     public Alphabet alphabet = new Alphabet();
+    public List<Assoc> assocList = new ArrayList<>();
     List<File> includes = new ArrayList<>();
 
     public Tree() {
@@ -36,6 +37,7 @@ public class Tree {
         file = tree.file;
         tokens = tree.tokens;
         options = tree.options;
+        assocList = new ArrayList<>(tree.assocList);
     }
 
     public static Tree makeTree(File path) {

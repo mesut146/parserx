@@ -15,6 +15,19 @@ public class PrepareTree extends SimpleTransformer {
 
     public void check() {
         transformAll();
+        for (Assoc assoc : tree.assocList) {
+            for (Name name : assoc.list) {
+                if (tree.getToken(name.name) != null) {
+                    name.isToken = true;
+                }
+                else if (tree.getRule(name.name) != null) {
+                    name.isToken = false;
+                }
+                else {
+                    throw new RuntimeException("invalid reference: " + name + " in assoc");
+                }
+            }
+        }
     }
 
     @Override

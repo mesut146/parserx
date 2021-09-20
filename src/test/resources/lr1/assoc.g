@@ -11,12 +11,12 @@ token
   N: [0-9]+;
 }
 
-@start: E2;
+%start: E;
 
-//%left PLUS;
-//E: E "+" E | N;
-E2: E "+" E | N;
-E: E2;
+%right PLUS;
+E: E "+" E | N;
+//E2: E "+" E | N;
+//E: E2;
 
 /*
 if left
