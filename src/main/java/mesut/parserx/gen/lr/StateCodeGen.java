@@ -8,17 +8,19 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class StateCodeGen {
     public static boolean debugState = false;
     public static boolean debugReduce = false;
     public Options options;
     LrDFA<?> dfa;
-    LRTableGen gen;
+    LRTableGen<?> gen;
     CodeWriter writer = new CodeWriter(true);
     IdMap idMap;
 
-    public StateCodeGen(LrDFA<?> dfa, LRTableGen tableGen, IdMap idMap) {
+    public StateCodeGen(LrDFA<?> dfa, LRTableGen<?> tableGen, IdMap idMap) {
         this.dfa = dfa;
         this.gen = tableGen;
         this.idMap = idMap;
@@ -87,6 +89,13 @@ public class StateCodeGen {
         //return String.valueOf(idMap.getId(sym));
     }
 
+    void writeShift(LrTransition<?> tr) {
+        writer.append("stack.push(la);");
+        writer.append("la = next();");
+        writer.append(getName(tr.to) + "();");
+        writer.append("return;");
+    }
+
     private void gen(LrItemSet set) {
         writer.append("public void %s() throws IOException{", getName(set));
         if (debugState) {
@@ -95,21 +104,29 @@ public class StateCodeGen {
         writer.append("states.push(%d);", dfa.getId(set));
         if (!dfa.getTrans(set).isEmpty()) {
             //shifts
-            writer.append("switch(la.id){");
-            for (LrTransition tr : dfa.getTrans(set)) {
+            List<LrTransition<?>> list = new ArrayList<>();
+            for (LrTransition<?> tr : dfa.getTrans(set)) {
                 if (tr.symbol.isToken) {
-                    writer.append("case %s:{", writeCase(tr.symbol));
-                    writer.append("stack.push(la);");
-                    writer.append("la = next();");
-                    writer.append(getName(tr.to) + "();");
-                    writer.append("return;");
-                    writer.append("}");
+                    list.add(tr);
                 }
                 else {
                     //goto
                 }
             }
-            writer.append("}");
+            if (list.size() == 1) {
+                writer.append("if(la.id == %s){", writeCase(list.get(0).symbol));
+                writeShift(list.get(0));
+                writer.append("}");
+            }
+            else if (list.size() > 1) {
+                writer.append("switch(la.id){");
+                for (LrTransition<?> tr : list) {
+                    writer.append("case %s:{", writeCase(tr.symbol));
+                    writeShift(tr);
+                    writer.append("}");
+                }
+                writer.append("}");
+            }
         }
         //reduces
         if (!set.getReduce().isEmpty()) {
@@ -165,7 +182,7 @@ public class StateCodeGen {
     }
 
     LrItemSet getGoto(LrItemSet from, Name symbol) {
-        for (LrTransition tr : dfa.getTrans(from)) {
+        for (LrTransition<?> tr : dfa.getTrans(from)) {
             if (tr.symbol.equals(symbol)) {
                 return tr.to;
             }

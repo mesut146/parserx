@@ -14,6 +14,6 @@ token
 %start = E;
 %left STAR PLUS POW;
 
+//E: E "*" E | E "+" E | N;
 E: E "^" E | E "*" E | E "+" E | "(" E ")" | N;
 
-//E: E "*" E | E "+" E | N;

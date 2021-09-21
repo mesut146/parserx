@@ -8,7 +8,8 @@ class Tester {
         //String in = "1+(4+(6+9))";
         //String in = "(6+(4+7))";
         //String in = "1+4+6";
-        String in = "(1*4^2+6)*7";
+        //String in = "(1*4^2+6)*7";
+        String in = "1+-2";
         //String in = "1?2:3?4:5";
 
         Lexer l = new Lexer(new StringReader(in));
