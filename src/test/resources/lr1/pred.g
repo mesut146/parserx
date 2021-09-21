@@ -11,8 +11,9 @@ token
   N: [0-9]+;
 }
 
-@start = E;
+%start = E;
+%left STAR PLUS POW;
 
-//E: E "^" E | E "*" E | E "+" E | "(" E ")" | N;
+E: E "^" E | E "*" E | E "+" E | "(" E ")" | N;
 
-E: E "*" E | E "+" E | N;
+//E: E "*" E | E "+" E | N;

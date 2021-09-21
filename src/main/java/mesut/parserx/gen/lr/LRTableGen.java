@@ -20,6 +20,7 @@ public abstract class LRTableGen<T extends LrItemSet> {
     public boolean merge;//lalr
     Tree tree;
     LrItem first;
+    boolean resolved;
 
     public void makeStart() {
         if (tree.start == null) {
@@ -101,7 +102,6 @@ public abstract class LRTableGen<T extends LrItemSet> {
                                         //can merge
                                         merged = true;
                                         doMerge(toFirst, set);
-                                        System.out.println("lalr merged");
                                         targetSet = set;
                                         break;
                                     }
@@ -122,7 +122,6 @@ public abstract class LRTableGen<T extends LrItemSet> {
                     }
                     else {
                         //found a set that has same core
-                        System.out.println("merge");
                         if (!targetSet.all.contains(toFirst)) {
                             targetSet.addCore(toFirst);
                         }
@@ -132,6 +131,7 @@ public abstract class LRTableGen<T extends LrItemSet> {
                     log(curItem, curSet, toFirst, targetSet, symbol);
                 }
                 else {
+                    //has same symbol transition
                     //check if item there
                     if (!targetSet.all.contains(toFirst)) {
                         if (merge) {
@@ -139,7 +139,6 @@ public abstract class LRTableGen<T extends LrItemSet> {
                             for (LrItem item : targetSet.all) {
                                 if (item.isSame(toFirst) && !item.equals(toFirst)) {
                                     doMerge(toFirst, targetSet);
-                                    System.out.println("lalr merged");
                                     merged = true;
                                     break;
                                 }
@@ -162,42 +161,51 @@ public abstract class LRTableGen<T extends LrItemSet> {
                     acc = table.getId(targetSet);
                 }
             }
-            System.out.println("-----------------");
         }
         //checkAll();
     }
 
     void doMerge(LrItem item, LrItemSet set) {
+        System.out.println("lalr merged " + set.stateId);
         for (LrItem old : set.all) {
             if (old.isSame(item) && !old.equals(item)) {
-                old.lookAhead.addAll(item.lookAhead);
-                set.all.clear();
-                set.closure();
-                doTrans(set);
+                //if my la is subset of old one don't do anything
+                Set<Name> la = new HashSet<>(old.lookAhead);
+                la.retainAll(item.lookAhead);
+                if (la.size() == item.lookAhead.size()) {
+                    //no need to
+                }
+                else {
+                    old.lookAhead.addAll(item.lookAhead);
+                    set.all.clear();
+                    set.closure();
+                    doTrans(set, new HashSet<LrItemSet>());
+                }
                 break;
             }
         }
     }
 
     //trace transitions and merge la
-    void doTrans(LrItemSet set) {
-        for (LrItem item : set.all) {
-            if (item.getDotNode() != null) {
-                LrItemSet target = table.getTargetSet((T) set, item.getDotNode());
-                if (target != null) {
-                    LrItem newItem = new LrItem(item, item.dotPos + 1);
-                    for (LrItem kernel : target.kernel) {
-                        if (kernel.isSame(newItem)) {
-                            kernel.lookAhead.addAll(item.lookAhead);
-                            target.all.clear();
-                            target.closure();
-                            doTrans(target);
-                            break;
-                        }
-                    }
-                    //doMerge(newItem, target);
+    void doTrans(LrItemSet set, Set<LrItemSet> done) {
+        if (done.contains(set)) return;
+        done.add(set);
+        for (int i = 0; i < set.all.size(); i++) {
+            LrItem item = set.all.get(i);
+            if (item.getDotNode() == null) continue;
+            LrItemSet target = table.getTargetSet((T) set, item.getDotNode());
+            if (target == null) continue;
+            LrItem newItem = new LrItem(item, item.dotPos + 1);
+            for (LrItem kernel : target.kernel) {
+                if (kernel.isSame(newItem)) {
+                    kernel.lookAhead.addAll(item.lookAhead);
+                    target.all.clear();
+                    target.closure();
+                    doTrans(target, done);
+                    break;
                 }
             }
+            //doMerge(newItem, target);
         }
     }
 
@@ -207,8 +215,12 @@ public abstract class LRTableGen<T extends LrItemSet> {
     }
 
     public void checkAll() {
+        resolved = false;
         for (LrItemSet set : table.itemSets) {
             check(set);
+        }
+        if (resolved) {
+            checkAll();
         }
     }
 
@@ -233,46 +245,83 @@ public abstract class LRTableGen<T extends LrItemSet> {
                     }
                 }
                 else {
-                    if (i1.hasReduce() && !i2.hasReduce()) {
-                        if (lr0 || i1.lookAhead.contains(i2.getDotNode())) {
-                            LrItemSet target = table.getTargetSet((T) set, i2.getDotNode());
-                            LrItem newItem = new LrItem(i2, i2.dotPos + 1);
-                            boolean removed = false;
-                            for (LrItem targetItem : target.all) {
-                                if (targetItem.isSame(newItem)) {
-                                    Assoc assoc = getAssoc(i2.getDotNode());
-                                    if (assoc == null) {
-                                        //prefer shift
-                                    }
-                                    else if (assoc.isLeft) {
-                                        //keep reduce,remove shift
-                                        removeItem(set, i2);
-                                        removed = true;
-                                    }
-                                    else {
-                                        //keep shift,remove reduce
-                                        i1.lookAhead.remove(i2.getDotNode());
-                                        if (i1.lookAhead.isEmpty()) {
-                                            removeItem(set, i1);
-                                        }
-                                        removed = true;
-                                    }
-                                    break;
+                    LrItem shift = null;
+                    LrItem reduce = null;
+                    if (i1.hasReduce() && !i2.hasReduce() && (lr0 || i1.lookAhead.contains(i2.getDotNode()))) {
+                        shift = i2;
+                        reduce = i1;
+                    }
+                    else if (!i1.hasReduce() && i2.hasReduce() && i2.lookAhead.contains(i1.getDotNode())) {
+                        shift = i1;
+                        reduce = i2;
+                    }
+                    else {
+                        continue;
+                    }
+                    boolean removed = false;
+                    //if same rule,check assoc
+                    if (shift.rule.equals(reduce.rule)) {
+                        LrItemSet target = table.getTargetSet((T) set, shift.getDotNode());
+                        LrItem newItem = new LrItem(shift, shift.dotPos + 1);
+                        for (LrItem targetItem : target.all) {
+                            if (targetItem.isSame(newItem)) {
+                                Assoc assoc = getAssoc(shift.getDotNode());
+                                if (assoc == null) {
+                                    //prefer shift
                                 }
-                            }
-                            if (!removed) {
-                                throw new RuntimeException("shift/reduce conflict " + table.getId(set) + "\n" + set);
+                                else if (assoc.isLeft) {
+                                    //keep reduce,remove shift
+                                    removeItem(set, shift);
+                                    removed = true;
+                                }
+                                else {
+                                    //keep shift,remove reduce
+                                    reduce.lookAhead.remove(shift.getDotNode());
+                                    if (reduce.lookAhead.isEmpty()) {
+                                        removeItem(set, reduce);
+                                    }
+                                    removed = true;
+                                }
+                                break;
                             }
                         }
-                    }
-                    else if (!i1.hasReduce() && i2.hasReduce()) {
-                        if (lr0 || i2.lookAhead.contains(i1.getDotNode())) {
-                            throw new RuntimeException("shift/reduce conflict " + table.getId(set) + "\n" + set);
+                        if (removed) {
+                            System.out.println("assoc is used on " + set.stateId);
+                            this.resolved = true;
                         }
                     }
+                    else {
+                        //check prec
+                        if (shift.rule.name.equals(reduce.rule.name)) {
+                            if (reduce.rule.index < shift.rule.index) {
+                                //prefer reduce
+                                removeItem(set, shift);
+                                removed = true;
+                            }
+                            else {
+                                //prefer shift
+                                reduce.lookAhead.remove(shift.getDotNode());
+                                if (reduce.lookAhead.isEmpty()) {
+                                    removeItem(set, reduce);
+                                }
+                                removed = true;
+                            }
+                        }
+                        if (removed) {
+                            System.out.println("prec used in " + set.stateId);
+                        }
+                    }
+                    if (!removed) {
+                        throw new RuntimeException("shift/reduce conflict " + table.getId(set) + "\n" + set);
+                    }
+
                 }
             }
         }
+    }
+
+    void handleAssoc() {
+
     }
 
     Assoc getAssoc(Name sym) {

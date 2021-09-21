@@ -2,10 +2,12 @@ token{
   ques: "?";
   plus: "+";
   colon: ":";
-  R: "rest";
+  N: [0-9]+;
 }
 
 %start = E;
-E: E "+" E
- | E "?" E ":" E
- | R;
+%left ques;
+
+
+E: N
+ | E "?" E ":" E;
