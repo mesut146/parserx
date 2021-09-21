@@ -245,8 +245,8 @@ public abstract class LRTableGen<T extends LrItemSet> {
                     }
                 }
                 else {
-                    LrItem shift = null;
-                    LrItem reduce = null;
+                    LrItem shift;
+                    LrItem reduce;
                     if (i1.hasReduce() && !i2.hasReduce() && (lr0 || i1.lookAhead.contains(i2.getDotNode()))) {
                         shift = i2;
                         reduce = i1;
@@ -309,6 +309,7 @@ public abstract class LRTableGen<T extends LrItemSet> {
                         }
                         if (removed) {
                             System.out.println("prec used in " + set.stateId);
+                            this.resolved = true;
                         }
                     }
                     if (!removed) {

@@ -136,7 +136,8 @@ public class LrTest {
         //Tree tree = Env.tree("lr1/assoc.g");
         //Tree tree = Env.tree("lr1/prec2.g");
         //Tree tree = Env.tree("lr1/pred.g");
-        Tree tree = Env.tree("lr1/prec3.g");
+        //Tree tree = Env.tree("lr1/prec3.g");
+        Tree tree = Env.tree("lr1/calc.g");
         //tree.options.outDir = Env.dotDir().getAbsolutePath();
         tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lr";
         tree.options.packageName = "lr";
