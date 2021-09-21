@@ -16,11 +16,11 @@ public class StateCodeGen {
     public static boolean debugReduce = false;
     public Options options;
     LrDFA<?> dfa;
-    LRTableGen<?> gen;
+    LrDFAGen<?> gen;
     CodeWriter writer = new CodeWriter(true);
     IdMap idMap;
 
-    public StateCodeGen(LrDFA<?> dfa, LRTableGen<?> tableGen, IdMap idMap) {
+    public StateCodeGen(LrDFA<?> dfa, LrDFAGen<?> tableGen, IdMap idMap) {
         this.dfa = dfa;
         this.gen = tableGen;
         this.idMap = idMap;

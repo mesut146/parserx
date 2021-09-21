@@ -38,7 +38,7 @@ public class IdMap {
         for (RuleDecl rule : tree.rules) {
             map.put(rule.ref(), ++lastId);
         }
-        map.put(new Name(LRTableGen.startName, false), ++lastId);
+        map.put(new Name(LrDFAGen.startName, false), ++lastId);
     }
 
     public void writeSym(Options options) throws IOException {
@@ -61,7 +61,7 @@ public class IdMap {
 
         for (Map.Entry<Name, Integer> entry : map.entrySet()) {
             if (entry.getKey().isRule()) {
-                if (entry.getKey().name.equals(LRTableGen.startName)) continue;
+                if (entry.getKey().name.equals(LrDFAGen.startName)) continue;
                 sb.append(field(entry.getKey().name, entry.getValue()));
             }
         }

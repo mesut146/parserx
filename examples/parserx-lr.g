@@ -39,13 +39,14 @@ skip{
 }
 
 optionsBlock: "options" "{" option* "}";
-option: IDENT "=" (NUMBER | BOOLEAN);
+option: IDENT "=" NUMBER
+      | IDENT "=" BOOLEAN;
 
 
 tree: includeStatement* (tokenBlock  | skipBlock)* startDecl? ruleDecl*;
 
 includeStatement: "include" STRING;
-startDecl: "@start" SEPARATOR name ";";
+startDecl: "%start" SEPARATOR name ";";
 
 tokenBlock: ("token" | "tokens") "{" tokenDecl* "}";
 skipBlock: "skip" "{" tokenDecl* "}";

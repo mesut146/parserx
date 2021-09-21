@@ -11,7 +11,7 @@ import java.io.PrintWriter;
 import java.util.*;
 
 //lr table generator
-public abstract class LRTableGen<T extends LrItemSet> {
+public abstract class LrDFAGen<T extends LrItemSet> {
     public static Name dollar = new Name("$", true);//eof
     public static String startName = "%start";
     public int acc = 1;
@@ -336,8 +336,8 @@ public abstract class LRTableGen<T extends LrItemSet> {
 
     void removeItem(LrItemSet set, LrItem item) {
         //remove incoming and outgoing transitions
-        List<LrTransition> out = new ArrayList<>();
-        for (LrTransition tr : table.getTrans(set)) {
+        List<LrTransition<?>> out = new ArrayList<>();
+        for (LrTransition<?> tr : table.getTrans(set)) {
             if (tr.symbol.equals(item.getDotNode())) {
                 out.add(tr);
             }
@@ -348,7 +348,7 @@ public abstract class LRTableGen<T extends LrItemSet> {
         }
         List<LrTransition> in = new ArrayList<>();
         for (LrItemSet from : table.itemSets) {
-            for (LrTransition tr : table.getTrans(from)) {
+            for (LrTransition<?> tr : table.getTrans(from)) {
                 if (tr.to == set) {
                     LrItem prev = new LrItem(item, item.dotPos - 1);
                     for (LrItem fromItem : from.all) {

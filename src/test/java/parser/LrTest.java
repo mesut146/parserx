@@ -26,7 +26,7 @@ public class LrTest {
         }
     }
 
-    void dots(LRTableGen<?> gen, String name) throws IOException {
+    void dots(LrDFAGen<?> gen, String name) throws IOException {
         gen.writeTableDot();
         gen.writeGrammar(Env.dotFile(name + "2"));
 
@@ -72,7 +72,6 @@ public class LrTest {
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         Lr1Generator generator = new Lr1Generator(tree);
         generator.generate();
-        generator.merge();
         dots(generator, tree.file.getName());
         CodeGen codeGen = new CodeGen(generator, false);
         codeGen.gen();
@@ -103,7 +102,6 @@ public class LrTest {
         tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lr";
         Lr1Generator generator = new Lr1Generator(tree);
         generator.generate();
-        generator.merge();
         CodeGen codeGen = new CodeGen(generator, false);
         codeGen.gen();
     }
@@ -155,5 +153,16 @@ public class LrTest {
         StateCodeGen.debugReduce = true;
         StateCodeGen gen = new StateCodeGen(dfaGen.table, dfaGen, lexerGenerator.idMap);
         gen.gen();
+
+        AstBuilderGen astBuilderGen = new AstBuilderGen(tree);
+        astBuilderGen.gen();
+    }
+
+    @Test
+    public void astBuilder() throws Exception {
+        Tree tree = Env.tree("lr1/calc.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        AstBuilderGen astBuilderGen = new AstBuilderGen(tree);
+        astBuilderGen.gen();
     }
 }

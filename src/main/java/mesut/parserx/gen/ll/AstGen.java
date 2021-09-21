@@ -2,6 +2,7 @@ package mesut.parserx.gen.ll;
 
 import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.Options;
+import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
 import mesut.parserx.utils.Utils;
@@ -25,7 +26,8 @@ public class AstGen {
         this.options = tree.options;
     }
 
-    void genAst() throws IOException {
+    public void genAst() throws IOException {
+        tree = EbnfToBnf.combineOr(tree);
         if (options.packageName != null) {
             astWriter.append("package " + options.packageName + ";");
             astWriter.append("");
@@ -99,7 +101,7 @@ public class AstGen {
         else if (node.isOr()) {
             parent.append("public int which;");
             int num = 1;
-            for (final Node ch : node.asOr()) {
+            for (Node ch : node.asOr()) {
                 if (ch.isEpsilon()) continue;
                 Type clsName = new Type(parentClass, Utils.camel(parentClass.name) + num);
                 String v = parentClass.name.toLowerCase() + num;

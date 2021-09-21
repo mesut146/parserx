@@ -17,13 +17,13 @@ import java.util.List;
 public class CodeGen {
     public Options options;
     LrDFA<?> dfa;
-    LRTableGen<?> gen;
+    LrDFAGen<?> gen;
     List<RuleDecl> all;
     LexerGenerator lexerGenerator;
     boolean islr0;
     IdMap idMap;
 
-    public CodeGen(LRTableGen<?> gen, boolean islr0) {
+    public CodeGen(LrDFAGen<?> gen, boolean islr0) {
         this.gen = gen;
         this.options = gen.tree.options;
         this.islr0 = islr0;
@@ -91,7 +91,7 @@ public class CodeGen {
         else {
             sb.append(pack(1));
             for (LrItem item : acc.kernel) {
-                if (item.hasReduce() && item.rule.name.equals(gen.start.name) && item.lookAhead.contains(LRTableGen.dollar)) {
+                if (item.hasReduce() && item.rule.name.equals(gen.start.name) && item.lookAhead.contains(LrDFAGen.dollar)) {
                     sb.append(pack(idMap.getId(IdMap.EOF)));
                     break;
                 }

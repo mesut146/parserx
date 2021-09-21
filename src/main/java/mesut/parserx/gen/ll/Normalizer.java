@@ -22,7 +22,7 @@ public class Normalizer extends SimpleTransformer {
             groupCount = 1;
             //todo restart
             RuleDecl decl = tree.rules.get(i);
-            decl.retType = decl.ref();
+            decl.retType = new Type(tree.options.astClass, decl.name);
             if (!map.containsKey(decl.name)) {
                 decl.isOriginal = true;
             }
@@ -44,7 +44,7 @@ public class Normalizer extends SimpleTransformer {
         RuleDecl original = getParent();
         String cls = original.name + "g" + groupCount;
         RuleDecl tmp = new RuleDecl(cls, node.node);
-        tmp.retType = tmp.ref();
+        tmp.retType = new Type(tree.options.astClass, cls);
         map.put(cls, original);
         tree.addRule(tmp);
         Name ref = tmp.ref();

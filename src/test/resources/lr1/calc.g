@@ -18,8 +18,8 @@ token
 %left PLUS MINUS STAR DIV POW;
 
 E: "-" E | "(" E ")" | NUMBER;
-E = E "^" E;
-E = E "*" E | E "/" E;
-E = E "+" E | E "-" E;
+E: E "^" E;
+E: E "*" E | E "/" E;
+E: E "+" E | E "-" E;
 
 
