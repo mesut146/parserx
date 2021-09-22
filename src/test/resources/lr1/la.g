@@ -3,7 +3,7 @@ token{
   b: "b";
 }
 
-@start: E;
+%start: E;
 
 E: B B;
 B: a B | b;

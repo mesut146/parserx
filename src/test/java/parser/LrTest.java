@@ -195,4 +195,15 @@ public class LrTest {
         AstBuilderGen astBuilderGen = new AstBuilderGen(tree);
         astBuilderGen.gen();
     }
+
+    @Test
+    public void name() throws Exception {
+        Tree tree = Env.tree("lr1/rec.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        Lr1Generator dfaGen = new Lr1Generator(tree);
+        dfaGen.merge = true;
+        dfaGen.generate();
+        dfaGen.checkAll();
+        dots(dfaGen, tree.file.getName());
+    }
 }
