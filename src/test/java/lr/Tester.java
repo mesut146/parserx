@@ -7,7 +7,7 @@ class Tester {
     public static void main(String[] a) throws Exception {
         //String in = "1+(4+(6+9))";
         //String in = "(6+(4+7))";
-        //String in = "1+4+6";
+        //String in = "6+(1+4)";
         //String in = "(1*4^2+6)*7";
         //String in = "1+-2";
         //String in = "1?2:3?4:5";
@@ -17,8 +17,9 @@ class Tester {
         Parser p = new Parser(l);
         //Parser.debug = true;
         Symbol sym = p.parse();
-        Ast.E res = AstBuilder.makeE(sym);
-        System.out.println(eval(res));
+        System.out.println(sym);
+        /*Ast.E res = AstBuilder.makeE(sym);
+        System.out.println(eval(res));*/
     }
 
     static double eval(Ast.E e) {

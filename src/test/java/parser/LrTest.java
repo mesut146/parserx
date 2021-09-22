@@ -97,7 +97,8 @@ public class LrTest {
 
     @Test
     public void real() throws Exception {
-        Tree tree = Env.tree("lr1/calc3.g");
+        //Tree tree = Env.tree("lr1/calc3.g");
+        Tree tree = Env.tree("lr1/calc.g");
         tree.options.packageName = "lr";
         tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lr";
         Lr1Generator generator = new Lr1Generator(tree);
@@ -156,6 +157,35 @@ public class LrTest {
 
         AstBuilderGen astBuilderGen = new AstBuilderGen(tree);
         astBuilderGen.gen();
+    }
+
+    @Test
+    public void stateCode2() throws Exception {
+        //Tree tree = Env.tree("lr1/calc3.g");
+        //Tree tree = Env.tree("lr1/assoc.g");
+        //Tree tree = Env.tree("lr1/prec2.g");
+        //Tree tree = Env.tree("lr1/pred.g");
+        //Tree tree = Env.tree("lr1/prec3.g");
+        Tree tree = Env.tree("lr1/calc.g");
+        //tree.options.outDir = Env.dotDir().getAbsolutePath();
+        tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lr";
+        tree.options.packageName = "lr";
+        LrDFA.debugTransition = true;
+        Lr1Generator dfaGen = new Lr1Generator(tree);
+        dfaGen.merge = true;
+        dfaGen.generate();
+        dfaGen.checkAll();
+        dfaGen.genGoto();
+        dots(dfaGen, tree.file.getName());
+        LexerGenerator lexerGenerator = new LexerGenerator(tree);
+        lexerGenerator.generate();
+        StateCodeGen2.debugState = true;
+        StateCodeGen2.debugReduce = true;
+        StateCodeGen2 gen = new StateCodeGen2(dfaGen.table, dfaGen, lexerGenerator.idMap);
+        gen.gen();
+
+        /*AstBuilderGen astBuilderGen = new AstBuilderGen(tree);
+        astBuilderGen.gen();*/
     }
 
     @Test

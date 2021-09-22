@@ -4,6 +4,7 @@ import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.nodes.*;
 
+//remove left recursion by factorisation
 public class Recursion {
     public static boolean debug = false;
     public boolean any;
