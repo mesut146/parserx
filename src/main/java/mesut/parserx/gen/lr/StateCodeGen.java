@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+//no table driven parser gen,each state converted to method
 public class StateCodeGen {
     public static boolean debugState = false;
     public static boolean debugReduce = false;

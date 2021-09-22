@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+//common for lexer and parser
 public class IdMap {
     public static Name EOF = new Name("EOF", true);
     public static Name dollar = new Name("$", true);

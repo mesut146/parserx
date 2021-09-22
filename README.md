@@ -8,8 +8,10 @@ lexer &amp; parser generator and grammar toolkit written in java
 - epsilon removal
 - left recursion removal(direct and indirect)
 - left factoring
-- ebnf to bnf and vice versa
+- ebnf to bnf
 - LR(0),LR(1),LALR(1) parser generator
+- Table based parser & State->Method based parser
+- Outputs AST/CST
 - LL(1) recursive descent parser generator
 - dot graph of NFA, DFA, LR(0), LR(1), LALR(1)
 - DFA minimization
@@ -37,6 +39,14 @@ to include another grammar use;<br>
 
 e.g `include "lexer.g"`
 
+### options
+
+```
+options{
+  <option_name> = <value>
+  ...
+}
+```
 ### token definitions
 
 ```
@@ -44,7 +54,6 @@ token{
 
   <TOKEN_NAME> <seperator> <regex> <SEMICOLON>
   //where seperator is one of ':' , '=' , '::=' , ':=' , '->'
-
 }
 ```
 e.g
@@ -87,8 +96,8 @@ right: ident | literal;
 e.g `a (b | c+)`
 
 #### epsilon
-use `%empty` or `ε` for epsilon<br>
-e.g `rule: a (b | c | %empty);`
+use `%empty`, `%epsilon` or `ε` for epsilon<br>
+e.g `rule: a (b | c | %epsilon);`
 
 #### ranges (token only)
 place ranges or single chars inside brackets(without quote)<br>
@@ -107,7 +116,7 @@ use double quotes for your strings<br>
 e.g `stmt: "if" "(" expr ")" stmt;`
 
 strings in rules will be replaced with token references that are declared in `token` block<br>
-so in the example above the strings would be declared like;<br>
+so in the example above the strings would need to be declared like;<br>
 ```
 token{
   IF: "if";
@@ -118,8 +127,18 @@ token{
 
 #### start directive
 
-in LR parsing you have to specify start rule with `@start`<br>
-e.g `@start: expr;`
+in LR parsing you have to specify start rule with `%start`<br>
+e.g `%start: expr;`
+
+#### assoc directives
+`%left <TOKEN_LIST>`
+<br>`%right <TOKEN_LIST>`
+
+#### precedence
+precedence handled by picking the production declared previously
+e.g `E: E "*" E | E "+" E | NUM;`
+<br>multiplication takes precedence over addition in the example aabove
+
 
 ### skip block
 

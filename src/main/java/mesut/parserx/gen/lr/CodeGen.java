@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+//table driven parser gen
 public class CodeGen {
     public Options options;
     LrDFA<?> dfa;

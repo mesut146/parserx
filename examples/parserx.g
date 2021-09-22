@@ -38,14 +38,15 @@ skip{
   WS: [ \n\r\t]+;
 }
 
-optionsBlock: "options" "{" option* "}";
-option: IDENT "=" (NUMBER | BOOLEAN);
 
-
-tree: includeStatement* (tokenBlock  | skipBlock)* startDecl? ruleDecl*;
+tree: includeStatement* optionsBlock? (tokenBlock  | skipBlock)* startDecl? ruleDecl*;
 
 includeStatement: "include" STRING;
-startDecl: "@start" SEPARATOR name ";";
+
+optionsBlock: "options" "{" option* "}";
+option: IDENT "=" (NUMBER | BOOLEAN) ";"?;
+
+startDecl: START SEPARATOR name ";";
 
 tokenBlock: ("token" | "tokens") "{" tokenDecl* "}";
 skipBlock: "skip" "{" tokenDecl* "}";
