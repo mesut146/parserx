@@ -3,6 +3,7 @@ include "../common.g"
 A: B b | a c;
 B: a d | e;
 
+
 /*
 A: a (B(a) b | a(a) c) | B_no_a b;
 B(a): a(a) d;

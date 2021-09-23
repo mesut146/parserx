@@ -197,7 +197,7 @@ public class LrTest {
     }
 
     @Test
-    public void name() throws Exception {
+    public void rec() throws Exception {
         Tree tree = Env.tree("lr1/rec.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         Lr1Generator dfaGen = new Lr1Generator(tree);

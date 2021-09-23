@@ -14,11 +14,20 @@ token{
  NUMBER: [0-9]+;
 }
 
+/*token{
+ #bracketLexer: "[" "^"? unit+ "]";
+ #unit: single ("-" single)?;
+ #single: "\\u" hex_digit hex_digit hex_digit hex_digit | .;
+ #hex_digit: [a-fA-F0-9];
+}*/
+
 token{
  LP: "(";
  RP: ")";
  LBRACE: "{";
  RBRACE: "}";
+ //LBRACKET: "[";
+ //RBRACKET: "]";
  STAR: "*";
  PLUS: "+";
  QUES: "?";
@@ -39,26 +48,28 @@ skip{
 }
 
 
-tree: includeStatement* optionsBlock? (tokenBlock  | skipBlock)* startDecl? ruleDecl*;
+tree: includeStatement* optionsBlock? tokens=(tokenBlock  | skipBlock)* startDecl? rules=(ruleDecl | assocDecl)*;
 
 includeStatement: "include" STRING;
 
 optionsBlock: "options" "{" option* "}";
-option: IDENT "=" (NUMBER | BOOLEAN) ";"?;
+option: key=IDENT "=" value=(NUMBER | BOOLEAN) ";"?;
 
 startDecl: START SEPARATOR name ";";
 
-tokenBlock: ("token" | "tokens") "{" tokenDecl* "}";
+tokenBlock: TOKEN "{" tokenDecl* "}";
 skipBlock: "skip" "{" tokenDecl* "}";
 
 
-tokenDecl= "#"? name SEPARATOR rhs ";";
-ruleDecl= name args? SEPARATOR rhs ";";
-args: "(" name ("," name)* ")";
+tokenDecl: "#"? name SEPARATOR rhs ";";
+ruleDecl: name args? SEPARATOR rhs ";";
+args: "(" name rest=("," name)* ")";
+
+assocDecl: type=("%left" | "%right") ref+ ";";
 
 rhs: sequence ("|" sequence)*;
 sequence: regex+ label=("#" name)?;
-regex: (name "=")? simple ("*" | "+" | "?")?;
+regex: name=(name "=")? simple type=("*" | "+" | "?")?;
 simple: group | ref | stringNode | bracketNode | untilNode | dotNode | EPSILON | repeatNode;
 
 group: "(" rhs ")";
@@ -70,6 +81,5 @@ ref: name;
 name: IDENT;
 repeatNode: "{" rhs "}";
 
-test: "+" #lbl1
-    | "*" #lbl2;
+//bracketOpt: "[" rhs "]";
 

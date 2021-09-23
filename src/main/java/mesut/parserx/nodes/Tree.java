@@ -7,9 +7,11 @@ import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.grammar.GParser;
+import mesut.parserx.parser.MyVisitor;
 import mesut.parserx.utils.Utils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +27,7 @@ public class Tree {
     public File file;
     public Alphabet alphabet = new Alphabet();
     public List<Assoc> assocList = new ArrayList<>();
-    List<File> includes = new ArrayList<>();
+    List<String> includes = new ArrayList<>();
 
     public Tree() {
     }
@@ -42,22 +44,13 @@ public class Tree {
 
     public static Tree makeTree(File path) {
         try {
-            String grammar = Utils.read(path);
+            return MyVisitor.makeTree(path);
+            /*String grammar = Utils.read(path);
             grammar += " ";
             GParser parser = new GParser(new StringReader(grammar));
-            return parser.tree(path).prepare();
+            return parser.tree(path).prepare();*/
         } catch (Exception e) {
             e.addSuppressed(new RuntimeException(path.getAbsolutePath()));
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static Tree makeTree(String grammar) {
-        grammar += " ";
-        try {
-            GParser parser = new GParser(new StringReader(grammar));
-            return parser.tree(null).prepare();
-        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -89,17 +82,27 @@ public class Tree {
     }
 
     public void addInclude(String path) {
-        if (file != null) {
-            File refFile = new File(file.getParent(), path);
-            if (!refFile.exists()) {
-                throw new IllegalArgumentException("grammar file " + path + " not found");
+        includes.add(path);
+    }
+
+    public void resolveIncludes() throws FileNotFoundException {
+        for (String path : includes) {
+            File abs = new File(path);
+            if (abs.exists()) {
+                Tree other = makeTree(abs);
+                mergeWith(other);
+                return;
             }
-            Tree other = makeTree(refFile);
-            mergeWith(other);
-            includes.add(refFile);
-        }
-        else {
-            throw new IllegalArgumentException("grammar file " + path + " not found");
+            else if (file != null) {
+                //relative
+                File refFile = new File(file.getParent(), path);
+                if (refFile.exists()) {
+                    Tree other = makeTree(refFile);
+                    mergeWith(other);
+                    return;
+                }
+            }
+            throw new FileNotFoundException("grammar file " + path + " not found");
         }
     }
 

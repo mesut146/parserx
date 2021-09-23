@@ -9,7 +9,7 @@ Ag1: a c | d;
 A: a (a(a) b | Ag1(a) e) | Ag1_no_a e;
 Ag1(a): a(a) c;
 Ag1_no_a: d;
-Ag1 = a Ag1(a) | Ag1_no_a;
+Ag1: a Ag1(a) | Ag1_no_a;
 
 Ag1 Ag1_no_a(){
  Ag1 res;

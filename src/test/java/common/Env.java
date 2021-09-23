@@ -1,11 +1,10 @@
 package common;
 
-import mesut.parserx.grammar.GParser;
 import mesut.parserx.nodes.*;
+import mesut.parserx.parser.MyVisitor;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URL;
 
 public class Env {
@@ -49,8 +48,7 @@ public class Env {
     public static Tree makeRule(String grammar) {
         grammar += " ";
         try {
-            GParser parser = new GParser(new StringReader(grammar));
-            final Tree tree = parser.tree(null);
+            final Tree tree = MyVisitor.makeTree(grammar);
             new SimpleTransformer(tree) {
                 @Override
                 public Node transformName(Name node, Node parent) {

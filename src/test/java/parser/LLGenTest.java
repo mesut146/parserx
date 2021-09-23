@@ -1,7 +1,9 @@
 package parser;
 
 import common.Env;
-import mesut.parserx.gen.*;
+import mesut.parserx.gen.LexerGenerator;
+import mesut.parserx.gen.Options;
+import mesut.parserx.gen.VisitorGenerator;
 import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.transform.Epsilons;
 import mesut.parserx.gen.transform.Factor;
@@ -28,6 +30,7 @@ public class LLGenTest {
     @Test
     public void factorAll() throws Exception {
         Factor.debug = false;
+
         Tester.check(Env.tree("factor/single.g"), "A", "ac", "eb", "adb");
         Tester.check(Env.tree("factor/single2.g"), "A", "aac", "aadbeb");
         Tester.check(Env.tree("factor/group.g"), "A", "ab", "ace", "de");
@@ -82,6 +85,7 @@ public class LLGenTest {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         options.parserClass = "Test";
+        options.genVisitor = true;
         //Tree tree = Tree.makeTree(Env.getResFile("calc-1.g"));
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/parserx.g"));
         tree.options = options;
@@ -112,12 +116,10 @@ public class LLGenTest {
         Factor.debug = true;
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/parserx.g"));
         Options options = new Options();
-        options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/itself";
-        options.packageName = "itself";
+        //options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/itself";
+        options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/java/mesut/parserx/parser";
+        options.packageName = "mesut.parserx.parser";
         tree.options = options;
-
-        VisitorGenerator visit = new VisitorGenerator(tree);
-        visit.generate();
 
         RecDescent rec = new RecDescent(tree);
         rec.gen();

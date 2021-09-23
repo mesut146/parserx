@@ -1,14 +1,15 @@
 package lexer;
 
 import common.Env;
-import mesut.parserx.Main;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.NfaReader;
-import mesut.parserx.grammar.GParser;
 import mesut.parserx.grammar.ParseException;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
+import mesut.parserx.parser.Lexer;
+import mesut.parserx.parser.MyVisitor;
+import mesut.parserx.parser.Parser;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -19,11 +20,11 @@ import java.io.StringReader;
 
 public class NfaTest {
 
-    static Node makeRegex(String regex) throws ParseException {
-        return new GParser(new StringReader(regex)).rhs();
+    static Node makeRegex(String regex) throws IOException {
+        return new MyVisitor().visitRhs(new Parser(new Lexer(new StringReader(regex))).rhs());
     }
 
-    static Tree makeTree(String regex) throws ParseException {
+    static Tree makeTree(String regex) throws IOException {
         Tree tree = new Tree();
         tree.addToken(new TokenDecl("test", makeRegex(regex)));
         return tree;
@@ -38,7 +39,7 @@ public class NfaTest {
     }
 
     @Test
-    public void splitRanges() throws ParseException {
+    public void splitRanges() throws IOException {
         Tree tree = new Tree();
         tree.addToken(new TokenDecl("hex", makeRegex("[a-f]")));
         tree.addToken(new TokenDecl("a", makeRegex("[b-z]")));

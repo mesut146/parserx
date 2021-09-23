@@ -2,7 +2,6 @@ package mesut.parserx.gen.ll;
 
 import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.Options;
-import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
 import mesut.parserx.utils.Utils;
@@ -12,7 +11,7 @@ import java.io.IOException;
 
 //generate ast file and astinfo per node
 public class AstGen {
-    Tree tree;
+    public Tree tree;
     CodeWriter astWriter = new CodeWriter(true);
     CodeWriter classes;
     Options options;
@@ -27,16 +26,15 @@ public class AstGen {
     }
 
     public void genAst() throws IOException {
-        tree = EbnfToBnf.combineOr(tree);
         if (options.packageName != null) {
-            astWriter.append("package " + options.packageName + ";");
+            astWriter.append("package %s;", options.packageName);
             astWriter.append("");
         }
         astWriter.append("import java.util.List;");
         astWriter.append("import java.util.ArrayList;");
         astWriter.append("");
 
-        astWriter.append(String.format("public class %s{", options.astClass));
+        astWriter.append("public class %s{", options.astClass);
         for (RuleDecl decl : tree.rules) {
             groupCount = 1;
             curRule = decl.name;
@@ -52,11 +50,11 @@ public class AstGen {
 
     void model(RuleDecl decl) {
         classes = new CodeWriter(true);
-        astWriter.append(String.format("public static class %s{", decl.name));
+        astWriter.append("public static class %s{", decl.name);
         Type type = new Type(options.astClass, decl.name);
         model(decl.rhs, type, "res", astWriter);
         astWriter.all(classes.get());
-        if (decl.isOriginal) {
+        if (decl.isOriginal && options.genVisitor) {
             astWriter.append(String.format("public <R,P> R accept(%sVisitor<R,P> visitor, P arg){", options.parserClass));
             astWriter.all(String.format("return visitor.visit%s(this, arg);\n}", Utils.camel(decl.name)));
         }

@@ -43,7 +43,7 @@ public class Tester {
         Process p = builder.start();
         if (p.waitFor() != 0) {
             System.out.println(read(p.getInputStream()));
-            throw new RuntimeException("cant compile");
+            throw new RuntimeException("cant compile " + tree.file.getName());
         }
 
         for (String s : in) {

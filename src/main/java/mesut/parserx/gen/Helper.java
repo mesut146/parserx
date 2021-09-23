@@ -125,6 +125,9 @@ public class Helper {
         }
     }
 
+    static void followFirst(Node node, Name sym, Tree tree, Set<Name> set) {
+    }
+
     public static Map<Name, Integer> firstMap(Node node, Tree tree) {
         Map<Name, Integer> map = new HashMap<>();
         firstMap(node, null, tree, true, map);

@@ -1,6 +1,9 @@
 package mesut.parserx.gen.ll;
 
-import mesut.parserx.gen.*;
+import mesut.parserx.gen.CodeWriter;
+import mesut.parserx.gen.Helper;
+import mesut.parserx.gen.LexerGenerator;
+import mesut.parserx.gen.Options;
 import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.Recursion;
@@ -15,7 +18,6 @@ import java.util.Set;
 public class RecDescent {
     public Options options;
     Tree tree;
-    CodeWriter sb = new CodeWriter(true);
     CodeWriter code = new CodeWriter(true);
     RuleDecl curRule;
     String tokens = "Tokens";
@@ -37,30 +39,30 @@ public class RecDescent {
     }
 
     void indent(String data) {
-        sb.all(data);
+        code.all(data);
     }
 
     public void gen() throws IOException {
         prepare();
         if (options.packageName != null) {
-            sb.append("package " + options.packageName + ";");
-            sb.append("");
+            code.append("package " + options.packageName + ";");
+            code.append("");
         }
-        sb.append("import java.util.List;");
-        sb.append("import java.util.ArrayList;");
+        code.append("import java.util.List;");
+        code.append("import java.util.ArrayList;");
         if (options.packageName != null) {
-            sb.append(String.format("import %s.%s;", options.packageName, options.astClass));
+            code.append(String.format("import %s.%s;", options.packageName, options.astClass));
         }
-        sb.append("");
-        sb.append(String.format("public class %s{", options.parserClass));
-        sb.append(String.format("List<%s> list = new ArrayList<>();", options.tokenClass));
-        sb.append(String.format("%s lexer;", options.lexerClass));
-        sb.append("");
+        code.append("");
+        code.append(String.format("public class %s{", options.parserClass));
+        code.append(String.format("List<%s> list = new ArrayList<>();", options.tokenClass));
+        code.append(String.format("%s lexer;", options.lexerClass));
+        code.append("");
 
-        sb.append(String.format("public %s(%s lexer) throws java.io.IOException{", options.parserClass, options.lexerClass));
+        code.append(String.format("public %s(%s lexer) throws java.io.IOException{", options.parserClass, options.lexerClass));
 
-        sb.all("this.lexer = lexer;\nfill();\n}");
-        sb.append("");
+        code.all("this.lexer = lexer;\nfill();\n}");
+        code.append("");
 
         writeConsume();
         writePop();
@@ -74,12 +76,11 @@ public class RecDescent {
                 code.append("");
             }
         }
-        sb.all(code.get());
-        sb.append("}");
+        code.append("}");
 
         File file = new File(options.outDir, options.parserClass + ".java");
 
-        Utils.write(sb.get(), file);
+        Utils.write(code.get(), file);
         System.out.println("parser file generated to " + file);
         genTokenType();
     }
@@ -163,7 +164,6 @@ public class RecDescent {
         if (recursion.any) {
             tree.printRules();
         }
-
         new LexerGenerator(tree).generate();
     }
 
@@ -181,8 +181,8 @@ public class RecDescent {
             }
             i++;
         }
-        code.append(String.format("public %s %s(%s){", type, decl.name, params));
-        code.append(String.format("%s res = new %s();", type, type));
+        code.append("public %s %s(%s){", type, decl.name, params);
+        code.append("%s res = new %s();", type, type);
         flagCount = 0;
         firstCount = 0;
 
