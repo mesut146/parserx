@@ -245,7 +245,7 @@ public class Factor extends SimpleTransformer {
 
         info.one = oneName;
 
-        if (tree.getRule(zeroName) == null && tree.getRule(oneName) == null) {
+        if (tree.getRule(oneName) == null) {
             PullInfo tmp = pull(decl.rhs, sym);
 
             RuleDecl oneDecl = oneName.makeRule();
@@ -262,6 +262,11 @@ public class Factor extends SimpleTransformer {
                 zeroDecl.isRecursive = decl.isRecursive;
                 tree.addRule(zeroDecl);
                 declSet.add(zeroDecl);
+                info.zero = zeroName;
+            }
+        }
+        else {
+            if (tree.getRule(zeroName) != null) {
                 info.zero = zeroName;
             }
         }

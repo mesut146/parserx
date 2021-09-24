@@ -75,6 +75,14 @@ public class FactorTest {
     }
 
     @Test
+    public void loopJava() throws Exception {
+        Tree tree = Tree.makeTree(Env.getResFile("java/parser-jls.g"));
+        FactorLoop factorLoop = new FactorLoop(tree);
+        factorLoop.factorize();
+        tree.printRules();
+    }
+
+    @Test
     public void loop() throws Exception {
         Tree tree = Env.tree("factor/loop4.g");
         Node node = tree.getRule("E").rhs;

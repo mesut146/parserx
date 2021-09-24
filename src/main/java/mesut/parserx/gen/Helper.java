@@ -1,5 +1,6 @@
 package mesut.parserx.gen;
 
+import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.nodes.*;
 
 import java.util.*;
@@ -47,7 +48,11 @@ public class Helper {
         if (node.isName()) {
             Name name = node.asName();
             if (name.astInfo.isFactored) return;
-            if (set.add(name)) {
+            if (name.isPlus || name.isStar) {
+                name = FactorLoop.noLoop(name);
+                first(name, tree, rec, set);
+            }
+            else if (set.add(name)) {
                 if (rec && name.isRule()) {
                     RuleDecl decl = tree.getRule(name);
                     if (decl == null) {
@@ -247,8 +252,13 @@ public class Helper {
     public static boolean canBeEmpty(Node node, Tree tree, Set<Name> set) {
         if (node.isName()) {
             if (node.astInfo.isFactored) return true;//acts as epsilon
-            if (node.asName().isRule() && set.add(node.asName())) {
-                return canBeEmpty(tree.getRule(node.asName()).rhs, tree, set);
+            Name name = node.asName();
+            if (name.isStar || name.isPlus) {
+                if (name.isStar) return true;
+                return canBeEmpty(FactorLoop.noLoop(name), tree, set);
+            }
+            else if (name.isRule() && set.add(name)) {
+                return canBeEmpty(tree.getRule(name).rhs, tree, set);
             }
         }
         else if (node.isGroup()) {

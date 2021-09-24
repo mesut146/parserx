@@ -41,7 +41,7 @@ public class LeftRecursive {
     public Node indirect(RuleDecl rule) {
         Node node = rule.rhs.copy();
         Name ref = rule.ref();
-        //cut last transition reaches rule
+        //cut last transition that reaches rule
         Set<Name> set = Helper.first(node, tree, true, true, false);
         for (Name any : set) {
             if (any.equals(ref)) continue;

@@ -14,11 +14,9 @@ B: C | b;
 C: c d;
 
 /*
-E: C* A(C*) e | C* B_no_C B* f | b B* f | A_nos_C e | f;
-
-*/
-
-/*
-(C B(C) | B_no_C)* = C* B_no_C B* | B_no_C B*
-
+E = C+ (A(C+) e | (B_no_C B*) f) | A_nop_C e | (B_no_C B*) f;
+A(C+) = C(C)+ a;
+A_nop_C = a;
+B(C) = C(C);
+B_no_C = b;
 */
