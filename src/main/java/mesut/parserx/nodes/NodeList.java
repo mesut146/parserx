@@ -7,6 +7,9 @@ public class NodeList extends Node implements Iterable<Node> {
     public List<Node> list = new ArrayList<>();
 
     public NodeList(List<Node> list) {
+        for (Node ch : list) {
+            if (ch == null) throw new NullPointerException("null child");
+        }
         this.list = new ArrayList<>(list);
     }
 

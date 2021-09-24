@@ -1,13 +1,11 @@
 package regex;
 
 import common.Env;
+import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.transform.Epsilons;
 import mesut.parserx.gen.transform.Factor;
-import mesut.parserx.gen.Helper;
-import mesut.parserx.nodes.Name;
-import mesut.parserx.nodes.Or;
-import mesut.parserx.nodes.RuleDecl;
-import mesut.parserx.nodes.Tree;
+import mesut.parserx.gen.transform.FactorLoop;
+import mesut.parserx.nodes.*;
 import org.junit.Test;
 
 import java.io.File;
@@ -66,5 +64,27 @@ public class FactorTest {
         Factor factor = new Factor(tree);
         factor.factorize();
         System.out.println(tree);
+    }
+
+    @Test
+    public void loopAll() throws Exception {
+        Tree tree = Env.tree("factor/loop4.g");
+        FactorLoop factorLoop = new FactorLoop(tree);
+        factorLoop.factorize();
+        tree.printRules();
+    }
+
+    @Test
+    public void loop() throws Exception {
+        Tree tree = Env.tree("factor/loop4.g");
+        Node node = tree.getRule("E").rhs;
+        FactorLoop factorLoop = new FactorLoop(tree);
+        //node = new Regex(new Name("B"), "*");
+        Factor.PullInfo info = factorLoop.pull(node, new Name("C") {{
+            isStar = true;
+        }});
+        System.out.println("one: " + info.one);
+        System.out.println("zero: " + info.zero);
+        tree.printRules();
     }
 }

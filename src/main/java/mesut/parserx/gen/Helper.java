@@ -49,7 +49,11 @@ public class Helper {
             if (name.astInfo.isFactored) return;
             if (set.add(name)) {
                 if (rec && name.isRule()) {
-                    first(tree.getRule(name).rhs, tree, rec, set);
+                    RuleDecl decl = tree.getRule(name);
+                    if (decl == null) {
+                        throw new RuntimeException("rule not found: " + name);
+                    }
+                    first(decl.rhs, tree, rec, set);
                 }
             }
         }

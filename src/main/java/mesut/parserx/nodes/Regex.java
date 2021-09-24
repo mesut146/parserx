@@ -65,8 +65,8 @@ public class Regex extends Node {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (node != null ? node.hashCode() : 0);
-        result = 31 * result + (type != null ? type.hashCode() : 0);
+        result = 31 * result + node.hashCode();
+        result = 31 * result + type.hashCode();
         return result;
     }
 }

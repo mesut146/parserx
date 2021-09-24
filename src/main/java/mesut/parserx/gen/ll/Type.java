@@ -1,6 +1,6 @@
 package mesut.parserx.gen.ll;
 
-//qualified class;
+//qualified ast type;
 public class Type {
     Type scope;
     String name;

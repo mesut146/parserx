@@ -1,7 +1,5 @@
 package mesut.parserx.nodes;
 
-import mesut.parserx.gen.ll.Type;
-
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -12,6 +10,8 @@ public class Name extends Node {
     public String name;
     public boolean isToken;
     public ArrayList<Name> args = new ArrayList<>();
+    public boolean isStar;
+    public boolean isPlus;
 
     public Name(String name) {
         this.name = name;
@@ -39,6 +39,12 @@ public class Name extends Node {
         }
         if (debug)
             sb.append(astInfo);
+        if (isStar) {
+            sb.append("*");
+        }
+        else if (isPlus) {
+            sb.append("+");
+        }
         return sb.toString();
     }
 
@@ -48,7 +54,7 @@ public class Name extends Node {
         if (o == null || getClass() != o.getClass()) return false;
         Name name = (Name) o;
         return isToken == name.isToken &&
-                Objects.equals(this.name, name.name) && args.equals(name.args);
+                Objects.equals(this.name, name.name) && args.equals(name.args) && isStar == name.isStar && isPlus == name.isPlus;
     }
 
     @Override
@@ -61,6 +67,8 @@ public class Name extends Node {
         Name res = new Name(name, isToken);
         res.args = new ArrayList<>(args);
         res.astInfo = astInfo.copy();
+        res.isPlus = isPlus;
+        res.isStar = isStar;
         return res;
     }
 

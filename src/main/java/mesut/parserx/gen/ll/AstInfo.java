@@ -4,7 +4,7 @@ public class AstInfo {
     public String varName;
     public String outerVar;
     public Type outerCls;
-    public Type type;
+    public Type type;//todo what is this
     public boolean isFactor;//no assign
     public boolean isFactored;//epsilon
     public boolean isFactorGroup;//follows a factor

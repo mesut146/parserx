@@ -43,8 +43,18 @@ public class NfaReader {
                 Matcher m = p.matcher(line);
                 m.find();
                 for (String f : m.group(1).split(" ")) {
-                    if (f.trim().isEmpty()) continue;
-                    nfa.setAccepting(Integer.parseInt(f.trim()), true);
+                    f = f.trim();
+                    if (f.isEmpty()) continue;
+                    if (f.contains("(")) {
+                        int i = f.indexOf('(');
+                        int num = Integer.parseInt(f.substring(0, i));
+                        nfa.setAccepting(num, true);
+                        nfa.names[num] = f.substring(i + 1, f.indexOf(')'));
+                    }
+                    else {
+                        int num = Integer.parseInt(f);
+                        nfa.setAccepting(num, true);
+                    }
                 }
                 continue;
             }

@@ -4,7 +4,10 @@ import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Factor extends SimpleTransformer {
 
@@ -17,6 +20,7 @@ public class Factor extends SimpleTransformer {
     boolean modified;
     RuleDecl curRule;
     CountingMap2<RuleDecl, Name> factorCount = new CountingMap2<>();
+    HashSet<RuleDecl> declSet = new HashSet<>();//new rules produced by this class
 
     public Factor(Tree tree) {
         super(tree);
@@ -55,64 +59,9 @@ public class Factor extends SimpleTransformer {
         return res;
     }
 
-    //return common sym in two list with all instances
-    public static List<Name> common(List<Name> s1, List<Name> s2) {
-        List<Name> common1 = new ArrayList<>();
-        List<Name> common2 = new ArrayList<>();
-        for (Name n1 : s1) {
-            for (Name n2 : s2) {
-                if (n1.equals(n2)) {
-                    common1.add(n1);
-                    common2.add(n2);
-                }
-            }
-        }
-        //find rule
-        List<Name> res = new ArrayList<>();
-        List<Name> res2 = new ArrayList<>();
-        for (int i = 0; i < common1.size(); i++) {
-            Name n = common1.get(i);
-            if (n.isEpsilon()) continue;
-            //collect same symbols
-            for (Name n1 : common1) {
-                if (n1.equals(n)) {
-                    if (n.isRule()) {
-                        res.add(n1);
-                    }
-                    else {
-                        res2.add(n1);
-                    }
-                }
-            }
-            for (Name n2 : common2) {
-                if (n2.equals(n)) {
-                    if (n.isRule()) {
-                        res.add(n2);
-                    }
-                    else {
-                        res2.add(n2);
-                    }
-                }
-            }
-            if (!res.isEmpty()) {
-                return res;
-            }
-            if (!res2.isEmpty()) {
-                return res2;
-            }
-        }
-        return null;
-    }
-
     public Name commonSym(Node n1, Node n2) {
-        Set<Name> s1 = Helper.first(n1, tree, true);
-        Set<Name> s2 = Helper.first(n2, tree, true);
-        return common(s1, s2);
-    }
-
-    public List<Name> commonList(Node n1, Node n2) {
-        List<Name> s1 = Helper.firstList(n1, tree);
-        List<Name> s2 = Helper.firstList(n2, tree);
+        Set<Name> s1 = first(n1);
+        Set<Name> s2 = first(n2);
         return common(s1, s2);
     }
 
@@ -142,7 +91,7 @@ public class Factor extends SimpleTransformer {
     }
 
     private void factorRule(RuleDecl decl) {
-        if (allowRecursion || !Helper.start(decl.rhs, decl.ref(), tree)) {
+        if (allowRecursion || !first(decl.rhs).contains(decl.ref())) {
             decl.rhs = transformNode(decl.rhs, decl);
         }
     }
@@ -158,27 +107,26 @@ public class Factor extends SimpleTransformer {
             return node;
         }
         for (int i = 0; i < or.size(); i++) {
-            Set<Name> s1 = Helper.first(or.get(i), tree, true);
+            Set<Name> s1 = first(or.get(i));
             for (int j = i + 1; j < or.size(); j++) {
-                Set<Name> s2 = Helper.first(or.get(j), tree, true);
+                Set<Name> s2 = first(or.get(j));
                 Name sym = common(s1, s2);
-                if (sym != null) {
-                    sym = sym.copy();
-                    //sym.astInfo.isFactor = true;
-                    //sym.astInfo.factorName = factorName(sym);
-                    if (debug)
-                        System.out.printf("factoring %s in %s\n", sym, curRule.name);
-                    modified = true;
-                    PullInfo info = pull(or, sym);
-                    Group g = new Group(info.one);
-                    g.astInfo.isFactorGroup = true;
-                    Node one = Sequence.of(sym, g);
-                    if (info.zero == null) {
-                        return one;
-                    }
-                    else {
-                        return new Or(one, info.zero).normal();
-                    }
+                if (sym == null) continue;
+                sym = sym.copy();
+                //sym.astInfo.isFactor = true;
+                //sym.astInfo.factorName = factorName(sym);
+                if (debug)
+                    System.out.printf("factoring %s in %s\n", sym, curRule.name);
+                modified = true;
+                PullInfo info = pull(or, sym);
+                Group g = new Group(info.one);
+                g.astInfo.isFactorGroup = true;
+                Node one = Sequence.of(sym, g);
+                if (info.zero == null) {
+                    return one;
+                }
+                else {
+                    return new Or(one, info.zero).normal();
                 }
             }
         }
@@ -203,8 +151,8 @@ public class Factor extends SimpleTransformer {
         Node A = s.first();
         if (Helper.canBeEmpty(A, tree)) {
             Node B = Helper.trim(s);
-            Set<Name> s1 = Helper.first(A, tree, true);
-            Set<Name> s2 = Helper.first(B, tree, true);
+            Set<Name> s1 = first(A);
+            Set<Name> s2 = first(B);
             if (common(s1, s2) != null) {
                 Node trimmed = new Epsilons(tree).trim(A);
                 return transformOr(new Or(Sequence.of(trimmed, B), B), parent);
@@ -221,7 +169,7 @@ public class Factor extends SimpleTransformer {
         if (sym.astInfo.isFactored) {
             throw new RuntimeException("factored sym");
         }
-        if (!Helper.first(node, tree, true).contains(sym)) {
+        if (!first(node).contains(sym)) {
             throw new RuntimeException("can't pull " + sym + " from " + node);
         }
         if (sym.astInfo.factorName == null) {
@@ -305,6 +253,7 @@ public class Factor extends SimpleTransformer {
             oneDecl.retType = decl.retType;
             oneDecl.isRecursive = decl.isRecursive;
             tree.addRule(oneDecl);
+            declSet.add(oneDecl);
 
             if (tmp.zero != null) {
                 RuleDecl zeroDecl = zeroName.makeRule();
@@ -312,6 +261,7 @@ public class Factor extends SimpleTransformer {
                 zeroDecl.retType = decl.retType;
                 zeroDecl.isRecursive = decl.isRecursive;
                 tree.addRule(zeroDecl);
+                declSet.add(zeroDecl);
                 info.zero = zeroName;
             }
         }
@@ -439,6 +389,12 @@ public class Factor extends SimpleTransformer {
             return pull(new Or(plus, new Epsilon()), sym);
         }
         return info;
+    }
+
+    Set<Name> first(Node node) {
+        Set<Name> set = new HashSet<>();
+        Helper.first(node, tree, true, set);
+        return set;
     }
 
     public static class PullInfo {
