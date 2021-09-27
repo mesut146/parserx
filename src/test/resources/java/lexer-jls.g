@@ -1,6 +1,6 @@
 token{
     StringLiteral = "\""  [^\r\n\"]* "\"";
-    CharacterLiteral = "'" .+ "'";
+    CharacterLiteral = "'" [^']+ "'";
     TextBlock = "\"\"\"" ~"\"\"\"";
 
     BooleanLiteral = "true" | "false";

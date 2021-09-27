@@ -124,6 +124,7 @@ public class Minimization {
         return set.states.size();
     }
 
+    //split states into accepting and non-accepting set
     static List<StateSet> group(NFA dfa) {
         List<StateSet> list = new ArrayList<>();
         StateSet noacc = new StateSet();

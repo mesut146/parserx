@@ -12,13 +12,12 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class LexerGenerator {
     public IdMap idMap = new IdMap();
+    public NFA dfa;
     Options options;
-    NFA dfa;
     Template template;
 
     public LexerGenerator(NFA dfa, Options options) {
@@ -65,7 +64,6 @@ public class LexerGenerator {
         idMap.genSymbolIds(dfa.tree);
 
         int[] idArr = new int[dfa.lastState + 1];//state->id
-
         for (int state = dfa.initial; state <= dfa.lastState; state++) {
             //make id for token
             String name = dfa.names[state];
@@ -73,24 +71,52 @@ public class LexerGenerator {
                 idArr[state] = idMap.getId(new Name(name, true));
             }
         }
-        //write name and id list
-        Writer nameWriter = new Writer();
+        //id list
         Writer idWriter = new Writer();
         for (int state = dfa.initial; state <= dfa.lastState; state++) {
             idWriter.print(idArr[state]);
-            nameWriter.print("\"" + (dfa.names[state] == null ? "" : dfa.names[state]) + "\"");
             if (state <= dfa.lastState - 1) {
-                nameWriter.print(",");
                 idWriter.print(",");
+                if (state > dfa.initial && state % 20 == 0) {
+                    idWriter.print("\n");
+                }
             }
         }
-        template.set("name_list", nameWriter.getString());
         template.set("id_list", idWriter.getString());
+        //sort tokens by id
+        TreeSet<Map.Entry<Name, Integer>> tokens = new TreeSet<>(new Comparator<Map.Entry<Name, Integer>>() {
+            @Override
+            public int compare(Map.Entry<Name, Integer> o1, Map.Entry<Name, Integer> o2) {
+                return o1.getValue().compareTo(o2.getValue());
+            }
+        });
+        for (Map.Entry<Name, Integer> entry : idMap.map.entrySet()) {
+            if (entry.getKey().isToken) {
+                tokens.add(entry);
+            }
+        }
+        //write
+        Writer nameWriter = new Writer();
+        int i = 0;
+        int column = 20;
+        for (Map.Entry<Name, Integer> entry : tokens) {
+            if (i > 0) {
+                nameWriter.print(",");
+                if (i % column == 0) {
+                    nameWriter.print("\n");
+                }
+            }
+            nameWriter.print("\"" + entry.getKey().name + "\"");
+            i++;
+        }
+        template.set("name_list", nameWriter.getString());
     }
 
     private void cmap() {
         Writer cmapWriter = new Writer();
         cmapWriter.print("\"");
+        int column = 20;
+        int i = 0;
         for (Iterator<Range> it = dfa.getAlphabet().getRanges(); it.hasNext(); ) {
             Range range = it.next();
             int left = range.start;
@@ -99,7 +125,13 @@ public class LexerGenerator {
             cmapWriter.print(UnicodeUtils.escapeUnicode(left));
             cmapWriter.print(UnicodeUtils.escapeUnicode(right));
             cmapWriter.print(UnicodeUtils.escapeUnicode(id));
-
+            i++;
+            if (i % column == 0) {
+                cmapWriter.print("\"+\n");
+                if (it.hasNext()) {
+                    cmapWriter.print("\"");//next line start
+                }
+            }
         }
         cmapWriter.print("\"");
 

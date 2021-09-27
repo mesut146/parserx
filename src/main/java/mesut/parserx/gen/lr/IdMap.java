@@ -16,7 +16,7 @@ import java.util.Map;
 public class IdMap {
     public static Name EOF = new Name("EOF", true);
     public static Name dollar = new Name("$", true);
-    HashMap<Name, Integer> map = new HashMap<>();
+    public HashMap<Name, Integer> map = new HashMap<>();
     int lastId;
 
 

@@ -13,6 +13,9 @@ public class Utils {
         if (i != -1) {
             name = name.substring(0, i);
         }
+        else {
+            name = name + ".";
+        }
         name = name + suffix;
         return name;
     }

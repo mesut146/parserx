@@ -4,10 +4,11 @@ import java.util.*;
 
 public class $lexer_class$ {
 
-    static int[] cMap = unpackCMap($cMap$);
+    static String cMapPacked = $cMap$;
+    static int[] cMap = unpackCMap(cMapPacked);
     int[] skip = {$skip_list$};
     int[] accepting = {$final_list$};
-    //state -> token name
+    //id -> token name
     String[] names = {$name_list$};
     //state->token id
     int[] ids = {$id_list$};
@@ -17,7 +18,7 @@ public class $lexer_class$ {
     int yypos = 0;//pos in file
     int yyline = 1;
     int yychar;
-    int bufSize = 10000;
+    public static int bufSize = 10000;
     int bufPos = bufSize;//pos in buffer
     int bufStart = bufSize;
     int bufEnd;
@@ -102,6 +103,11 @@ public class $lexer_class$ {
                 }
                 else if(yychar == '\r'){
                     if(yybuf[bufPos + 1] == '\n'){
+                        //todo \n may have transition?
+                        yyline++;
+                        //bufPos++;
+                        //yypos++;
+                    }else{
                         yyline++;
                     }
                 }
@@ -111,7 +117,7 @@ public class $lexer_class$ {
                     if (!getBit(skip, lastState)) {
                         Token token = new Token(ids[lastState], getText());
                         token.offset = startPos;
-                        token.name = names[lastState];
+                        token.name = names[ids[lastState]];
                         token.line = startLine;
                         bufStart = bufPos;
                         return token;

@@ -58,7 +58,74 @@ public class AstGen {
             astWriter.append(String.format("public <R,P> R accept(%sVisitor<R,P> visitor, P arg){", options.parserClass));
             astWriter.all(String.format("return visitor.visit%s(this, arg);\n}", Utils.camel(decl.name)));
         }
+        writePrinter(decl.rhs, astWriter);
         astWriter.append("}");
+    }
+
+    void writePrinter(Node rhs, CodeWriter c) {
+        c.append("public String toString(){");
+        c.append("StringBuilder sb=new StringBuilder();");
+        getPrint(rhs, c);
+        c.append("return sb.toString();");
+        c.append("}");//toString
+    }
+
+    void getPrint(Node node, CodeWriter c) {
+        if (node.isName()) {
+            Name name = node.asName();
+            if (name.isToken) {
+                c.append("sb.append(" + node.astInfo.varName + ".value);");
+            }
+            else {
+                c.append("sb.append(" + node.astInfo.varName + ".toString());");
+            }
+        }
+        else if (node.isSequence()) {
+            Sequence s = node.asSequence();
+            for (int i = 0; i < s.size(); i++) {
+                getPrint(s.get(i), c);
+            }
+        }
+        else if (node.isRegex()) {
+            Regex regex = node.asRegex();
+            String v = regex.node.astInfo.varName;
+            if (regex.isStar() || regex.isPlus()) {
+                c.append("sb.append('{');");
+                c.append("for(int i=0;i<%s.size();i++){", v);
+                c.append("sb.append(%s.get(i));", v);
+                c.append("}");
+                c.append("sb.append('}');");
+            }
+            else {
+                c.append("sb.append(%s);", v + "==null?\"\":" + v);
+            }
+        }
+        else if (node.isGroup()) {
+            getPrint(node.asGroup().node, c);
+        }
+        else if (node.isOr()) {
+            Or or = node.asOr();
+            for (int i = 0; i < or.size(); i++) {
+                if (i == 0) {
+                    c.append("if(which==1){");
+                }
+                else {
+                    c.append("else if(which==%d){", i + 1);
+                }
+                Node ch = or.get(i);
+                if (ch.isName()) {
+                    getPrint(ch, c);
+                }
+                else {
+                    c.append("sb.append(%s);", ch.astInfo.varName);
+                }
+
+                c.append("}");//if
+            }
+        }
+        else {
+            throw new RuntimeException();
+        }
     }
 
     private void model(Node node, Type parentClass, String outerVar, CodeWriter parent) {
@@ -122,6 +189,7 @@ public class AstGen {
                     CodeWriter c = new CodeWriter(true);
                     c.append(String.format("public static class %s{", clsName.name));
                     model(ch, clsName, v, c);
+                    writePrinter(ch, c);
                     c.append("}");
                     classes.all(c.get());
                     ch.astInfo.varName = v;

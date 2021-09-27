@@ -28,6 +28,11 @@ public class LLGenTest {
     }
 
     @Test
+    public void name() throws Exception {
+        Tester.check(Env.tree("ll/norm.g"), "A", "ab", "cf", "ccf", "ddf", "ddcf");
+    }
+
+    @Test
     public void factorAll() throws Exception {
         Factor.debug = false;
 

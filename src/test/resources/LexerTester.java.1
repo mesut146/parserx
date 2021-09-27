@@ -1,0 +1,17 @@
+import java.io.File;
+
+public class LexerTester {
+
+
+    public static void main(String... args) throws Exception {
+        Lexer l = new Lexer(new File(args[0]));
+        while (true) {
+            Token t = l.next();
+            System.out.println(t);
+            if (t.type == 0) {
+                break;
+            }
+        }
+    }
+
+}

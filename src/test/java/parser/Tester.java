@@ -15,9 +15,9 @@ import java.nio.file.attribute.BasicFileAttributes;
 public class Tester {
 
     public static void check(Tree tree, String rule, String... in) throws Exception {
-        File tester = new File(Env.dotDir(), "Tester.java");
+        File tester = new File(Env.dotDir(), "DescTester.java");
         if (!tester.exists()) {
-            Utils.write(Utils.read(Env.getResFile("Tester.java.1")), tester);
+            Utils.write(Utils.read(Env.getResFile("DescTester.java.1")), tester);
         }
         String outDir = Env.dotDir().getAbsolutePath();
         tree.options.outDir = outDir;
