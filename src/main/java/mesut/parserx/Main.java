@@ -26,7 +26,7 @@ import java.util.List;
 public class Main {
 
     static List<String> cmds = Arrays.asList("-left", "-factor", "-epsilon",
-            "-optimize", "-dfa", "-nfa", "-nfa2dfa", "-regex", "-lr0", "-desc", "-lexer", "-lalr");
+            "-optimize", "-dfa", "-nfa", "-nfa2dfa", "-regex", "-lr0", "-desc", "-lexer", "-lalr", "-lr1", "-lr0");
 
     static String usageStr = "usage:\n" +
             "java -jar <jarfile> <command>\n" +
@@ -42,7 +42,8 @@ public class Main {
             "-lexer [-out <path>] [-package <pkg>] [-lexerClass <cls>] [-lexerFunc <func>] [-tokenClass <cls>]  generates just lexer\n" +
             "-desc [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates LL(1) recursive descent parser\n" +
             "-lalr [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lalr parser" +
-            "-lalr [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lr(1) parser" +
+            "-lr1 [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lr(1) parser" +
+            "-lr0 [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lr(0) parser" +
             "\ninput is given by -in <path> or as last argument";
 
     static void usage() {
@@ -266,7 +267,7 @@ public class Main {
                 RecDescent gen = new RecDescent(tree);
                 gen.gen();
             }
-            else if (cmd.contains("-lalr")) {
+            else if (cmd.contains("-lalr") || cmd.contains("-lr1") || cmd.contains("-lr0")) {
                 Tree tree = Tree.makeTree(input);
                 if (output == null) {
                     tree.options.outDir = input.getParent();
@@ -292,7 +293,17 @@ public class Main {
                 if (astClass != null) {
                     tree.options.astClass = astClass;
                 }
-                CodeGen gen = new CodeGen(tree, "lalr");
+                String type;
+                if (cmd.contains("-lr1")) {
+                    type = "lr1";
+                }
+                else if (cmd.contains("-lalr")) {
+                    type = "lalr";
+                }
+                else {
+                    type = "lr0";
+                }
+                CodeGen gen = new CodeGen(tree, type);
                 gen.gen();
                 AstBuilderGen builderGen = new AstBuilderGen(tree);
                 builderGen.gen();
