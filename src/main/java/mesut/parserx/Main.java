@@ -38,6 +38,7 @@ public class Main {
             "-nfa2dfa [-optimize]              nfa to dfa\n" +
             "-regex                            nfa to regex\n" +
             "-lexer [-out <path>] [-package <pkg>] [-lexerClass <cls>] [-lexerFunc <func>] [-tokenClass <cls>]  generate just lexer\n" +
+            "-desc [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generate LL(1) recursive descent parser\n" +
             "\ninput is given by -in <path> or as last argument";
 
     static void usage() {

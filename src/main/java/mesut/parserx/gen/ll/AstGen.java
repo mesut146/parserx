@@ -186,7 +186,7 @@ public class AstGen {
                 else {
                     parent.append(String.format("%s %s;", clsName.name, v));
 
-                    CodeWriter c = new CodeWriter(true);
+                    CodeWriter c = new CodeWriter(false);
                     c.append(String.format("public static class %s{", clsName.name));
                     model(ch, clsName, v, c);
                     writePrinter(ch, c);
