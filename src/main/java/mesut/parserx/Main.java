@@ -6,6 +6,8 @@ import mesut.parserx.dfa.NfaReader;
 import mesut.parserx.dfa.Validator;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.lr.AstBuilderGen;
+import mesut.parserx.gen.lr.CodeGen;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.LeftRecursive;
 import mesut.parserx.nodes.Node;
@@ -24,7 +26,7 @@ import java.util.List;
 public class Main {
 
     static List<String> cmds = Arrays.asList("-left", "-factor", "-epsilon",
-            "-optimize", "-dfa", "-nfa", "-nfa2dfa", "-regex", "-lr0", "-desc", "-lexer");
+            "-optimize", "-dfa", "-nfa", "-nfa2dfa", "-regex", "-lr0", "-desc", "-lexer", "-lalr");
 
     static String usageStr = "usage:\n" +
             "java -jar <jarfile> <command>\n" +
@@ -37,8 +39,10 @@ public class Main {
             "-nfa [-dot]                       nfa from grammar\n" +
             "-nfa2dfa [-optimize]              nfa to dfa\n" +
             "-regex                            nfa to regex\n" +
-            "-lexer [-out <path>] [-package <pkg>] [-lexerClass <cls>] [-lexerFunc <func>] [-tokenClass <cls>]  generate just lexer\n" +
-            "-desc [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generate LL(1) recursive descent parser\n" +
+            "-lexer [-out <path>] [-package <pkg>] [-lexerClass <cls>] [-lexerFunc <func>] [-tokenClass <cls>]  generates just lexer\n" +
+            "-desc [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates LL(1) recursive descent parser\n" +
+            "-lalr [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lalr parser" +
+            "-lalr [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lr(1) parser" +
             "\ninput is given by -in <path> or as last argument";
 
     static void usage() {
@@ -72,7 +76,6 @@ public class Main {
             }
             else if (s.equals("-dot")) {
                 hasDot = true;
-                i++;
             }
             else if (s.equals("-package") || s.equals("-pkg")) {
                 pkg = args[i + 1];
@@ -125,7 +128,6 @@ public class Main {
                     output = new File(input.getParent(), Utils.newName(input.getName(), "-out.g"));
                 }
                 Utils.write(tree.toString(), output);
-                logwrite(output);
             }
             else if (cmd.contains("-factor")) {
                 Tree tree = Tree.makeTree(input);
@@ -135,7 +137,6 @@ public class Main {
                     output = new File(input.getParent(), Utils.newName(input.getName(), "-out.g"));
                 }
                 Utils.write(tree.toString(), output);
-                logwrite(output);
             }
             else if (cmd.contains("-nfa")) {
                 Tree tree = Tree.makeTree(input);
@@ -186,7 +187,6 @@ public class Main {
                 }
                 else {
                     Utils.write(node.toString(), output);
-                    logwrite(output);
                 }
             }
             else if (cmd.contains("-nfa2dfa")) {
@@ -266,6 +266,43 @@ public class Main {
                 RecDescent gen = new RecDescent(tree);
                 gen.gen();
             }
+            else if (cmd.contains("-lalr")) {
+                Tree tree = Tree.makeTree(input);
+                if (output == null) {
+                    tree.options.outDir = input.getParent();
+                }
+                else {
+                    tree.options.outDir = output.getAbsolutePath();
+                }
+                if (pkg != null) {
+                    tree.options.packageName = pkg;
+                }
+                if (lexerClass != null) {
+                    tree.options.lexerClass = lexerClass;
+                }
+                if (lexerFunc != null) {
+                    tree.options.lexerFunction = lexerFunc;
+                }
+                if (tokenClass != null) {
+                    tree.options.tokenClass = tokenClass;
+                }
+                if (parserClass != null) {
+                    tree.options.parserClass = parserClass;
+                }
+                if (astClass != null) {
+                    tree.options.astClass = astClass;
+                }
+                CodeGen gen = new CodeGen(tree, "lalr");
+                gen.gen();
+                AstBuilderGen builderGen = new AstBuilderGen(tree);
+                builderGen.gen();
+                if (hasDot) {
+                    File dotFile = new File(tree.options.outDir, Utils.newName(input.getName(), "-dfa.dot"));
+                    gen.gen.writeDot(new PrintWriter(dotFile));
+                    File table = new File(tree.options.outDir, Utils.newName(input.getName(), "-table.dot"));
+                    gen.gen.writeTableDot(new PrintWriter(table));
+                }
+            }
             else {
                 throw new Exception("unknown commands: " + cmd);
             }
@@ -274,8 +311,9 @@ public class Main {
         }
     }
 
-    static void logwrite(File file) {
+    private static void logwrite(File file) {
         System.out.println("writing " + file);
     }
+
 
 }

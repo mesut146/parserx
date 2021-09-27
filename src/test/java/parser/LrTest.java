@@ -14,10 +14,6 @@ import java.io.PrintWriter;
 
 public class LrTest {
 
-    //static String gr="lr0/calc_lr.g";
-    static String gr = "lr0/simple.g";
-
-
     void dot(File dotFile) {
         try {
             Runtime.getRuntime().exec("dot -Tpng -O " + dotFile);
@@ -27,7 +23,7 @@ public class LrTest {
     }
 
     void dots(LrDFAGen<?> gen, String name) throws IOException {
-        gen.writeTableDot();
+        gen.writeTableDot(new PrintWriter(Env.dotFile(Utils.newName(name, "-table.dot"))));
         gen.writeGrammar(Env.dotFile(name + "2"));
 
         dot(gen.tableDotFile());
@@ -62,18 +58,18 @@ public class LrTest {
         //file = Env.getFile2("lr1/calc2.g");
         file = Env.getResFile("lr1/calc3.g");
         //file = Env.getFile2("lr1/simple.g");
-        //file = Env.getFile2("lr0/simple.g");
+        Tree tree = Env.tree("lr0/simple.g");
         //file = Env.getFile2("lr1/lr1.g");
         //file = Env.getResFile("rec/cyc.g");
         //file = Env.getFile2("lr1/rr.g");
-        //Tree tree = Tree.makeTree(file);
-        Tree tree = Env.tree("lr1/test.g");
+        //Tree tree = Env.tree("lr1/test.g");
         //Lr1ItemSet.mergeLa = true;
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         Lr1Generator generator = new Lr1Generator(tree);
+        generator.merge = true;
         generator.generate();
         dots(generator, tree.file.getName());
-        CodeGen codeGen = new CodeGen(generator, false);
+        CodeGen codeGen = new CodeGen(generator, "lar1");
         codeGen.gen();
     }
 
@@ -103,7 +99,7 @@ public class LrTest {
         tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lr";
         Lr1Generator generator = new Lr1Generator(tree);
         generator.generate();
-        CodeGen codeGen = new CodeGen(generator, false);
+        CodeGen codeGen = new CodeGen(generator, "lalr");
         codeGen.gen();
     }
 
@@ -205,5 +201,10 @@ public class LrTest {
         dfaGen.generate();
         dfaGen.checkAll();
         dots(dfaGen, tree.file.getName());
+    }
+
+    @Test
+    public void lalrTester() throws Exception {
+        LrTester.check(Env.tree("lr0/simple.g"), "bb", "bab", "abab");
     }
 }

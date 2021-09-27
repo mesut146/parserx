@@ -5,7 +5,6 @@ import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
@@ -34,8 +33,8 @@ public abstract class LrDFAGen<T extends LrItemSet> {
         return new File(tree.options.outDir, Utils.newName(tree.file.getName(), "-table.dot"));
     }
 
-    public void writeTableDot() {
-        DotWriter.table(this, false);
+    public void writeTableDot(PrintWriter writer) {
+        DotWriter.table(writer, this, false);
     }
 
     void prepare() {
@@ -377,14 +376,6 @@ public abstract class LrDFAGen<T extends LrItemSet> {
     }
 
     public void writeDot(PrintWriter dotWriter) {
-        if (dotWriter == null) {
-            try {
-                dotWriter = new PrintWriter(new File(tree.options.outDir, Utils.newName(tree.file.getName(), ".dot")));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                return;
-            }
-        }
         DotWriter.writeDot(table, dotWriter);
     }
 

@@ -68,14 +68,12 @@ public class StateCodeGen2 {
         writer.append("}");//class
         File file = new File(options.outDir, options.parserClass + ".java");
         Utils.write(writer.get(), file);
-        System.out.println("writing " + file);
 
         Template sym = new Template("Symbol.java.template");
         sym.set("token_class", options.tokenClass);
         sym.set("package", options.packageName == null ? "" : "package " + options.packageName + ";\n");
         File symFile = new File(options.outDir, "Symbol.java");
         Utils.write(sym.toString(), symFile);
-        System.out.println("writing " + symFile);
 
         idMap.writeSym(options);
     }

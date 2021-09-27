@@ -29,25 +29,25 @@ public class LLGenTest {
 
     @Test
     public void printer() throws Exception {
-        Tester.check(Env.tree("ll/norm.g"), "A", "ab", "cf", "ccf", "ddf", "ddcf");
+        DescTester.check(Env.tree("ll/norm.g"), "A", "ab", "cf", "ccf", "ddf", "ddcf");
     }
 
     @Test
     public void factorAll() throws Exception {
         Factor.debug = false;
 
-        Tester.check(Env.tree("factor/single.g"), "A", "ac", "eb", "adb");
-        Tester.check(Env.tree("factor/single2.g"), "A", "aac", "aadbeb");
-        Tester.check(Env.tree("factor/group.g"), "A", "ab", "ace", "de");
-        Tester.check(Env.tree("factor/list.g"), "A", "ab", "c", "ac", "aaaaaac");
-        Tester.check(Env.tree("factor/group-list.g"), "A", "c", "abc", "ababc", "e", "ade");
-        Tester.check(Env.tree("factor/eps.g"), "A", "a", "aa");
-        Tester.check(Env.tree("factor/eps.g"), "B", "ab", "a", "aa");
-        Tester.check(Env.tree("factor/double-same.g"), "A", "aab", "aac");
-        Tester.check(Env.tree("factor/double-same.g"), "B", "abc", "abd");
-        Tester.check(Env.tree("factor/double-same-extra.g"), "A", "aab", "c", "aadb", "axb", "eb");
-        Tester.check(Env.tree("factor/double-same-extra2.g"), "B", "aad", "ax", "e");
-        Tester.check(Env.tree("factor/double-same-extra2.g"), "A", "aab", "c", "aadb", "axb", "eb");
+        DescTester.check(Env.tree("factor/single.g"), "A", "ac", "eb", "adb");
+        DescTester.check(Env.tree("factor/single2.g"), "A", "aac", "aadbeb");
+        DescTester.check(Env.tree("factor/group.g"), "A", "ab", "ace", "de");
+        DescTester.check(Env.tree("factor/list.g"), "A", "ab", "c", "ac", "aaaaaac");
+        DescTester.check(Env.tree("factor/group-list.g"), "A", "c", "abc", "ababc", "e", "ade");
+        DescTester.check(Env.tree("factor/eps.g"), "A", "a", "aa");
+        DescTester.check(Env.tree("factor/eps.g"), "B", "ab", "a", "aa");
+        DescTester.check(Env.tree("factor/double-same.g"), "A", "aab", "aac");
+        DescTester.check(Env.tree("factor/double-same.g"), "B", "abc", "abd");
+        DescTester.check(Env.tree("factor/double-same-extra.g"), "A", "aab", "c", "aadb", "axb", "eb");
+        DescTester.check(Env.tree("factor/double-same-extra2.g"), "B", "aad", "ax", "e");
+        DescTester.check(Env.tree("factor/double-same-extra2.g"), "A", "aab", "c", "aadb", "axb", "eb");
     }
 
     @Test
@@ -137,6 +137,6 @@ public class LLGenTest {
         //Tester.check(Env.tree("rec/direct2.g"), "A", "c", "cb", "cca", "ccba");
         //Tester.check(Env.tree("rec/direct-double.g"), "A", "b","bba","bbbaa");
         //Tester.check(Env.tree("rec/cyc1.g"), "A", "c","db","cab");
-        Tester.check(Env.tree("rec/cyc1.g"), "B", "d", "ca", "dba");
+        DescTester.check(Env.tree("rec/cyc1.g"), "B", "d", "ca", "dba");
     }
 }

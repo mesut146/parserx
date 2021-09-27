@@ -16,7 +16,7 @@ public class Lr0ItemSet extends LrItemSet {
         if (node.isToken) {
             throw new RuntimeException("closure symbol is token: " + node + "in " + it);
         }
-        List<RuleDecl> ruleDecl = tree.getRules(node.name);
+        List<RuleDecl> ruleDecl = tree.getRules(node);
         for (RuleDecl decl : ruleDecl) {
             LrItem item = new LrItem(decl, 0);
             if (!all.contains(item)) {

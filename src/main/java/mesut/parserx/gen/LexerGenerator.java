@@ -45,7 +45,6 @@ public class LexerGenerator {
 
         File file = new File(options.outDir, options.lexerClass + ".java");
         Utils.write(template.toString(), file);
-        System.out.println("lexer file generated to " + file);
 
         writeTokenClass();
     }
@@ -213,6 +212,5 @@ public class LexerGenerator {
         template.set("token_class", options.tokenClass);
 
         Utils.write(template.toString(), out);
-        System.out.println("token class generated to " + out);
     }
 }

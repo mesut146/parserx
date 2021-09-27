@@ -75,7 +75,6 @@ public class AstBuilderGen {
                         writer.append("res.%s = make%s(node.children.get(0));", name.astInfo.varName, name.name);
                     }
                 }
-
                 writer.append("}");
             }
 
@@ -87,6 +86,5 @@ public class AstBuilderGen {
 
         File file = new File(options.outDir, "AstBuilder.java");
         Utils.write(writer.get(), file);
-        System.out.println("writing " + file);
     }
 }

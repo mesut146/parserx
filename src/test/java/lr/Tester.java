@@ -13,16 +13,16 @@ class Tester {
         //String in = "1?2:3?4:5";
         String in = "1+2*-3+6^2";
 
-        Lexer l = new Lexer(new StringReader(in));
+        /*Lexer l = new Lexer(new StringReader(in));
         Parser p = new Parser(l);
         //Parser.debug = true;
         Symbol sym = p.parse();
-        System.out.println(sym);
+        System.out.println(sym);*/
         /*Ast.E res = AstBuilder.makeE(sym);
         System.out.println(eval(res));*/
     }
 
-    static double eval(Ast.E e) {
+    /*static double eval(Ast.E e) {
         if (e.NUMBER != null) {
             return Integer.parseInt(e.NUMBER.value);
         }
@@ -48,7 +48,7 @@ class Tester {
             return eval(e.e8.E) - eval(e.e8.E2);
         }
         return 0;
-    }
+    }*/
 
 
 }

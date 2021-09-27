@@ -219,10 +219,10 @@ public class Tree {
         return null;
     }
 
-    public List<RuleDecl> getRules(String name) {
+    public List<RuleDecl> getRules(Name name) {
         List<RuleDecl> list = new ArrayList<>();
         for (RuleDecl decl : rules) {
-            if (decl.name.equals(name)) {
+            if (decl.ref().equals(name)) {
                 list.add(decl);
             }
         }

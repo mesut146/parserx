@@ -44,7 +44,6 @@ public class AstGen {
 
         File file = new File(options.outDir, options.astClass + ".java");
         Utils.write(astWriter.get(), file);
-        System.out.println("writing " + file);
         varCount.clear();
     }
 

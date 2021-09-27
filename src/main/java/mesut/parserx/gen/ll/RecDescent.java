@@ -81,7 +81,6 @@ public class RecDescent {
         File file = new File(options.outDir, options.parserClass + ".java");
 
         Utils.write(code.get(), file);
-        System.out.println("parser file generated to " + file);
         genTokenType();
     }
 
@@ -137,7 +136,6 @@ public class RecDescent {
         c.append("}");
         File file = new File(options.outDir, tokens + ".java");
         Utils.write(c.get(), file);
-        System.out.println("write " + file);
     }
 
     String peekExpr() {

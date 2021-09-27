@@ -4,7 +4,7 @@ token{
   c = "c";
 }
 
-@start = expr;
+%start = expr;
 expr = A b;
 A = A a;
 A = c;

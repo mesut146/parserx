@@ -5,6 +5,7 @@ import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.RuleDecl;
+import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.UnicodeUtils;
 import mesut.parserx.utils.Utils;
 
@@ -17,17 +18,33 @@ import java.util.List;
 //table driven parser gen
 public class CodeGen {
     public Options options;
-    LrDFA<?> dfa;
-    LrDFAGen<?> gen;
+    public LrDFA<?> dfa;
+    public LrDFAGen<?> gen;
     List<RuleDecl> all;
     LexerGenerator lexerGenerator;
-    boolean islr0;
+    String type;
     IdMap idMap;
 
-    public CodeGen(LrDFAGen<?> gen, boolean islr0) {
+    public CodeGen(Tree tree, String type) {
+        if (type.equals("lalr") || type.equals("lr1")) {
+            Lr1Generator generator = new Lr1Generator(tree);
+            generator.merge = type.equals("lalr");
+            generator.generate();
+            this.gen = generator;
+        }
+        else {
+            Lr0Generator generator = new Lr0Generator(tree);
+            generator.generate();
+            this.gen = generator;
+        }
+        this.options = tree.options;
+        this.type = type;
+    }
+
+    public CodeGen(LrDFAGen<?> gen, String type) {
         this.gen = gen;
         this.options = gen.tree.options;
-        this.islr0 = islr0;
+        this.type = type;
     }
 
     public void gen() throws IOException {
@@ -82,7 +99,7 @@ public class CodeGen {
         //write accept
         sb.append(pack(gen.acc));
         LrItemSet acc = dfa.getSet(gen.acc);
-        if (islr0) {
+        if (type.equals("lr0")) {
             //all tokens acc
             sb.append(pack(dfa.tokens.size()));
             for (Name tok : dfa.tokens) {
@@ -130,7 +147,6 @@ public class CodeGen {
         }
 
         sb.append("\"");
-
         template.set("table_packed", sb.toString());
     }
 

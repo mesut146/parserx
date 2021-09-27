@@ -148,48 +148,67 @@ public class EbnfToBnf {
     }
 
     Node transform(Regex regex, RuleDecl decl) {
-        Node node = transform(regex.node, decl);
-        regex.node = node;
-        if (regex.isStar()) {
+        if (regex.isStar() || regex.isPlus()) {
+            Node node;
             //b* = € | b* b; left
             //b* = € | b b*; right
-            Name ref = new Name(decl.name + getCount(decl.name));
-            Node newNode;
-            if (leftRecursive) {
-                newNode = new Or(new Epsilon(), new Sequence(ref, node));
-            }
-            else {
-                newNode = new Or(new Epsilon(), new Sequence(node, ref));
-            }
-            RuleDecl r = new RuleDecl(ref.name, newNode);
-            r.rhs = transform(newNode, r);
-            addRule(r);
-            return ref;
-        }
-        else if (regex.isPlus()) {
             //b+ = b | b b+; right
             //b+ = b | b+ b; left
             Name ref = new Name(decl.name + getCount(decl.name));
-            Node newNode;
-            if (leftRecursive) {
-                newNode = new Or(regex.node, Sequence.of(ref, regex.node));
+            Or or = new Or();
+
+            if (regex.node.isGroup()) {
+                Group group = regex.node.asGroup();
+                //no need to make another rule
+                //node = transform(group.node, decl);
+                node = group.node;
+                if (regex.isPlus()) {
+                    or.add(node);
+                }
+                else {
+                    or.add(new Epsilon());
+                }
+                if (node.isOr()) {
+                    for (Node ch : node.asOr()) {
+                        addCh(or, ref, ch);
+                    }
+                }
+                else {
+                    addCh(or, ref, node);
+                }
             }
             else {
-                newNode = new Or(regex.node, Sequence.of(regex.node, ref));
+                //name
+                if (regex.isPlus()) {
+                    or.add(regex.node);
+                }
+                else {
+                    or.add(new Epsilon());
+                }
+                addCh(or, ref, regex.node);
             }
-            RuleDecl r = new RuleDecl(ref.name, newNode);
-            r.rhs = transform(newNode, r);
+            RuleDecl r = new RuleDecl(ref.name, or);
+            r.rhs = transform(or, r);
             addRule(r);
             return ref;
         }
         else {
             //r? = € | a;
             Name ref = new Name(decl.name + getCount(decl.name));
-            Node newNode = new Or(new Epsilon(), node);
+            Node newNode = new Or(new Epsilon(), regex.node);
             RuleDecl r = new RuleDecl(ref.name, newNode);
             r.rhs = transform(newNode, r);
             addRule(r);
             return ref;
+        }
+    }
+
+    void addCh(Or or, Node ref, Node other) {
+        if (leftRecursive) {
+            or.add(new Sequence(ref, other));
+        }
+        else {
+            or.add(new Sequence(other, ref));
         }
     }
 

@@ -70,10 +70,7 @@ public class Or extends NodeList {
             if (ch.isOr()) {
                 s.addAll(ch.asOr().list);
             }
-            else if (ch.isOptional()) {
-                //doesn't make sense
-            }
-            else if (!ch.isEpsilon()) {
+            else {
                 s.add(ch);
             }
         }

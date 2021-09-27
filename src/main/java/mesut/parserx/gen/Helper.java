@@ -54,11 +54,14 @@ public class Helper {
             }
             else if (set.add(name)) {
                 if (rec && name.isRule()) {
-                    RuleDecl decl = tree.getRule(name);
-                    if (decl == null) {
+                    List<RuleDecl> list = tree.getRules(name);
+                    if (list.isEmpty()) {
                         throw new RuntimeException("rule not found: " + name);
                     }
-                    first(decl.rhs, tree, rec, set);
+                    for (RuleDecl decl : list) {
+                        first(decl.rhs, tree, rec, set);
+                    }
+
                 }
             }
         }

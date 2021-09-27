@@ -70,7 +70,6 @@ public class IdMap {
 
         File file = new File(options.outDir, "sym.java");
         Utils.write(sb.toString(), file);
-        System.out.println("writing " + file);
     }
 
     String field(String name, int id) {

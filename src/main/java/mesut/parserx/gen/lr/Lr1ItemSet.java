@@ -44,7 +44,7 @@ public class Lr1ItemSet extends LrItemSet {
             //laList.add(sender.lookAhead.get(0));
         }
         //get rules
-        List<RuleDecl> rules = tree.getRules(node.name);
+        List<RuleDecl> rules = tree.getRules(node);
         for (RuleDecl decl : rules) {
             if (mergeLa) {
                 LrItem newItem = new LrItem(decl, 0);
@@ -80,12 +80,7 @@ public class Lr1ItemSet extends LrItemSet {
     //first terminals of rule
     public Set<Name> first(Name name) {
         //todo if first has epsilon look next
-        Set<Name> list = new HashSet<>();
-        for (RuleDecl decl : tree.getRules(name.name)) {
-            Sequence node = decl.rhs.asSequence();
-            Helper.first(node, tree, true, false, true);
-        }
-        return list;
+        return Helper.first(name, tree, true, false, true);
     }
 
 }

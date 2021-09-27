@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-public class Tester {
+public class DescTester {
 
     public static void check(Tree tree, String rule, String... in) throws Exception {
         File tester = new File(Env.dotDir(), "DescTester.java");

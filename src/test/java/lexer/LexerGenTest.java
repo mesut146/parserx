@@ -55,7 +55,6 @@ public class LexerGenTest {
         generateTest(dfa);
     }
 
-
     @Test
     @Ignore
     public void escapeTest() {
