@@ -20,6 +20,7 @@ public abstract class LrDFAGen<T extends LrItemSet> {
     Tree tree;
     LrItem first;
     boolean resolved;
+    Queue<T> queue = new LinkedList<>();//itemsets
 
     public void makeStart() {
         if (tree.start == null) {
@@ -47,13 +48,8 @@ public abstract class LrDFAGen<T extends LrItemSet> {
     }
 
     public void writeGrammar() {
-        File file = tree.file;
-        String s = file.getName();
-        int i = s.lastIndexOf('.');
-        if (i != -1) {
-            s = s.substring(0, i);
-        }
-        writeGrammar(new File(file.getParent(), s + "-final.g"));
+        String out = tree.options.outDir == null ? tree.file.getParent() : tree.options.outDir;
+        writeGrammar(new File(out, Utils.newName(tree.file.getName(), "-final.g")));
     }
 
     public void writeGrammar(File file) {
@@ -70,8 +66,7 @@ public abstract class LrDFAGen<T extends LrItemSet> {
 
     public void generate() {
         prepare();
-
-        Queue<T> queue = new LinkedList<>();//itemsets
+        writeGrammar();
 
         T firstSet = makeSet(first);
         table.addSet(firstSet);
@@ -80,80 +75,70 @@ public abstract class LrDFAGen<T extends LrItemSet> {
 
         while (!queue.isEmpty()) {
             T curSet = queue.poll();
+            System.out.println("set=" + curSet.stateId);
             //iterate items
             while (true) {
                 LrItem curItem = curSet.getItem();
-                if (curItem == null) break;
+                if (curItem == null) break;//already done
 
                 Name symbol = curItem.getDotNode();
-                if (symbol == null) continue;
+                if (symbol == null) continue;//dot end
+
                 LrItem toFirst = new LrItem(curItem, curItem.dotPos + 1);
                 T targetSet = table.getTargetSet(curSet, symbol);
+
                 if (targetSet == null) {
                     //find another set that has same core
-                    targetSet = getSet(toFirst);
-                    if (targetSet == null) {
-                        if (merge) {
-                            boolean merged = false;
-                            for (T set : table.itemSets) {
-                                for (LrItem item : set.kernel) {
-                                    if (item.isSame(toFirst) && !item.equals(toFirst)) {
-                                        //can merge
-                                        merged = true;
-                                        doMerge(toFirst, set);
-                                        targetSet = set;
-                                        break;
-                                    }
-                                }
-                                if (merged) break;
+                    HashSet<T> similars = new HashSet<>();
+                    for (T set : table.itemSets) {
+                        for (LrItem item : set.kernel) {
+                            if (item.equals(toFirst)) {
+                                targetSet = set;
+                                break;
                             }
-                            if (!merged) {
-                                targetSet = makeSet(toFirst);
-                                table.addSet(targetSet);
-                                targetSet.closure();
+                            else if (item.isSame(toFirst)) {
+                                similars.add(set);
                             }
                         }
-                        else {
-                            targetSet = makeSet(toFirst);
-                            table.addSet(targetSet);
-                            targetSet.closure();
-                        }
+                        if (targetSet != null) break;
                     }
-                    else {
-                        //found a set that has same core
-                        if (!targetSet.all.contains(toFirst)) {
-                            targetSet.addCore(toFirst);
+                    //or another set that has similar core(merge-able)
+                    if (targetSet == null) {
+                        if (merge && !similars.isEmpty()) {
+                            targetSet = similars.iterator().next();
+                            doMerge(toFirst, targetSet);
+                        }
+                        if (targetSet == null) {
+                            //create new set
+                            targetSet = makeSet(toFirst);
+                            targetSet.closure();
+                            table.addSet(targetSet);
                         }
                     }
                     table.addTransition(curSet, targetSet, symbol);
-                    queue.add(targetSet);
-                    log(curItem, curSet, toFirst, targetSet, symbol);
+                    addQueue(targetSet);
                 }
                 else {
                     //has same symbol transition
                     //check if item there
-                    if (!targetSet.all.contains(toFirst)) {
-                        if (merge) {
-                            boolean merged = false;
-                            for (LrItem item : targetSet.all) {
-                                if (item.isSame(toFirst) && !item.equals(toFirst)) {
-                                    doMerge(toFirst, targetSet);
-                                    merged = true;
-                                    break;
-                                }
-                            }
-                            if (!merged) {
-                                targetSet.addCore(toFirst);
-                                queue.add(targetSet);
-                            }
+                    boolean has = false;
+                    for (LrItem item : targetSet.kernel) {
+                        if (item.equals(toFirst)) {
+                            //already have same
+                            has = true;
+                            break;
                         }
-                        else {
-                            targetSet.addCore(toFirst);
-                            queue.add(targetSet);
-                            //table.addTransition(curSet, targetSet, symbol);
+                        if (item.isSame(toFirst)) {
+                            //has similar so merge
+                            doMerge(toFirst, targetSet);
+                            has = true;
+                            break;
                         }
-                        //merge
-                        log(curItem, curSet, toFirst, targetSet, symbol);
+                    }
+                    if (!has) {
+                        //doesn't have so add
+                        targetSet.addCore(toFirst);
+                        addQueue(targetSet);
                     }
                 }
                 if (curSet == firstSet && symbol.equals(tree.start)) {
@@ -162,6 +147,12 @@ public abstract class LrDFAGen<T extends LrItemSet> {
             }
         }
         //checkAll();
+    }
+
+    void addQueue(T set) {
+        if (!queue.contains(set)) {
+            queue.add(set);
+        }
     }
 
     void doMerge(LrItem item, LrItemSet set) {
@@ -259,7 +250,7 @@ public abstract class LrDFAGen<T extends LrItemSet> {
                     }
                     boolean removed = false;
                     //if same rule,check assoc
-                    if (shift.rule.equals(reduce.rule)) {
+                    if (shift.rule.equals(reduce.rule)) {//todo isSame?
                         LrItemSet target = table.getTargetSet((T) set, shift.getDotNode());
                         LrItem newItem = new LrItem(shift, shift.dotPos + 1);
                         for (LrItem targetItem : target.all) {

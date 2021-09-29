@@ -30,12 +30,16 @@ public class CodeGen {
             Lr1Generator generator = new Lr1Generator(tree);
             generator.merge = type.equals("lalr");
             generator.generate();
+            generator.checkAll();
             this.gen = generator;
         }
-        else {
+        else if (type.equals("lr0")) {
             Lr0Generator generator = new Lr0Generator(tree);
             generator.generate();
             this.gen = generator;
+        }
+        else {
+            throw new RuntimeException("invalid type: " + type);
         }
         this.options = tree.options;
         this.type = type;
@@ -94,7 +98,7 @@ public class CodeGen {
         sb.append("\"");
 
         sb.append(pack(dfa.lastId + 1));//state count,width
-        sb.append(pack(gen.tree.tokens.size() + dfa.rules.size() + 2));//symbol count,height
+        sb.append(pack(idMap.lastId + 1));//symbol count,height
 
         //write accept
         sb.append(pack(gen.acc));

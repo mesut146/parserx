@@ -122,8 +122,9 @@ public class LLGenTest {
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/parserx.g"));
         Options options = new Options();
         //options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/itself";
-        options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/java/mesut/parserx/parser";
-        options.packageName = "mesut.parserx.parser";
+        //options.outDir = Env.dotDir().getAbsolutePath();
+        options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/java/mesut/parserx/parser2";
+        options.packageName = "mesut.parserx.parser2";
         tree.options = options;
 
         RecDescent rec = new RecDescent(tree);

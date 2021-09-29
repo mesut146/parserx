@@ -17,15 +17,21 @@ public class Or extends NodeList {
         super(args);
     }
 
-    String withNewline() {
+    public String withNewline() {
         StringBuilder sb = new StringBuilder();
+        boolean first = true;
         for (Iterator<Node> it = list.iterator(); it.hasNext(); ) {
             Node node = it.next();
+            sb.append("   ");
+            if (first) {
+                sb.append(" ");//to adjust bar
+            }
             sb.append(node.withLabel());
             sb.append("\n");
             if (it.hasNext()) {
-                sb.append("|  ");
+                sb.append("|");
             }
+            first = false;
         }
         return sb.toString();
     }
@@ -33,15 +39,11 @@ public class Or extends NodeList {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        boolean simp = isSimple();
         for (Iterator<Node> it = list.iterator(); it.hasNext(); ) {
             Node node = it.next();
             sb.append(node);
             if (node.label != null) {
                 sb.append(" #").append(node.label);
-            }
-            if (newLine && !simp) {
-                sb.append("\n  ");
             }
             if (it.hasNext()) {
                 sb.append(" | ");

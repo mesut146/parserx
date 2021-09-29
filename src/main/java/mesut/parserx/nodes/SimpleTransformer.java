@@ -11,9 +11,17 @@ public class SimpleTransformer {
     }
 
     public void transformAll() {
+        transformTokens();
+        transformRules();
+    }
+
+    private void transformTokens() {
         for (TokenDecl decl : tree.tokens) {
             transformToken(decl);
         }
+    }
+
+    public void transformRules() {
         for (RuleDecl decl : tree.rules) {
             transformRule(decl);
         }
@@ -81,23 +89,23 @@ public class SimpleTransformer {
         return node;
     }
 
-    public Node transformSequence(Sequence node, Node parent) {
-        for (int i = 0; i < node.size(); i++) {
-            node.set(i, transformNode(node.get(i), node));
+    public Node transformSequence(Sequence seq, Node parent) {
+        for (int i = 0; i < seq.size(); i++) {
+            seq.set(i, transformNode(seq.get(i), seq));
         }
-        return node;
+        return seq;
     }
 
-    public Node transformRegex(Regex node, Node parent) {
-        node.node = transformNode(node.node, node);
-        return node;
+    public Node transformRegex(Regex regex, Node parent) {
+        regex.node = transformNode(regex.node, regex);
+        return regex;
     }
 
-    public Node transformOr(Or node, Node parent) {
-        for (int i = 0; i < node.size(); i++) {
-            node.set(i, transformNode(node.get(i), node));
+    public Node transformOr(Or or, Node parent) {
+        for (int i = 0; i < or.size(); i++) {
+            or.set(i, transformNode(or.get(i), or));
         }
-        return node;
+        return or;
     }
 
     public Node transformBracket(Bracket node, Node parent) {

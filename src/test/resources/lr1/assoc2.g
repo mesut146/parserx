@@ -6,8 +6,7 @@ token{
 }
 
 %start = E;
-%left ques;
 
+%right ques;
 
-E: N
- | E "?" E ":" E;
+E: N | E "?" E ":" E;

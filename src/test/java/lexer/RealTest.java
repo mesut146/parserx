@@ -1,7 +1,7 @@
-package parser;
+package lexer;
 
 import common.Env;
-import mesut.parserx.gen.lr.CodeGen;
+import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 
@@ -12,17 +12,16 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-public class LrTester {
+public class RealTest {
 
     public static void check(Tree tree, String... in) throws Exception {
-        File tester = new File(Env.dotDir(), "LrTester.java");
-        if (!tester.exists()) {
-            Utils.write(Utils.read(Env.getResFile("LrTester.java.1")), tester);
-        }
+        File tester = new File(Env.dotDir(), "LexerTester.java");
+        Utils.write(Utils.read(Env.getResFile("LexerTester.java.1")), tester);
+
         String outDir = Env.dotDir().getAbsolutePath();
         tree.options.outDir = outDir;
-        CodeGen gen = new CodeGen(tree, "lr1");
-        gen.gen();
+        LexerGenerator gen = new LexerGenerator(tree);
+        gen.generate();
 
         File out = new File(outDir, "out");
         if (out.exists()) {
@@ -37,7 +36,7 @@ public class LrTester {
         }
         out.mkdir();
 
-        ProcessBuilder builder = new ProcessBuilder("javac", "-d", "./out", "Parser.java", "LrTester.java");
+        ProcessBuilder builder = new ProcessBuilder("javac", "-d", "./out", "LexerTester.java");
         builder.directory(new File(outDir));
         builder.redirectErrorStream(true);
         Process p = builder.start();
@@ -47,7 +46,7 @@ public class LrTester {
         }
 
         for (String s : in) {
-            ProcessBuilder runner = new ProcessBuilder("java", "-cp", "./", "LrTester", s);
+            ProcessBuilder runner = new ProcessBuilder("java", "-cp", "./", "LexerTester", s);
             runner.directory(out);
             runner.redirectErrorStream(true);
             Process p2 = runner.start();

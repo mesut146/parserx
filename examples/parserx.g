@@ -9,6 +9,7 @@ token{
  LEFT: "%left";
  RIGHT: "%right";
  IDENT: [a-zA-Z_] [a-zA-Z0-9_]*;
+ SHORTCUT: "[:" IDENT ":]";
  BRACKET: "[" ~"]";
  STRING: "\"" ([^\r\n\\"] | "\\" .)* "\"";
  NUMBER: [0-9]+;
@@ -70,7 +71,7 @@ assocDecl: type=("%left" | "%right") ref+ ";";
 rhs: sequence ("|" sequence)*;
 sequence: regex+ label=("#" name)?;
 regex: name=(name "=")? simple type=("*" | "+" | "?")?;
-simple: group | ref | stringNode | bracketNode | untilNode | dotNode | EPSILON | repeatNode;
+simple: group | ref | stringNode | bracketNode | untilNode | dotNode | EPSILON | repeatNode | SHORTCUT;
 
 group: "(" rhs ")";
 stringNode: STRING;
@@ -78,7 +79,7 @@ bracketNode: BRACKET;//easier to handle as token
 untilNode: "~" regex;
 dotNode: ".";
 ref: name;
-name: IDENT;
+name: IDENT | "token" | "tokens" | "skip" | "options";
 repeatNode: "{" rhs "}";
 
 //bracketOpt: "[" rhs "]";

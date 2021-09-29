@@ -6,13 +6,10 @@ import mesut.parserx.dfa.NFABuilder;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.PrepareTree;
-import mesut.parserx.grammar.GParser;
-import mesut.parserx.parser.MyVisitor;
-import mesut.parserx.utils.Utils;
+import mesut.parserx.parser2.MyVisitor2;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +41,7 @@ public class Tree {
 
     public static Tree makeTree(File path) {
         try {
-            return MyVisitor.makeTree(path);
+            return MyVisitor2.makeTree(path);
             /*String grammar = Utils.read(path);
             grammar += " ";
             GParser parser = new GParser(new StringReader(grammar));

@@ -33,6 +33,14 @@ public class LrDFA<T extends LrItemSet> {
         }
     }
 
+    void expand(int id) {
+        if (id >= map.length) {
+            List<LrTransition<T>>[] tmp = new List[map.length * 2];
+            System.arraycopy(map, 0, tmp, 0, map.length);
+            map = tmp;
+        }
+    }
+
     public LrItemSet getSet(int id) {
         if (idMap.containsKey(id)) {
             return idMap.get(id);
@@ -45,6 +53,7 @@ public class LrDFA<T extends LrItemSet> {
     }
 
     public List<LrTransition<T>> getTrans(int id) {
+        expand(id);
         List<LrTransition<T>> list = map[id];
         if (list == null) {
             list = new ArrayList<>();

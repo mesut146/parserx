@@ -36,7 +36,6 @@ public class EpsilonTrimmer extends SimpleTransformer {
         return tree;
     }
 
-    //A B C = A B C
     Or replace(Sequence node, int i, Node opt) {
         //A B? C = A B C | A C
         List<Node> l1 = new ArrayList<>(node.list);

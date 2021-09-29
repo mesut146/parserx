@@ -10,15 +10,25 @@ token{
  RIGHT: "%right";
  IDENT: [a-zA-Z_] [a-zA-Z0-9_]*;
  BRACKET: "[" ~"]";
+ SHORTCUT: "[:" IDENT ":]";
  STRING: "\"" ([^\r\n\\"] | "\\" .)* "\"";
  NUMBER: [0-9]+;
 }
+
+/*token{
+ #bracketLexer: "[" "^"? unit+ "]";
+ #unit: single ("-" single)?;
+ #single: "\\u" hex_digit hex_digit hex_digit hex_digit | .;
+ #hex_digit: [a-fA-F0-9];
+}*/
 
 token{
  LP: "(";
  RP: ")";
  LBRACE: "{";
  RBRACE: "}";
+ //LBRACKET: "[";
+ //RBRACKET: "]";
  STAR: "*";
  PLUS: "+";
  QUES: "?";
@@ -38,28 +48,30 @@ skip{
   WS: [ \n\r\t]+;
 }
 
-optionsBlock: "options" "{" option* "}";
-option: IDENT "=" NUMBER
-      | IDENT "=" BOOLEAN;
 
-
-tree: includeStatement* (tokenBlock  | skipBlock)* startDecl? ruleDecl*;
+tree: includeStatement* optionsBlock? tokens=(tokenBlock  | skipBlock)* startDecl? rules=(ruleDecl | assocDecl)*;
 
 includeStatement: "include" STRING;
-startDecl: "%start" SEPARATOR name ";";
 
-tokenBlock: ("token" | "tokens") "{" tokenDecl* "}";
+optionsBlock: "options" "{" option* "}";
+option: key=IDENT "=" value=(NUMBER | BOOLEAN) ";"?;
+
+startDecl: START SEPARATOR name ";";
+
+tokenBlock: TOKEN "{" tokenDecl* "}";
 skipBlock: "skip" "{" tokenDecl* "}";
 
 
-tokenDecl= "#"? name SEPARATOR rhs ";";
-ruleDecl= name args? SEPARATOR rhs ";";
-args: "(" name ("," name)* ")";
+tokenDecl: "#"? name SEPARATOR rhs ";";
+ruleDecl: name args? SEPARATOR rhs ";";
+args: "(" name rest=("," name)* ")";
+
+assocDecl: type=("%left" | "%right") ref+ ";";
 
 rhs: sequence ("|" sequence)*;
 sequence: regex+ label=("#" name)?;
-regex: (name "=")? simple ("*" | "+" | "?")?;
-simple: group | ref | stringNode | bracketNode | untilNode | dotNode | EPSILON | repeatNode;
+regex: name=(name "=")? simple type=("*" | "+" | "?")?;
+simple: group | ref | stringNode | bracketNode | untilNode | dotNode | EPSILON | repeatNode | SHORTCUT;
 
 group: "(" rhs ")";
 stringNode: STRING;
@@ -67,9 +79,8 @@ bracketNode: BRACKET;//easier to handle as token
 untilNode: "~" regex;
 dotNode: ".";
 ref: name;
-name: IDENT;
+name: IDENT | "token" | "tokens" | "skip" | "options";
 repeatNode: "{" rhs "}";
 
-test: "+" #lbl1
-    | "*" #lbl2;
+//bracketOpt: "[" rhs "]";
 

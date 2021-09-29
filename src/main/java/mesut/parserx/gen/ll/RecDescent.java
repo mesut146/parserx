@@ -38,10 +38,6 @@ public class RecDescent {
         return node.isName();
     }
 
-    void indent(String data) {
-        code.all(data);
-    }
-
     public void gen() throws IOException {
         prepare();
         if (options.packageName != null) {
@@ -86,37 +82,35 @@ public class RecDescent {
 
     void writeFill() {
         String s = "void fill() throws java.io.IOException{\n" +
-                "  while(true){\n" +
-                String.format("    %s t = lexer.%s();\n", options.tokenClass, options.lexerFunction) +
-                "    list.add(t);\n" +
-                "    if(t == null || t.type == 0) return;\n" +
-                "  }\n" +
+                "while(true){\n" +
+                String.format("%s t = lexer.%s();\n", options.tokenClass, options.lexerFunction) +
+                "list.add(t);\n" +
+                "if(t == null || t.type == 0) return;\n" +
+                "}\n" +
                 "}";
-        indent(s);
+        code.all(s);
     }
 
     void writeConsume() {
-        String s = options.tokenClass + " consume(int type){\n" +
-                "  " + options.tokenClass + " t = pop();\n" +
-                "  if(t.type != type)\n" +
-                "    throw new RuntimeException(\"unexpected token: \" + t + \" expecting: \" + type);\n" +
-                "  return t;\n" +
-                "\n}";
-        indent(s);
+        code.append("%s consume(int type){", options.tokenClass);
+        code.append("%s t = pop();", options.tokenClass);
+        code.append("if(t.type != type){");
+        code.append("throw new RuntimeException(\"unexpected token: \" + t + \" expecting: \" + type);");
+        code.all("}");
+        code.append("return t;");
+        code.append("}");
     }
 
     void writePop() {
-        String s = "Token pop(){\n" +
-                "  return list.remove(0);\n" +
-                "}";
-        indent(s);
+        code.append("%s pop(){", options.tokenClass);
+        code.append("return list.remove(0);");
+        code.append("}");
     }
 
     void writePeek() {
-        String s = "Token peek(){\n" +
-                "  return list.get(0);\n" +
-                "}";
-        indent(s);
+        code.append("%s peek(){", options.tokenClass);
+        code.append("return list.get(0);");
+        code.append("}");
     }
 
     void genTokenType() throws IOException {

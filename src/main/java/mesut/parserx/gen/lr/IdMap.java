@@ -17,8 +17,7 @@ public class IdMap {
     public static Name EOF = new Name("EOF", true);
     public static Name dollar = new Name("$", true);
     public HashMap<Name, Integer> map = new HashMap<>();
-    int lastId;
-
+    public int lastId;
 
     public int getId(Name name) {
         if (name.isToken && name.name.equals("$")) {

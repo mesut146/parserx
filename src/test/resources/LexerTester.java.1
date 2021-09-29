@@ -1,10 +1,15 @@
-import java.io.File;
+import java.io.*;
 
 public class LexerTester {
 
-
     public static void main(String... args) throws Exception {
-        Lexer l = new Lexer(new File(args[0]));
+        Lexer l;
+        if(args[0].equals("-file")){
+            l = new Lexer(new File(args[1]));
+        }else{
+            l = new Lexer(new StringReader(args[0]));
+        }
+
         while (true) {
             Token t = l.next();
             System.out.println(t);

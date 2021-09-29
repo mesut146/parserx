@@ -1,6 +1,7 @@
 include "lexer-jls.g"
 //https://docs.oracle.com/javase/specs/jls/se16/html/jls-15.html
 
+%start: CompilationUnit;
 
 //3.8. Identifiers
 TypeIdentifier:
@@ -100,6 +101,21 @@ CompilationUnit:
 
 OrdinaryCompilationUnit:
   PackageDeclaration? ImportDeclaration* TopLevelClassOrInterfaceDeclaration*;
+
+/*
+OrdinaryCompilationUnit:
+    ImportDeclaration* TopLevelClassOrInterfaceDeclaration*
+|   PackageDeclaration ImportDeclaration* TopLevelClassOrInterfaceDeclaration*;
+
+OrdinaryCompilationUnit:
+    TopLevelClassOrInterfaceDeclaration* | ImportDeclaration+ TopLevelClassOrInterfaceDeclaration*
+|   PackageDeclaration TopLevelClassOrInterfaceDeclaration* | PackageDeclaration ImportDeclaration+ TopLevelClassOrInterfaceDeclaration*
+;
+OrdinaryCompilationUnit:
+     | TopLevelClassOrInterfaceDeclaration+ | ImportDeclaration+ | ImportDeclaration+ TopLevelClassOrInterfaceDeclaration+
+|   PackageDeclaration | PackageDeclaration TopLevelClassOrInterfaceDeclaration+ | PackageDeclaration ImportDeclaration+ | PackageDeclaration ImportDeclaration+ TopLevelClassOrInterfaceDeclaration+
+;
+*/
 
 ModularCompilationUnit:
   ImportDeclaration* ModuleDeclaration;

@@ -24,7 +24,6 @@ public class LrTest {
 
     void dots(LrDFAGen<?> gen, String name) throws IOException {
         gen.writeTableDot(new PrintWriter(Env.dotFile(Utils.newName(name, "-table.dot"))));
-        gen.writeGrammar(Env.dotFile(name + "2"));
 
         dot(gen.tableDotFile());
 
@@ -54,23 +53,32 @@ public class LrTest {
     @Test
     @Ignore
     public void lr1() throws Exception {
-        File file;
         //file = Env.getFile2("lr1/calc2.g");
-        file = Env.getResFile("lr1/calc3.g");
         //file = Env.getFile2("lr1/simple.g");
-        Tree tree = Env.tree("lr0/simple.g");
-        //file = Env.getFile2("lr1/lr1.g");
+        //Tree tree = Env.tree("lr0/simple.g");
+        //Tree tree = Env.tree("lr1/calc3.g");
+        //Tree tree = Env.tree("lr1/calc.g");
+        //Tree tree = Env.tree("java/parser-jls-eps.g");
+        //Tree tree = Env.tree("lr1/lr1.g");
         //file = Env.getResFile("rec/cyc.g");
-        //file = Env.getFile2("lr1/rr.g");
-        //Tree tree = Env.tree("lr1/test.g");
+        Tree tree = Env.tree("lr1/factor-loop-right.g");
         //Lr1ItemSet.mergeLa = true;
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         Lr1Generator generator = new Lr1Generator(tree);
-        generator.merge = true;
+        //generator.merge = true;
+        //EpsilonTrimmer.trim(tree);
         generator.generate();
+        //generator.checkAll();
         dots(generator, tree.file.getName());
-        CodeGen codeGen = new CodeGen(generator, "lar1");
+    }
+
+    @Test
+    public void codeGen() throws Exception {
+        Tree tree = Env.tree("lr1/lr1.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        CodeGen codeGen = new CodeGen(tree, "lr1");
         codeGen.gen();
+        dots(codeGen.gen, tree.file.getName());
     }
 
     @Test
@@ -197,7 +205,7 @@ public class LrTest {
         Tree tree = Env.tree("lr1/rec.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         Lr1Generator dfaGen = new Lr1Generator(tree);
-        dfaGen.merge = true;
+        //dfaGen.merge = true;
         dfaGen.generate();
         dfaGen.checkAll();
         dots(dfaGen, tree.file.getName());
@@ -206,5 +214,19 @@ public class LrTest {
     @Test
     public void lalrTester() throws Exception {
         LrTester.check(Env.tree("lr0/simple.g"), "bb", "bab", "abab");
+        LrTester.check(Env.tree("lr0/left.g"), "cb", "cab", "caab");
+        LrTester.check(Env.tree("lr1/la.g"), "bb", "abab", "aabaaab");
+        LrTester.check(Env.tree("lr1/lr1.g"), "aea", "beb", "aeb", "bea");
+        LrTester.check(Env.tree("lr1/assoc.g"), "1+2", "1+2+3");
+        LrTester.check(Env.tree("lr1/assoc2.g"), "1?2:3", "1?2:3?4:5");
+        LrTester.check(Env.tree("lr1/prec.g"), "1.5+2*3.9440", "2*3+1", "2^3*5+1");
+        LrTester.check(Env.tree("lr1/prec-unary.g"), "-1+3", "1+-6");
+        LrTester.check(Env.tree("lr1/calc.g"), "1+2", "1*2", "1+2*3", "2*3+1", "1+2^3", "2*2^-3");
+        LrTester.check(Env.tree("lr1/factor-loop-right.g"), "ac", "ab", "aac", "aab");
+    }
+
+    @Test
+    public void prec() throws Exception {
+        LrTester.check(Env.tree("lr1/rec.g"), "abc", "abd", "ababc");
     }
 }

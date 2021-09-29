@@ -23,10 +23,6 @@ public class RegexUtils {
         return node;
     }
 
-    public static Node lineComment() {
-        return Sequence.of(new StringNode("//"), new Regex(new Bracket("[^\\n]"), "*"));
-    }
-
     public static Node blockComment() {
         return Sequence.of(new StringNode("/*"), new Regex(new Or(new Bracket("[^*]"), new Sequence(new StringNode("*"), new Bracket("[^/]"))), "*"), new StringNode("*/"));
     }
@@ -72,5 +68,6 @@ public class RegexUtils {
         }
         throw new Exception("can't negate regex: " + regex);
     }
+
 
 }

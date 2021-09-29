@@ -7,15 +7,14 @@ token{
 
 %start: E;
 
-/*E: A c | a b d;
+
+E: A c | a b d;
 A: A B | B;
 B: a b;
+
+/*
+E: B+ c | a b d;
 */
 
-/*E: A c | a b;
-A: A a | a;*/
 
-/*E: A c | B b;
-A: A a | a;
-B: B a | a;*/
-E: a+ (c | b);
+

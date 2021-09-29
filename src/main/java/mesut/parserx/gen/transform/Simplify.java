@@ -3,8 +3,13 @@ package mesut.parserx.gen.transform;
 import mesut.parserx.nodes.*;
 
 public class Simplify extends SimpleTransformer {
+
     public Simplify(Tree tree) {
         super(tree);
+    }
+
+    public static void all(Tree tree) {
+        new Simplify(tree).transformRules();
     }
 
     public static Node simplifyNode(Node node) {
@@ -32,7 +37,10 @@ public class Simplify extends SimpleTransformer {
             if (ch.isSequence()) {
                 res.addAll(ch.asSequence().list);
             }
-            else {
+            else if (ch.isGroup() && ch.asGroup().node.isSequence()) {
+                res.addAll(ch.asGroup().node.asSequence().list);
+            }
+            else if (!ch.isEpsilon()) {
                 res.add(ch);
             }
         }
@@ -49,6 +57,9 @@ public class Simplify extends SimpleTransformer {
             ch = transformNode(ch, node);
             if (ch.isOr()) {
                 res.addAll(ch.asOr().list);
+            }
+            else if (ch.isGroup() && ch.asGroup().node.isOr()) {
+                res.addAll(ch.asGroup().node.asOr().list);
             }
             else {
                 res.add(ch);

@@ -43,7 +43,14 @@ public class RuleDecl extends Node {
 
     @Override
     public String toString() {
-        String s = name + printArgs() + " = " + rhs + ";";
+        String s;
+        if (rhs.isOr()) {
+            s = name + printArgs() + ":\n" + rhs.asOr().withNewline() + ";";
+        }
+        else {
+            s = name + printArgs() + " = " + rhs + ";";
+        }
+
         if (hidden) {
             return "/*" + s + "*/";
         }

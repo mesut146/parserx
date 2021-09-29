@@ -1,4 +1,4 @@
-package mesut.parserx.parser;
+package mesut.parserx.parser2;
 
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.UnicodeUtils;
@@ -8,18 +8,18 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
 
-public class MyVisitor {
+public class MyVisitor2 {
 
     public static Tree makeTree(String data) throws IOException {
         //grammar += " ";
         Parser parser = new Parser(new Lexer(new StringReader(data)));
-        return new MyVisitor().visitTree(parser.tree()).prepare();
+        return new MyVisitor2().visitTree(parser.tree()).prepare();
     }
 
     public static Tree makeTree(File path) throws IOException {
         //grammar += " ";
         Parser parser = new Parser(new Lexer(new FileReader(path)));
-        Tree tree = new MyVisitor().visitTree(parser.tree());
+        Tree tree = new MyVisitor2().visitTree(parser.tree());
         tree.file = path;
         tree.resolveIncludes();
         return tree.prepare();
@@ -117,7 +117,7 @@ public class MyVisitor {
     public Node visitRegex(Ast.regex node) {
         Node res = visitSimple(node.simple);
         if (node.name != null) {
-            res.varName = node.name.name.IDENT.value;
+            res.varName = node.name.name.toString();
         }
         if (node.type != null) {
             String type;
@@ -164,6 +164,10 @@ public class MyVisitor {
                 rhs = new Group(rhs);
             }
             return new Regex(rhs, "*");
+        }
+        else if (node.SHORTCUT != null) {
+            String s = node.SHORTCUT.value;
+            return new Group(Shortcut.from(s.substring(2, s.length() - 2)));
         }
         else {
             throw new RuntimeException("unexpected");
