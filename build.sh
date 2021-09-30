@@ -1,4 +1,5 @@
 #!/bin/sh
 
+mvn clean
 sh ./src/main/grammar/gen.sh
-mvn package
+mvn -DskipTests=true package

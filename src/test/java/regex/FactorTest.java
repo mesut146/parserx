@@ -57,6 +57,7 @@ public class FactorTest {
     }
 
     @Test
+    @Ignore
     public void loopAll() throws Exception {
         Tree tree = Env.tree("factor/loop4.g");
         FactorLoop factorLoop = new FactorLoop(tree);
@@ -74,6 +75,7 @@ public class FactorTest {
     }
 
     @Test
+    @Ignore
     public void loop() throws Exception {
         Tree tree = Env.tree("factor/loop4.g");
         Node node = tree.getRule("E").rhs;
