@@ -3,9 +3,9 @@ package lexer;
 import common.Env;
 import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
+import mesut.parserx.dfa.NfaReader;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
-import mesut.parserx.dfa.NfaReader;
 import org.junit.Test;
 
 import java.io.File;
@@ -15,9 +15,7 @@ public class DfaTest {
 
     @Test
     public void hopcroft() throws Exception {
-        //File file = Env.getResFile("fsm/dfa-min.dfa");
-        File file = Env.getResFile("min/dfa2.dfa");
-        NFA dfa = NfaReader.read(Utils.read(file));
+        NFA dfa = NfaReader.read(Env.getResFile("min/dfa2.dfa"));
         //Minimization.removeUnreachable(dfa);
         //dfa = Minimization.optimize(dfa);
         dfa = Minimization.Hopcroft(dfa);
@@ -27,9 +25,8 @@ public class DfaTest {
 
     @Test
     public void minimizeMy() throws Exception {
-        File file = Env.getResFile("min/dfa-min.dfa");
         //File file = Env.getResFile("fsm/dfa2.dfa");
-        NFA dfa = NfaReader.read(Utils.read(file));
+        NFA dfa = NfaReader.read(Env.getResFile("min/dfa-min.dfa"));
         Minimization.removeUnreachable(dfa);
         Minimization.removeDead(dfa);
         Minimization.optimize(dfa);
@@ -52,7 +49,7 @@ public class DfaTest {
 
     @Test
     public void name() throws Exception {
-        Tree tree = Tree.makeTree(Env.getResFile("min/a.g"));
+        Tree tree = Env.tree("min/a.g");
         NFA dfa = tree.makeNFA().dfa();
         //dfa = Minimization.Hopcroft(dfa);
         dfa = Minimization.optimize(dfa);

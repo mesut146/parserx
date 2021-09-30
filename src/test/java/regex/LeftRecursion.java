@@ -1,8 +1,8 @@
 package regex;
 
 import common.Env;
-import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.Helper;
+import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.transform.LeftRecursive;
 import mesut.parserx.gen.transform.Recursion;
 import mesut.parserx.nodes.NodeList;
@@ -10,8 +10,6 @@ import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
-
-import java.io.File;
 
 public class LeftRecursion {
 
@@ -24,8 +22,7 @@ public class LeftRecursion {
 
     @Test
     public void remove() throws Exception {
-        File file = Env.getResFile("rec/leftRec2.g");
-        Tree tree = Tree.makeTree(file);
+        Tree tree = Env.tree("rec/leftRec2.g");
         LeftRecursive leftRecursive = new LeftRecursive(tree);
         leftRecursive.process();
         Helper.revert(tree);
@@ -36,8 +33,7 @@ public class LeftRecursion {
 
     @Test
     public void split() throws Exception {
-        File file = Env.getResFile("rec/leftRec.g");
-        Tree tree = Tree.makeTree(file);
+        Tree tree = Env.tree("rec/leftRec.g");
         RuleDecl rule = tree.getRule("A");
         LeftRecursive left = new LeftRecursive(tree);
         LeftRecursive.SplitInfo info = left.split(rule.rhs, rule.ref());
@@ -48,18 +44,15 @@ public class LeftRecursion {
     @Test
     public void direct() throws Exception {
         Or.newLine = false;
-        File file = Env.getResFile("rec/direct.g");
-        Tree tree = Tree.makeTree(file);
+        Tree tree = Env.tree("rec/direct.g");
         tree = LeftRecursive.transform(tree);
         System.out.println(NodeList.join(tree.rules, "\n"));
     }
 
-
     @Test
     public void rec() throws Exception {
         Or.newLine = false;
-        File file = Env.getResFile("rec/cyc2.g");
-        Tree tree = Tree.makeTree(file);
+        Tree tree = Env.tree("rec/cyc2.g");
         tree = LeftRecursive.transform(tree);
         System.out.println(NodeList.join(tree.rules, "\n"));
     }

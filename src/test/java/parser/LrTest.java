@@ -42,12 +42,11 @@ public class LrTest {
         //file = Env.getResFile("lr1/calc2.g");
         //file = Env.getFile2("lr1/simple.g");
         //file = Env.getResFile("rec/cyc.g");
-        file = Env.getResFile("lr1/calc3.g");
         //file = Env.getFile2("javaParser.g");
-        Tree tree = Tree.makeTree(file);
+        Tree tree = Env.tree("lr1/calc3.g");
         Lr0Generator generator = new Lr0Generator(tree);
         generator.generate();
-        dots(generator, file.getName());
+        dots(generator, tree.file.getName());
     }
 
     @Test

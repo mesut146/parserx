@@ -4,12 +4,9 @@ import common.Env;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.transform.EpsilonTrimmer;
 import mesut.parserx.gen.transform.EpsilonTrimmer2;
-import mesut.parserx.gen.transform.Simplify;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
-
-import java.io.File;
 
 public class EpsTest {
 
@@ -25,11 +22,10 @@ public class EpsTest {
     }
 
     @Test
-    public void test() throws Exception {
+    public void trim() throws Exception {
         Or.newLine = false;
-        //Tree tree = Tree.makeTree(Env.getResFile("eps.g"));
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/dots/recc.g"));
-        tree = new EpsilonTrimmer(tree).trim();
+        Tree tree = Env.tree("eps.g");
+        tree = new EpsilonTrimmer2(tree).trim();
         Helper.revert(tree);
         System.out.println(tree);
     }

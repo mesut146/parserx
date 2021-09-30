@@ -1,4 +1,4 @@
-package mesut.parserx.parser2;
+package mesut.parserx.parser;
 
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.UnicodeUtils;
@@ -8,16 +8,15 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
 
+//cst to ast
 public class MyVisitor2 {
 
     public static Tree makeTree(String data) throws IOException {
-        //grammar += " ";
         Parser parser = new Parser(new Lexer(new StringReader(data)));
         return new MyVisitor2().visitTree(parser.tree()).prepare();
     }
 
     public static Tree makeTree(File path) throws IOException {
-        //grammar += " ";
         Parser parser = new Parser(new Lexer(new FileReader(path)));
         Tree tree = new MyVisitor2().visitTree(parser.tree());
         tree.file = path;

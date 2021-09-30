@@ -1,7 +1,6 @@
 package regex;
 
 import common.Env;
-import lexer.NfaTest;
 import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.NFABuilder;
@@ -11,7 +10,6 @@ import mesut.parserx.nodes.Shortcut;
 import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.regex.RegexBuilder;
-import mesut.parserx.regex.RegexFromStr;
 import mesut.parserx.regex.RegexOptimizer;
 import mesut.parserx.regex.RegexUtils;
 import org.junit.Ignore;
@@ -43,8 +41,7 @@ public class RegexBuilderTest {
     @Test
     @Ignore
     public void fromGrammar() throws Exception {
-        File file = Env.getResFile("javaLexer.g");
-        NFA nfa = NfaTest.makeNFA(file);
+        NFA nfa = Env.tree("javaLexer.g").makeNFA();
         //nfa.dump(null);
         Node node = new RegexBuilder(nfa).buildRegex();
         node = new RegexOptimizer(node).optimize();

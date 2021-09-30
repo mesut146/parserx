@@ -8,8 +8,6 @@ import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.nodes.*;
 import org.junit.Test;
 
-import java.io.File;
-
 public class FactorTest {
 
     @Test
@@ -30,7 +28,7 @@ public class FactorTest {
     @Test
     public void eps() throws Exception {
         //Tree tree = Tree.makeTree(Env.getResFile("factor.g"));
-        Tree tree = Tree.makeTree(Env.getResFile("eps.g"));
+        Tree tree = Env.tree("eps.g");
         System.out.println(new Epsilons(tree).trim(tree.getRule("C").rhs));
         System.out.println(tree);
     }
@@ -38,7 +36,7 @@ public class FactorTest {
     @Test
     public void pull() throws Exception {
         Or.newLine = false;
-        Tree tree = Tree.makeTree(Env.getResFile("factor.g"));
+        Tree tree = Env.tree("factor.g");
         Factor factor = new Factor(tree);
 
         Factor.PullInfo info = factor.pull(new Name("E", false), new Name("A", false));
@@ -49,9 +47,8 @@ public class FactorTest {
     @Test
     public void all() throws Exception {
         Or.newLine = false;
-        //Tree tree = Tree.makeTree(Env.getResFile("factor.g"));
-        //Tree tree = Tree.makeTree(Env.getResFile("rec/leftRec2.g"));
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/factoring/1.g"));
+        Tree tree = Env.tree("factor.g");
+        //Tree tree = Env.tree("rec/leftRec2.g");
         Factor factor = new Factor(tree);
         Factor.keepFactor = false;
         factor.factorize();
@@ -60,7 +57,7 @@ public class FactorTest {
 
     @Test
     public void java() throws Exception {
-        Tree tree = Tree.makeTree(Env.getResFile("java/parser-jls.g"));
+        Tree tree = Env.tree("java/parser-jls.g");
         Factor factor = new Factor(tree);
         factor.factorize();
         System.out.println(tree);
@@ -76,7 +73,7 @@ public class FactorTest {
 
     @Test
     public void loopJava() throws Exception {
-        Tree tree = Tree.makeTree(Env.getResFile("java/parser-jls.g"));
+        Tree tree = Env.tree("java/parser-jls.g");
         FactorLoop factorLoop = new FactorLoop(tree);
         factorLoop.factorize();
         tree.printRules();

@@ -62,7 +62,7 @@ public class EpsilonTrimmer2 extends SimpleTransformer {
     public Node transformSequence(Sequence seq, Node parent) {
         for (int i = 0; i < seq.size(); i++) {
             Node ch = seq.get(i);
-            if (!ch.isName() && canBeEmpty(ch)) {
+            if (canBeEmpty(ch)) {//!ch.isName()
                 Or res = new Or();
                 ch = transformNode(ch, seq);
                 List<Node> l1 = new ArrayList<>(seq.list);

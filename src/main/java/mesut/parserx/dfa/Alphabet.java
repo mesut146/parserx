@@ -10,8 +10,8 @@ import java.util.Map;
 
 //character classes used by nfa,dfa
 public class Alphabet {
-    public static int min = Character.MIN_VALUE;
-    public static int max = Character.MAX_VALUE;
+    public static int min = Character.MIN_VALUE;//0x0000
+    public static int max = Character.MAX_VALUE;//0xFFFF
     public Map<Node, Integer> map = new HashMap<>();
     int lastId = 0;
 

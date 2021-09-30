@@ -1,23 +1,14 @@
 package common;
 
 import mesut.parserx.nodes.*;
-import mesut.parserx.parser.MyVisitor;
+import mesut.parserx.parser.MyVisitor2;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
 public class Env {
-    public static String dir;
-    public static String testJava;
-    public static String testRes;
-
-    static {
-        dir = "/home/mesut/Desktop/IdeaProjects/parserx";
-        //dir = "/storage/emulated/0/AppProjects/parserx";
-        testJava = dir + "/src/test/java";
-        testRes = dir + "/src/test/resources";
-    }
+    public static String dir = "/home/mesut/Desktop/IdeaProjects/parserx";
 
     public static File dotDir() {
         return new File(dir + "/dots");
@@ -30,9 +21,6 @@ public class Env {
         return file;
     }
 
-    public static File getJavaLexer() throws Exception {
-        return Env.getResFile("/javaLexer.g");
-    }
 
     public static File getResFile(String name) throws Exception {
         if (!name.startsWith("/")) {
@@ -46,9 +34,8 @@ public class Env {
     }
 
     public static Tree makeRule(String grammar) {
-        grammar += " ";
         try {
-            final Tree tree = MyVisitor.makeTree(grammar);
+            final Tree tree = MyVisitor2.makeTree(grammar);
             new SimpleTransformer(tree) {
                 @Override
                 public Node transformName(Name node, Node parent) {

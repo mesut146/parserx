@@ -39,10 +39,9 @@ public class LexerGenTest {
     }
 
     @Test
-    public void dot() throws IOException {
-        //Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/parserx.g"));
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/resources/str.g"));
-        tree.makeNFA().dfa().dot(new FileWriter("/media/mesut/SSD-DATA/IdeaProjects/parserx/dots/a.dot"));
+    public void dot() throws Exception {
+        Tree tree = Env.tree("str.g");
+        tree.makeNFA().dfa().dot(new FileWriter(Env.dotFile("a.dot")));
     }
 
     @Test
@@ -85,7 +84,7 @@ public class LexerGenTest {
     @Test
     @Ignore
     public void all() throws Exception {
-        NFA dfa = NFA.makeDFA(Env.getJavaLexer());
+        NFA dfa = Env.tree("javaLexer.g").makeNFA().dfa();
         File dump = new File(Env.dotDir(), "javaLexer.txt");
         dfa.dump(new FileWriter(dump));
         dfa.getAlphabet().dump(new File(Env.dotDir(), "alphabet.txt"));

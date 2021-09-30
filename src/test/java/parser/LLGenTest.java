@@ -19,7 +19,7 @@ public class LLGenTest {
     public void normalize() throws Exception {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
-        Tree tree = Tree.makeTree(Env.getResFile("ll/norm.g"));
+        Tree tree = Env.tree("ll/norm.g");
         tree.options = options;
         //new Normalizer(tree).normalize();
         //new Factor(tree).factorize();
@@ -52,7 +52,7 @@ public class LLGenTest {
 
     @Test
     public void eps() throws Exception {
-        Tree tree = Tree.makeTree(Env.getResFile("factor/eps.g"));
+        Tree tree = Env.tree("factor/eps.g");
         System.out.println(new Epsilons(tree).trim(tree.getRule("C").rhs));
     }
 
@@ -60,7 +60,7 @@ public class LLGenTest {
     public void factored() throws Exception {
         //Tree tree = Tree.makeTree(Env.getResFile("factor/double-same.g"));
         //Tree tree = Tree.makeTree(Env.getResFile("factor/double-same-extra.g"));
-        Tree tree = Tree.makeTree(Env.getResFile("factor/double-same-extra2.g"));
+        Tree tree = Env.tree("factor/double-same-extra2.g");
         //Tree tree = Tree.makeTree(Env.getResFile("factor/eps.g"));
         //Tree tree = Tree.makeTree(Env.getResFile("factor/list.g"));
         //Tree tree = Tree.makeTree(Env.getResFile("factor/group-list.g"));
@@ -78,7 +78,7 @@ public class LLGenTest {
     public void all() throws Exception {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
-        Tree tree = Tree.makeTree(Env.getResFile("calc-1.g"));
+        Tree tree = Env.tree("calc-1.g");
         tree.options = options;
         new LexerGenerator(tree).generate();
         RecDescent gen = new RecDescent(tree);
@@ -91,8 +91,7 @@ public class LLGenTest {
         options.outDir = Env.dotDir().getAbsolutePath();
         options.parserClass = "Test";
         options.genVisitor = true;
-        //Tree tree = Tree.makeTree(Env.getResFile("calc-1.g"));
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/parserx.g"));
+        Tree tree = Env.tree("parserx.g");
         tree.options = options;
         VisitorGenerator visitorGenerator = new VisitorGenerator(tree);
         visitorGenerator.generate();
