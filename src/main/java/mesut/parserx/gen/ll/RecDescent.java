@@ -7,6 +7,7 @@ import mesut.parserx.gen.Options;
 import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.Recursion;
+import mesut.parserx.gen.transform.Simplify;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
@@ -16,6 +17,7 @@ import java.util.Set;
 
 // ll(1) recursive descent parser generator
 public class RecDescent {
+    public static boolean debug = false;
     public Options options;
     Tree tree;
     CodeWriter code = new CodeWriter(true);
@@ -138,22 +140,23 @@ public class RecDescent {
     }
 
     private void prepare() throws IOException {
+        Simplify.all(tree);
         tree = EbnfToBnf.combineOr(tree);
         new Normalizer(tree).normalize();
         astGen = new AstGen(tree);
         astGen.genAst();
-        tree.printRules();
-        Recursion.debug = true;
+        if (debug) tree.printRules();
+        Recursion.debug = debug;
         Factor.allowRecursion = true;
-        Factor.debug = true;
+        Factor.debug = debug;
         Factor factor = new Factor(tree);
         factor.factorize();
-        if (factor.any) {
+        if (debug && factor.any) {
             tree.printRules();
         }
         Recursion recursion = new Recursion(tree);
         recursion.all();
-        if (recursion.any) {
+        if (debug && recursion.any) {
             tree.printRules();
         }
         new LexerGenerator(tree).generate();

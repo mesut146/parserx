@@ -16,9 +16,8 @@ public class DescTester {
 
     public static void check(Tree tree, String rule, String... in) throws Exception {
         File tester = new File(Env.dotDir(), "DescTester.java");
-        if (!tester.exists()) {
-            Utils.write(Utils.read(Env.getResFile("DescTester.java.1")), tester);
-        }
+        Utils.write(Utils.read(Env.getResFile("DescTester.java.1")), tester);
+
         String outDir = Env.dotDir().getAbsolutePath();
         tree.options.outDir = outDir;
         RecDescent gen = new RecDescent(tree);
@@ -37,7 +36,7 @@ public class DescTester {
         }
         out.mkdir();
 
-        ProcessBuilder builder = new ProcessBuilder("javac", "-d", "./out", "Parser.java", "Tester.java");
+        ProcessBuilder builder = new ProcessBuilder("javac", "-d", "./out", "DescTester.java");
         builder.directory(new File(outDir));
         builder.redirectErrorStream(true);
         Process p = builder.start();
@@ -47,7 +46,7 @@ public class DescTester {
         }
 
         for (String s : in) {
-            ProcessBuilder runner = new ProcessBuilder("java", "-cp", "./", "Tester", rule, s);
+            ProcessBuilder runner = new ProcessBuilder("java", "-cp", "./", "DescTester", rule, s);
             runner.directory(out);
             runner.redirectErrorStream(true);
             Process p2 = runner.start();
@@ -61,7 +60,7 @@ public class DescTester {
     static String read(InputStream in) throws IOException {
         StringBuilder sb = new StringBuilder();
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
-        String line = null;
+        String line;
         while ((line = br.readLine()) != null) {
             sb.append(line).append("\n");
         }

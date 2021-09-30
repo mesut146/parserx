@@ -2,4 +2,4 @@
 
 dir=$(dirname $0)
 
-java -jar $dir/../../../target/*.jar -desc -package mesut.parserx.parser -out "../java/mesut/parserx/parser" "parserx.g"
+java -jar $dir/../../../target/*.jar -desc -package mesut.parserx.parser -out "$dir/../java/mesut/parserx/parser" $dir/parserx.g

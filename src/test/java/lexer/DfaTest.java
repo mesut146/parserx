@@ -34,21 +34,7 @@ public class DfaTest {
     }
 
     @Test
-    public void minimize2() throws Exception {
-        NFA dfa = NFA.makeDFA(Env.getResFile("javaLexer.g"));
-        System.out.println("before " + Minimization.numOfStates(dfa));
-        //Minimization.removeUnreachable(dfa);
-        //Minimization.removeDead(dfa);
-        //dfa = Minimization.Hopcroft(dfa);
-        dfa = Minimization.optimize(dfa);
-        dfa = Minimization.combineAlphabet(dfa);
-        System.out.println("after " + Minimization.numOfStates(dfa));
-        //dfa.dump();
-        dfa.dot(new FileWriter(Env.dotFile("dfa1")));
-    }
-
-    @Test
-    public void name() throws Exception {
+    public void loop() throws Exception {
         Tree tree = Env.tree("min/a.g");
         NFA dfa = tree.makeNFA().dfa();
         //dfa = Minimization.Hopcroft(dfa);

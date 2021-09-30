@@ -1,6 +1,6 @@
 include "../common.g"
 
-@start = E;
+%start = E;
 
 E: A a | B c c;
 A: B b | C c;

@@ -36,6 +36,7 @@ public class Utils {
 
     public static void write(String data, File file) throws IOException {
         System.out.println("writing " + file);
+        file.getParentFile().mkdirs();
         FileWriter wr = new FileWriter(file);
         wr.write(data);
         wr.close();

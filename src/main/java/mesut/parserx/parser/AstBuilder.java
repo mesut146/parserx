@@ -9,19 +9,19 @@ import java.io.IOException;
 import java.io.StringReader;
 
 //cst to ast
-public class MyVisitor2 {
+public class AstBuilder {
 
     public static Tree makeTree(String data) throws IOException {
         Parser parser = new Parser(new Lexer(new StringReader(data)));
-        return new MyVisitor2().visitTree(parser.tree()).prepare();
+        return new AstBuilder().visitTree(parser.tree());
     }
 
     public static Tree makeTree(File path) throws IOException {
         Parser parser = new Parser(new Lexer(new FileReader(path)));
-        Tree tree = new MyVisitor2().visitTree(parser.tree());
+        Tree tree = new AstBuilder().visitTree(parser.tree());
         tree.file = path;
         tree.resolveIncludes();
-        return tree.prepare();
+        return tree;
     }
 
     public Tree visitTree(Ast.tree node) {
@@ -116,20 +116,10 @@ public class MyVisitor2 {
     public Node visitRegex(Ast.regex node) {
         Node res = visitSimple(node.simple);
         if (node.name != null) {
-            res.varName = node.name.name.toString();
+            res.astInfo.varName = node.name.name.toString();
         }
         if (node.type != null) {
-            String type;
-            if (node.type.QUES != null) {
-                type = "?";
-            }
-            else if (node.type.STAR != null) {
-                type = "*";
-            }
-            else {
-                type = "+";
-            }
-            return new Regex(res, type);
+            return new Regex(res, node.type.toString());
         }
         return res;
     }

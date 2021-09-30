@@ -1,7 +1,7 @@
 package common;
 
 import mesut.parserx.nodes.*;
-import mesut.parserx.parser.MyVisitor2;
+import mesut.parserx.parser.AstBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +35,7 @@ public class Env {
 
     public static Tree makeRule(String grammar) {
         try {
-            final Tree tree = MyVisitor2.makeTree(grammar);
+            final Tree tree = AstBuilder.makeTree(grammar);
             new SimpleTransformer(tree) {
                 @Override
                 public Node transformName(Name node, Node parent) {

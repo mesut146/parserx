@@ -139,14 +139,8 @@ public class AstGen {
             Name name = node.asName();
             String vname = name.astInfo.varName;
             if (vname == null) {
-                if (name.varName != null) {
-                    name.astInfo.varName = name.varName;
-                    vname = name.varName;
-                }
-                else {
-                    vname = vName(name, parentClass.toString());
-                    name.astInfo.varName = vname;
-                }
+                vname = vName(name, parentClass.toString());
+                name.astInfo.varName = vname;
             }
             if (name.isToken) {
                 parent.append(String.format("public Token %s;", vname));
@@ -231,8 +225,8 @@ public class AstGen {
         else if (node.isGroup()) {
             Group group = node.asGroup();
             String var;
-            if (node.varName != null) {
-                var = node.varName;
+            if (node.astInfo.varName != null) {
+                var = node.astInfo.varName;
             }
             else {
                 var = "g" + groupCount++;

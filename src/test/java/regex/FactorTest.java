@@ -6,6 +6,7 @@ import mesut.parserx.gen.transform.Epsilons;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.nodes.*;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class FactorTest {
@@ -36,29 +37,21 @@ public class FactorTest {
     @Test
     public void pull() throws Exception {
         Or.newLine = false;
-        Tree tree = Env.tree("factor.g");
+        Tree tree = Env.tree("factor/single.g");
         Factor factor = new Factor(tree);
 
-        Factor.PullInfo info = factor.pull(new Name("E", false), new Name("A", false));
-        System.out.printf("E0=%s\nE1=%s\n", info.zero, info.one);
+        Factor.PullInfo info = factor.pull(new Name("A", false), new Name("a", true));
+        System.out.printf("0=%s\n1=%s\n", info.zero, info.one);
         System.out.println(tree);
     }
 
     @Test
     public void all() throws Exception {
         Or.newLine = false;
-        Tree tree = Env.tree("factor.g");
+        Tree tree = Env.tree("factor/single.g");
         //Tree tree = Env.tree("rec/leftRec2.g");
         Factor factor = new Factor(tree);
         Factor.keepFactor = false;
-        factor.factorize();
-        System.out.println(tree);
-    }
-
-    @Test
-    public void java() throws Exception {
-        Tree tree = Env.tree("java/parser-jls.g");
-        Factor factor = new Factor(tree);
         factor.factorize();
         System.out.println(tree);
     }
@@ -72,6 +65,7 @@ public class FactorTest {
     }
 
     @Test
+    @Ignore
     public void loopJava() throws Exception {
         Tree tree = Env.tree("java/parser-jls.g");
         FactorLoop factorLoop = new FactorLoop(tree);

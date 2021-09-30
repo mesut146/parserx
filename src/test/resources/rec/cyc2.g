@@ -1,15 +1,9 @@
-token{
-  a:"";
-  b:"";
-  c:"";
-  e:"";
-  r1:"";
-  r2:"";
-}
+include "../common.g"
 
-@start = E;
+%start = E;
+
 E: A a;
 A: B b | C c;
-B: D | E e | r1;
-C: B b | r2;
+B: D | E e | x;
+C: B b | y;
 D: A b | c;

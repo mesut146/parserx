@@ -6,7 +6,7 @@ import mesut.parserx.dfa.NFABuilder;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.PrepareTree;
-import mesut.parserx.parser.MyVisitor2;
+import mesut.parserx.parser.AstBuilder;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -41,7 +41,7 @@ public class Tree {
 
     public static Tree makeTree(File path) {
         try {
-            return MyVisitor2.makeTree(path);
+            return AstBuilder.makeTree(path).prepare();
         } catch (Exception e) {
             e.addSuppressed(new RuntimeException(path.getAbsolutePath()));
             throw new RuntimeException(e);

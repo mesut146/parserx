@@ -11,6 +11,7 @@ import java.util.*;
 
 //lr table generator
 public abstract class LrDFAGen<T extends LrItemSet> {
+    public static boolean debug = false;
     public static Name dollar = new Name("$", true);//eof
     public static String startName = "%start";
     public int acc = 1;
@@ -75,7 +76,7 @@ public abstract class LrDFAGen<T extends LrItemSet> {
 
         while (!queue.isEmpty()) {
             T curSet = queue.poll();
-            System.out.println("set=" + curSet.stateId);
+            if (debug) System.out.println("set=" + curSet.stateId);
             //iterate items
             while (true) {
                 LrItem curItem = curSet.getItem();
@@ -156,7 +157,7 @@ public abstract class LrDFAGen<T extends LrItemSet> {
     }
 
     void doMerge(LrItem item, LrItemSet set) {
-        System.out.println("lalr merged " + set.stateId);
+        if (debug) System.out.println("lalr merged " + set.stateId);
         for (LrItem old : set.all) {
             if (old.isSame(item) && !old.equals(item)) {
                 //if my la is subset of old one don't do anything
@@ -197,11 +198,6 @@ public abstract class LrDFAGen<T extends LrItemSet> {
             }
             //doMerge(newItem, target);
         }
-    }
-
-    void log(LrItem from, LrItemSet curSet, LrItem toFirst, LrItemSet targetSet, Name symbol) {
-        //System.out.printf("%s -> %s by %s\n", table.getId(curSet), table.getId(targetSet), symbol.name);
-        //System.out.printf("%s (%d)%s to (%d)%s\n", symbol, table.getId(curSet), from, table.getId(targetSet), toFirst);
     }
 
     public void checkAll() {
@@ -276,7 +272,7 @@ public abstract class LrDFAGen<T extends LrItemSet> {
                             }
                         }
                         if (removed) {
-                            System.out.println("assoc is used on " + set.stateId);
+                            if (debug) System.out.println("assoc is used on " + set.stateId);
                             this.resolved = true;
                         }
                     }
@@ -298,7 +294,7 @@ public abstract class LrDFAGen<T extends LrItemSet> {
                             }
                         }
                         if (removed) {
-                            System.out.println("prec used in " + set.stateId);
+                            if (debug) System.out.println("prec used in " + set.stateId);
                             this.resolved = true;
                         }
                     }
@@ -390,7 +386,7 @@ public abstract class LrDFAGen<T extends LrItemSet> {
                     if (curItem.hasReduce()) {
                         //set goto
                         curItem.gotoSet.add(set);
-                        System.out.println("set goto");
+                        if (debug) System.out.println("set goto");
                         break;
                     }
                 }

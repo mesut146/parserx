@@ -1,5 +1,6 @@
 package mesut.parserx.gen.transform;
 
+import mesut.parserx.gen.ll.AstInfo;
 import mesut.parserx.nodes.*;
 
 public class Simplify extends SimpleTransformer {
@@ -24,9 +25,14 @@ public class Simplify extends SimpleTransformer {
     public Node transformGroup(Group node, Node parent) {
         Node ch = transformNode(node.node, node);
         if (isSimple(ch)) {
+            if (ch.astInfo.varName == null) {
+                ch.astInfo.varName = node.astInfo.varName;
+            }
             return ch;
         }
-        return ch;
+        Group res = new Group(ch);
+        res.astInfo = node.astInfo.copy();
+        return res;
     }
 
     @Override
@@ -38,7 +44,13 @@ public class Simplify extends SimpleTransformer {
                 res.addAll(ch.asSequence().list);
             }
             else if (ch.isGroup() && ch.asGroup().node.isSequence()) {
-                res.addAll(ch.asGroup().node.asSequence().list);
+                if (ch.astInfo.varName != null) {
+                    //don't over simplify
+                    res.add(ch);
+                }
+                else {
+                    res.addAll(ch.asGroup().node.asSequence().list);
+                }
             }
             else if (!ch.isEpsilon()) {
                 res.add(ch);
@@ -59,7 +71,13 @@ public class Simplify extends SimpleTransformer {
                 res.addAll(ch.asOr().list);
             }
             else if (ch.isGroup() && ch.asGroup().node.isOr()) {
-                res.addAll(ch.asGroup().node.asOr().list);
+                if (ch.astInfo.varName != null) {
+                    //don't over simplify
+                    res.add(ch);
+                }
+                else {
+                    res.addAll(ch.asGroup().node.asOr().list);
+                }
             }
             else {
                 res.add(ch);
@@ -71,36 +89,47 @@ public class Simplify extends SimpleTransformer {
         return res.dups();
     }
 
+    Node withAst(Node node, AstInfo info) {
+        if (node.astInfo.varName == null) {
+            node.astInfo = info;
+        }
+        return node;
+    }
+
     @Override
     public Node transformRegex(Regex regex, Node parent) {
         if (!regex.node.isGroup() && !regex.node.isName()) {
             return transformRegex(new Regex(new Group(regex.node), regex.type), parent);
         }
         Node ch = transformNode(regex.node, regex);
+        Node res = null;
         if (regex.isOptional()) {
             if (ch.isPlus()) {
-                return new Regex(ch.asRegex().node, "*");
+                res = new Regex(ch.asRegex().node, "*");
             }
             else if (ch.isStar() || ch.isOptional()) {
-                return ch;
+                res = ch;
             }
         }
         else if (regex.isStar()) {
             if (ch.isStar() || ch.isPlus()) {
-                return ch;
+                res = ch;
             }
             if (ch.isOptional()) {
-                return new Regex(ch.asRegex().node, "*");
+                ch = new Regex(ch.asRegex().node, "*");
             }
         }
         else {
             if (ch.isOptional() || ch.isStar()) {
-                return new Regex(ch.asRegex().node, "*");
+                res = new Regex(ch.asRegex().node, "*");
             }
             if (ch.isPlus()) {
-                return ch;
+                res = ch;
             }
         }
-        return new Regex(ch, regex.type);
+        if (res == null) {
+            res = new Regex(ch, regex.type);
+        }
+        return withAst(res, regex.astInfo);
     }
 }

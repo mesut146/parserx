@@ -9,9 +9,8 @@ import mesut.parserx.gen.transform.Epsilons;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
+import org.junit.Ignore;
 import org.junit.Test;
-
-import java.io.File;
 
 public class LLGenTest {
 
@@ -98,6 +97,21 @@ public class LLGenTest {
     }
 
     @Test
+    @Ignore
+    public void parserx() throws Exception {
+        Factor.factorSequence = true;
+        Factor.debug = true;
+        Tree tree = Env.tree("parserx.g");
+        Options options = new Options();
+        options.outDir = Env.dotDir().getAbsolutePath();
+        options.packageName = "mesut.parserx.parser2";
+        tree.options = options;
+
+        RecDescent rec = new RecDescent(tree);
+        rec.gen();
+    }
+
+    @Test
     public void recursion() throws Exception {
         Factor.factorSequence = false;
         Factor.debug = true;
@@ -110,22 +124,6 @@ public class LLGenTest {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         tree.options = options;
-        RecDescent rec = new RecDescent(tree);
-        rec.gen();
-    }
-
-    @Test
-    public void parserx() throws Exception {
-        Factor.factorSequence = true;
-        Factor.debug = true;
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/parserx.g"));
-        Options options = new Options();
-        //options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/itself";
-        //options.outDir = Env.dotDir().getAbsolutePath();
-        options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/java/mesut/parserx/parser2";
-        options.packageName = "mesut.parserx.parser2";
-        tree.options = options;
-
         RecDescent rec = new RecDescent(tree);
         rec.gen();
     }

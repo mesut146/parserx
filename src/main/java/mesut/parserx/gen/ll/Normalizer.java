@@ -3,15 +3,15 @@ package mesut.parserx.gen.ll;
 import mesut.parserx.nodes.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 //simplify a little for llrec
 public class Normalizer extends SimpleTransformer {
 
     int groupCount = 1;
-    Map<String, RuleDecl> map = new HashMap<>();
+    Set<Name> map = new HashSet<>();//created rules
 
     public Normalizer(Tree tree) {
         super(tree);
@@ -23,38 +23,30 @@ public class Normalizer extends SimpleTransformer {
             //todo restart
             RuleDecl decl = tree.rules.get(i);
             decl.retType = new Type(tree.options.astClass, decl.name);
-            if (!map.containsKey(decl.name)) {
+            if (!map.contains(decl.ref())) {
                 decl.isOriginal = true;
             }
             transformRule(decl);
         }
     }
 
-    RuleDecl getParent() {
-        if (map.containsKey(curRule.name)) {
-            //group
-            return map.get(curRule.name);
-        }
-        //not group,so original rule
-        return curRule;
-    }
-
     @Override
     public Node transformGroup(Group node, Node parent) {
-        RuleDecl original = getParent();
-        String cls = original.name + "g" + groupCount;
+        String cls = curRule.name + "g" + groupCount;
         RuleDecl tmp = new RuleDecl(cls, node.node);
         tmp.retType = new Type(tree.options.astClass, cls);
-        map.put(cls, original);
         tree.addRule(tmp);
+        map.add(tmp.ref());
+
         Name ref = tmp.ref();
-        if (node.varName != null) {
-            ref.astInfo.varName = node.varName;
+        if (node.astInfo.varName != null) {
+            ref.astInfo.varName = node.astInfo.varName;
         }
         else {
             ref.astInfo.varName = "g" + groupCount;
         }
         groupCount++;
+        tmp.rhs = transformNode(tmp.rhs, tmp);
         return ref;
     }
 

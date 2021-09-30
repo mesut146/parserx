@@ -2,6 +2,7 @@ package mesut.parserx.parser;
 
 import java.util.List;
 import java.util.ArrayList;
+import mesut.parserx.parser.Ast;
 
 public class Parser{
     List<Token> list = new ArrayList<>();
@@ -351,7 +352,7 @@ public class Parser{
                 break;
             }
             default:{
-                throw new RuntimeException("expecting one of [OPTIONS,BRACKET,TOKEN,bracketNode,SKIP,TILDE,DOT,simple_no_name,EPSILON,group,stringNode,LP,untilNode,name,IDENT,dotNode,LBRACE,SHORTCUT,STRING,repeatNode] got: "+peek());
+                throw new RuntimeException("expecting one of [OPTIONS = OPTIONS,BRACKET = BRACKET,TOKEN = TOKEN,bracketNode = bracketNode,SKIP = SKIP,TILDE = TILDE,DOT = DOT,simple = simple_no_name,EPSILON = EPSILON,group = group,stringNode = stringNode,LP = LP,untilNode = untilNode,name = name,IDENT = IDENT,dotNode = dotNode,LBRACE = LBRACE,SHORTCUT = SHORTCUT,STRING = STRING,repeatNode = repeatNode] got: "+peek());
             }
         }
         return res;
@@ -418,7 +419,7 @@ public class Parser{
                 break;
             }
             default:{
-                throw new RuntimeException("expecting one of [OPTIONS,BRACKET,TOKEN,bracketNode,SKIP,TILDE,DOT,EPSILON,group,stringNode,LP,untilNode,name,IDENT,dotNode,LBRACE,ref,SHORTCUT,STRING,repeatNode] got: "+peek());
+                throw new RuntimeException("expecting one of [OPTIONS = OPTIONS,BRACKET = BRACKET,TOKEN = TOKEN,bracketNode = bracketNode,SKIP = SKIP,TILDE = TILDE,DOT = DOT,EPSILON = EPSILON,group = group,stringNode = stringNode,LP = LP,untilNode = untilNode,name = name,IDENT = IDENT,dotNode = dotNode,LBRACE = LBRACE,ref = ref,SHORTCUT = SHORTCUT,STRING = STRING,repeatNode = repeatNode] got: "+peek());
             }
         }
         return res;
@@ -491,7 +492,7 @@ public class Parser{
                 break;
             }
             default:{
-                throw new RuntimeException("expecting one of [IDENT,OPTIONS,TOKEN,SKIP] got: "+peek());
+                throw new RuntimeException("expecting one of [IDENT = IDENT,OPTIONS = OPTIONS,TOKEN = TOKEN,SKIP = SKIP] got: "+peek());
             }
         }
         return res;
@@ -521,7 +522,7 @@ public class Parser{
                 break;
             }
             default:{
-                throw new RuntimeException("expecting one of [TOKEN,SKIP,skipBlock,tokenBlock] got: "+peek());
+                throw new RuntimeException("expecting one of [TOKEN = TOKEN,SKIP = SKIP,skipBlock = skipBlock,tokenBlock = tokenBlock] got: "+peek());
             }
         }
         return res;
@@ -547,7 +548,7 @@ public class Parser{
                 break;
             }
             default:{
-                throw new RuntimeException("expecting one of [name,IDENT,OPTIONS,TOKEN,SKIP,LEFT,RIGHT,ruleDecl,assocDeclg1,assocDecl] got: "+peek());
+                throw new RuntimeException("expecting one of [name = name,IDENT = IDENT,OPTIONS = OPTIONS,TOKEN = TOKEN,SKIP = SKIP,LEFT = LEFT,RIGHT = RIGHT,ruleDecl = ruleDecl,type = assocDeclg1,assocDecl = assocDecl] got: "+peek());
             }
         }
         return res;
@@ -569,7 +570,7 @@ public class Parser{
                 break;
             }
             default:{
-                throw new RuntimeException("expecting one of [BOOLEAN,NUMBER] got: "+peek());
+                throw new RuntimeException("expecting one of [BOOLEAN = BOOLEAN,NUMBER = NUMBER] got: "+peek());
             }
         }
         return res;
@@ -598,7 +599,7 @@ public class Parser{
                 break;
             }
             default:{
-                throw new RuntimeException("expecting one of [LEFT,RIGHT] got: "+peek());
+                throw new RuntimeException("expecting one of [LEFT = LEFT,RIGHT = RIGHT] got: "+peek());
             }
         }
         return res;
@@ -647,7 +648,7 @@ public class Parser{
                 break;
             }
             default:{
-                throw new RuntimeException("expecting one of [QUES,STAR,PLUS] got: "+peek());
+                throw new RuntimeException("expecting one of [QUES = QUES,STAR = STAR,PLUS = PLUS] got: "+peek());
             }
         }
         return res;
@@ -725,7 +726,7 @@ public class Parser{
                 break;
             }
             default:{
-                throw new RuntimeException("expecting one of [BRACKET,bracketNode,TILDE,DOT,EPSILON,group,stringNode,LP,untilNode,dotNode,LBRACE,SHORTCUT,STRING,repeatNode] got: "+peek());
+                throw new RuntimeException("expecting one of [BRACKET = BRACKET,bracketNode = bracketNode,TILDE = TILDE,DOT = DOT,EPSILON = EPSILON,group = group,stringNode = stringNode,LP = LP,untilNode = untilNode,dotNode = dotNode,LBRACE = LBRACE,SHORTCUT = SHORTCUT,STRING = STRING,repeatNode = repeatNode] got: "+peek());
             }
         }
         return res;
