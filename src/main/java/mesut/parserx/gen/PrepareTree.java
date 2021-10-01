@@ -70,7 +70,7 @@ public class PrepareTree extends SimpleTransformer {
             if (decl == null) {
                 throw new RuntimeException("unknown string token: " + val + " in " + getDecl());
             }
-            //replace
+            //replace with token
             return decl.ref();
         }
         return node;

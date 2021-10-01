@@ -2,12 +2,12 @@ package mesut.parserx.gen.lr;
 
 import mesut.parserx.nodes.Name;
 
-public class LrTransition<T extends LrItemSet> {
-    T from;
-    T to;
+public class LrTransition {
+    LrItemSet from;
+    LrItemSet to;
     Name symbol;
 
-    public LrTransition(T from, T to, Name symbol) {
+    public LrTransition(LrItemSet from, LrItemSet to, Name symbol) {
         this.from = from;
         this.to = to;
         this.symbol = symbol;
@@ -23,7 +23,7 @@ public class LrTransition<T extends LrItemSet> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        LrTransition<?> that = (LrTransition<?>) o;
+        LrTransition that = (LrTransition) o;
         return symbol.equals(that.symbol) && from.equals(that.from) && to.equals(that.to);
     }
 

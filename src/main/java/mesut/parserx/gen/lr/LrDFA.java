@@ -6,18 +6,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class LrDFA<T extends LrItemSet> {
+public class LrDFA {
     public static boolean debugTransition = false;
-    public List<LrTransition<T>>[] map = new List[100];
+    public List<LrTransition>[] map = new List[100];
     public List<Name> tokens = new ArrayList<>();
     public List<Name> rules = new ArrayList<>();
     int lastId = -1;
-    List<T> itemSets = new ArrayList<>();
+    List<LrItemSet> itemSets = new ArrayList<>();
     HashMap<Integer, LrItemSet> idMap = new HashMap<>();//state id -> item set
 
-    public void addTransition(T from, T to, Name symbol) {
-        LrTransition<T> t = new LrTransition<>(from, to, symbol);
-        List<LrTransition<T>> list = getTrans(from);
+    public void addTransition(LrItemSet from, LrItemSet to, Name symbol) {
+        LrTransition t = new LrTransition(from, to, symbol);
+        List<LrTransition> list = getTrans(from);
         if (list.contains(t)) {
             return;
         }
@@ -35,7 +35,7 @@ public class LrDFA<T extends LrItemSet> {
 
     void expand(int id) {
         if (id >= map.length) {
-            List<LrTransition<T>>[] tmp = new List[map.length * 2];
+            List<LrTransition>[] tmp = new List[map.length * 2];
             System.arraycopy(map, 0, tmp, 0, map.length);
             map = tmp;
         }
@@ -48,13 +48,13 @@ public class LrDFA<T extends LrItemSet> {
         throw new RuntimeException("can't find set from id:" + id);
     }
 
-    public List<LrTransition<T>> getTrans(LrItemSet set) {
+    public List<LrTransition> getTrans(LrItemSet set) {
         return getTrans(getId(set));
     }
 
-    public List<LrTransition<T>> getTrans(int id) {
+    public List<LrTransition> getTrans(int id) {
         expand(id);
-        List<LrTransition<T>> list = map[id];
+        List<LrTransition> list = map[id];
         if (list == null) {
             list = new ArrayList<>();
             map[id] = list;
@@ -63,8 +63,8 @@ public class LrDFA<T extends LrItemSet> {
     }
 
     //if there exist another transition from this
-    public T getTargetSet(T from, Name symbol) {
-        for (LrTransition<T> tr : getTrans(from)) {
+    public LrItemSet getTargetSet(LrItemSet from, Name symbol) {
+        for (LrTransition tr : getTrans(from)) {
             if (tr.symbol.equals(symbol)) {
                 return tr.to;
             }
@@ -72,7 +72,7 @@ public class LrDFA<T extends LrItemSet> {
         return null;
     }
 
-    public void addSet(T set) {
+    public void addSet(LrItemSet set) {
         if (getId(set) != -1) {
             throw new RuntimeException("set already exists " + set);
         }

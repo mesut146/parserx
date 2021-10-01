@@ -10,18 +10,25 @@ import java.io.PrintWriter;
 import java.util.*;
 
 //lr table generator
-public abstract class LrDFAGen<T extends LrItemSet> {
+public class LrDFAGen {
     public static boolean debug = false;
     public static Name dollar = new Name("$", true);//eof
     public static String startName = "%start";
+    private final boolean merge;//lalr
     public int acc = 1;
-    public LrDFA<T> table = new LrDFA<>();
+    public LrDFA table = new LrDFA();
     public RuleDecl start;
-    public boolean merge;//lalr
-    Tree tree;
+    public Tree tree;
+    public String type;
     LrItem first;
-    boolean resolved;
-    Queue<T> queue = new LinkedList<>();//itemsets
+    boolean isResolved;//is conflicts checked
+    Queue<LrItemSet> queue = new LinkedList<>();//itemsets
+
+    public LrDFAGen(Tree tree, String type) {
+        this.tree = tree;
+        this.type = type;
+        merge = type.equals("lalr");
+    }
 
     public void makeStart() {
         if (tree.start == null) {
@@ -31,12 +38,12 @@ public abstract class LrDFAGen<T extends LrItemSet> {
         tree.addRule(start);
     }
 
-    public File tableDotFile() {
-        return new File(tree.options.outDir, Utils.newName(tree.file.getName(), "-table.dot"));
-    }
-
     public void writeTableDot(PrintWriter writer) {
         DotWriter.table(writer, this, false);
+    }
+
+    public void writeDot(PrintWriter dotWriter) {
+        DotWriter.writeDot(table, dotWriter);
     }
 
     void prepare() {
@@ -46,6 +53,9 @@ public abstract class LrDFAGen<T extends LrItemSet> {
 
         makeStart();
         first = new LrItem(start, 0);
+        if (!type.equals("lr0")) {
+            first.lookAhead.add(dollar);
+        }
     }
 
     public void writeGrammar() {
@@ -62,20 +72,22 @@ public abstract class LrDFAGen<T extends LrItemSet> {
         }
     }
 
-    public abstract T makeSet(LrItem item);
-
+    public LrItemSet makeSet(LrItem item) {
+        LrItemSet set = new LrItemSet(item, tree, type);
+        set.closure();
+        table.addSet(set);
+        return set;
+    }
 
     public void generate() {
         prepare();
         writeGrammar();
 
-        T firstSet = makeSet(first);
-        table.addSet(firstSet);
-        firstSet.closure();
+        LrItemSet firstSet = makeSet(first);
         queue.add(firstSet);
 
         while (!queue.isEmpty()) {
-            T curSet = queue.poll();
+            LrItemSet curSet = queue.poll();
             if (debug) System.out.println("set=" + curSet.stateId);
             //iterate items
             while (true) {
@@ -86,12 +98,12 @@ public abstract class LrDFAGen<T extends LrItemSet> {
                 if (symbol == null) continue;//dot end
 
                 LrItem toFirst = new LrItem(curItem, curItem.dotPos + 1);
-                T targetSet = table.getTargetSet(curSet, symbol);
+                LrItemSet targetSet = table.getTargetSet(curSet, symbol);
 
                 if (targetSet == null) {
                     //find another set that has same core
-                    HashSet<T> similars = new HashSet<>();
-                    for (T set : table.itemSets) {
+                    HashSet<LrItemSet> similars = new HashSet<>();
+                    for (LrItemSet set : table.itemSets) {
                         for (LrItem item : set.kernel) {
                             if (item.equals(toFirst)) {
                                 targetSet = set;
@@ -112,8 +124,6 @@ public abstract class LrDFAGen<T extends LrItemSet> {
                         if (targetSet == null) {
                             //create new set
                             targetSet = makeSet(toFirst);
-                            targetSet.closure();
-                            table.addSet(targetSet);
                         }
                     }
                     table.addTransition(curSet, targetSet, symbol);
@@ -147,10 +157,9 @@ public abstract class LrDFAGen<T extends LrItemSet> {
                 }
             }
         }
-        //checkAll();
     }
 
-    void addQueue(T set) {
+    void addQueue(LrItemSet set) {
         if (!queue.contains(set)) {
             queue.add(set);
         }
@@ -184,7 +193,7 @@ public abstract class LrDFAGen<T extends LrItemSet> {
         for (int i = 0; i < set.all.size(); i++) {
             LrItem item = set.all.get(i);
             if (item.getDotNode() == null) continue;
-            LrItemSet target = table.getTargetSet((T) set, item.getDotNode());
+            LrItemSet target = table.getTargetSet(set, item.getDotNode());
             if (target == null) continue;
             LrItem newItem = new LrItem(item, item.dotPos + 1);
             for (LrItem kernel : target.kernel) {
@@ -201,18 +210,18 @@ public abstract class LrDFAGen<T extends LrItemSet> {
     }
 
     public void checkAll() {
-        resolved = false;
+        isResolved = false;
         for (LrItemSet set : table.itemSets) {
             check(set);
         }
-        if (resolved) {
+        if (isResolved) {
             checkAll();
         }
     }
 
     //check if two item has conflict
     void check(LrItemSet set) {
-        boolean lr0 = this instanceof Lr0Generator;
+        boolean lr0 = type.equals("lr0");
         for (int i = 0; i < set.all.size(); i++) {
             LrItem i1 = set.all.get(i);
             for (int j = i + 1; j < set.all.size(); j++) {
@@ -247,7 +256,7 @@ public abstract class LrDFAGen<T extends LrItemSet> {
                     boolean removed = false;
                     //if same rule,check assoc
                     if (shift.rule.equals(reduce.rule)) {//todo isSame?
-                        LrItemSet target = table.getTargetSet((T) set, shift.getDotNode());
+                        LrItemSet target = table.getTargetSet(set, shift.getDotNode());
                         LrItem newItem = new LrItem(shift, shift.dotPos + 1);
                         for (LrItem targetItem : target.all) {
                             if (targetItem.isSame(newItem)) {
@@ -273,7 +282,7 @@ public abstract class LrDFAGen<T extends LrItemSet> {
                         }
                         if (removed) {
                             if (debug) System.out.println("assoc is used on " + set.stateId);
-                            this.resolved = true;
+                            this.isResolved = true;
                         }
                     }
                     else {
@@ -295,7 +304,7 @@ public abstract class LrDFAGen<T extends LrItemSet> {
                         }
                         if (removed) {
                             if (debug) System.out.println("prec used in " + set.stateId);
-                            this.resolved = true;
+                            this.isResolved = true;
                         }
                     }
                     if (!removed) {
@@ -322,8 +331,8 @@ public abstract class LrDFAGen<T extends LrItemSet> {
 
     void removeItem(LrItemSet set, LrItem item) {
         //remove incoming and outgoing transitions
-        List<LrTransition<?>> out = new ArrayList<>();
-        for (LrTransition<?> tr : table.getTrans(set)) {
+        List<LrTransition> out = new ArrayList<>();
+        for (LrTransition tr : table.getTrans(set)) {
             if (tr.symbol.equals(item.getDotNode())) {
                 out.add(tr);
             }
@@ -334,7 +343,7 @@ public abstract class LrDFAGen<T extends LrItemSet> {
         }
         List<LrTransition> in = new ArrayList<>();
         for (LrItemSet from : table.itemSets) {
-            for (LrTransition<?> tr : table.getTrans(from)) {
+            for (LrTransition tr : table.getTrans(from)) {
                 if (tr.to == set) {
                     LrItem prev = new LrItem(item, item.dotPos - 1);
                     for (LrItem fromItem : from.all) {
@@ -350,22 +359,6 @@ public abstract class LrDFAGen<T extends LrItemSet> {
         set.all.remove(item);
     }
 
-    //get itemSet that contains item
-    T getSet(LrItem kernel) {
-        for (T itemSet : table.itemSets) {
-            for (LrItem item : itemSet.kernel) {
-                if (item.equals(kernel)) {
-                    return itemSet;
-                }
-            }
-        }
-        return null;
-    }
-
-    public void writeDot(PrintWriter dotWriter) {
-        DotWriter.writeDot(table, dotWriter);
-    }
-
     public void genGoto() {
         for (LrItemSet set : table.itemSets) {
             for (LrItem item : set.all) {
@@ -374,7 +367,7 @@ public abstract class LrDFAGen<T extends LrItemSet> {
                 LrItemSet curSet = set;
                 LrItem curItem = item;
                 while (true) {
-                    curSet = table.getTargetSet((T) curSet, curItem.getDotNode());
+                    curSet = table.getTargetSet(curSet, curItem.getDotNode());
                     LrItem tmpItem = new LrItem(curItem.rule, curItem.dotPos + 1);
                     //use tmp to get original item
                     for (LrItem tmp : curSet.all) {

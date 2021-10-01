@@ -1,9 +1,7 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.nodes.Name;
-import mesut.parserx.nodes.NodeList;
-import mesut.parserx.nodes.RuleDecl;
-import mesut.parserx.nodes.Sequence;
+import mesut.parserx.gen.Helper;
+import mesut.parserx.nodes.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -16,16 +14,29 @@ public class LrItem {
     public RuleDecl rule;
     public int dotPos;
     public Set<LrItemSet> gotoSet = new HashSet<>();
+    public LrItem sender;
     int hash = -1;
 
     public LrItem(RuleDecl rule, int dotPos) {
         this.rule = rule;
         this.dotPos = dotPos;
+        if (isEpsilon()) {
+            //act as reduce
+            this.dotPos = 1;
+        }
     }
 
     public LrItem(LrItem item, int dotPos) {
         this(item.rule, dotPos);
         this.lookAhead = new HashSet<>(item.lookAhead);
+    }
+
+    public static boolean isEpsilon(RuleDecl decl) {
+        Sequence rhs = decl.rhs.asSequence();
+        if (rhs.size() == 1) {
+            return rhs.get(0).isEpsilon();
+        }
+        return false;
     }
 
     public boolean hasReduce() {
@@ -65,11 +76,16 @@ public class LrItem {
     //if dot follows a terminal
     public boolean isDotNonTerminal() {
         Name name = getDotNode();
-        return name == null ? false : !name.isToken;
+        return name != null && !name.isToken;
+    }
+
+    public boolean isEpsilon() {
+        return isEpsilon(rule);
     }
 
     //node after dot
     public Name getDotNode() {
+        if (isEpsilon()) return null;
         Sequence rhs = rule.rhs.asSequence();
         if (dotPos < rhs.size()) {
             return rhs.get(dotPos).asName();
@@ -84,6 +100,29 @@ public class LrItem {
             return rhs.get(dotPos + 1).asName();
         }
         return null;
+    }
+
+    public Set<Name> follow(Tree tree) {
+        HashSet<Name> res = new HashSet<>();
+        Sequence rhs = rule.rhs.asSequence();
+        boolean allEmpty = true;
+        for (int i = dotPos + 1; i < rhs.size(); ) {
+            Node node = rhs.get(i);
+            res.addAll(Helper.first(node, tree, true, false, true));
+            if (Helper.canBeEmpty(node, tree)) {
+                i++;
+                //look next node
+            }
+            else {
+                allEmpty = false;
+                break;
+            }
+        }
+        if (allEmpty) {
+            //no end,la is carried
+            res.addAll(lookAhead);
+        }
+        return res;
     }
 
     @Override

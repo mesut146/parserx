@@ -41,7 +41,7 @@ public class DescTester {
         builder.redirectErrorStream(true);
         Process p = builder.start();
         if (p.waitFor() != 0) {
-            System.out.println(read(p.getInputStream()));
+            System.out.println(Utils.read(p.getInputStream()));
             throw new RuntimeException("cant compile " + tree.file.getName());
         }
 
@@ -50,21 +50,11 @@ public class DescTester {
             runner.directory(out);
             runner.redirectErrorStream(true);
             Process p2 = runner.start();
-            System.out.println(read(p2.getInputStream()));
+            System.out.println(Utils.read(p2.getInputStream()));
             if (p2.waitFor() != 0) {
                 throw new RuntimeException("err for input " + s);
             }
         }
-    }
-
-    static String read(InputStream in) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        BufferedReader br = new BufferedReader(new InputStreamReader(in));
-        String line;
-        while ((line = br.readLine()) != null) {
-            sb.append(line).append("\n");
-        }
-        return sb.toString();
     }
 
 }

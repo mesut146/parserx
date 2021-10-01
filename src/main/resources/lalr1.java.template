@@ -75,7 +75,7 @@ public class $parser_class${
           else if((action & 3) == 2){
             //reduce
             action >>= 2;
-            if(debug)System.out.println("reduced "+action);
+            if(debug)System.out.println("reduced " + action);
             //action is rule index
             int size = rhs_sizes[action];
             Symbol[] rhs = new Symbol[size];
@@ -84,6 +84,7 @@ public class $parser_class${
               states.pop();
             }
             Symbol tmp = new Symbol(ruleIds[action]);
+            tmp.index = action;
             tmp.children = Arrays.asList(rhs);;
             stack.push(tmp);
             state = states.peek();
@@ -108,6 +109,7 @@ class Symbol{
     $token_class$ token;
     public String name;
     public int id;
+    public int index;//rule index
     public List<Symbol> children = new ArrayList<>();
 
     public Symbol(int id){

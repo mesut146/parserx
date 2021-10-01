@@ -18,8 +18,8 @@ import java.util.List;
 //table driven parser gen
 public class CodeGen {
     public Options options;
-    public LrDFA<?> dfa;
-    public LrDFAGen<?> gen;
+    public LrDFA dfa;
+    public LrDFAGen gen;
     List<RuleDecl> all;
     LexerGenerator lexerGenerator;
     String type;
@@ -27,14 +27,13 @@ public class CodeGen {
 
     public CodeGen(Tree tree, String type) {
         if (type.equals("lalr") || type.equals("lr1")) {
-            Lr1Generator generator = new Lr1Generator(tree);
-            generator.merge = type.equals("lalr");
+            LrDFAGen generator = new LrDFAGen(tree, type);
             generator.generate();
             generator.checkAll();
             this.gen = generator;
         }
         else if (type.equals("lr0")) {
-            Lr0Generator generator = new Lr0Generator(tree);
+            LrDFAGen generator = new LrDFAGen(tree, type);
             generator.generate();
             this.gen = generator;
         }
@@ -45,7 +44,7 @@ public class CodeGen {
         this.type = type;
     }
 
-    public CodeGen(LrDFAGen<?> gen, String type) {
+    public CodeGen(LrDFAGen gen, String type) {
         this.gen = gen;
         this.options = gen.tree.options;
         this.type = type;
@@ -67,7 +66,7 @@ public class CodeGen {
         writeTable(template);
         File file = new File(options.outDir, options.parserClass + ".java");
         Utils.write(template.toString(), file);
-        writeSym();
+        idMap.writeSym(options);
     }
 
     //map rule ids to symbol ids
@@ -82,8 +81,14 @@ public class CodeGen {
             }
         });
         for (int i = 0; i < all.size(); i++) {
-            ruleIds.append(idMap.getId(all.get(i).ref()));
-            sizes.append(all.get(i).rhs.asSequence().size());
+            RuleDecl decl = all.get(i);
+            ruleIds.append(idMap.getId(decl.ref()));
+            if (LrItem.isEpsilon(decl)) {
+                sizes.append(0);
+            }
+            else {
+                sizes.append(decl.rhs.asSequence().size());
+            }
             if (i < all.size() - 1) {
                 ruleIds.append(", ");
                 sizes.append(", ");
@@ -123,9 +128,9 @@ public class CodeGen {
 
         for (int state = 0; state <= dfa.lastId; state++) {
             //write shifts
-            List<? extends LrTransition<?>> shifts = dfa.getTrans(state);
+            List<? extends LrTransition> shifts = dfa.getTrans(state);
             sb.append(pack(shifts.size()));//shift count
-            for (LrTransition<?> tr : shifts) {
+            for (LrTransition tr : shifts) {
                 sb.append(pack(idMap.getId(tr.symbol)));
                 int action = dfa.getId(tr.to);
                 sb.append(pack(action));
@@ -159,40 +164,6 @@ public class CodeGen {
             return "-" + UnicodeUtils.escapeUnicode(-i);
         }
         return UnicodeUtils.escapeUnicode(i);
-    }
-
-    public void writeSym() throws IOException {
-        //idMap.writeSym(options);
-        StringBuilder sb = new StringBuilder();
-
-        if (options.packageName != null) {
-            sb.append("package ").append(options.packageName).append(";\n\n");
-        }
-
-        sb.append("public class sym{\n");
-
-        sb.append("  //tokens\n");
-        sb.append(field("EOF", 0));
-        for (Name token : dfa.tokens) {
-            if (token.name.equals("$")) {
-                continue;
-            }
-            sb.append(field(token.name, idMap.getId(token)));
-        }
-        sb.append("  //rules\n");
-        //sb.append(field(gen.start.name, ids.get(gen.start.ref())));
-        for (Name rule : dfa.rules) {
-            sb.append(field(rule.name, idMap.getId(rule)));
-        }
-
-        sb.append("\n}");
-
-        File file = new File(options.outDir, "sym.java");
-        Utils.write(sb.toString(), file);
-    }
-
-    String field(String name, int id) {
-        return String.format("  public static int %s = %d;\n", name, id);
     }
 
 }

@@ -8,8 +8,8 @@ import java.util.List;
 
 public class DotWriter {
 
-    public static void table(PrintWriter writer, LrDFAGen<?> generator, boolean writeRules) {
-        LrDFA<?> table = generator.table;
+    public static void table(PrintWriter writer, LrDFAGen generator, boolean writeRules) {
+        LrDFA table = generator.table;
         List<Name> tokens = table.tokens;
         tokens.add(LrDFAGen.dollar);
 
@@ -55,7 +55,7 @@ public class DotWriter {
             for (Name token : tokens) {
                 writer.print("<TD>");
                 //shift
-                for (LrTransition<?> tr : table.getTrans(set)) {
+                for (LrTransition tr : table.getTrans(set)) {
                     if (tr.symbol.equals(token)) {
                         writer.print("S" + table.getId(tr.to));
                     }
@@ -103,7 +103,7 @@ public class DotWriter {
                         writer.print(table.getId(item.gotoSet));
                     }
                 }*/
-                for (LrTransition<?> tr : table.getTrans(set)) {
+                for (LrTransition tr : table.getTrans(set)) {
                     if (tr.symbol.equals(rule)) {//tr.to.hasReduce()
                         writer.print(table.getId(tr.to));
                     }
@@ -118,7 +118,7 @@ public class DotWriter {
         writer.close();
     }
 
-    public static <T extends LrItemSet> void writeDot(LrDFA<T> table, PrintWriter writer) {
+    public static void writeDot(LrDFA table, PrintWriter writer) {
         try {
             writer.println("digraph G{");
             //dotWriter.println("rankdir = LR");
@@ -127,14 +127,14 @@ public class DotWriter {
             //dotWriter.println("ratio=\"fill\";");
 
             //labels
-            for (T set : table.itemSets) {
+            for (LrItemSet set : table.itemSets) {
                 writer.printf("%s [shape=box xlabel=\"%s\" %s label=\"%s\"]\n",
                         table.getId(set), table.getId(set), set.hasReduce() ? "color=red " : "", set.toString().replace("\n", "\\l") + "\\l");
             }
 
             for (int i = 0; i <= table.lastId; i++) {
                 if (table.map[i] != null)
-                    for (LrTransition<T> t : table.map[i]) {
+                    for (LrTransition t : table.map[i]) {
                         writer.printf("%s -> %s [label=\"%s\"]\n",
                                 table.getId(t.from), table.getId(t.to), t.symbol.name);
                     }

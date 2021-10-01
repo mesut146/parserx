@@ -1,5 +1,6 @@
 package mesut.parserx.gen.lr;
 
+import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.Options;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.RuleDecl;
@@ -16,6 +17,7 @@ import java.util.Map;
 public class IdMap {
     public static Name EOF = new Name("EOF", true);
     public static Name dollar = new Name("$", true);
+    public static String className = "Symbols";
     public HashMap<Name, Integer> map = new HashMap<>();
     public int lastId;
 
@@ -42,36 +44,35 @@ public class IdMap {
     }
 
     public void writeSym(Options options) throws IOException {
-        StringBuilder sb = new StringBuilder();
+        CodeWriter writer = new CodeWriter(true);
 
         if (options.packageName != null) {
-            sb.append("package ").append(options.packageName).append(";\n\n");
+            writer.all("package %s;\n\n", options.packageName);
         }
+        writer.all("public class %s {\n", className);
 
-        sb.append("public class sym{\n");
-
-        sb.append("  //tokens\n");
+        writer.append("//tokens");
         for (Map.Entry<Name, Integer> entry : map.entrySet()) {
             if (entry.getKey().isToken) {
                 if (entry.getKey().name.equals("$")) continue;
-                sb.append(field(entry.getKey().name, entry.getValue()));
+                writer.append(field(entry.getKey().name, entry.getValue()));
             }
         }
-        sb.append("  //rules\n");
+        writer.append("//rules");
 
         for (Map.Entry<Name, Integer> entry : map.entrySet()) {
             if (entry.getKey().isRule()) {
                 if (entry.getKey().name.equals(LrDFAGen.startName)) continue;
-                sb.append(field(entry.getKey().name, entry.getValue()));
+                writer.append(field(entry.getKey().name, entry.getValue()));
             }
         }
-        sb.append("\n}");
+        writer.all("\n}");
 
-        File file = new File(options.outDir, "sym.java");
-        Utils.write(sb.toString(), file);
+        File file = new File(options.outDir, className + ".java");
+        Utils.write(writer.toString(), file);
     }
 
     String field(String name, int id) {
-        return String.format("  public static final int %s = %d;\n", name, id);
+        return String.format("public static final int %s = %d;", name, id);
     }
 }

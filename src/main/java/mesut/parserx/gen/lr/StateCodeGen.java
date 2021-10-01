@@ -16,12 +16,12 @@ public class StateCodeGen {
     public static boolean debugState = false;
     public static boolean debugReduce = false;
     public Options options;
-    LrDFA<?> dfa;
-    LrDFAGen<?> gen;
+    LrDFA dfa;
+    LrDFAGen gen;
     CodeWriter writer = new CodeWriter(true);
     IdMap idMap;
 
-    public StateCodeGen(LrDFA<?> dfa, LrDFAGen<?> tableGen, IdMap idMap) {
+    public StateCodeGen(LrDFA dfa, LrDFAGen tableGen, IdMap idMap) {
         this.dfa = dfa;
         this.gen = tableGen;
         this.idMap = idMap;
@@ -61,14 +61,12 @@ public class StateCodeGen {
         writer.append("}");
         File file = new File(options.outDir, options.parserClass + ".java");
         Utils.write(writer.get(), file);
-        System.out.println("writing " + file);
 
         Template sym = new Template("Symbol.java.template");
         sym.set("token_class", options.tokenClass);
         sym.set("package", options.packageName == null ? "" : "package " + options.packageName + ";\n");
         File symFile = new File(options.outDir, "Symbol.java");
         Utils.write(sym.toString(), symFile);
-        System.out.println("writing " + symFile);
 
         idMap.writeSym(options);
     }
@@ -86,11 +84,11 @@ public class StateCodeGen {
     }
 
     String writeCase(Name sym) {
-        return "sym." + symName(sym);
+        return IdMap.className + "." + symName(sym);
         //return String.valueOf(idMap.getId(sym));
     }
 
-    void writeShift(LrTransition<?> tr) {
+    void writeShift(LrTransition tr) {
         writer.append("stack.push(la);");
         writer.append("la = next();");
         writer.append(getName(tr.to) + "();");
@@ -105,8 +103,8 @@ public class StateCodeGen {
         writer.append("states.push(%d);", dfa.getId(set));
         if (!dfa.getTrans(set).isEmpty()) {
             //shifts
-            List<LrTransition<?>> list = new ArrayList<>();
-            for (LrTransition<?> tr : dfa.getTrans(set)) {
+            List<LrTransition> list = new ArrayList<>();
+            for (LrTransition tr : dfa.getTrans(set)) {
                 if (tr.symbol.isToken) {
                     list.add(tr);
                 }
@@ -121,7 +119,7 @@ public class StateCodeGen {
             }
             else if (list.size() > 1) {
                 writer.append("switch(la.id){");
-                for (LrTransition<?> tr : list) {
+                for (LrTransition tr : list) {
                     writer.append("case %s:{", writeCase(tr.symbol));
                     writeShift(tr);
                     writer.append("}");
@@ -183,7 +181,7 @@ public class StateCodeGen {
     }
 
     LrItemSet getGoto(LrItemSet from, Name symbol) {
-        for (LrTransition<?> tr : dfa.getTrans(from)) {
+        for (LrTransition tr : dfa.getTrans(from)) {
             if (tr.symbol.equals(symbol)) {
                 return tr.to;
             }

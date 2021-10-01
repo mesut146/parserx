@@ -1,0 +1,20 @@
+import java.io.*;
+import java.lang.reflect.*;
+
+public class AstBuilderTester{
+
+  public static void main(String[] a) throws Exception{
+    String start = a[0];
+    String in = a[1];
+
+    Lexer l = new Lexer(new StringReader(in));
+    //Parser.debug=true;
+    Parser p = new Parser(l);
+    Symbol s = p.parse();
+    Method m = AstBuilder.class.getDeclaredMethod("make" + start, Symbol.class);
+    System.out.println(s);
+    System.out.println(m.invoke(null, s));
+  }
+
+
+}

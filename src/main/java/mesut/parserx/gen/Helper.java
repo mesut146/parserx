@@ -85,9 +85,6 @@ public class Helper {
         else if (node.isRegex()) {
             first(node.asRegex().node, tree, rec, set);
         }
-        else if (node.isEpsilon()) {
-            set.add(((Epsilon) node));
-        }
     }
 
     public static void firstLoop(Node node, Tree tree, Set<Item> set) {
@@ -261,7 +258,12 @@ public class Helper {
                 return canBeEmpty(FactorLoop.noLoop(name), tree, set);
             }
             else if (name.isRule() && set.add(name)) {
-                return canBeEmpty(tree.getRule(name).rhs, tree, set);
+                for (RuleDecl decl : tree.getRules(name)) {
+                    if (canBeEmpty(decl.rhs, tree, set)) {
+                        return true;
+                    }
+                }
+                return false;
             }
         }
         else if (node.isGroup()) {

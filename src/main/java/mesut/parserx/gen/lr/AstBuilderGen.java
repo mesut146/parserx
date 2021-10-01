@@ -22,8 +22,8 @@ public class AstBuilderGen {
     }
 
     public void gen() throws IOException {
-        new AstGen(tree).genAst();
         tree = EbnfToBnf.combineOr(tree);
+        new AstGen(tree).genAst();
         new Normalizer(tree).normalize();
         options = tree.options;
         if (options.packageName != null) {

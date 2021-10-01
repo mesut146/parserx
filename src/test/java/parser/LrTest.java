@@ -1,8 +1,9 @@
 package parser;
 
 import common.Env;
-import mesut.parserx.gen.LexerGenerator;
-import mesut.parserx.gen.lr.*;
+import mesut.parserx.gen.lr.AstBuilderGen;
+import mesut.parserx.gen.lr.CodeGen;
+import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 import org.junit.Ignore;
@@ -14,60 +15,51 @@ import java.io.PrintWriter;
 
 public class LrTest {
 
-    void dot(File dotFile) {
+    static void dot(File dotFile) {
         try {
-            Runtime.getRuntime().exec("dot -Tpng -O " + dotFile);
-        } catch (IOException e) {
+            Runtime.getRuntime().exec("dot -Tpng -O " + dotFile).waitFor();
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    void dots(LrDFAGen<?> gen, String name) throws IOException {
-        gen.writeTableDot(new PrintWriter(Env.dotFile(Utils.newName(name, "-table.dot"))));
-
-        dot(gen.tableDotFile());
-
+    public static void dots(LrDFAGen gen, String name) throws IOException {
         File dot = Env.dotFile(Utils.newName(name, ".dot"));
         gen.writeDot(new PrintWriter(dot));
         dot(dot);
+        dot.delete();
+
+        File table = Env.dotFile(Utils.newName(name, "-table.dot"));
+        gen.writeTableDot(new PrintWriter(table));
+        dot(table);
+        table.delete();
+    }
+
+    void checkLr(String grammar, String type) throws Exception {
+        Tree tree = Env.tree(grammar);
+        LrDFAGen generator = new LrDFAGen(tree, type);
+        generator.generate();
+        generator.checkAll();
     }
 
     @Ignore
     @Test
     public void lr0() throws Exception {
-        File file;
-        //file = Env.getCalc();
-        //file = Env.getResFile(gr);
-        //file = Env.getResFile("lr0/left.g");
-        //file = Env.getResFile("lr1/calc2.g");
-        //file = Env.getFile2("lr1/simple.g");
-        //file = Env.getResFile("rec/cyc.g");
-        //file = Env.getFile2("javaParser.g");
-        Tree tree = Env.tree("lr1/calc3.g");
-        Lr0Generator generator = new Lr0Generator(tree);
-        generator.generate();
-        dots(generator, tree.file.getName());
+        checkLr("lr0/left.g", "lr0");
+        checkLr("lr0/simple.g", "lr0");
     }
 
     @Test
-    @Ignore
     public void lr1() throws Exception {
-        //file = Env.getFile2("lr1/calc2.g");
-        //file = Env.getFile2("lr1/simple.g");
-        //Tree tree = Env.tree("lr0/simple.g");
-        //Tree tree = Env.tree("lr1/calc3.g");
-        //Tree tree = Env.tree("lr1/calc.g");
-        //Tree tree = Env.tree("java/parser-jls-eps.g");
-        //Tree tree = Env.tree("lr1/lr1.g");
-        //file = Env.getResFile("rec/cyc.g");
+        checkLr("lr1/lr1.g", "lr1");
+    }
+
+    @Test
+    public void loop() throws Exception {
         Tree tree = Env.tree("lr1/factor-loop-right.g");
-        //Lr1ItemSet.mergeLa = true;
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        Lr1Generator generator = new Lr1Generator(tree);
-        //generator.merge = true;
-        //EpsilonTrimmer.trim(tree);
+        LrDFAGen generator = new LrDFAGen(tree, "lr1");
         generator.generate();
-        //generator.checkAll();
         dots(generator, tree.file.getName());
     }
 
@@ -81,41 +73,21 @@ public class LrTest {
     }
 
     @Test
-    public void pred() throws Exception {
+    public void prec() throws Exception {
         Tree tree = Env.tree("lr1/prec.g");
-        //tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lr";
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        tree.options.packageName = "lr";
-        Lr1Generator generator = new Lr1Generator(tree);
-        generator.merge = true;
+        LrDFAGen generator = new LrDFAGen(tree, "lalr");
         generator.generate();
         generator.checkAll();
         dots(generator, tree.file.getName());
-        //generator.checkAll();
-        /*CodeGen codeGen = new CodeGen(generator, false);
-        codeGen.gen();*/
-    }
-
-    @Test
-    public void real() throws Exception {
-        //Tree tree = Env.tree("lr1/calc3.g");
-        Tree tree = Env.tree("lr1/calc.g");
-        tree.options.packageName = "lr";
-        tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lr";
-        Lr1Generator generator = new Lr1Generator(tree);
-        generator.generate();
-        CodeGen codeGen = new CodeGen(generator, "lalr");
-        codeGen.gen();
     }
 
     @Test
     public void assoc() throws Exception {
         Tree tree = Env.tree("lr1/assoc.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        Lr1Generator generator = new Lr1Generator(tree);
-        generator.merge = false;
+        LrDFAGen generator = new LrDFAGen(tree, "lalr");
         generator.generate();
-        //generator.merge();
         generator.checkAll();
         dots(generator, tree.file.getName());
     }
@@ -125,92 +97,39 @@ public class LrTest {
         Tree tree = Env.tree("lr1/la.g");
         //Tree tree = Env.tree("lr1/prec.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        Lr1Generator generator = new Lr1Generator(tree);
+        LrDFAGen generator = new LrDFAGen(tree, "lr1");
         generator.generate();
         dots(generator, tree.file.getName());
     }
 
     @Test
     @Ignore
-    public void stateCode() throws Exception {
-        //Tree tree = Env.tree("lr1/calc3.g");
-        //Tree tree = Env.tree("lr1/assoc.g");
-        //Tree tree = Env.tree("lr1/prec2.g");
-        //Tree tree = Env.tree("lr1/pred.g");
-        //Tree tree = Env.tree("lr1/prec3.g");
-        Tree tree = Env.tree("lr1/calc.g");
-        //tree.options.outDir = Env.dotDir().getAbsolutePath();
-        tree.options.packageName = "lr";
-        LrDFA.debugTransition = true;
-        Lr1Generator dfaGen = new Lr1Generator(tree);
-        dfaGen.merge = true;
-        dfaGen.generate();
-        dfaGen.checkAll();
-        //dfaGen.merge();
-        dfaGen.genGoto();
-        dots(dfaGen, tree.file.getName());
-        LexerGenerator lexerGenerator = new LexerGenerator(tree);
-        lexerGenerator.generate();
-        StateCodeGen.debugState = true;
-        StateCodeGen.debugReduce = true;
-        StateCodeGen gen = new StateCodeGen(dfaGen.table, dfaGen, lexerGenerator.idMap);
-        gen.gen();
-
-        AstBuilderGen astBuilderGen = new AstBuilderGen(tree);
-        astBuilderGen.gen();
-    }
-
-    @Test
-    @Ignore
-    public void stateCode2() throws Exception {
-        //Tree tree = Env.tree("lr1/calc3.g");
-        //Tree tree = Env.tree("lr1/assoc.g");
-        //Tree tree = Env.tree("lr1/prec2.g");
-        //Tree tree = Env.tree("lr1/pred.g");
-        //Tree tree = Env.tree("lr1/prec3.g");
-        Tree tree = Env.tree("lr1/calc.g");
-        //tree.options.outDir = Env.dotDir().getAbsolutePath();
-        tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lr";
-        tree.options.packageName = "lr";
-        LrDFA.debugTransition = true;
-        Lr1Generator dfaGen = new Lr1Generator(tree);
-        dfaGen.merge = true;
-        dfaGen.generate();
-        dfaGen.checkAll();
-        dfaGen.genGoto();
-        dots(dfaGen, tree.file.getName());
-        LexerGenerator lexerGenerator = new LexerGenerator(tree);
-        lexerGenerator.generate();
-        StateCodeGen2.debugState = true;
-        StateCodeGen2.debugReduce = true;
-        StateCodeGen2 gen = new StateCodeGen2(dfaGen.table, dfaGen, lexerGenerator.idMap);
-        gen.gen();
-
-        /*AstBuilderGen astBuilderGen = new AstBuilderGen(tree);
-        astBuilderGen.gen();*/
-    }
-
-    @Test
     public void astBuilder() throws Exception {
         Tree tree = Env.tree("lr1/calc.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
+        //todo or combine
         AstBuilderGen astBuilderGen = new AstBuilderGen(tree);
         astBuilderGen.gen();
+    }
+
+    @Test
+    public void astReal() throws Exception {
+        LrTester.checkAst(Env.tree("lr1/calc.g"), "1+2", "1+2*3", "3^2*1^(3-1)");
     }
 
     @Test
     public void rec() throws Exception {
         Tree tree = Env.tree("lr1/rec.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        Lr1Generator dfaGen = new Lr1Generator(tree);
-        //dfaGen.merge = true;
+        LrDFAGen dfaGen = new LrDFAGen(tree, "lr1");
+        LrDFAGen.debug = true;
         dfaGen.generate();
         dfaGen.checkAll();
         dots(dfaGen, tree.file.getName());
     }
 
     @Test
-    public void lalrTester() throws Exception {
+    public void all() throws Exception {
         LrTester.check(Env.tree("lr0/simple.g"), "bb", "bab", "abab");
         LrTester.check(Env.tree("lr0/left.g"), "cb", "cab", "caab");
         LrTester.check(Env.tree("lr1/la.g"), "bb", "abab", "aabaaab");
@@ -221,12 +140,17 @@ public class LrTest {
         LrTester.check(Env.tree("lr1/prec-unary.g"), "-1+3", "1+-6");
         LrTester.check(Env.tree("lr1/calc.g"), "1+2", "1*2", "1+2*3", "2*3+1", "1+2^3", "2*2^-3");
         LrTester.check(Env.tree("lr1/factor-loop-right.g"), "ac", "ab", "aac", "aab");
+        LrTester.check(Env.tree("lr1/eps.g"), "c", "ac", "xc", "axc", "de");
+        LrTester.check(Env.tree("lr1/rec.g"), "abc", "abd", "ababc");
     }
 
     @Test
-    @Ignore
-    public void prec() throws Exception {
-        //todo la not merged
-        LrTester.check(Env.tree("lr1/rec.g"), "abc", "abd", "ababc");
+    public void epsilon() throws Exception {
+        Tree tree = Env.tree("lr1/eps.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        LrDFAGen dfaGen = new LrDFAGen(tree, "lr1");
+        dfaGen.generate();
+        //dfaGen.checkAll();
+        dots(dfaGen, tree.file.getName());
     }
 }

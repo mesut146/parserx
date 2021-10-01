@@ -1,10 +1,6 @@
 package mesut.parserx.nodes;
 
-public class Epsilon extends Name {
-
-    public Epsilon() {
-        super(str());
-    }
+public class Epsilon extends Node {
 
     static String str() {
         //return "\uD835\uDF74";//bold
@@ -19,10 +15,5 @@ public class Epsilon extends Name {
     @Override
     public boolean equals(Object o) {
         return o instanceof Epsilon;
-    }
-
-    @Override
-    public boolean isName() {
-        return false;
     }
 }

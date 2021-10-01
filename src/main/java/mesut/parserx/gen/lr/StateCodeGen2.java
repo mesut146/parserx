@@ -16,12 +16,12 @@ public class StateCodeGen2 {
     public static boolean debugState = false;
     public static boolean debugReduce = false;
     public Options options;
-    LrDFA<?> dfa;
-    LrDFAGen<?> gen;
+    LrDFA dfa;
+    LrDFAGen gen;
     CodeWriter writer = new CodeWriter(true);
     IdMap idMap;
 
-    public StateCodeGen2(LrDFA<?> dfa, LrDFAGen<?> tableGen, IdMap idMap) {
+    public StateCodeGen2(LrDFA dfa, LrDFAGen tableGen, IdMap idMap) {
         this.dfa = dfa;
         this.gen = tableGen;
         this.idMap = idMap;
@@ -86,11 +86,11 @@ public class StateCodeGen2 {
     }
 
     String writeCase(Name sym) {
-        return "sym." + symName(sym);
+        return IdMap.className + "." + symName(sym);
         //return String.valueOf(idMap.getId(sym));
     }
 
-    void writeShift(LrTransition<?> tr) {
+    void writeShift(LrTransition tr) {
         writer.append("stack.push(la);");
         writer.append("la = next();");
         writer.append("state = %d;", tr.to.stateId);
@@ -102,8 +102,8 @@ public class StateCodeGen2 {
         writer.append("case %d:{", set.stateId);
         if (!dfa.getTrans(set).isEmpty()) {
             //shifts
-            List<LrTransition<?>> list = new ArrayList<>();
-            for (LrTransition<?> tr : dfa.getTrans(set)) {
+            List<LrTransition> list = new ArrayList<>();
+            for (LrTransition tr : dfa.getTrans(set)) {
                 if (tr.symbol.isToken) {
                     list.add(tr);
                 }
@@ -118,7 +118,7 @@ public class StateCodeGen2 {
             }
             else if (list.size() > 1) {
                 writer.append("switch(la.id){");
-                for (LrTransition<?> tr : list) {
+                for (LrTransition tr : list) {
                     writer.append("case %s:{", writeCase(tr.symbol));
                     writeShift(tr);
                     writer.append("}");
@@ -189,7 +189,7 @@ public class StateCodeGen2 {
     }
 
     LrItemSet getGoto(LrItemSet from, Name symbol) {
-        for (LrTransition<?> tr : dfa.getTrans(from)) {
+        for (LrTransition tr : dfa.getTrans(from)) {
             if (tr.symbol.equals(symbol)) {
                 return tr.to;
             }

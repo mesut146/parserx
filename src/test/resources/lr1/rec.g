@@ -10,6 +10,7 @@ token{
 
 E: A c | a b d;
 A: A B | B;
+//A: B A | B;
 B: a b;
 
 /*
