@@ -69,6 +69,13 @@ public class SimpleTransformer {
         else if (node instanceof Dot) {
             return transformDot(((Dot) node), parent);
         }
+        else if (node.isEpsilon()) {
+            return transformEpsilon((Epsilon) node, parent);
+        }
+        return node;
+    }
+
+    public Node transformEpsilon(Epsilon node, Node parent) {
         return node;
     }
 

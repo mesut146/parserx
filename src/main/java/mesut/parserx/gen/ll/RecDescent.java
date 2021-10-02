@@ -166,13 +166,25 @@ public class RecDescent {
         Type type = new Type(options.astClass, decl.retType.name);//todo decl.type
         StringBuilder params = new StringBuilder();
         int i = 0;
-        for (Name arg : decl.args) {
+        for (Node arg : decl.args) {
             if (i > 0) params.append(", ");
-            if (arg.isToken) {
+            if (arg.isName() && arg.asName().isToken) {
                 params.append("Token ").append(arg.astInfo.factorName);
             }
             else {
-                params.append(String.format("%s.%s %s", options.astClass, arg.name, arg.astInfo.factorName));
+                if (arg.isName()) {
+                    params.append(String.format("%s.%s %s", options.astClass, arg.asName().name, arg.astInfo.factorName));
+                }
+                else {
+                    Regex regex = arg.asRegex();
+                    Name name = regex.node.asName();
+                    if (name.isToken) {
+                        params.append(String.format("List<Token> %s", regex.astInfo.factorName));
+                    }
+                    else {
+                        params.append(String.format("List<%s.%s> %s", options.astClass, name.name, regex.astInfo.factorName));
+                    }
+                }
             }
             i++;
         }

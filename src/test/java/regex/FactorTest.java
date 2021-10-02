@@ -5,6 +5,7 @@ import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.transform.Epsilons;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorLoop;
+import mesut.parserx.gen.transform.Recursion;
 import mesut.parserx.nodes.*;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -68,10 +69,19 @@ public class FactorTest {
     @Test
     @Ignore
     public void loopJava() throws Exception {
+        //Tree tree = Env.tree("java/parser-jls-eps.g");
+        //Tree tree = Env.tree("java/parser-jls-rec.g");
         Tree tree = Env.tree("java/parser-jls.g");
-        FactorLoop factorLoop = new FactorLoop(tree);
-        factorLoop.factorize();
+        //Tree tree = Env.tree("java/factor-eps.g");
+        Recursion.debug = true;
+        new Recursion(tree).all();
+        //EpsilonTrimmer2.trim(tree);
         tree.printRules();
+
+        //FactorLoop.debug = true;
+        /*FactorLoop factorLoop = new FactorLoop(tree);
+        factorLoop.factorize();
+        tree.printRules();*/
     }
 
     @Test
@@ -81,9 +91,7 @@ public class FactorTest {
         Node node = tree.getRule("E").rhs;
         FactorLoop factorLoop = new FactorLoop(tree);
         //node = new Regex(new Name("B"), "*");
-        Factor.PullInfo info = factorLoop.pull(node, new Name("C") {{
-            isStar = true;
-        }});
+        Factor.PullInfo info = factorLoop.pull(node, new Regex(new Name("C"), "*"));
         System.out.println("one: " + info.one);
         System.out.println("zero: " + info.zero);
         tree.printRules();

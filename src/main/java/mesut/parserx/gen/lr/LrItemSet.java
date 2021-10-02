@@ -1,7 +1,6 @@
 package mesut.parserx.gen.lr;
 
 import mesut.parserx.nodes.Name;
-import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
 
@@ -59,7 +58,12 @@ public class LrItemSet {
 
     @Override
     public String toString() {
-        return NodeList.join(all, "\n");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < all.size(); i++) {
+            sb.append(all.get(i).toString2(tree));
+            if (i < all.size() - 1) sb.append("\n");
+        }
+        return sb.toString();
     }
 
     public void closure() {

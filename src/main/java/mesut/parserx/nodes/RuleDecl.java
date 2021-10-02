@@ -14,7 +14,7 @@ public class RuleDecl extends Node {
     public String name;
     public Node rhs;
     public int index;
-    public List<Name> args = new ArrayList<>();
+    public List<Node> args = new ArrayList<>();
     public boolean hidden = false;//if true rule has no effect
     public Type retType;//ast type in case it is modified
     public boolean isRecursive;

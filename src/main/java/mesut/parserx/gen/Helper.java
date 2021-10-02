@@ -1,6 +1,5 @@
 package mesut.parserx.gen;
 
-import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.nodes.*;
 
 import java.util.*;
@@ -48,11 +47,7 @@ public class Helper {
         if (node.isName()) {
             Name name = node.asName();
             if (name.astInfo.isFactored) return;
-            if (name.isPlus || name.isStar) {
-                name = FactorLoop.noLoop(name);
-                first(name, tree, rec, set);
-            }
-            else if (set.add(name)) {
+            if (set.add(name)) {
                 if (rec && name.isRule()) {
                     List<RuleDecl> list = tree.getRules(name);
                     if (list.isEmpty()) {
@@ -83,6 +78,7 @@ public class Helper {
             first(node.asGroup().node, tree, rec, set);
         }
         else if (node.isRegex()) {
+            if (node.astInfo.isFactored) return;
             first(node.asRegex().node, tree, rec, set);
         }
     }
@@ -253,11 +249,7 @@ public class Helper {
         if (node.isName()) {
             if (node.astInfo.isFactored) return true;//acts as epsilon
             Name name = node.asName();
-            if (name.isStar || name.isPlus) {
-                if (name.isStar) return true;
-                return canBeEmpty(FactorLoop.noLoop(name), tree, set);
-            }
-            else if (name.isRule() && set.add(name)) {
+            if (name.isRule() && set.add(name)) {
                 for (RuleDecl decl : tree.getRules(name)) {
                     if (canBeEmpty(decl.rhs, tree, set)) {
                         return true;
@@ -271,6 +263,7 @@ public class Helper {
         }
         else if (node.isRegex()) {
             Regex r = node.asRegex();
+            if (r.astInfo.isFactored) return true;
             if (r.isOptional() || r.isStar()) {
                 return true;
             }

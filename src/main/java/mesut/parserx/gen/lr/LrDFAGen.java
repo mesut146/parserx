@@ -134,14 +134,11 @@ public class LrDFAGen {
                     //check if item there
                     boolean has = false;
                     for (LrItem item : targetSet.kernel) {
-                        if (item.equals(toFirst)) {
-                            //already have same
-                            has = true;
-                            break;
-                        }
                         if (item.isSame(toFirst)) {
-                            //has similar so merge
-                            doMerge(toFirst, targetSet);
+                            if (!item.equals(toFirst)) {
+                                //has similar so merge
+                                doMerge(toFirst, targetSet);
+                            }
                             has = true;
                             break;
                         }
@@ -308,7 +305,7 @@ public class LrDFAGen {
                         }
                     }
                     if (!removed) {
-                        throw new RuntimeException("shift/reduce conflict " + table.getId(set) + "\n" + set);
+                        throw new RuntimeException(String.format("shift/reduce conflict %d sym=%s\n%s", table.getId(set), shift.getDotNode(), set));
                     }
 
                 }

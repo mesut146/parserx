@@ -3,10 +3,7 @@ package mesut.parserx.gen.lr;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 //lr0,lr1
 public class LrItem {
@@ -69,6 +66,45 @@ public class LrItem {
         if (!isLr0()) {
             sb.append(" , ");
             sb.append(NodeList.join(new ArrayList<>(lookAhead), "/"));
+        }
+        return sb.toString();
+    }
+
+    public String toString2(Tree tree) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(rule.name);
+        sb.append(" -> ");
+        Sequence rhs = rule.rhs.asSequence();
+        for (int i = 0; i < rhs.size(); i++) {
+            if (i == dotPos) {
+                sb.append(". ");
+            }
+            sb.append(rhs.get(i));
+            if (i < rhs.size() - 1) {
+                sb.append(" ");
+            }
+        }
+        if (rhs.size() == dotPos) {
+            sb.append(".");
+        }
+        if (!isLr0()) {
+            sb.append(" , ");
+            for (Iterator<Name> it = lookAhead.iterator(); it.hasNext(); ) {
+                Name la = it.next();
+                if (la.name.equals("$")) {
+                    sb.append(la);
+                }
+                else {
+                    TokenDecl decl = tree.getToken(la.name);
+                    if (decl.rhs.isString()) {
+                        sb.append(decl.rhs.asString().value);
+                    }
+                    else {
+                        sb.append(la);
+                    }
+                }
+                if (it.hasNext()) sb.append("/");
+            }
         }
         return sb.toString();
     }

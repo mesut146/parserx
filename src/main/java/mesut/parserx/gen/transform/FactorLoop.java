@@ -40,10 +40,8 @@ public class FactorLoop extends SimpleTransformer {
         return res;
     }
 
-    public static Name noLoop(Name sym) {
-        Name copy = sym.copy();
-        copy.isStar = copy.isPlus = false;
-        return copy;
+    public static Name noLoop(Regex sym) {
+        return sym.node.asName().copy();
     }
 
     public void factorize() {
@@ -57,8 +55,8 @@ public class FactorLoop extends SimpleTransformer {
                 //restart if any modification happens
                 i = 0;
                 if (debug) {
-                    tree.printRules();
-                    //System.out.println(decl);
+                    //tree.printRules();
+                    System.out.println(decl);
                 }
             }
             else {
@@ -89,19 +87,18 @@ public class FactorLoop extends SimpleTransformer {
                 if (syms == null) continue;
                 //try each sym
                 for (Name sym : syms) {
-                    sym = sym.copy();
-                    sym.isPlus = true;//todo what about star?
-                    Factor.PullInfo info1 = pull(or.get(i), sym);
-                    Factor.PullInfo info2 = pull(or.get(j), sym);
+                    Regex regex = new Regex(sym.copy(), "+");//todo what about star?
+                    Factor.PullInfo info1 = pull(or.get(i), regex);
+                    Factor.PullInfo info2 = pull(or.get(j), regex);
                     if (info1 != null && info2 != null) {
                         if (debug)
-                            System.out.printf("factoring %s in %s\n", sym, curRule.name);
+                            System.out.printf("factoring %s in %s\n", regex, curRule.name);
 
                         modified = true;
-                        Factor.PullInfo info = pullOr(or, sym);
+                        Factor.PullInfo info = pullOr(or, regex);
                         Group g = new Group(info.one);
                         g.astInfo.isFactorGroup = true;
-                        Node one = Sequence.of(sym, g);
+                        Node one = Sequence.of(regex, g);
                         if (info.zero == null) {
                             return one;
                         }
@@ -115,8 +112,8 @@ public class FactorLoop extends SimpleTransformer {
         return or;
     }
 
-    public Factor.PullInfo pull(Node node, Name sym) {
-        if (!sym.isStar && !sym.isPlus) {
+    public Factor.PullInfo pull(Node node, Regex sym) {
+        if (!sym.isStar() && !sym.isPlus()) {
             throw new RuntimeException("loop sym expected");
         }
         Name normal = noLoop(sym);
@@ -164,7 +161,7 @@ public class FactorLoop extends SimpleTransformer {
         return info;
     }
 
-    Factor.PullInfo pullOr(Or or, Name sym) {
+    Factor.PullInfo pullOr(Or or, Regex sym) {
         List<Node> one = new ArrayList<>();
         List<Node> zero = new ArrayList<>();
         for (Node ch : or) {
@@ -190,7 +187,7 @@ public class FactorLoop extends SimpleTransformer {
         return res;
     }
 
-    Factor.PullInfo pullSeq(Sequence seq, Name sym) {
+    Factor.PullInfo pullSeq(Sequence seq, Regex sym) {
         Node a = seq.first();
         Node b = Helper.trim(seq);
 
@@ -234,18 +231,20 @@ public class FactorLoop extends SimpleTransformer {
         }
     }
 
-    Factor.PullInfo pullRule(Name name, Name sym) {
+    Factor.PullInfo pullRule(Name name, Regex sym) {
         String key = name + "-" + sym;
         if (cache.containsKey(key)) {
             return cache.get(key);
         }
-
+        Factor.PullInfo info = new Factor.PullInfo();
+        cache.put(key, info);
         RuleDecl decl = tree.getRule(name);
-        Factor.PullInfo info = pull(decl.rhs, sym);
-        if (info.one == null) {
+        info = pull(decl.rhs, sym);
+        if (info == null || info.one == null) {
+            cache.put(key, null);
             return null;
         }
-        cache.put(key, info);
+
 
         Name oneSym = new Name(name.name);
         oneSym.args.add(sym);
@@ -254,7 +253,7 @@ public class FactorLoop extends SimpleTransformer {
         tree.addRule(oneDecl);
 
         Name zeroSym;
-        if (sym.isStar) {
+        if (sym.isStar()) {
             zeroSym = new Name(name.name + "_nos_" + noLoop(sym));
         }
         else {
@@ -269,21 +268,21 @@ public class FactorLoop extends SimpleTransformer {
         return info;
     }
 
-    Factor.PullInfo pullRegex(Regex regex, Name sym) {
+    Factor.PullInfo pullRegex(Regex regex, Regex sym) {
         if (regex.isStar()) {
             if (regex.node.equals(noLoop(sym))) {
                 //base case
                 Factor.PullInfo res = new Factor.PullInfo();
-                Name copy = sym.copy();
+                Regex copy = sym.copy();
                 copy.astInfo.isFactored = true;
                 res.one = copy;
-                if (sym.isPlus) {
+                if (sym.isPlus()) {
                     //A*: A+ | €
                     res.zero = new Epsilon();
                 }
                 return res;
             }
-            if (sym.isPlus) {
+            if (sym.isPlus()) {
                 //A*: A+ | €
                 Regex plus = new Regex(regex.node, "+");
                 Factor.PullInfo info = pull(plus, sym);
@@ -330,13 +329,13 @@ public class FactorLoop extends SimpleTransformer {
             }
         }
         else if (regex.isPlus()) {
-            if (sym.isStar) {
+            if (sym.isStar()) {
                 throw new RuntimeException("can't pull star from plus");
             }
             if (regex.node.equals(noLoop(sym))) {
                 //base case
                 Factor.PullInfo res = new Factor.PullInfo();
-                Name copy = sym.copy();
+                Regex copy = sym.copy();
                 copy.astInfo.isFactored = true;
                 res.one = copy;
                 return res;

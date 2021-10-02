@@ -29,12 +29,16 @@ public class Factor extends SimpleTransformer {
     public static Name encode(Name name) {
         StringBuilder sb = new StringBuilder(name.name);
         if (!name.args.isEmpty()) {
-            sb.append("_");
             for (int i = 0; i < name.args.size(); i++) {
+                sb.append("_");
                 //todo arg of arg?
-                sb.append(name.args.get(i).name);
-                if (i < name.args.size() - 1) {
-                    sb.append("_");
+                Node arg = name.args.get(i);
+                if (arg.isName()) {
+                    sb.append(arg.asName().name);
+                }
+                else {
+                    Regex regex = arg.asRegex();//todo improve
+                    sb.append(regex.toString());
                 }
             }
         }

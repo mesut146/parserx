@@ -48,6 +48,7 @@ skip{
   WS: [ \n\r\t]+;
 }
 
+%start: tree;
 
 tree: includeStatement* optionsBlock? tokens=(tokenBlock  | skipBlock)* startDecl? rules=(ruleDecl | assocDecl)*;
 
@@ -63,8 +64,9 @@ skipBlock: "skip" "{" tokenDecl* "}";
 
 
 tokenDecl: "#"? name SEPARATOR rhs ";";
-ruleDecl: name args? SEPARATOR rhs ";";
-args: "(" name rest=("," name)* ")";
+ruleDecl: ref args? SEPARATOR rhs ";";
+args: "(" arg rest=("," arg)* ")";
+arg: name type=("*" | "+")?;
 
 assocDecl: type=("%left" | "%right") ref+ ";";
 

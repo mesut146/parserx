@@ -48,7 +48,7 @@ public class Regex extends Node {
     }
 
     @Override
-    public Node copy() {
+    public Regex copy() {
         return new Regex(node, type);
     }
 

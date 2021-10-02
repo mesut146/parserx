@@ -6,7 +6,6 @@ import mesut.parserx.nodes.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
 //make grammar epsilon free
@@ -34,7 +33,12 @@ public class EpsilonTrimmer2 extends SimpleTransformer {
                 emptyRules.add(rule.ref());
             }
             transformRule(rule);
-            rule.rhs = Simplify.simplifyNode(rule.rhs);
+            if (rule.rhs == null || rule.rhs.isEpsilon()) {
+                tree.rules.remove(i);
+            }
+            else {
+                rule.rhs = Simplify.simplifyNode(rule.rhs);
+            }
             if (modified) {
                 modified = false;
                 i--;
@@ -99,8 +103,9 @@ public class EpsilonTrimmer2 extends SimpleTransformer {
         return regex;
     }
 
-    boolean isEmpty(Node node) {
-        Set<Name> set = Helper.first(node, tree, true);
-        return set.isEmpty() || (set.size() == 1 && set.iterator().next().equals(node));
+    @Override
+    public Node transformEpsilon(Epsilon node, Node parent) {
+        return null;
     }
+
 }

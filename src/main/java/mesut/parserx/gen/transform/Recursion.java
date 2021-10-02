@@ -1,7 +1,6 @@
 package mesut.parserx.gen.transform;
 
 import mesut.parserx.gen.Helper;
-import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.nodes.*;
 
 //remove left recursion by factorisation
@@ -20,7 +19,7 @@ public class Recursion {
             if (Helper.first(decl.rhs, tree, true).contains(decl.ref())) {
                 any = true;
                 if (debug) {
-                    System.out.println("removing recursion on " + decl);
+                    System.out.println("removing recursion on " + decl.ref());
                 }
                 handle(decl);
             }

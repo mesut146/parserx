@@ -1,0 +1,14 @@
+import java.io.*;
+import java.lang.reflect.*;
+
+public class DescTester{
+
+  public static Object test(String rule, String in) throws Exception{
+    Lexer l = new Lexer(new StringReader(in));
+    Parser p = new Parser(l);
+    Method m = Parser.class.getDeclaredMethod(rule);
+    return m.invoke(p);
+  }
+
+
+}

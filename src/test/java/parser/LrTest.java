@@ -27,7 +27,7 @@ public class LrTest {
         File dot = Env.dotFile(Utils.newName(name, ".dot"));
         gen.writeDot(new PrintWriter(dot));
         dot(dot);
-        dot.delete();
+        //dot.delete();
 
         File table = Env.dotFile(Utils.newName(name, "-table.dot"));
         gen.writeTableDot(new PrintWriter(table));
@@ -58,6 +58,17 @@ public class LrTest {
     public void loop() throws Exception {
         Tree tree = Env.tree("lr1/factor-loop-right.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
+        LrDFAGen generator = new LrDFAGen(tree, "lr1");
+        generator.generate();
+        dots(generator, tree.file.getName());
+    }
+
+    @Test
+    @Ignore
+    public void java() throws Exception {
+        Tree tree = Env.tree("java/parser-jls-eps.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        LrDFAGen.debug = true;
         LrDFAGen generator = new LrDFAGen(tree, "lr1");
         generator.generate();
         dots(generator, tree.file.getName());
