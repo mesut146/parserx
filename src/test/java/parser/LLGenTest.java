@@ -5,15 +5,15 @@ import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.VisitorGenerator;
 import mesut.parserx.gen.ll.RecDescent;
-import mesut.parserx.gen.lr.LrDFAGen;
-import mesut.parserx.gen.transform.EbnfToBnf;
-import mesut.parserx.gen.transform.EpsilonTrimmer2;
 import mesut.parserx.gen.transform.Epsilons;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.IOException;
 
 public class LLGenTest {
 
@@ -112,6 +112,16 @@ public class LLGenTest {
 
         RecDescent rec = new RecDescent(tree);
         rec.gen();
+    }
+
+    @Test
+    public void math() throws IOException {
+        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        Factor.debug = true;
+        new Factor(tree).factorize();
+        /*RecDescent gen = new RecDescent(tree);
+        gen.gen();*/
     }
 
     @Test

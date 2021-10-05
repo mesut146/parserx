@@ -82,7 +82,7 @@ public class CodeGen {
         });
         for (int i = 0; i < all.size(); i++) {
             RuleDecl decl = all.get(i);
-            ruleIds.append(idMap.getId(decl.ref()));
+            ruleIds.append(idMap.getId(decl.reff));
             if (LrItem.isEpsilon(decl)) {
                 sizes.append(0);
             }
@@ -118,7 +118,7 @@ public class CodeGen {
         else {
             sb.append(pack(1));
             for (LrItem item : acc.kernel) {
-                if (item.hasReduce() && item.rule.name.equals(gen.start.name) && item.lookAhead.contains(LrDFAGen.dollar)) {
+                if (item.hasReduce() && item.rule.reff.equals(gen.start.reff) && item.lookAhead.contains(LrDFAGen.dollar)) {
                     sb.append(pack(idMap.getId(IdMap.EOF)));
                     break;
                 }
@@ -143,7 +143,7 @@ public class CodeGen {
             }
             sb.append(pack(count));
             for (LrItem reduce : list) {
-                if (reduce.rule.name.equals(gen.start.name)) {
+                if (reduce.rule.reff.equals(gen.start.reff)) {
                     continue;
                 }
                 int action = reduce.rule.index;

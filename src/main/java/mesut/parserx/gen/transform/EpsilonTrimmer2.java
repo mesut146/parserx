@@ -30,7 +30,7 @@ public class EpsilonTrimmer2 extends SimpleTransformer {
             modified = false;
             if (canBeEmpty(rule.rhs)) {
                 //rule.hidden = true;
-                emptyRules.add(rule.ref());
+                emptyRules.add(rule.reff);
             }
             transformRule(rule);
             if (rule.rhs == null || rule.rhs.isEpsilon()) {

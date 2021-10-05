@@ -38,7 +38,7 @@ public class DotWriter {
             writer.println("<TD>" + rule.name + "</TD>");
         }
         writer.println("</TR>");
-        String start = generator.start.name;
+        String start = generator.start.baseName();
         for (LrItemSet set : table.itemSets) {
             writer.print("<TR>");
             writer.println("<TD>" + table.getId(set) + "</TD>");
@@ -62,7 +62,7 @@ public class DotWriter {
                 }
                 //reduce
                 for (LrItem item : set.getReduce()) {
-                    String name = item.rule.name;
+                    String name = item.rule.baseName();
                     if (item.lookAhead.isEmpty()) {
                         //lr0
                         if (name.equals(start)) {

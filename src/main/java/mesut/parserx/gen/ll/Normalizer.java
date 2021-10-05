@@ -22,8 +22,8 @@ public class Normalizer extends SimpleTransformer {
             groupCount = 1;
             //todo restart
             RuleDecl decl = tree.rules.get(i);
-            decl.retType = new Type(tree.options.astClass, decl.name);
-            if (!map.contains(decl.ref())) {
+            decl.retType = new Type(tree.options.astClass, decl.baseName());
+            if (!map.contains(decl.reff)) {
                 decl.isOriginal = true;
             }
             transformRule(decl);
@@ -32,13 +32,13 @@ public class Normalizer extends SimpleTransformer {
 
     @Override
     public Node transformGroup(Group node, Node parent) {
-        String cls = curRule.name + "g" + groupCount;
+        String cls = curRule.baseName() + "g" + groupCount;
         RuleDecl tmp = new RuleDecl(cls, node.node);
         tmp.retType = new Type(tree.options.astClass, cls);
         tree.addRule(tmp);
-        map.add(tmp.ref());
+        map.add(tmp.reff);
 
-        Name ref = tmp.ref();
+        Name ref = tmp.reff.copy();
         if (node.astInfo.varName != null) {
             ref.astInfo.varName = node.astInfo.varName;
         }

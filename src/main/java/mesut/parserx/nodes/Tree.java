@@ -198,14 +198,14 @@ public class Tree {
 
     public RuleDecl getRule(String name) {
         for (RuleDecl decl : rules) {
-            if (decl.name.equals(name)) return decl;
+            if (decl.getName().equals(name)) return decl;
         }
         return null;
     }
 
     public RuleDecl getRule(Name res) {
         for (RuleDecl decl : rules) {
-            if (decl.ref().equals(res)) {
+            if (decl.reff.equals(res)) {
                 return decl;
             }
         }
@@ -215,7 +215,7 @@ public class Tree {
     public List<RuleDecl> getRules(Name name) {
         List<RuleDecl> list = new ArrayList<>();
         for (RuleDecl decl : rules) {
-            if (decl.ref().equals(name)) {
+            if (decl.reff.equals(name)) {
                 list.add(decl);
             }
         }

@@ -7,6 +7,7 @@ import java.util.Objects;
 public class Name extends Node {
 
     public static boolean debug = false;
+    public static boolean autoEncode = true;
     public String name;
     public boolean isToken;
     public ArrayList<Node> args = new ArrayList<>();
@@ -20,6 +21,26 @@ public class Name extends Node {
         this.isToken = isToken;
     }
 
+    public Name encode() {
+        StringBuilder sb = new StringBuilder(name);
+        if (!args.isEmpty()) {
+            for (Node arg : args) {
+                sb.append("_");
+                //todo arg of arg?
+                if (arg.isName()) {
+                    sb.append(arg.asName().name);
+                }
+                else {
+                    Regex regex = arg.asRegex();//todo improve
+                    sb.append(regex.toString());
+                }
+            }
+        }
+        Name res = new Name(sb.toString(), false);
+        res.args = new ArrayList<>(args);
+        return res;
+    }
+
     public boolean isRule() {
         return !isToken;
     }
@@ -28,12 +49,17 @@ public class Name extends Node {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(varString());
-        sb.append(name);
+        if (autoEncode) {
+            sb.append(encode().name);
+        }
+        else {
+            sb.append(name);
+            if (!args.isEmpty()) {
+                sb.append("(").append(NodeList.join(args, ", ")).append(")");
+            }
+        }
         if (astInfo.isFactored) {
             sb.append("(").append(name).append(")");
-        }
-        if (!args.isEmpty()) {
-            sb.append("(").append(NodeList.join(args, ", ")).append(")");
         }
         if (debug)
             sb.append(astInfo);
@@ -63,8 +89,6 @@ public class Name extends Node {
     }
 
     public RuleDecl makeRule() {
-        RuleDecl decl = new RuleDecl(name);
-        decl.args = new ArrayList<>(args);
-        return decl;
+        return new RuleDecl(this);
     }
 }

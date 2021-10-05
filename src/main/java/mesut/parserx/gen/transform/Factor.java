@@ -4,9 +4,9 @@ import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 public class Factor extends SimpleTransformer {
@@ -24,27 +24,6 @@ public class Factor extends SimpleTransformer {
 
     public Factor(Tree tree) {
         super(tree);
-    }
-
-    public static Name encode(Name name) {
-        StringBuilder sb = new StringBuilder(name.name);
-        if (!name.args.isEmpty()) {
-            for (int i = 0; i < name.args.size(); i++) {
-                sb.append("_");
-                //todo arg of arg?
-                Node arg = name.args.get(i);
-                if (arg.isName()) {
-                    sb.append(arg.asName().name);
-                }
-                else {
-                    Regex regex = arg.asRegex();//todo improve
-                    sb.append(regex.toString());
-                }
-            }
-        }
-        Name res = new Name(sb.toString(), false);
-        res.args = new ArrayList<>(name.args);
-        return res;
     }
 
     public static Name common(Set<Name> s1, Set<Name> s2) {
@@ -86,8 +65,8 @@ public class Factor extends SimpleTransformer {
                 //restart if any modification happens
                 i = 0;
                 if (debug) {
-                    tree.printRules();
-                    //System.out.println(decl);
+                    //tree.printRules();
+                    System.out.println(decl);
                 }
             }
             else {
@@ -97,7 +76,7 @@ public class Factor extends SimpleTransformer {
     }
 
     private void factorRule(RuleDecl decl) {
-        if (allowRecursion || !first(decl.rhs).contains(decl.ref())) {
+        if (allowRecursion || !first(decl.rhs).contains(decl.reff)) {
             decl.rhs = transformNode(decl.rhs, decl);
         }
     }
@@ -122,7 +101,7 @@ public class Factor extends SimpleTransformer {
                 //sym.astInfo.isFactor = true;
                 //sym.astInfo.factorName = factorName(sym);
                 if (debug)
-                    System.out.printf("factoring %s in %s\n", sym, curRule.name);
+                    System.out.printf("factoring %s in %s\n", sym, curRule.reff);
                 modified = true;
                 PullInfo info = pull(or, sym);
                 Group g = new Group(info.one);
@@ -233,14 +212,7 @@ public class Factor extends SimpleTransformer {
         RuleDecl decl = tree.getRule(name);
         //check if already pulled before
 
-        Name zeroName;
-        if (name.args.isEmpty()) {
-            zeroName = new Name(name.name, false);
-        }
-        else {
-            //encode args
-            zeroName = encode(name);
-        }
+        Name zeroName = name.copy();
         zeroName.name += "_no_" + sym.name;
         zeroName.astInfo = name.astInfo.copy();
         zeroName.astInfo.isPrimary = true;
@@ -405,7 +377,40 @@ public class Factor extends SimpleTransformer {
     Set<Name> first(Node node) {
         Set<Name> set = new HashSet<>();
         Helper.first(node, tree, true, set);
+        //remove epsilon rules
+        if (node.isName() && node.asName().isRule() && set.size() == 1) {
+            if (set.iterator().next().equals(node)) {
+                set.clear();
+            }
+        }
+        else {
+            for (Iterator<Name> it = set.iterator(); it.hasNext(); ) {
+                Name sym = it.next();
+                if (sym.isRule() && isEmpty(sym)) {
+                    it.remove();
+                }
+            }
+        }
         return set;
+    }
+
+    boolean isEmpty(Name node) {
+        if (node.isRule()) {
+            Set<Name> first = Helper.first(node, tree, true);
+            if (first.isEmpty()) {
+                return true;
+            }
+            if (first.size() == 1) {
+                Name f = first.iterator().next();
+                if (f.equals(node)) {
+                    return true;
+                }
+                else {
+                    return isEmpty(f);
+                }
+            }
+        }
+        return false;
     }
 
     public static class PullInfo {

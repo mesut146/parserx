@@ -36,7 +36,7 @@ public class LeftRecursion {
         Tree tree = Env.tree("rec/leftRec.g");
         RuleDecl rule = tree.getRule("A");
         LeftRecursive left = new LeftRecursive(tree);
-        LeftRecursive.SplitInfo info = left.split(rule.rhs, rule.ref());
+        LeftRecursive.SplitInfo info = left.split(rule.rhs, rule.reff);
         System.out.println("zero = " + info.zero);
         System.out.println("one = " + info.one);
     }

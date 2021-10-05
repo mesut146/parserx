@@ -26,10 +26,10 @@ public class LeftRecursive {
     }
 
     void handleRule(RuleDecl rule) {
-        while (startr(rule.rhs, rule.ref())) {
-            if (start(rule.rhs, rule.ref())) {
+        while (startr(rule.rhs, rule.reff)) {
+            if (start(rule.rhs, rule.reff)) {
                 //direct
-                rule.rhs = removeDirect(rule.rhs, rule.ref());
+                rule.rhs = removeDirect(rule.rhs, rule.reff);
             }
             else {
                 //indirect
@@ -40,7 +40,7 @@ public class LeftRecursive {
 
     public Node indirect(RuleDecl rule) {
         Node node = rule.rhs.copy();
-        Name ref = rule.ref();
+        Name ref = rule.reff;
         //cut last transition that reaches rule
         Set<Name> set = Helper.first(node, tree, true, true, false);
         for (Name any : set) {

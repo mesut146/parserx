@@ -96,6 +96,7 @@ public class AlphabetBuilder extends SimpleTransformer {
 
         //first collect ranges
         for (TokenDecl token : tree.tokens) {
+            System.out.println(token.name);
             transformToken(token);
         }
         //find intersecting ranges and split them

@@ -2,8 +2,6 @@ package mesut.parserx.nodes;
 
 import mesut.parserx.gen.ll.Type;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 //rule decl in grammar
@@ -11,10 +9,9 @@ import java.util.Objects;
 public class RuleDecl extends Node {
 
     public static boolean printIndex = false;
-    public String name;
     public Node rhs;
+    public Name reff;
     public int index;
-    public List<Node> args = new ArrayList<>();
     public boolean hidden = false;//if true rule has no effect
     public Type retType;//ast type in case it is modified
     public boolean isRecursive;
@@ -31,24 +28,35 @@ public class RuleDecl extends Node {
         if (name.equals("EOF")) {
             throw new RuntimeException("rule name 'EOF' is reserved use another");
         }
-        this.name = name;
+        this.reff = new Name(name);
         this.rhs = rhs;
     }
 
-    public Name ref() {
-        Name res = new Name(name, false);
-        res.args = new ArrayList<>(args);
-        return res;
+    public RuleDecl(Name reff, Node rhs) {
+        this.reff = reff;
+        this.rhs = rhs;
+    }
+
+    public RuleDecl(Name reff) {
+        this.reff = reff;
+    }
+
+    public String getName() {
+        return reff.toString();
+    }
+
+    public String baseName() {
+        return reff.name;
     }
 
     @Override
     public String toString() {
         String s;
         if (rhs.isOr()) {
-            s = name + printArgs() + ":\n" + rhs.asOr().withNewline() + ";";
+            s = reff + ":\n" + rhs.asOr().withNewline() + ";";
         }
         else {
-            s = name + printArgs() + " = " + rhs + ";";
+            s = reff + " = " + rhs + ";";
         }
 
         if (hidden) {
@@ -60,24 +68,17 @@ public class RuleDecl extends Node {
         return s;
     }
 
-    String printArgs() {
-        if (args.isEmpty()) {
-            return "";
-        }
-        return "(" + NodeList.join(args, ", ") + ")";
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RuleDecl decl = (RuleDecl) o;
-        return index == decl.index && Objects.equals(name, decl.name);
+        return index == decl.index && Objects.equals(reff, decl.reff);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, index);
+        return Objects.hash(reff, index);
     }
 
 }

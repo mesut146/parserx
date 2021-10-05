@@ -19,7 +19,7 @@ public class VisitorGenerator {
     }
 
     String ruleType(RuleDecl decl) {
-        return options.astClass + "." + decl.name;
+        return options.astClass + "." + decl.baseName();
     }
 
     public void generate() throws IOException {
@@ -41,7 +41,7 @@ public class VisitorGenerator {
         writer.append(String.format("public interface %s<R,P>{", className));
         writer.append("");
         for (RuleDecl decl : tree.rules) {
-            writer.append(String.format("R visit%s(%s node, P p);", Utils.camel(decl.name), ruleType(decl)));
+            writer.append(String.format("R visit%s(%s node, P p);", Utils.camel(decl.baseName()), ruleType(decl)));
         }
         writer.append("}");
 
@@ -63,7 +63,7 @@ public class VisitorGenerator {
         writer.append(String.format("public class %s<R,P>{", className));
         writer.append("");
         for (RuleDecl decl : tree.rules) {
-            writer.append(String.format("public R visit%s(%s node, P p){", Utils.camel(decl.name), ruleType(decl)));
+            writer.append(String.format("public R visit%s(%s node, P p){", Utils.camel(decl.baseName()), ruleType(decl)));
             writer.append("return null;");
             writer.append("}");
             writer.append("");

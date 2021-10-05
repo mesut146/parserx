@@ -83,6 +83,64 @@ public class Helper {
         }
     }
 
+    /*private static boolean isEpsilon(Node node, Tree tree) {
+        return isEpsilon(node, tree, new HashMap<Name, Boolean>());
+    }*/
+
+    private static boolean isEpsilon(Node node, Tree tree, Map<Name, Boolean> set) {
+        if (node.isEpsilon()) {
+            return true;
+        }
+        else if (node.isName()) {
+            Name name = node.asName();
+            if (name.astInfo.isFactored) {
+                return true;
+            }
+            if (name.isRule()) {
+                Boolean val = set.get(name);
+                if (val == null) {
+
+                }
+                else {
+
+                }
+                /*if (set.add(name)) {
+                    RuleDecl decl = tree.getRule(name);
+                    return isEpsilon(decl.rhs, tree, set);
+                }
+                else {
+                    //todo??
+                }*/
+            }
+            else {
+                return false;
+            }
+        }
+        else if (node.isOr()) {
+            for (Node ch : node.asOr()) {
+                if (!isEpsilon(ch, tree, set)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        else if (node.isSequence()) {
+            for (Node ch : node.asSequence()) {
+                if (!isEpsilon(ch, tree, set)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        else if (node.isGroup()) {
+            return isEpsilon(node.asGroup().node, tree, set);
+        }
+        else if (node.isRegex()) {
+            return isEpsilon(node.asRegex().node, tree, set);
+        }
+        return false;
+    }
+
     public static void firstLoop(Node node, Tree tree, Set<Item> set) {
         if (node.isName()) {
             Name name = node.asName();

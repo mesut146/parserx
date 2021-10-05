@@ -38,7 +38,7 @@ public class IdMap {
         }
 
         for (RuleDecl rule : tree.rules) {
-            map.put(rule.ref(), ++lastId);
+            map.put(rule.reff, ++lastId);
         }
         map.put(new Name(LrDFAGen.startName, false), ++lastId);
     }

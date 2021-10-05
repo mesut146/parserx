@@ -42,6 +42,9 @@ public class PrepareTree extends SimpleTransformer {
                 throw new RuntimeException("invalid reference: " + node.name + " in " + getDecl());
             }
             else {
+                if (decl == curToken) {
+                    throw new RuntimeException("recursive token reference is not allowed: " + decl);
+                }
                 if (decl.isSkip && curRule != null) {
                     throw new RuntimeException("skip token inside production is not allowed");
                 }
@@ -55,7 +58,7 @@ public class PrepareTree extends SimpleTransformer {
     }
 
     String getDecl() {
-        return curRule != null ? curRule.name : curToken.name;
+        return curRule != null ? curRule.getName() : curToken.name;
     }
 
     @Override

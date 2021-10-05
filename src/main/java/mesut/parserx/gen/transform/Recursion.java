@@ -16,10 +16,10 @@ public class Recursion {
     public void all() {
         for (int i = 0; i < tree.rules.size(); ) {
             RuleDecl decl = tree.rules.get(i++);
-            if (Helper.first(decl.rhs, tree, true).contains(decl.ref())) {
+            if (Helper.first(decl.rhs, tree, true).contains(decl.reff)) {
                 any = true;
                 if (debug) {
-                    System.out.println("removing recursion on " + decl.ref());
+                    System.out.println("removing recursion on " + decl.reff);
                 }
                 handle(decl);
             }
@@ -29,7 +29,7 @@ public class Recursion {
     public void handle(RuleDecl decl) {
         //A= A A(A) | A_no_A
         //A= A_no_A A(A)*
-        Name sym = decl.ref();
+        Name sym = decl.reff.copy();
         sym.astInfo.outerVar = "res";
         //sym.astInfo.isFactor = true;
         //sym.astInfo.factorName =;

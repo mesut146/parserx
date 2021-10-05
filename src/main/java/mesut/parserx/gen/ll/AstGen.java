@@ -37,7 +37,7 @@ public class AstGen {
         astWriter.append("public class %s{", options.astClass);
         for (RuleDecl decl : tree.rules) {
             groupCount = 1;
-            curRule = decl.name;
+            curRule = decl.baseName();
             model(decl);
         }
         astWriter.append("}");
@@ -49,13 +49,13 @@ public class AstGen {
 
     void model(RuleDecl decl) {
         classes = new CodeWriter(true);
-        astWriter.append("public static class %s{", decl.name);
-        Type type = new Type(options.astClass, decl.name);
+        astWriter.append("public static class %s{", decl.baseName());
+        Type type = new Type(options.astClass, decl.baseName());
         model(decl.rhs, type, "res", astWriter);
         astWriter.all(classes.get());
         if (decl.isOriginal && options.genVisitor) {
             astWriter.append(String.format("public <R,P> R accept(%sVisitor<R,P> visitor, P arg){", options.parserClass));
-            astWriter.all(String.format("return visitor.visit%s(this, arg);\n}", Utils.camel(decl.name)));
+            astWriter.all(String.format("return visitor.visit%s(this, arg);\n}", Utils.camel(decl.baseName())));
         }
         writePrinter(decl.rhs, astWriter);
         astWriter.append("}");

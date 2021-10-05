@@ -92,7 +92,7 @@ public class FactorLoop extends SimpleTransformer {
                     Factor.PullInfo info2 = pull(or.get(j), regex);
                     if (info1 != null && info2 != null) {
                         if (debug)
-                            System.out.printf("factoring %s in %s\n", regex, curRule.name);
+                            System.out.printf("factoring %s in %s\n", regex, curRule.reff);
 
                         modified = true;
                         Factor.PullInfo info = pullOr(or, regex);

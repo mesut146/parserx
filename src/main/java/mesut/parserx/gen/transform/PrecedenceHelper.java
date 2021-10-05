@@ -25,8 +25,8 @@ public class PrecedenceHelper {
         return tree;
     }
 
-    boolean isName(Node node, String name) {
-        return node.isName() && node.asName().name.equals(name);
+    boolean isName(Node node, Name name) {
+        return node.isName() && node.asName().equals(name);
     }
 
     String getOp(Name name) {
@@ -53,7 +53,7 @@ public class PrecedenceHelper {
             }
             boolean added = false;
             Sequence seq = ch.asSequence();
-            if (seq.size() == 3 && isName(seq.first(), rule.name) && isName(seq.last(), rule.name)) {
+            if (seq.size() == 3 && isName(seq.first(), rule.reff) && isName(seq.last(), rule.reff)) {
                 Node mid = seq.get(1);
                 if (mid.isString()) {
                     addLast(mid.asString().value);
@@ -141,7 +141,7 @@ public class PrecedenceHelper {
         rule.rhs = res;
 
         //remove lowest because it accepts any so it is in main rule
-        res.add(Sequence.of(rule.ref(), groups.remove(lastLevel + 1).normal(), rule.ref()));
+        res.add(Sequence.of(rule.reff.copy(), groups.remove(lastLevel + 1).normal(), rule.reff.copy()));
 
         Node prev = new Or(rest.list);
         //start from highest
@@ -155,7 +155,7 @@ public class PrecedenceHelper {
             //make lhs rhs
             RuleDecl lhsRule = new RuleDecl(lhsName, new Or(ref, prev).normal());
             tree.addRule(lhsRule);
-            prev = lhsRule.ref();
+            prev = lhsRule.reff.copy();
         }
     }
 

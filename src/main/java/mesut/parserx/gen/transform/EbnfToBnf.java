@@ -40,10 +40,10 @@ public class EbnfToBnf {
         //preserves rule order
         LinkedHashMap<Name, Or> map = new LinkedHashMap<>();
         for (RuleDecl decl : input.rules) {
-            Or or = map.get(decl.ref());
+            Or or = map.get(decl.reff);
             if (or == null) {
                 or = new Or();
-                map.put(decl.ref(), or);
+                map.put(decl.reff, or);
             }
             or.add(decl.rhs);
         }
@@ -89,7 +89,7 @@ public class EbnfToBnf {
             if (rhsSequence && !rhs.isSequence()) {
                 rhs = new Sequence(rhs);
             }
-            addRule(new RuleDecl(decl.name, rhs));
+            addRule(new RuleDecl(decl.reff, rhs));
         }
     }
 
@@ -110,21 +110,22 @@ public class EbnfToBnf {
         return node;
     }
 
-    Node transform(Group groupNode, RuleDecl decl) {
+    //todo remove this,use Normalizer instead
+    Node transform(Group group, RuleDecl decl) {
         //r = a (e1 e2) b;
         //r = a rg1 b;
         //rg1 = e1 e2;
-        String newName = decl.name + getCount(decl.name);
+        String newName = decl.baseName() + getCount(decl.baseName());
         RuleDecl newDecl = new RuleDecl(newName);
-        newDecl.rhs = transform(groupNode.node, newDecl);
+        newDecl.rhs = transform(group.node, newDecl);
         addRule(newDecl);
-        return newDecl.ref();
+        return newDecl.reff.copy();
     }
 
     Node transform(Or orNode, RuleDecl decl) {
         if (expand_or) {
             for (Node node : orNode) {
-                RuleDecl newDecl = new RuleDecl(decl.name);
+                RuleDecl newDecl = new RuleDecl(decl.reff);
                 newDecl.rhs = transform(node, newDecl);
                 transformRhs(newDecl);
             }
@@ -154,7 +155,8 @@ public class EbnfToBnf {
             //b* = € | b b*; right
             //b+ = b | b b+; right
             //b+ = b | b+ b; left
-            Name ref = new Name(decl.name + getCount(decl.name));
+            Name ref = decl.reff.copy();
+            ref.name += getCount(decl.baseName());
             Or or = new Or();
 
             if (regex.node.isGroup()) {
@@ -194,7 +196,8 @@ public class EbnfToBnf {
         }
         else {
             //r? = € | a;
-            Name ref = new Name(decl.name + getCount(decl.name));
+            Name ref = decl.reff;
+            ref.name += getCount(decl.baseName());
             Node newNode = new Or(new Epsilon(), regex.node);
             RuleDecl r = new RuleDecl(ref.name, newNode);
             r.rhs = transform(newNode, r);

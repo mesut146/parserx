@@ -37,7 +37,7 @@ public class AstBuilderGen {
         writer.append("public class AstBuilder{");
 
         for (RuleDecl decl : tree.rules) {
-            writer.append("public static %s make%s(Symbol node){", decl.retType, decl.name);
+            writer.append("public static %s make%s(Symbol node){", decl.retType, decl.baseName());
             writer.append("%s res = new %s();", decl.retType, decl.retType);
             Or or = decl.rhs.asOr();
 
@@ -53,8 +53,8 @@ public class AstBuilderGen {
                 Node ch = or.get(i);
                 if (ch.isSequence()) {
                     Sequence s = ch.asSequence();
-                    Type type = new Type(new Type(options.astClass, decl.name), Utils.camel(decl.name) + (i + 1));
-                    String v = decl.name.toLowerCase() + (i + 1);
+                    Type type = new Type(new Type(options.astClass, decl.baseName()), Utils.camel(decl.baseName()) + (i + 1));
+                    String v = decl.baseName().toLowerCase() + (i + 1);
                     writer.append("%s %s = res.%s = new %s();", type, v, v, type);
                     for (int j = 0; j < s.size(); j++) {
                         Name name = s.get(j).asName();

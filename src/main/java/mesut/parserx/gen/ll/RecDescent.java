@@ -166,7 +166,7 @@ public class RecDescent {
         Type type = new Type(options.astClass, decl.retType.name);//todo decl.type
         StringBuilder params = new StringBuilder();
         int i = 0;
-        for (Node arg : decl.args) {
+        for (Node arg : decl.reff.args) {
             if (i > 0) params.append(", ");
             if (arg.isName() && arg.asName().isToken) {
                 params.append("Token ").append(arg.astInfo.factorName);
@@ -188,7 +188,7 @@ public class RecDescent {
             }
             i++;
         }
-        code.append("public %s %s(%s){", type, decl.name, params);
+        code.append("public %s %s(%s){", type, decl.baseName(), params);
         code.append("%s res = new %s();", type, type);
         flagCount = 0;
         firstCount = 0;

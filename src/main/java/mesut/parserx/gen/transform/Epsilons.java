@@ -85,13 +85,13 @@ public class Epsilons {
             }
 
             RuleDecl decl = tree.getRule(name);
-            String newName = Factor.encode(name).name + "_noe";
+            String newName = name.encode().name + "_noe";
             RuleDecl newDecl = tree.getRule(newName);
             if (newDecl == null) {
                 newDecl = new RuleDecl(newName, trim(decl.rhs));
                 tree.addRule(newDecl);
             }
-            return newDecl.ref();
+            return newDecl.reff.copy();
         }
         else {
             throw new RuntimeException("invalid node: " + node);
