@@ -82,9 +82,9 @@ public class AstBuilder {
     public RuleDecl visitRuledecl(Ast.ruleDecl node) {
         RuleDecl decl = new RuleDecl(node.name.IDENT.value);
         if (node.args != null) {
-            decl.reff.args.add(new Name(node.args.name.IDENT.value));
+            decl.ref.args.add(new Name(node.args.name.IDENT.value));
             for (Ast.argsg1 g1 : node.args.rest) {
-                decl.reff.args.add(new Name(g1.name.IDENT.value));
+                decl.ref.args.add(new Name(g1.name.IDENT.value));
             }
         }
         decl.rhs = visitRhs(node.rhs);

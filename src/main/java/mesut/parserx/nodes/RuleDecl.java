@@ -10,7 +10,7 @@ public class RuleDecl extends Node {
 
     public static boolean printIndex = false;
     public Node rhs;
-    public Name reff;
+    public Name ref;
     public int index;
     public boolean hidden = false;//if true rule has no effect
     public Type retType;//ast type in case it is modified
@@ -28,35 +28,35 @@ public class RuleDecl extends Node {
         if (name.equals("EOF")) {
             throw new RuntimeException("rule name 'EOF' is reserved use another");
         }
-        this.reff = new Name(name);
+        this.ref = new Name(name, false);
         this.rhs = rhs;
     }
 
-    public RuleDecl(Name reff, Node rhs) {
-        this.reff = reff;
+    public RuleDecl(Name ref, Node rhs) {
+        this.ref = ref;
         this.rhs = rhs;
     }
 
-    public RuleDecl(Name reff) {
-        this.reff = reff;
+    public RuleDecl(Name ref) {
+        this.ref = ref;
     }
 
     public String getName() {
-        return reff.toString();
+        return ref.toString();
     }
 
     public String baseName() {
-        return reff.name;
+        return ref.name;
     }
 
     @Override
     public String toString() {
         String s;
         if (rhs.isOr()) {
-            s = reff + ":\n" + rhs.asOr().withNewline() + ";";
+            s = ref + ":\n" + rhs.asOr().withNewline() + ";";
         }
         else {
-            s = reff + " = " + rhs + ";";
+            s = ref + ": " + rhs + ";";
         }
 
         if (hidden) {
@@ -73,12 +73,12 @@ public class RuleDecl extends Node {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RuleDecl decl = (RuleDecl) o;
-        return index == decl.index && Objects.equals(reff, decl.reff);
+        return index == decl.index && Objects.equals(ref, decl.ref);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(reff, index);
+        return Objects.hash(ref, index);
     }
 
 }

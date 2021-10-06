@@ -5,6 +5,7 @@ import mesut.parserx.gen.ll.AstInfo;
 //base class used in grammar file
 public abstract class Node {
 
+    public static boolean printVarName = true;
     public String label;//name in alternation
     public AstInfo astInfo = new AstInfo();
 
@@ -103,7 +104,7 @@ public abstract class Node {
     }
 
     protected String varString() {
-        if (astInfo.varName != null) return astInfo.varName + " = ";
+        if (printVarName && astInfo.varName != null) return astInfo.varName + "=";
         return "";
     }
 

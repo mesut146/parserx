@@ -40,10 +40,10 @@ public class EbnfToBnf {
         //preserves rule order
         LinkedHashMap<Name, Or> map = new LinkedHashMap<>();
         for (RuleDecl decl : input.rules) {
-            Or or = map.get(decl.reff);
+            Or or = map.get(decl.ref);
             if (or == null) {
                 or = new Or();
-                map.put(decl.reff, or);
+                map.put(decl.ref, or);
             }
             or.add(decl.rhs);
         }
@@ -89,7 +89,7 @@ public class EbnfToBnf {
             if (rhsSequence && !rhs.isSequence()) {
                 rhs = new Sequence(rhs);
             }
-            addRule(new RuleDecl(decl.reff, rhs));
+            addRule(new RuleDecl(decl.ref, rhs));
         }
     }
 
@@ -119,13 +119,13 @@ public class EbnfToBnf {
         RuleDecl newDecl = new RuleDecl(newName);
         newDecl.rhs = transform(group.node, newDecl);
         addRule(newDecl);
-        return newDecl.reff.copy();
+        return newDecl.ref.copy();
     }
 
     Node transform(Or orNode, RuleDecl decl) {
         if (expand_or) {
             for (Node node : orNode) {
-                RuleDecl newDecl = new RuleDecl(decl.reff);
+                RuleDecl newDecl = new RuleDecl(decl.ref);
                 newDecl.rhs = transform(node, newDecl);
                 transformRhs(newDecl);
             }
@@ -155,7 +155,7 @@ public class EbnfToBnf {
             //b* = € | b b*; right
             //b+ = b | b b+; right
             //b+ = b | b+ b; left
-            Name ref = decl.reff.copy();
+            Name ref = decl.ref.copy();
             ref.name += getCount(decl.baseName());
             Or or = new Or();
 
@@ -196,7 +196,7 @@ public class EbnfToBnf {
         }
         else {
             //r? = € | a;
-            Name ref = decl.reff;
+            Name ref = decl.ref;
             ref.name += getCount(decl.baseName());
             Node newNode = new Or(new Epsilon(), regex.node);
             RuleDecl r = new RuleDecl(ref.name, newNode);

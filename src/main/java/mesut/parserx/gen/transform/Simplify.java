@@ -3,6 +3,7 @@ package mesut.parserx.gen.transform;
 import mesut.parserx.gen.ll.AstInfo;
 import mesut.parserx.nodes.*;
 
+//remove unnecessary nodes & merge
 public class Simplify extends SimpleTransformer {
 
     public Simplify(Tree tree) {

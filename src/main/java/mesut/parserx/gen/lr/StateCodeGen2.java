@@ -134,13 +134,13 @@ public class StateCodeGen2 {
                     writer.append("case %s:", writeCase(la));
                 }
                 writer.append("{");
-                if (item.rule.reff.equals(gen.start.reff)) {
+                if (item.rule.ref.equals(gen.start.ref)) {
                     //accept
                     writer.append("System.out.println(\"accept\");");
                     writer.append("return stack.peek();");
                 }
                 else {
-                    writer.append("Symbol tmp = new Symbol(%d);", idMap.getId(item.rule.reff));
+                    writer.append("Symbol tmp = new Symbol(%d);", idMap.getId(item.rule.ref));
                     writer.append("tmp.name = \"%s\";", item.rule.baseName());
                     writer.append("tmp.index = %s;", item.rule.index);
                     if (item.dotPos == 1) {
@@ -164,7 +164,7 @@ public class StateCodeGen2 {
                     for (LrItemSet s : item.gotoSet) {
                         writer.append("case %d:", dfa.getId(s));
                         writer.up();
-                        writer.append("state = %d;", getGoto(s, item.rule.reff).stateId);
+                        writer.append("state = %d;", getGoto(s, item.rule.ref).stateId);
                         writer.append("continue loop;");
                         //writer.append("break;");
                         writer.down();

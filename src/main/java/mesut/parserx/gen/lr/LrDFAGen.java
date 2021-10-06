@@ -284,7 +284,7 @@ public class LrDFAGen {
                     }
                     else {
                         //check prec
-                        if (shift.rule.reff.equals(reduce.rule.reff)) {
+                        if (shift.rule.ref.equals(reduce.rule.ref)) {
                             if (reduce.rule.index < shift.rule.index) {
                                 //prefer reduce
                                 removeItem(set, shift);

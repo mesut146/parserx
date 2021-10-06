@@ -23,7 +23,7 @@ public class Normalizer extends SimpleTransformer {
             //todo restart
             RuleDecl decl = tree.rules.get(i);
             decl.retType = new Type(tree.options.astClass, decl.baseName());
-            if (!map.contains(decl.reff)) {
+            if (!map.contains(decl.ref)) {
                 decl.isOriginal = true;
             }
             transformRule(decl);
@@ -36,9 +36,9 @@ public class Normalizer extends SimpleTransformer {
         RuleDecl tmp = new RuleDecl(cls, node.node);
         tmp.retType = new Type(tree.options.astClass, cls);
         tree.addRule(tmp);
-        map.add(tmp.reff);
+        map.add(tmp.ref);
 
-        Name ref = tmp.reff.copy();
+        Name ref = tmp.ref.copy();
         if (node.astInfo.varName != null) {
             ref.astInfo.varName = node.astInfo.varName;
         }

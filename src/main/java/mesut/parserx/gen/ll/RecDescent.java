@@ -159,6 +159,12 @@ public class RecDescent {
         if (debug && recursion.any) {
             tree.printRules();
         }
+
+        File out = new File(options.outDir, Utils.newName(tree.file.getName(), "-final.g"));
+        Name.autoEncode = false;
+        Node.printVarName = false;
+        Utils.write(tree.toString(), out);
+
         new LexerGenerator(tree).generate();
     }
 
@@ -166,7 +172,7 @@ public class RecDescent {
         Type type = new Type(options.astClass, decl.retType.name);//todo decl.type
         StringBuilder params = new StringBuilder();
         int i = 0;
-        for (Node arg : decl.reff.args) {
+        for (Node arg : decl.ref.args) {
             if (i > 0) params.append(", ");
             if (arg.isName() && arg.asName().isToken) {
                 params.append("Token ").append(arg.astInfo.factorName);

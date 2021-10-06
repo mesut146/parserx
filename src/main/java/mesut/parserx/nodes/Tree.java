@@ -205,7 +205,7 @@ public class Tree {
 
     public RuleDecl getRule(Name res) {
         for (RuleDecl decl : rules) {
-            if (decl.reff.equals(res)) {
+            if (decl.ref.equals(res)) {
                 return decl;
             }
         }
@@ -215,7 +215,7 @@ public class Tree {
     public List<RuleDecl> getRules(Name name) {
         List<RuleDecl> list = new ArrayList<>();
         for (RuleDecl decl : rules) {
-            if (decl.reff.equals(name)) {
+            if (decl.ref.equals(name)) {
                 list.add(decl);
             }
         }

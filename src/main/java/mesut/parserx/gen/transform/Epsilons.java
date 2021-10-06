@@ -51,13 +51,24 @@ public class Epsilons {
             Node a = or.first();
             Node b = Helper.trim(or);
             if (Helper.canBeEmpty(a, tree)) {
+                Node a1 = trim(a);
                 if (Helper.canBeEmpty(b, tree)) {
                     //A | B = A1 | € | B1 | € = A1 | B1 | €
-                    return new Or(trim(a), trim(b));
+                    if (a1 == null) {
+                        return trim(b);
+                    }
+                    else {
+                        return new Or(a1, trim(b));
+                    }
                 }
                 else {
                     //A | B = A1 | € | B
-                    return new Or(trim(a), b);
+                    if (a1 == null) {
+                        return b;
+                    }
+                    else {
+                        return new Or(a1, b);
+                    }
                 }
             }
             else {
@@ -72,16 +83,43 @@ public class Epsilons {
             Node b = trim(Helper.trim(s));
             //both a b are empty
             //A B = (A1 | €) (B1 | €) = A1 B1 | A1 | B1 | € = A1 B1? | B1 | €
-            Sequence s1 = new Sequence(a, b);
-            return new Or(s1, a, b);
+            if (a == null) {
+                if (isFactored(s.first())) {
+                    Sequence s1 = new Sequence(s.first(), b);
+                    s1.astInfo.code = s.astInfo.code;
+                    b.astInfo.code = s.astInfo.code;
+                    return new Or(s1, b);
+                }
+                else {
+                    //a is epsilon without factor
+                    b.astInfo.code = s.astInfo.code;
+                    return b;
+                }
+            }
+            else {
+                Sequence s1 = new Sequence(a, b);
+                s1.astInfo.code = s.astInfo.code;
+                a.astInfo.code = s.astInfo.code;
+                b.astInfo.code = s.astInfo.code;
+                return new Or(s1, a, b);
+            }
         }
         else if (node.isGroup()) {
-            return new Group(trim(node.asGroup().node)).normal();
+            Group res = new Group(trim(node.asGroup().node));
+            res.astInfo = node.astInfo;
+            return res;
         }
         else if (node.isName()) {
             Name name = node.asName();
             if (name.astInfo.isFactored) {
-                return name;
+                //throw new RuntimeException();
+                //todo null is better
+                //return name;
+                return null;
+            }
+            if (isFactored(name)) {
+                //still factored but chained
+                return null;
             }
 
             RuleDecl decl = tree.getRule(name);
@@ -89,12 +127,18 @@ public class Epsilons {
             RuleDecl newDecl = tree.getRule(newName);
             if (newDecl == null) {
                 newDecl = new RuleDecl(newName, trim(decl.rhs));
+                newDecl.retType = decl.retType;
+                newDecl.ref.args = name.args;//todo improve
                 tree.addRule(newDecl);
             }
-            return newDecl.reff.copy();
+            return newDecl.ref.copy();
         }
         else {
             throw new RuntimeException("invalid node: " + node);
         }
+    }
+
+    private boolean isFactored(Node a) {
+        return Helper.first(a, tree, true, false, true).isEmpty();
     }
 }

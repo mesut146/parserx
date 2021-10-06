@@ -118,10 +118,13 @@ public class LLGenTest {
     public void math() throws IOException {
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        Factor.debug = true;
+        /*Factor.debug = true;
+        Name.autoEncode = false;
+        Factor.factorSequence = false;
         new Factor(tree).factorize();
-        /*RecDescent gen = new RecDescent(tree);
-        gen.gen();*/
+        tree.printRules();*/
+        RecDescent gen = new RecDescent(tree);
+        gen.gen();
     }
 
     @Test

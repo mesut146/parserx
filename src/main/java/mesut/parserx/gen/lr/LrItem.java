@@ -48,7 +48,7 @@ public class LrItem {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(rule.reff);
+        sb.append(rule.ref);
         sb.append(" -> ");
         Sequence rhs = rule.rhs.asSequence();
         for (int i = 0; i < rhs.size(); i++) {
@@ -72,7 +72,7 @@ public class LrItem {
 
     public String toString2(Tree tree) {
         StringBuilder sb = new StringBuilder();
-        sb.append(rule.reff);
+        sb.append(rule.ref);
         sb.append(" -> ");
         Sequence rhs = rule.rhs.asSequence();
         for (int i = 0; i < rhs.size(); i++) {
