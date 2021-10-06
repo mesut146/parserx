@@ -13,11 +13,13 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Set;
 
 // ll(1) recursive descent parser generator
 public class RecDescent {
     public static boolean debug = false;
+    public static int loopLimit = 10;
     public Options options;
     Tree tree;
     CodeWriter code = new CodeWriter(true);
@@ -48,24 +50,22 @@ public class RecDescent {
         }
         code.append("import java.util.List;");
         code.append("import java.util.ArrayList;");
+        code.append("import java.io.IOException;");
         if (options.packageName != null) {
-            code.append(String.format("import %s.%s;", options.packageName, options.astClass));
+            code.append("import %s.%s;", options.packageName, options.astClass);
         }
         code.append("");
-        code.append(String.format("public class %s{", options.parserClass));
-        code.append(String.format("List<%s> list = new ArrayList<>();", options.tokenClass));
-        code.append(String.format("%s lexer;", options.lexerClass));
+        code.append("public class %s{", options.parserClass);
+        code.append("%s lexer;", options.lexerClass);
+        code.append("%s la;", options.tokenClass);
         code.append("");
 
-        code.append(String.format("public %s(%s lexer) throws java.io.IOException{", options.parserClass, options.lexerClass));
+        code.append("public %s(%s lexer) throws IOException{", options.parserClass, options.lexerClass);
 
-        code.all("this.lexer = lexer;\nfill();\n}");
+        code.all("this.lexer = lexer;\nla = lexer.next();\n}");
         code.append("");
 
         writeConsume();
-        writePop();
-        writePeek();
-        writeFill();
 
         for (RuleDecl decl : tree.rules) {
             if (!decl.hidden) {
@@ -82,36 +82,17 @@ public class RecDescent {
         genTokenType();
     }
 
-    void writeFill() {
-        String s = "void fill() throws java.io.IOException{\n" +
-                "while(true){\n" +
-                String.format("%s t = lexer.%s();\n", options.tokenClass, options.lexerFunction) +
-                "list.add(t);\n" +
-                "if(t == null || t.type == 0) return;\n" +
-                "}\n" +
-                "}";
-        code.all(s);
-    }
-
     void writeConsume() {
         code.append("%s consume(int type){", options.tokenClass);
-        code.append("%s t = pop();", options.tokenClass);
-        code.append("if(t.type != type){");
-        code.append("throw new RuntimeException(\"unexpected token: \" + t + \" expecting: \" + type);");
+        code.append("if(la.type != type){");
+        code.append("throw new RuntimeException(\"unexpected token: \" + la + \" expecting: \" + type);");
         code.all("}");
-        code.append("return t;");
+        code.append("try{");
+        code.append("la = lexer.next();");
+        code.all("}\ncatch(IOException e){");
+        code.append("throw new RuntimeException(e);");
         code.append("}");
-    }
-
-    void writePop() {
-        code.append("%s pop(){", options.tokenClass);
-        code.append("return list.remove(0);");
-        code.append("}");
-    }
-
-    void writePeek() {
-        code.append("%s peek(){", options.tokenClass);
-        code.append("return list.get(0);");
+        code.append("return la;");
         code.append("}");
     }
 
@@ -135,8 +116,7 @@ public class RecDescent {
     }
 
     String peekExpr() {
-        //todo optimize to field access
-        return "peek().type";
+        return "la.type";
     }
 
     private void prepare() throws IOException {
@@ -257,8 +237,8 @@ public class RecDescent {
             }
         }
         else if (regex.isStar()) {
-            if (set.size() == 1) {
-                code.append(String.format("while(%s == %s.%s){", peekExpr(), tokens, set.iterator().next().name));
+            if (set.size() <= loopLimit) {
+                code.append("while(%s){", loopExpr(set));
                 write(regex.node);
                 code.append("}");
             }
@@ -277,11 +257,11 @@ public class RecDescent {
         }
         else {
             //plus
-            if (set.size() == 1) {
+            if (set.size() <= loopLimit) {
                 code.append("do{");
                 write(regex.node);
                 code.down();
-                code.append(String.format("}while(%s == %s.%s);", peekExpr(), tokens, set.iterator().next().name));
+                code.append("}while(%s);", loopExpr(set));
             }
             else {
                 flagCount++;
@@ -293,7 +273,7 @@ public class RecDescent {
                 code.append(String.format("boolean %s = true;", flagStr));
                 code.append(String.format("boolean %s = true;", firstStr));
                 code.append(String.format("while(%s){", flagStr));
-                String def = String.format("if(!%s)  %s = false;\n" + "else  throw new RuntimeException(\"unexpected token: \"+peek());", firstStr, flagStr);
+                String def = String.format("if(!%s)  %s = false;\n" + "else  throw new RuntimeException(\"unexpected token: \"+la);", firstStr, flagStr);
                 beginSwitch(set);
                 write(regex.node);
                 endSwitch(def);
@@ -301,6 +281,18 @@ public class RecDescent {
                 code.append("}");
             }
         }
+    }
+
+    String loopExpr(Set<Name> set) {
+        StringBuilder sb = new StringBuilder();
+        for (Iterator<Name> it = set.iterator(); it.hasNext(); ) {
+            Name tok = it.next();
+            sb.append(peekExpr()).append(" == ").append(tokens).append(".").append(tok.name);
+            if (it.hasNext()) {
+                sb.append(" || ");
+            }
+        }
+        return sb.toString();
     }
 
     private void writeName(Name name) {
@@ -409,14 +401,14 @@ public class RecDescent {
             code.append("default:{");
             StringBuilder arr = new StringBuilder();
             boolean first = true;
-            for (Name nm : Helper.first(or, tree, true)) {
+            for (Name nm : Helper.first(or, tree, true, false, true)) {
                 if (!first) {
                     arr.append(",");
                 }
                 arr.append(nm);
                 first = false;
             }
-            code.append(String.format("throw new RuntimeException(\"expecting one of [%s] got: \"+peek());", arr));
+            code.append("throw new RuntimeException(\"expecting one of [%s] got: \"+la);", arr);
             code.append("}");
         }
         code.append("}");

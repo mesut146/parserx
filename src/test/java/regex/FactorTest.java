@@ -31,7 +31,7 @@ public class FactorTest {
     public void eps() throws Exception {
         //Tree tree = Tree.makeTree(Env.getResFile("factor.g"));
         Tree tree = Env.tree("eps.g");
-        System.out.println(new Epsilons(tree).trim(tree.getRule("C").rhs));
+        System.out.println(Epsilons.trim(tree.getRule("C").rhs, tree));
         System.out.println(tree);
     }
 

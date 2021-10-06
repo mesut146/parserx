@@ -15,8 +15,8 @@ public class Sequence extends NodeList {
         super(arr);
     }
 
-    public static Node of(Node... a) {
-        return new Sequence(a).normal();
+    public static Sequence of(Node... a) {
+        return new Sequence(a);
     }
 
     @Override

@@ -55,7 +55,7 @@ public class LLGenTest {
     @Test
     public void eps() throws Exception {
         Tree tree = Env.tree("factor/eps.g");
-        System.out.println(new Epsilons(tree).trim(tree.getRule("C").rhs));
+        System.out.println(Epsilons.trim(tree.getRule("C").rhs, tree));
     }
 
     @Test
@@ -118,13 +118,18 @@ public class LLGenTest {
     public void math() throws IOException {
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        /*Factor.debug = true;
+        Factor.debug = true;
         Name.autoEncode = false;
         Factor.factorSequence = false;
         new Factor(tree).factorize();
-        tree.printRules();*/
-        RecDescent gen = new RecDescent(tree);
-        gen.gen();
+        tree.printRules();
+        //new RecDescent(tree).gen();
+    }
+
+    @Test
+    public void mathReal() throws Exception {
+        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
+        DescTester.check(tree, "expr", "1+2");
     }
 
     @Test

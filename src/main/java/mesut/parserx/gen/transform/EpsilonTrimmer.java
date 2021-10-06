@@ -89,7 +89,7 @@ public class EpsilonTrimmer extends SimpleTransformer {
     @Override
     public Node transformName(Name node, Node parent) {
         if (node.isRule() && Helper.canBeEmpty(node, tree)) {
-            Node noe = new Epsilons(tree).trim(node);
+            Node noe = Epsilons.trim(node,tree);
             modified = true;
             return noe;
         }

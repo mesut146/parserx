@@ -253,22 +253,30 @@ public class Factor extends SimpleTransformer {
         return info;
     }
 
+    private boolean isFactored(Node a) {
+        return Helper.first(a, tree, true, false, true).isEmpty();
+    }
+
     PullInfo pullSeq(Sequence s, Name sym) {
         PullInfo info = new PullInfo();
-        //E=A B
+        //A B
         Node A = s.first();
         Node B = Helper.trim(s);
         if (Helper.start(A, sym, tree)) {
             PullInfo p1 = pull(A, sym);
             if (Helper.canBeEmpty(A, tree)) {
-                //A B = A_noe B | B
-                Node no = Epsilons.trim(A, tree);
-                Node B2 = B.copy();
-                Sequence se = new Sequence(no, B2);
-                no.astInfo = A.astInfo;
-                B2.astInfo.code = s.astInfo.code;
-                se.astInfo.code = s.astInfo.code;
-                info = pull(new Or(se, withCode(B.copy(), s)), sym);
+                if (Helper.start(B, sym, tree)) {
+                    throw new RuntimeException("not yet");
+                }
+                else {
+                    //A B = A_eps B | A_noe B
+                    Epsilons.Info a1 = Epsilons.trimInfo(A, tree);
+                    Sequence s1 = new Sequence(a1.eps, B);
+                    Sequence s2 = new Sequence(a1.noEps, B);
+                    s1.astInfo.code = s.astInfo.code;
+                    s2.astInfo.code = s.astInfo.code;
+                    return pull(new Or(s1, s2), sym);
+                }
             }
             else {
                 //A no empty
@@ -306,15 +314,18 @@ public class Factor extends SimpleTransformer {
                 }
             }
             else {
-                //A B=A_noe B | B
-                Node no = Epsilons.trim(A, tree);
-                Node se = Sequence.of(no, B);
-                Node B2 = B.copy();
-                if (s.astInfo.code != null) {
-                    se.astInfo.code = s.astInfo.code;
-                    B2.astInfo.code = s.astInfo.code;
+                //A B=A_noe B | A_eps B
+                Epsilons.Info a1 = Epsilons.trimInfo(A, tree);
+                Node s2 = Sequence.of(a1.eps, B.copy());
+                s2.astInfo.code = s.astInfo.code;
+                if (a1.noEps == null) {
+                    return pull(s2, sym);
                 }
-                info = pullOr(new Or(se, B2), sym);
+                else {
+                    Node s1 = Sequence.of(a1.noEps, B.copy());
+                    s1.astInfo.code = s.astInfo.code;
+                    info = pullOr(new Or(s1, s2), sym);
+                }
             }
         }
         return info;
