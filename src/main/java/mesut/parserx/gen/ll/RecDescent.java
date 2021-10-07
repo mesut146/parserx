@@ -45,7 +45,7 @@ public class RecDescent {
     public void gen() throws IOException {
         prepare();
         if (options.packageName != null) {
-            code.append("package " + options.packageName + ";");
+            code.append("package %s;", options.packageName);
             code.append("");
         }
         code.append("import java.util.List;");
@@ -100,15 +100,15 @@ public class RecDescent {
     void genTokenType() throws IOException {
         CodeWriter c = new CodeWriter(true);
         if (options.packageName != null) {
-            c.append("package " + options.packageName + ";");
+            c.append("package %s;", options.packageName);
             c.append("");
         }
-        c.append("public class " + tokens + "{");
+        c.append("public class %s{", tokens);
         c.append("public static final int EOF = 0;");
         int id = 1;
         for (TokenDecl decl : tree.tokens) {
             if (decl.isSkip) continue;
-            c.append(String.format("public static final int %s = %d;", decl.name, id));
+            c.append("public static final int %s = %d;", decl.name, id);
             id++;
         }
         c.append("}");
@@ -226,8 +226,8 @@ public class RecDescent {
         Set<Name> set = Helper.first(regex, tree, true, false, true);
         regex.node.astInfo.isInLoop = regex.isStar() || regex.isPlus();
         if (regex.isOptional()) {
-            if (set.size() == 1) {
-                code.append(String.format("if(%s == %s.%s){", peekExpr(), tokens, set.iterator().next().name));
+            if (set.size() <= loopLimit) {
+                code.append("if(%s){", loopExpr(set));
                 write(regex.node);
                 code.append("}");
             }
@@ -271,9 +271,9 @@ public class RecDescent {
                 String firstStr = "first";
                 if (flagCount > 1) flagStr += flagCount;
                 if (firstCount > 1) firstStr += firstCount;
-                code.append(String.format("boolean %s = true;", flagStr));
-                code.append(String.format("boolean %s = true;", firstStr));
-                code.append(String.format("while(%s){", flagStr));
+                code.append("boolean %s = true;", flagStr);
+                code.append("boolean %s = true;", firstStr);
+                code.append("while(%s){", flagStr);
                 String def = String.format("if(!%s)  %s = false;\n" + "else  throw new RuntimeException(\"unexpected token: \"+la);", firstStr, flagStr);
                 beginSwitch(set);
                 write(regex.node);
@@ -302,18 +302,18 @@ public class RecDescent {
         }
         if (name.astInfo.isFactored) {
             if (name.astInfo.isInLoop) {
-                code.append(String.format("%s.%s.add(%s);", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName));
+                code.append("%s.%s.add(%s);", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName);
             }
             else {
-                code.append(String.format("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName));
+                code.append("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName);
             }
         }
         else if (curRule.isRecursive) {
             if (name.astInfo.isPrimary) {
-                code.append(String.format("%s = %s();", name.astInfo.outerVar, name.name));
+                code.append("%s = %s();", name.astInfo.outerVar, name.name);
             }
             else {
-                code.append(String.format("%s = %s(%s);", name.astInfo.outerVar, name.name, name.astInfo.outerVar));
+                code.append("%s = %s(%s);", name.astInfo.outerVar, name.name, name.astInfo.outerVar);
             }
         }
         else {
@@ -335,14 +335,14 @@ public class RecDescent {
             }
             if (name.astInfo.isFactor) {
                 String type = name.isToken ? "Token" : (options.astClass + "." + name.name);
-                code.append(String.format("%s %s = %s;", type, name.astInfo.factorName, rhs));
+                code.append("%s %s = %s;", type, name.astInfo.factorName, rhs);
             }
             else {
                 if (name.astInfo.isInLoop) {
-                    code.append(String.format("%s.%s.add(%s);", name.astInfo.outerVar, name.astInfo.varName, rhs));
+                    code.append("%s.%s.add(%s);", name.astInfo.outerVar, name.astInfo.varName, rhs);
                 }
                 else {
-                    code.append(String.format("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, rhs));
+                    code.append("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, rhs);
                 }
             }
         }
@@ -351,12 +351,12 @@ public class RecDescent {
     private void writeGroup(Node node, Group group) {
         if (!node.astInfo.isFactorGroup) {
             String var = group.astInfo.varName;
-            code.append(String.format("%s %s = new %s();", group.astInfo.outerCls, var, group.astInfo.outerCls));
+            code.append("%s %s = new %s();", group.astInfo.outerCls, var, group.astInfo.outerCls);
             if (group.astInfo.isInLoop) {
-                code.append(String.format("%s.%s.add(%s);", group.astInfo.outerVar, var, var));
+                code.append("%s.%s.add(%s);", group.astInfo.outerVar, var, var);
             }
             else {
-                code.append(String.format("%s.%s = %s;", group.astInfo.outerVar, var, var));
+                code.append("%s.%s = %s;", group.astInfo.outerVar, var, var);
             }
             write(group.node);
         }
@@ -419,7 +419,7 @@ public class RecDescent {
     void beginSwitch(Set<Name> set) {
         code.append("switch(" + peekExpr() + "){");
         for (Name token : set) {
-            code.append(String.format("case %s.%s:", tokens, token.name));
+            code.append("case %s.%s:", tokens, token.name);
         }
         code.append("{");
     }

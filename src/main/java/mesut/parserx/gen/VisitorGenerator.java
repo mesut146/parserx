@@ -30,13 +30,8 @@ public class VisitorGenerator {
     void genInterface() throws IOException {
         String className = options.parserClass + "Visitor";
         if (options.packageName != null) {
-            writer.append("package " + options.packageName + ";");
+            writer.append("package %s;", options.packageName);
             writer.append("");
-        }
-        if (options.astClass != null) {
-            if (options.packageName != null) {
-                writer.append("import " + options.packageName + "." + options.astClass + ";");
-            }
         }
         writer.append(String.format("public interface %s<R,P>{", className));
         writer.append("");
@@ -52,13 +47,8 @@ public class VisitorGenerator {
     void genImpl() throws IOException {
         String className = options.parserClass + "Visitor";
         if (options.packageName != null) {
-            writer.append("package " + options.packageName + ";");
+            writer.append("package %s;", options.packageName);
             writer.append("");
-        }
-        if (options.astClass != null) {
-            if (options.packageName != null) {
-                writer.append("import " + options.packageName + "." + options.astClass + ";");
-            }
         }
         writer.append(String.format("public class %s<R,P>{", className));
         writer.append("");

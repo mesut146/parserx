@@ -149,10 +149,10 @@ public class AstGen {
                 name.astInfo.varName = vname;
             }
             if (name.isToken) {
-                parent.append(String.format("public Token %s;", vname));
+                parent.append("public Token %s;", vname);
             }
             else {
-                parent.append(String.format("public %s %s;", name.name, vname));
+                parent.append("public %s %s;", name.name, vname);
             }
         }
         else if (node.isOr()) {
@@ -210,15 +210,15 @@ public class AstGen {
                     ch.astInfo.outerCls = parentClass;
                     ch.astInfo.outerVar = outerVar;
                     String type = ch.asName().isToken ? "Token" : ch.asName().name;
-                    parent.append(String.format("public List<%s> %s = new ArrayList<>();", type, vname));
+                    parent.append("public List<%s> %s = new ArrayList<>();", type, vname);
                 }
                 else {
                     //group
                     String var = "g" + groupCount++;
                     Type cls = new Type(parentClass, curRule + var);
-                    parent.append(String.format("public List<%s> %s = new ArrayList<>();", cls.name, var));
+                    parent.append("public List<%s> %s = new ArrayList<>();", cls.name, var);
                     CodeWriter c = new CodeWriter(true);
-                    c.append("public static class " + cls.name + "{");
+                    c.append("public static class %s{", cls.name);
                     model(ch.asGroup().node, cls, var, c);
                     c.append("}");
                     classes.all(c.get());
