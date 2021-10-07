@@ -32,7 +32,7 @@ public class Bracket extends NodeList {
     }
 
     public void add(char chr) {
-        add(Range.of(chr));
+        add(Range.of(chr, chr));
     }
 
     public void parse(String str) {

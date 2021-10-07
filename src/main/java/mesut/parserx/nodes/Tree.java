@@ -116,6 +116,16 @@ public class Tree {
         rules.add(rule);
     }
 
+    public void addRuleBelow(RuleDecl rule, RuleDecl prev) {
+        rule.index = rules.size();
+        for (int i = 0; i < rules.size(); i++) {
+            if (rules.get(i) == prev) {
+                rules.add(i + 1, rule);
+                return;
+            }
+        }
+    }
+
     //find token by string literal
     public TokenDecl getTokenByValue(String val) {
         for (TokenDecl decl : tokens) {

@@ -48,7 +48,7 @@ public class RegexUtils {
             if (str.value.length() == 1) {
                 Bracket bracket = new Bracket();
                 bracket.negate = true;
-                bracket.add(Range.of(str.value.charAt(0)));
+                bracket.add(Range.of(str.value.charAt(0),str.value.charAt(0)));
                 return bracket;
             }
             Sequence seq = new Sequence();

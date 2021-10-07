@@ -18,17 +18,13 @@ public class Range extends Node implements Comparable<Range> {
         return new Range(start, end);
     }
 
-    public static Range of(int start) {
-        return new Range(start, start);
-    }
-
     public static Range intersect(Range r1, Range r2) {
         int l = Math.max(r1.start, r2.start);
         int r = Math.min(r1.end, r2.end);
-        if (l > r) {
-            return null;
+        if (l <= r) {
+            return new Range(l, r);
         }
-        return new Range(l, r);
+        return null;
     }
 
     @Override

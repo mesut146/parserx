@@ -5,7 +5,10 @@ import java.util.*;
 public class $lexer_class$ {
 
     static String cMapPacked = $cMap$;
+    //input -> input id
     static int[] cMap = unpackCMap(cMapPacked);
+    //input id -> regex string for error reporting
+    static String[] cMapRegex = {$cMapRegex$};
     int[] skip = {$skip_list$};
     int[] accepting = {$final_list$};
     //id -> token name
@@ -24,7 +27,7 @@ public class $lexer_class$ {
     int bufEnd;
     char[] yybuf = new char[bufSize];
     static String trans_packed = $trans$;
-    static int[][] trans = unpackTrans(trans_packed, $max$);
+    static int[][] trans = unpackTrans(trans_packed);
 
     public $lexer_class$(Reader reader) {
         this.reader = reader;
@@ -38,14 +41,15 @@ public class $lexer_class$ {
         return ((arr[state / 32] >> (state % 32)) & 1) != 0;
     }
 
-    static int[][] unpackTrans(String str, int max) {
+    static int[][] unpackTrans(String str) {
         int pos = 0;
+        int max = str.charAt(pos++);
         List<int[]> list = new ArrayList<>();
         while (pos < str.length()) {
-            int size = str.charAt(pos++);
             int[] arr = new int[max];
             Arrays.fill(arr, -1);
-            for (int input = 0; input < size; input++) {
+            int trCount = str.charAt(pos++);
+            for (int input = 0; input < trCount; input++) {
                 //input -> target state
                 arr[str.charAt(pos++)] = str.charAt(pos++);
             }
@@ -84,6 +88,15 @@ public class $lexer_class$ {
       return new String(yybuf, bufStart, bufPos - bufStart);
     }
 
+    String findExpected(int from){
+        StringBuilder sb = new StringBuilder();
+        for(int input : trans[from]){
+            sb.append(cMapRegex[input]);
+            sb.append(",");
+        }
+        return sb.toString();
+    }
+
     public $token_class$ $next_token$() throws IOException {
         fill();
         int curState = INITIAL;
@@ -92,11 +105,13 @@ public class $lexer_class$ {
         int startLine = yyline;
         yychar = yybuf[bufPos];
         if (yychar == EOF) return new Token(EOF, "EOF");
+        int backupState = -1;
         while (true) {
             yychar = yybuf[bufPos];
             if(yychar == EOF){
                 curState = -1;
             }else{
+                backupState = curState;
                 curState = trans[curState][cMap[yychar]];
                 if(yychar == '\n'){
                     yyline++;
@@ -127,7 +142,8 @@ public class $lexer_class$ {
                     if (getBit(skip, lastState)) return $next_token$();
                 }
                 else {
-                    throw new IOException("invalid input=" + (char)yychar + "(" + yychar + ") " + " yybuf= " + getText());
+                    throw new IOException(String.format("invalid input=%c(%d) buf=%s expecting=%s",yychar,yychar,getText(),findExpected(backupState)));
+                    //throw new IOException("invalid input=" + (char)yychar + "(" + yychar + ") " + " yybuf= " + getText());
                 }
             }
             else {

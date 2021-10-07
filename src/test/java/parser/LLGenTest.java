@@ -118,18 +118,29 @@ public class LLGenTest {
     public void math() throws IOException {
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        Factor.debug = true;
+        /*Factor.debug = true;
         Name.autoEncode = false;
         Factor.factorSequence = false;
         new Factor(tree).factorize();
-        tree.printRules();
-        //new RecDescent(tree).gen();
+        tree.printRules();*/
+        new RecDescent(tree).gen();
     }
+
+    @Test
+    public void math2() throws IOException {
+        //Name.autoEncode = true;
+        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
+        //Tree tree = Env.tree("factor/math.g");
+        tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/ll1";
+        tree.options.packageName = "ll1";
+        new RecDescent(tree).gen();
+    }
+
 
     @Test
     public void mathReal() throws Exception {
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
-        DescTester.check(tree, "expr", "1+2");
+        DescTester.check(tree, "var", "abc");
     }
 
     @Test

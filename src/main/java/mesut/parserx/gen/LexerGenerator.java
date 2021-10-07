@@ -3,10 +3,7 @@ package mesut.parserx.gen;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
 import mesut.parserx.gen.lr.IdMap;
-import mesut.parserx.nodes.Name;
-import mesut.parserx.nodes.NodeList;
-import mesut.parserx.nodes.Range;
-import mesut.parserx.nodes.Tree;
+import mesut.parserx.nodes.*;
 import mesut.parserx.utils.UnicodeUtils;
 import mesut.parserx.utils.Utils;
 
@@ -116,14 +113,19 @@ public class LexerGenerator {
         cmapWriter.print("\"");
         int column = 20;
         int i = 0;
-        for (Iterator<Range> it = dfa.getAlphabet().getRanges(); it.hasNext(); ) {
-            Range range = it.next();
-            int left = range.start;
-            int right = range.end;
-            int id = dfa.getAlphabet().getId(range);
-            cmapWriter.print(UnicodeUtils.escapeUnicode(left));
-            cmapWriter.print(UnicodeUtils.escapeUnicode(right));
-            cmapWriter.print(UnicodeUtils.escapeUnicode(id));
+        TreeSet<Map.Entry<Node, Integer>> entries = new TreeSet<>(new Comparator<Map.Entry<Node, Integer>>() {
+            @Override
+            public int compare(Map.Entry<Node, Integer> o1, Map.Entry<Node, Integer> o2) {
+                return o1.getValue().compareTo(o2.getValue());
+            }
+        });
+        for (Iterator<Map.Entry<Node, Integer>> it = dfa.getAlphabet().map.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<Node, Integer> entry = it.next();
+            Range range = entry.getKey().asRange();
+            entries.add(entry);
+            cmapWriter.print(makeOctal(range.start));
+            cmapWriter.print(makeOctal(range.end));
+            cmapWriter.print(makeOctal(entry.getValue()));
             i++;
             if (i % column == 0) {
                 cmapWriter.print("\"+\n");
@@ -133,15 +135,28 @@ public class LexerGenerator {
             }
         }
         cmapWriter.print("\"");
-
         template.set("cMap", cmapWriter.getString());
+
+        Writer regexWriter = new Writer();
+        for (Iterator<Map.Entry<Node, Integer>> it = entries.iterator(); it.hasNext(); ) {
+            Map.Entry<Node, Integer> entry = it.next();
+            regexWriter.print("\"");
+            regexWriter.print(entry.getKey().toString());
+            regexWriter.print("\"");
+            if (it.hasNext()) {
+                regexWriter.print(", ");
+            }
+        }
+        template.set("cMapRegex", regexWriter.getString());
     }
 
     void makeTrans() {
         Writer transWriter = new Writer();
         String indent = "        ";
+        transWriter.print("\"");
+        transWriter.print(makeOctal(dfa.getAlphabet().size()));
+        transWriter.print("\" +");
         transWriter.print("\n");
-        int maxId = dfa.getAlphabet().size();
         for (int state = 0; state <= dfa.lastState; state++) {
             List<Transition> list = dfa.trans[state];
             transWriter.print(indent);
@@ -161,19 +176,7 @@ public class LexerGenerator {
                 transWriter.print(" +\n");
             }
         }
-
-
         template.set("trans", transWriter.getString());
-        template.set("max", String.valueOf(maxId));
-    }
-
-    Transition getTransition(int id, List<Transition> list) {
-        for (Transition transition : list) {
-            if (transition.input == id) {
-                return transition;
-            }
-        }
-        return null;
     }
 
     String makeOctal(int val) {
@@ -181,7 +184,6 @@ public class LexerGenerator {
             return "\\" + Integer.toOctalString(val);
         }
         return UnicodeUtils.escapeUnicode(val);
-        //throw new RuntimeException("can't make octal from " + val);
     }
 
     int[] makeIntArr(boolean[] arr) {

@@ -7,7 +7,7 @@ import java.util.Objects;
 public class Name extends Node {
 
     public static boolean debug = false;
-    public static boolean autoEncode = true;
+    public static boolean autoEncode = false;
     public String name;
     public boolean isToken;
     public ArrayList<Node> args = new ArrayList<>();
@@ -28,7 +28,7 @@ public class Name extends Node {
                 sb.append("_");
                 //todo arg of arg?
                 if (arg.isName()) {
-                    sb.append(arg.asName().name);
+                    sb.append(arg.asName().encode().name);
                 }
                 else {
                     Regex regex = arg.asRegex();//todo improve

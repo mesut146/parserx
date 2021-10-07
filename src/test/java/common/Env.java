@@ -4,6 +4,7 @@ import mesut.parserx.nodes.*;
 import mesut.parserx.parser.AstBuilder;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 
@@ -22,13 +23,13 @@ public class Env {
     }
 
 
-    public static File getResFile(String name) throws Exception {
+    public static File getResFile(String name) throws IOException {
         if (!name.startsWith("/")) {
             name = "/" + name;
         }
         URL url = Env.class.getResource(name);
         if (url == null) {
-            throw new Exception(name + " not found");
+            throw new FileNotFoundException(name + " not found");
         }
         return new File(url.getPath());
     }
@@ -53,7 +54,7 @@ public class Env {
         }
     }
 
-    public static Tree tree(String res) throws Exception {
+    public static Tree tree(String res) throws IOException {
         return Tree.makeTree(getResFile(res));
     }
 }

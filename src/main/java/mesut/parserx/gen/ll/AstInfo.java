@@ -4,7 +4,6 @@ public class AstInfo {
     public String varName;
     public String outerVar;
     public Type outerCls;
-    public Type type;//todo what is this
     public boolean isFactor;//no assign
     public boolean isFactored;//epsilon
     public boolean isFactorGroup;//follows a factor
@@ -24,7 +23,6 @@ public class AstInfo {
         res.code = code;
         res.factorName = factorName;
         res.isPrimary = isPrimary;
-        res.type = type;
         return res;
     }
 
@@ -34,7 +32,7 @@ public class AstInfo {
         if (isFactor) {
             sb.append("factor ");
         }
-        sb.append(String.format("var=%s cls=%s v2=%s", varName, outerCls, outerVar));
+        sb.append(String.format("%s.%s", outerVar, varName));
         if (code != null) {
             sb.append(" code");
         }

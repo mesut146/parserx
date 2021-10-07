@@ -33,20 +33,20 @@ public class Sequence extends NodeList {
             }
             return first();
         }
-        Sequence s = new Sequence();
+        Sequence res = new Sequence();
         for (Node ch : this) {
             if (ch.isSequence()) {
-                s.addAll(ch.asSequence().list);
+                res.addAll(ch.asSequence().list);
             }
             else if (ch.isOr()) {
-                s.add(new Group(ch));
+                res.add(new Group(ch));
             }
             else if (!ch.isEpsilon()) {
-                s.add(ch);
+                res.add(ch);
             }
         }
-        s.astInfo = astInfo.copy();
-        return s;
+        res.astInfo = astInfo.copy();
+        return res;
     }
 
     @Override

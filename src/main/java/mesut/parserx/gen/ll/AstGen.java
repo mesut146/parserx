@@ -73,30 +73,34 @@ public class AstGen {
         if (node.isName()) {
             Name name = node.asName();
             if (name.isToken) {
-                c.append("sb.append(" + node.astInfo.varName + ".value);");
+                c.append("sb.append(%s.value);", node.astInfo.varName);
             }
             else {
-                c.append("sb.append(" + node.astInfo.varName + ".toString());");
+                c.append("sb.append(%s.toString());", node.astInfo.varName);
             }
         }
         else if (node.isSequence()) {
             Sequence s = node.asSequence();
             for (int i = 0; i < s.size(); i++) {
                 getPrint(s.get(i), c);
+                //c.append("sb.append(\" \");");
             }
         }
         else if (node.isRegex()) {
             Regex regex = node.asRegex();
             String v = regex.node.astInfo.varName;
             if (regex.isStar() || regex.isPlus()) {
+                c.append("if(!%s.isEmpty()){", v);
                 c.append("sb.append('{');");
                 c.append("for(int i=0;i<%s.size();i++){", v);
                 c.append("sb.append(%s.get(i));", v);
+                c.append("sb.append(\",\");");
                 c.append("}");
                 c.append("sb.append('}');");
+                c.append("}");
             }
             else {
-                c.append("sb.append(%s);", v + "==null?\"\":" + v);
+                c.append("sb.append(%s==null?\"\":%s);", v, v);
             }
         }
         else if (node.isGroup()) {
@@ -128,14 +132,16 @@ public class AstGen {
     }
 
     private void model(Node node, Type parentClass, String outerVar, CodeWriter parent) {
-        node.astInfo.outerVar = outerVar;
-        node.astInfo.outerCls = parentClass;
+//        node.astInfo.outerVar = outerVar;
+//        node.astInfo.outerCls = parentClass;
         if (node.isSequence()) {
             for (Node ch : node.asSequence()) {
                 model(ch, parentClass, outerVar, parent);
             }
         }
         else if (node.isName()) {
+            node.astInfo.outerVar = outerVar;
+            node.astInfo.outerCls = parentClass;
             Name name = node.asName();
             String vname = name.astInfo.varName;
             if (vname == null) {
@@ -146,13 +152,6 @@ public class AstGen {
                 parent.append(String.format("public Token %s;", vname));
             }
             else {
-                if (tree.getRule(name) != null) {
-                    name.astInfo.type = new Type(options.astClass, name.name);
-                }
-                else {
-                    //or child not visible
-                    //name.astInfo.type = new Type();
-                }
                 parent.append(String.format("public %s %s;", name.name, vname));
             }
         }
@@ -177,8 +176,8 @@ public class AstGen {
                     model(ch, parentClass, outerVar, parent);
                 }
                 else {
+                    //sequence
                     parent.append(String.format("%s %s;", clsName.name, v));
-
                     CodeWriter c = new CodeWriter(false);
                     c.append(String.format("public static class %s{", clsName.name));
                     model(ch, clsName, v, c);
@@ -186,11 +185,15 @@ public class AstGen {
                     c.append("}");
                     classes.all(c.get());
                     ch.astInfo.varName = v;
+                    ch.astInfo.outerVar = outerVar;
+                    ch.astInfo.outerCls = parentClass;
                 }
                 num++;
             }
         }
         else if (node.isRegex()) {
+            node.astInfo.outerVar = outerVar;
+            node.astInfo.outerCls = parentClass;
             Regex regex = node.asRegex();
             Node ch = regex.node;
             if (regex.isOptional()) {
@@ -223,6 +226,8 @@ public class AstGen {
             }
         }
         else if (node.isGroup()) {
+            node.astInfo.outerVar = outerVar;
+            node.astInfo.outerCls = parentClass;
             Group group = node.asGroup();
             String var;
             if (node.astInfo.varName != null) {

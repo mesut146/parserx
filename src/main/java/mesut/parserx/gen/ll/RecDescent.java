@@ -88,11 +88,12 @@ public class RecDescent {
         code.append("throw new RuntimeException(\"unexpected token: \" + la + \" expecting: \" + type);");
         code.all("}");
         code.append("try{");
+        code.append("%s res = la;", options.tokenClass);
         code.append("la = lexer.next();");
+        code.append("return res;");
         code.all("}\ncatch(IOException e){");
         code.append("throw new RuntimeException(e);");
         code.append("}");
-        code.append("return la;");
         code.append("}");
     }
 
@@ -141,7 +142,7 @@ public class RecDescent {
         }
 
         File out = new File(options.outDir, Utils.newName(tree.file.getName(), "-final.g"));
-        Name.autoEncode = false;
+        //Name.autoEncode = true;
         Node.printVarName = false;
         Utils.write(tree.toString(), out);
 
