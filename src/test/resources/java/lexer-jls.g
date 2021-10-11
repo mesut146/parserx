@@ -1,5 +1,5 @@
 token{
-    StringLiteral = "\""  [^\r\n\"]* "\"";
+    StringLiteral = [:string:];
     CharacterLiteral = "'" [^']+ "'";
     TextBlock = "\"\"\"" ~"\"\"\"";
 
@@ -133,8 +133,6 @@ token{
     LBRACKET = "[";
     RBRACKET = "]";
     BANG = "!";
-    //SINGLE_QUOTE = "'";
-    //DOUBLE_QUOTE = "\"";
     UNDERSCORE = "_";
     QUESTION = "?";
     EQ = "=";
@@ -174,8 +172,8 @@ token{
     LT = "<";
     GT = ">";
     LTLT = "<<";
-    GTGT = ">>";
-    GTGTGT = ">>>";
+    //GTGT = ">>";
+    //GTGTGT = ">>>";
     LTEQ = "<=";
     GTEQ = ">=";
     LTLTEQ = "<<=";

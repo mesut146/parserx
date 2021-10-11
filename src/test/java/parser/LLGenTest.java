@@ -118,8 +118,8 @@ public class LLGenTest {
     public void math() throws IOException {
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        /*Factor.debug = true;
-        Name.autoEncode = false;
+        Factor.debug = true;
+        /*Name.autoEncode = false;
         Factor.factorSequence = false;
         new Factor(tree).factorize();
         tree.printRules();*/
@@ -163,10 +163,11 @@ public class LLGenTest {
     @Test
     public void recursionAll() throws Exception {
         Factor.debug = true;
-        //Tester.check(Env.tree("rec/direct.g"), "A", "c","ca","cb","caa","cab","cba","cbb");
-        //Tester.check(Env.tree("rec/direct2.g"), "A", "c", "cb", "cca", "ccba");
-        //Tester.check(Env.tree("rec/direct-double.g"), "A", "b","bba","bbbaa");
-        //Tester.check(Env.tree("rec/cyc1.g"), "A", "c","db","cab");
+//        DescTester.check(Env.tree("rec/direct.g"), "A", "c", "ca", "cb", "caa", "cab", "cba", "cbb");
+//        DescTester.check(Env.tree("rec/direct2.g"), "A", "c", "cb", "cca", "ccba");
+//        DescTester.check(Env.tree("rec/direct-double.g"), "A", "b", "bba", "bbbaa");
+        //DescTester.check(Env.tree("rec/indirect.g"), "A", "d", "aec", "ec", "adbc", "dbc");
+        DescTester.check(Env.tree("rec/cyc1.g"), "A", "c", "db", "cab", "dbab");
         DescTester.check(Env.tree("rec/cyc1.g"), "B", "d", "ca", "dba");
     }
 }

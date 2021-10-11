@@ -194,7 +194,7 @@ public class Tree {
         if (!rules.isEmpty()) {
             sb.append("/* rules */\n");
             if (start != null) {
-                sb.append("@start = ").append(start).append(";\n\n");
+                sb.append("%start = ").append(start).append(";\n\n");
             }
             sb.append(NodeList.join(rules, "\n"));
         }

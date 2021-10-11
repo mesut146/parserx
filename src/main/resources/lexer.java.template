@@ -21,20 +21,22 @@ public class $lexer_class$ {
     int yypos = 0;//pos in file
     int yyline = 1;
     int yychar;
-    public static int bufSize = 10000;
-    int bufPos = bufSize;//pos in buffer
-    int bufStart = bufSize;
+    public static int bufSize = 100;
+    int bufPos = 0;//pos in buffer
+    int bufStart = bufPos;
     int bufEnd;
     char[] yybuf = new char[bufSize];
     static String trans_packed = $trans$;
     static int[][] trans = unpackTrans(trans_packed);
 
-    public $lexer_class$(Reader reader) {
+    public $lexer_class$(Reader reader) throws IOException{
         this.reader = reader;
+        init();
     }
 
-    public $lexer_class$(File file) throws FileNotFoundException {
+    public $lexer_class$(File file) throws IOException {
         this.reader = new BufferedReader(new FileReader(file));
+        init();
     }
 
     static boolean getBit(int[] arr, int state) {
@@ -73,14 +75,16 @@ public class $lexer_class$ {
       return arr;
     }
 
+    void init() throws IOException{
+      reader.read(yybuf, 0, bufSize);
+    }
+
     void fill() throws IOException{
-      if(bufPos == bufSize){
-        char[] newBuf = new char[bufSize];
-        System.arraycopy(yybuf, bufStart, newBuf, 0, bufPos - bufStart);
-        reader.read(newBuf, bufPos - bufStart, bufSize - bufPos + bufStart);
+      if(bufPos == yybuf.length){
+        char[] newBuf = new char[yybuf.length * 2];
+        System.arraycopy(yybuf, 0, newBuf, 0, yybuf.length);
+        reader.read(newBuf, bufPos, yybuf.length);
         yybuf = newBuf;
-        bufPos = bufPos - bufStart;
-        bufStart = 0;
       }
     }
 
@@ -90,66 +94,75 @@ public class $lexer_class$ {
 
     String findExpected(int from){
         StringBuilder sb = new StringBuilder();
-        for(int input : trans[from]){
-            sb.append(cMapRegex[input]);
+        for(int i = 0 ; i < trans[from].length;i++){
+            sb.append(cMapRegex[i]);
             sb.append(",");
         }
         return sb.toString();
     }
 
+    $token_class$ getEOF(){
+        $token_class$ res =  new $token_class$(EOF, "");
+        res.name = "EOF";
+        return res;
+    }
+
     public $token_class$ $next_token$() throws IOException {
+        $token_class$ tok = $next_token$_normal();
+        if(getBit(skip, tok.type)){
+          return $next_token$();
+        }
+        return tok;
+    }
+
+    public $token_class$ $next_token$_normal() throws IOException {
         fill();
         int curState = INITIAL;
         int lastState = -1;
         int startPos = yypos;
         int startLine = yyline;
         yychar = yybuf[bufPos];
-        if (yychar == EOF) return new Token(EOF, "EOF");
+        if (yychar == EOF) return getEOF();
         int backupState = -1;
         while (true) {
+            fill();
             yychar = yybuf[bufPos];
             if(yychar == EOF){
                 curState = -1;
             }else{
                 backupState = curState;
+                if(cMap[yychar] == -1){
+                    throw new IOException(String.format("invalid input=%c(%d) buf='%s' expecting=%s",yychar,yychar,getText(),findExpected(backupState)));
+                }
                 curState = trans[curState][cMap[yychar]];
-                if(yychar == '\n'){
-                    yyline++;
-                }
-                else if(yychar == '\r'){
-                    if(yybuf[bufPos + 1] == '\n'){
-                        //todo \n may have transition?
-                        yyline++;
-                        //bufPos++;
-                        //yypos++;
-                    }else{
-                        yyline++;
-                    }
-                }
             }
             if (curState == -1) {
                 if (lastState != -1) {
-                    if (!getBit(skip, lastState)) {
-                        Token token = new Token(ids[lastState], getText());
-                        token.offset = startPos;
-                        token.name = names[ids[lastState]];
-                        token.line = startLine;
-                        bufStart = bufPos;
-                        return token;
-                    }
+                    $token_class$ token = new $token_class$(ids[lastState], getText());
+                    token.offset = startPos;
+                    token.name = names[ids[lastState]];
+                    token.line = startLine;
                     bufStart = bufPos;
-                    if (yychar == EOF) return new Token(EOF, "EOF");
-                    if (getBit(skip, lastState)) return $next_token$();
+                    return token;
                 }
                 else {
-                    throw new IOException(String.format("invalid input=%c(%d) buf=%s expecting=%s",yychar,yychar,getText(),findExpected(backupState)));
+                    throw new IOException(String.format("invalid input=%c(%d) buf='%s' expecting=%s",yychar,yychar,getText(),findExpected(backupState)));
                     //throw new IOException("invalid input=" + (char)yychar + "(" + yychar + ") " + " yybuf= " + getText());
                 }
             }
             else {
+                if (getBit(accepting, curState)) lastState = curState;
+                if(yychar == '\n'){
+                    yyline++;
+                    if(bufPos > 0 && yybuf[bufPos - 1] == '\r'){
+                        yyline--;
+                    }
+                }
+                else if(yychar == '\r'){
+                    yyline++;
+                }
                 bufPos++;
                 yypos++;
-                if (getBit(accepting, curState)) lastState = curState;
             }
         }
     }

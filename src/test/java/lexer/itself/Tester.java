@@ -1,23 +1,19 @@
 package lexer.itself;
 
-import mesut.parserx.parser.Lexer;
+import common.Env;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 
 public class Tester {
     @Test
     public void name() throws IOException {
-        //Lexer l = new Lexer(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/parserx.g"));
-        Lexer l = new mesut.parserx.parser.Lexer(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/resources/str.g"));
-        //Lexer l = new Lexer(new StringReader("[:string:]"));
-        while (true) {
-            mesut.parserx.parser.Token t = l.next();
-            System.out.println(t);
-            if (t.type == 0) {
-                break;
-            }
+        Lexer2.bufSize = 9;
+        Lexer2 lexer2 = new Lexer2(Env.getResFile("java/large.java"));
+        for (; ; ) {
+            Token2 token2 = lexer2.next();
+            System.out.println(token2);
+            if (token2.type == 0) break;
         }
     }
 }

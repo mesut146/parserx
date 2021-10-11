@@ -48,6 +48,7 @@ skip{
   WS: [ \n\r\t]+;
 }
 
+%start: tree;
 
 tree: includeStatement* optionsBlock? tokens=(tokenBlock  | skipBlock)* startDecl? rules=(ruleDecl | assocDecl)*;
 

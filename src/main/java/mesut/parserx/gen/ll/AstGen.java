@@ -54,8 +54,8 @@ public class AstGen {
         model(decl.rhs, type, "res", astWriter);
         astWriter.all(classes.get());
         if (decl.isOriginal && options.genVisitor) {
-            astWriter.append(String.format("public <R,P> R accept(%sVisitor<R,P> visitor, P arg){", options.parserClass));
-            astWriter.all(String.format("return visitor.visit%s(this, arg);\n}", Utils.camel(decl.baseName())));
+            astWriter.append("public <R,P> R accept(%sVisitor<R,P> visitor, P arg){", options.parserClass);
+            astWriter.all("return visitor.visit%s(this, arg);\n}", Utils.camel(decl.baseName()));
         }
         writePrinter(decl.rhs, astWriter);
         astWriter.append("}");
@@ -179,7 +179,7 @@ public class AstGen {
                     //sequence
                     parent.append(String.format("%s %s;", clsName.name, v));
                     CodeWriter c = new CodeWriter(false);
-                    c.append(String.format("public static class %s{", clsName.name));
+                    c.append("public static class %s{", clsName.name);
                     model(ch, clsName, v, c);
                     writePrinter(ch, c);
                     c.append("}");
@@ -238,10 +238,10 @@ public class AstGen {
             }
             Type cls = new Type(parentClass, curRule + var);
             group.astInfo.varName = var;
-            parent.append(String.format("public %s %s;", cls.name, var));
+            parent.append("public %s %s;", cls.name, var);
 
             CodeWriter c = new CodeWriter(true);
-            c.append("public static class " + cls.name + "{");
+            c.append("public static class %s{", cls.name);
             model(group.node, cls, var, c);
             c.append("}");
             classes.all(c.get());

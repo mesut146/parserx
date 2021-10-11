@@ -6,10 +6,7 @@ import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 
 import java.io.*;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 
 public class RealTest {
@@ -46,7 +43,13 @@ public class RealTest {
         }
 
         for (String s : in) {
-            ProcessBuilder runner = new ProcessBuilder("java", "-cp", "./", "LexerTester", s);
+            ProcessBuilder runner;
+            if (Files.exists(Paths.get(s))) {
+                runner = new ProcessBuilder("java", "-cp", "./", "LexerTester", "-file", s);
+            }
+            else {
+                runner = new ProcessBuilder("java", "-cp", "./", "LexerTester", s);
+            }
             runner.directory(out);
             runner.redirectErrorStream(true);
             Process p2 = runner.start();

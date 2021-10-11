@@ -33,10 +33,10 @@ public class VisitorGenerator {
             writer.append("package %s;", options.packageName);
             writer.append("");
         }
-        writer.append(String.format("public interface %s<R,P>{", className));
+        writer.append("public interface %s<R,P>{", className);
         writer.append("");
         for (RuleDecl decl : tree.rules) {
-            writer.append(String.format("R visit%s(%s node, P p);", Utils.camel(decl.baseName()), ruleType(decl)));
+            writer.append("R visit%s(%s node, P p);", Utils.camel(decl.baseName()), ruleType(decl));
         }
         writer.append("}");
 
@@ -50,10 +50,10 @@ public class VisitorGenerator {
             writer.append("package %s;", options.packageName);
             writer.append("");
         }
-        writer.append(String.format("public class %s<R,P>{", className));
+        writer.append("public class %s<R,P>{", className);
         writer.append("");
         for (RuleDecl decl : tree.rules) {
-            writer.append(String.format("public R visit%s(%s node, P p){", Utils.camel(decl.baseName()), ruleType(decl)));
+            writer.append("public R visit%s(%s node, P p){", Utils.camel(decl.baseName()), ruleType(decl));
             writer.append("return null;");
             writer.append("}");
             writer.append("");

@@ -153,6 +153,8 @@ public class Minimization {
     }
 
     public static NFA optimize(NFA dfa) {
+        removeDead(dfa);
+        removeUnreachable(dfa);
         List<StateSet> P = group(dfa);
         List<StateSet> done = new ArrayList<>();
         List<StateSet> all = new ArrayList<>(P);

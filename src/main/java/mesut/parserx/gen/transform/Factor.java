@@ -1,13 +1,12 @@
 package mesut.parserx.gen.transform;
 
 import mesut.parserx.gen.Helper;
+import mesut.parserx.gen.ll.AstInfo;
 import mesut.parserx.nodes.*;
+import mesut.parserx.utils.CountingMap;
 import mesut.parserx.utils.CountingMap2;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 public class Factor extends SimpleTransformer {
 
@@ -21,6 +20,8 @@ public class Factor extends SimpleTransformer {
     RuleDecl curRule;
     CountingMap2<RuleDecl, Name> factorCount = new CountingMap2<>();
     HashSet<RuleDecl> declSet = new HashSet<>();//new rules produced by this class
+    CountingMap<String> nameMap = new CountingMap<>();
+    HashMap<Name, Name> senderMap = new HashMap<>();
 
     public Factor(Tree tree) {
         super(tree);
@@ -44,10 +45,14 @@ public class Factor extends SimpleTransformer {
         return res;
     }
 
-    public Name commonSym(Node n1, Node n2) {
-        Set<Name> s1 = first(n1);
-        Set<Name> s2 = first(n2);
-        return common(s1, s2);
+    public static void check(Node s) {
+        if (s == null || !s.isSequence()) return;
+        if (s.astInfo.code == null) return;
+        for (Node ch : s.asSequence()) {
+            if (ch.astInfo.code != null) {
+                throw new RuntimeException("");
+            }
+        }
     }
 
     String factorName(Name sym) {
@@ -98,6 +103,7 @@ public class Factor extends SimpleTransformer {
                 Name sym = common(s1, s2);
                 if (sym == null) continue;
                 sym = sym.copy();
+                sym.astInfo = new AstInfo();
                 //sym.astInfo.isFactor = true;
                 //sym.astInfo.factorName = factorName(sym);
                 if (debug) {
@@ -198,6 +204,16 @@ public class Factor extends SimpleTransformer {
         return info;
     }
 
+    Name baseName(Name name) {
+        if (senderMap.containsKey(name)) {
+            return senderMap.get(name);
+        }
+        else {
+            senderMap.put(name, name);
+            return name;
+        }
+    }
+
     //pull sym from rule
     public PullInfo pullRule(Name name, Name sym) {
         if (debug)
@@ -205,47 +221,65 @@ public class Factor extends SimpleTransformer {
         PullInfo info = new PullInfo();
         String key = name + "-" + sym;
         if (cache.containsKey(key)) {
-            //throw new RuntimeException("cached factor " + name);
+            info = cache.get(key);
+            info.one.astInfo = name.astInfo.copy();
+            if (info.zero != null)
+                info.zero.astInfo = name.astInfo.copy();
+            return info;
             //todo astinfo carried incorrectly
-            //return cache.get(key);
         }
         cache.put(key, info);
         //check if already pulled before
-        Name zeroName = name.copy();
-        zeroName.name += "_no_" + sym.name;
+        Name base = baseName(name);
+        Name zeroName = new Name(base.name + nameMap.get(base.name));
+        zeroName.args = new ArrayList<>(name.args);
+        zeroName.astInfo = name.astInfo.copy();
         zeroName.astInfo.isPrimary = true;
 
-        Name oneName = name.copy();
+        Name oneName = new Name(base.name + nameMap.get(base.name));
+        oneName.args = new ArrayList<>(name.args);
         oneName.args.add(sym);
-
+        oneName.astInfo = name.astInfo.copy();
         info.one = oneName;
         //can fill zero by checking first set
 
-        if (tree.getRule(oneName) == null) {
-            RuleDecl decl = tree.getRule(name);
-            PullInfo tmp = pull(decl.rhs, sym);
-
-            RuleDecl oneDecl = oneName.makeRule();
-            oneDecl.rhs = tmp.one.normal();
-            oneDecl.retType = decl.retType;
-            oneDecl.isRecursive = decl.isRecursive;
-            tree.addRuleBelow(oneDecl, decl);
-            declSet.add(oneDecl);
-
-            if (tmp.zero != null) {
-                RuleDecl zeroDecl = zeroName.makeRule();
-                zeroDecl.rhs = tmp.zero.normal();
-                zeroDecl.retType = decl.retType;
-                zeroDecl.isRecursive = decl.isRecursive;
-                tree.addRuleBelow(zeroDecl, decl);
-                declSet.add(zeroDecl);
-                info.zero = zeroName;
-            }
-        }
-        else {
+        if (tree.getRule(oneName) != null) {
             if (tree.getRule(zeroName) != null) {
                 info.zero = zeroName;
             }
+            return info;
+        }
+
+        RuleDecl decl = tree.getRule(name);
+        PullInfo tmp = pull(decl.rhs, sym);
+
+        RuleDecl oneDecl = oneName.makeRule();
+        oneDecl.rhs = tmp.one.normal();
+        oneDecl.retType = decl.retType;
+        oneDecl.isRecursive = decl.isRecursive;
+        tree.addRuleBelow(oneDecl, decl);
+        declSet.add(oneDecl);
+        if (senderMap.containsKey(name)) {
+            senderMap.put(oneName, senderMap.get(name));
+        }
+        else {
+            senderMap.put(oneName, name);
+        }
+
+        if (tmp.zero != null) {
+            RuleDecl zeroDecl = zeroName.makeRule();
+            zeroDecl.rhs = tmp.zero.normal();
+            zeroDecl.retType = decl.retType;
+            zeroDecl.isRecursive = decl.isRecursive;
+            tree.addRuleBelow(zeroDecl, decl);
+            declSet.add(zeroDecl);
+            if (senderMap.containsKey(name)) {
+                senderMap.put(zeroName, senderMap.get(name));
+            }
+            else {
+                senderMap.put(zeroName, name);
+            }
+            info.zero = zeroName;
         }
         return info;
     }
@@ -265,11 +299,15 @@ public class Factor extends SimpleTransformer {
                     //A B = A_eps B | A_noe B
                     //a A(a) B | A_no_a B
                     Sequence s1 = new Sequence(ai.one, B.copy());
-                    Sequence s2 = new Sequence(ai.zero, B.copy());
+                    if (ai.zero != null) {
+                        Sequence s2 = new Sequence(ai.zero, B.copy());
+                        s2.astInfo.code = s.astInfo.code;
+                        info.zero = s2;
+                        check(s2);
+                    }
                     s1.astInfo.code = s.astInfo.code;
-                    s2.astInfo.code = s.astInfo.code;
                     info.one = s1;
-                    info.zero = s2;
+                    check(s1);
                     return info;
                 }
             }
@@ -278,11 +316,13 @@ public class Factor extends SimpleTransformer {
                 //(a A1 | A0) B
                 //a A1 B | A0 B
                 if (ai.zero != null) {
-                    info.zero = Sequence.of(ai.zero, B);
+                    info.zero = new Sequence(ai.zero, B);
                     info.zero.astInfo.code = s.astInfo.code;
                 }
                 info.one = Sequence.of(ai.one, B);
                 info.one.astInfo.code = s.astInfo.code;
+                check(info.one);
+                check(info.zero);
             }
         }
         else {
@@ -311,6 +351,9 @@ public class Factor extends SimpleTransformer {
                 }
             }
             info.one = s2;
+            check(s1);
+            check(s2);
+            check(s3);
         }
         return info;
     }

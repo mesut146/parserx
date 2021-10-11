@@ -82,20 +82,25 @@ public class DFABuilder {
         return state;
     }
 
-    //epsilon closure for dfa conversion
     public StateSet closure(int state) {
-        StateSet res = new StateSet();
-        res.addState(state);//itself
+        return closure(state, new StateSet());
+    }
+
+    //epsilon closure for dfa conversion
+    public StateSet closure(int state, StateSet set) {
+        if (set.contains(state)) return set;
+        set.addState(state);//itself
         StateSet eps = nfa.getEps(state);
         if (eps == null || eps.states.size() == 0) {
-            return res;
+            return set;
         }
         for (int st : eps.states) {
-            if (!res.contains(st)) {//prevent stack overflow
+            closure(st, set);
+            /*if (!res.contains(st)) {//prevent stack overflow
                 res.addAll(closure(st));
-            }
+            }*/
         }
-        return res;
+        return set;
     }
 
     //epsilon closure for dfa conversion

@@ -19,7 +19,9 @@ public class IdMap {
     public static Name dollar = new Name("$", true);
     public static String className = "Symbols";
     public HashMap<Name, Integer> map = new HashMap<>();
+    public HashMap<Integer, Name> id_to_name = new HashMap<>();
     public int lastId;
+    public int lastTokenId;
 
     public int getId(Name name) {
         if (name.isToken && name.name.equals("$")) {
@@ -28,19 +30,29 @@ public class IdMap {
         return map.get(name);
     }
 
+    public Name getName(int id) {
+        return id_to_name.get(id);
+    }
+
     //symbol ids
     public void genSymbolIds(Tree tree) {
         map.put(EOF, 0);
         lastId = 0;
         for (TokenDecl decl : tree.tokens) {
-            if (decl.isSkip) continue;
+            if (decl.fragment) continue;
+            //if (decl.isSkip) continue;
             map.put(decl.ref(), ++lastId);
         }
+        lastTokenId = lastId;
 
         for (RuleDecl rule : tree.rules) {
             map.put(rule.ref, ++lastId);
         }
         map.put(new Name(LrDFAGen.startName, false), ++lastId);
+
+        for (Map.Entry<Name, Integer> entry : map.entrySet()) {
+            id_to_name.put(entry.getValue(), entry.getKey());
+        }
     }
 
     public void writeSym(Options options) throws IOException {

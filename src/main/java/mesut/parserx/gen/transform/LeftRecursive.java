@@ -5,7 +5,7 @@ import mesut.parserx.nodes.*;
 
 import java.util.*;
 
-//remove left recursions
+//remove left recursions by substitutions
 public class LeftRecursive {
     public Tree tree;
 

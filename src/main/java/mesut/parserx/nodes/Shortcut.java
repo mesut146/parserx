@@ -28,7 +28,7 @@ public class Shortcut extends Node {
                 regex = "[0-9]+(\\.[0-9]+)?";
                 break;
             case "string":
-                regex = "\"(\\\\.|[^\r\n\"])*\"";
+                regex = "\"(\\\\.|[^\r\n\\\\\"])*\"";
                 break;
             default:
                 throw new RuntimeException("unknown shortcut: " + name);

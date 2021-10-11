@@ -57,26 +57,6 @@ public class Alphabet {
         throw new RuntimeException("invalid alphabet id: " + id);
     }
 
-    public Iterator<Range> getRanges() {
-        final Iterator<Node> iterator = map.keySet().iterator();
-        return new Iterator<Range>() {
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public Range next() {
-                return iterator.next().asRange();
-            }
-
-            @Override
-            public void remove() {
-                iterator.remove();
-            }
-        };
-    }
-
     //find intersecting range
     public Range findRange(Range range) {
         for (Map.Entry<Node, Integer> entry : map.entrySet()) {

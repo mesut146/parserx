@@ -1,5 +1,6 @@
 package mesut.parserx.gen;
 
+import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
 import mesut.parserx.gen.lr.IdMap;
@@ -14,16 +15,14 @@ import java.util.*;
 public class LexerGenerator {
     public IdMap idMap = new IdMap();
     public NFA dfa;
+    public Tree tree;
     Options options;
     Template template;
 
-    public LexerGenerator(NFA dfa, Options options) {
-        this.dfa = dfa;
-        this.options = options;
-    }
-
     public LexerGenerator(Tree tree) {
+        this.tree = tree;
         this.dfa = tree.makeNFA().dfa();
+        this.dfa = Minimization.optimize(this.dfa);
         this.options = tree.options;
     }
 
@@ -50,9 +49,19 @@ public class LexerGenerator {
         makeTrans();
         nameAndId();
         template.set("final_list", NodeList.join(makeIntArr(dfa.accepting), ","));
-        template.set("skip_list", NodeList.join(makeIntArr(dfa.isSkip), ","));
-
         cmap();
+        skipList();
+    }
+
+    private void skipList() {
+        boolean[] arr = new boolean[idMap.lastTokenId + 1];
+        for (int id = 1; id <= idMap.lastTokenId; id++) {
+            Name tok = idMap.getName(id);
+            if (tree.getToken(tok.name).isSkip) {
+                arr[id] = true;
+            }
+        }
+        template.set("skip_list", NodeList.join(makeIntArr(arr), ","));
     }
 
     private void nameAndId() {
@@ -63,7 +72,8 @@ public class LexerGenerator {
         for (int state = dfa.initial; state <= dfa.lastState; state++) {
             //make id for token
             String name = dfa.names[state];
-            if (name != null && dfa.isAccepting(state) && !dfa.isSkip[state]) {
+            if (name != null && dfa.isAccepting(state)) {
+                //!dfa.isSkip[state]
                 idArr[state] = idMap.getId(new Name(name, true));
             }
         }
@@ -74,7 +84,7 @@ public class LexerGenerator {
             if (state <= dfa.lastState - 1) {
                 idWriter.print(",");
                 if (state > dfa.initial && state % 20 == 0) {
-                    idWriter.print("\n");
+                    idWriter.print("\n            ");
                 }
             }
         }
@@ -130,6 +140,7 @@ public class LexerGenerator {
             if (i % column == 0) {
                 cmapWriter.print("\"+\n");
                 if (it.hasNext()) {
+                    cmapWriter.print("            ");
                     cmapWriter.print("\"");//next line start
                 }
             }
@@ -141,7 +152,7 @@ public class LexerGenerator {
         for (Iterator<Map.Entry<Node, Integer>> it = entries.iterator(); it.hasNext(); ) {
             Map.Entry<Node, Integer> entry = it.next();
             regexWriter.print("\"");
-            regexWriter.print(entry.getKey().toString());
+            regexWriter.print(UnicodeUtils.escapeString(entry.getKey().toString()));
             regexWriter.print("\"");
             if (it.hasNext()) {
                 regexWriter.print(", ");
@@ -186,6 +197,7 @@ public class LexerGenerator {
         return UnicodeUtils.escapeUnicode(val);
     }
 
+    //compress boolean bits to integers
     int[] makeIntArr(boolean[] arr) {
         int[] res = new int[arr.length / 32 + 1];
         int pos = 0;

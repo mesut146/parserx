@@ -129,13 +129,16 @@ public class Epsilons {
         Info b = trim(Helper.trim(s));
         //both a b are empty
         //A B = (A1 | A0) (B1 | B0) = A1 B1 | A1 A0 | A0 B1 | A0 B0;
-        Node s1 = a.noEps == null ? b.noEps : new Sequence(a.noEps, b.noEps);
-        Node s2 = a.noEps == null ? null : new Sequence(a.noEps, b.eps);
-        Node s3 = b.noEps == null ? null : new Sequence(a.eps, b.noEps);
-        Node s4 = a.noEps == null ? b.noEps : new Sequence(a.eps, b.eps);
-        s1.astInfo.code = s.astInfo.code;
+        Node s1 = a.noEps == null ? null : new Sequence(a.noEps, b.noEps);
+        Node s2 = a.noEps == null ? null : new Sequence(a.noEps, b.eps).normal();
+        Node s3 = b.noEps == null ? null : new Sequence(a.eps, b.noEps).normal();
+        Node s4 = new Sequence(a.eps, b.eps).normal();
         s4.astInfo.code = s.astInfo.code;
-        Or or = new Or(s1);
+        Or or = new Or();
+        if (s1 != null) {
+            s1.astInfo.code = s.astInfo.code;
+            or.add(s1);
+        }
         if (s2 != null) {
             s2.astInfo.code = s.astInfo.code;
             or.add(s2);
@@ -146,6 +149,10 @@ public class Epsilons {
         }
         res.noEps = or.normal();
         res.eps = s4;
+        Factor.check(s1);
+        Factor.check(s2);
+        Factor.check(s3);
+        Factor.check(s4);
         return res;
     }
 
@@ -162,13 +169,16 @@ public class Epsilons {
 
         RuleDecl decl = tree.getRule(name);
 
-        Name noName = new Name(name.encode().name + "_noe");
+        Name noName = new Name(name.name + "_noe");
         noName.args = name.args;
+        noName.astInfo = name.astInfo.copy();
         RuleDecl noDecl = tree.getRule(noName);
 
-        Name epsName = new Name(name.encode().name + "_eps");
+        Name epsName = new Name(name.name + "_eps");
         epsName.args = name.args;
+        epsName.astInfo = name.astInfo.copy();
         RuleDecl epsDecl = tree.getRule(epsName);
+
         Info tmp = null;
         if (noDecl == null) {
             tmp = trim(decl.rhs);

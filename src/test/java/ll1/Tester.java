@@ -15,7 +15,7 @@ public class Tester {
             if (t.type == 0) return;
         }*/
 
-        Parser p = new Parser(l);
-        System.out.println(p.line());
+        /*Parser p = new Parser(l);
+        System.out.println(p.line());*/
     }
 }

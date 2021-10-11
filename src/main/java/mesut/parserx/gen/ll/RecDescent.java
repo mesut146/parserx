@@ -107,7 +107,8 @@ public class RecDescent {
         c.append("public static final int EOF = 0;");
         int id = 1;
         for (TokenDecl decl : tree.tokens) {
-            if (decl.isSkip) continue;
+            if (decl.fragment) continue;
+            //if (decl.isSkip) continue;
             c.append("public static final int %s = %d;", decl.name, id);
             id++;
         }
@@ -127,19 +128,21 @@ public class RecDescent {
         astGen = new AstGen(tree);
         astGen.genAst();
         if (debug) tree.printRules();
-        Recursion.debug = debug;
-        Factor.allowRecursion = true;
-        Factor.debug = debug;
-        Factor factor = new Factor(tree);
-        factor.factorize();
-        if (debug && factor.any) {
-            tree.printRules();
-        }
+
+
         Recursion recursion = new Recursion(tree);
         recursion.all();
         if (debug && recursion.any) {
             tree.printRules();
         }
+
+        Factor.allowRecursion = true;
+        Factor factor = new Factor(tree);
+        factor.factorize();
+        if (debug && factor.any) {
+            tree.printRules();
+        }
+
 
         File out = new File(options.outDir, Utils.newName(tree.file.getName(), "-final.g"));
         //Name.autoEncode = true;
@@ -155,22 +158,24 @@ public class RecDescent {
         int i = 0;
         for (Node arg : decl.ref.args) {
             if (i > 0) params.append(", ");
-            if (arg.isName() && arg.asName().isToken) {
-                params.append("Token ").append(arg.astInfo.factorName);
-            }
-            else {
-                if (arg.isName()) {
-                    params.append(String.format("%s.%s %s", options.astClass, arg.asName().name, arg.astInfo.factorName));
+            if (arg.isName()) {
+                Name name = arg.asName();
+                if (name.isToken) {
+                    params.append("Token ").append(arg.astInfo.factorName);
+
                 }
                 else {
-                    Regex regex = arg.asRegex();
-                    Name name = regex.node.asName();
-                    if (name.isToken) {
-                        params.append(String.format("List<Token> %s", regex.astInfo.factorName));
-                    }
-                    else {
-                        params.append(String.format("List<%s.%s> %s", options.astClass, name.name, regex.astInfo.factorName));
-                    }
+                    params.append(String.format("%s %s", tree.getRule(arg.asName()).retType, arg.astInfo.factorName));
+                }
+            }
+            else {
+                Regex regex = arg.asRegex();
+                Name name = regex.node.asName();
+                if (name.isToken) {
+                    params.append(String.format("List<Token> %s", regex.astInfo.factorName));
+                }
+                else {
+                    params.append(String.format("List<%s.%s> %s", options.astClass, name.name, regex.astInfo.factorName));
                 }
             }
             i++;

@@ -10,12 +10,22 @@ import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
+import parser.DescTester;
+
+import java.io.IOException;
 
 public class LeftRecursion {
 
     @Test
     public void withAst() throws Exception {
         Tree tree = Env.tree("rec/direct.g");
+        new Recursion(tree).all();
+        tree.printRules();
+    }
+
+    @Test
+    public void withAst2() throws Exception {
+        Tree tree = Env.tree("rec/indirect.g");
         new Recursion(tree).all();
         tree.printRules();
     }
