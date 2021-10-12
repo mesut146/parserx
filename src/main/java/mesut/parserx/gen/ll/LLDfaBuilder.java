@@ -1,16 +1,21 @@
 package mesut.parserx.gen.ll;
 
+import mesut.parserx.dfa.Alphabet;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.nodes.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class LLDfaBuilder {
     public NFA dfa = new NFA(100);
     Tree tree;
-    Map<Name, Integer> finalMap = new HashMap<>();
+    Map<Name, List<Integer>> finalMap = new HashMap<>();
+    Map<Name, Integer> finalMapReal = new HashMap<>();
     Map<Name, Integer> startMap = new HashMap<>();
+    Alphabet alphabet;
 
     public LLDfaBuilder(Tree tree) {
         this.tree = tree;
@@ -19,37 +24,76 @@ public class LLDfaBuilder {
 
     public void build() {
         makeAlphabet();
+
+        //make start & end states
+        for (RuleDecl decl : tree.rules) {
+            int start = dfa.newState();
+            if (decl.ref.equals(tree.start)) {
+                dfa.addEpsilon(dfa.initial, start);
+            }
+            startMap.put(decl.ref, start);
+            List<Integer> finals = new ArrayList<>();
+            finalMap.put(decl.ref, finals);
+            if (decl.rhs.isOr()) {
+                int realEnd = dfa.newState();
+                finalMapReal.put(decl.ref, realEnd);
+                for (int i = 0; i < decl.rhs.asOr().size(); i++) {
+                    int curEnd = dfa.newState();
+                    finals.add(curEnd);
+                    dfa.setAccepting(curEnd, true);
+                    dfa.names[curEnd] = decl.baseName() + (i + 1);
+                    dfa.addEpsilon(curEnd, realEnd);
+                    dfa.setAccepting(realEnd, true);
+                    dfa.names[realEnd] = decl.baseName();
+                }
+            }
+            else {
+                int end = dfa.newState();
+                finals.add(end);
+                dfa.setAccepting(end, true);
+                dfa.names[end] = decl.baseName();
+                finalMapReal.put(decl.ref, end);
+            }
+        }
         for (RuleDecl decl : tree.rules) {
             add(decl);
         }
     }
 
     void makeAlphabet() {
+        alphabet = new Alphabet();
+        alphabet.lastId = 1;//skip eof
         for (TokenDecl decl : tree.tokens) {
             if (decl.fragment) continue;
-            tree.alphabet.addRegex(decl.ref());
+            alphabet.addRegex(decl.ref());
         }
     }
 
-    int add(RuleDecl decl) {
-        int start = dfa.newState();
-        startMap.put(decl.ref, start);
-        int end = dfa.newState();
-        finalMap.put(decl.ref, end);
-        dfa.names[end] = decl.baseName();
-        dfa.setAccepting(end, true);
-
-        int end2 = add(decl.rhs, start);
-        dfa.addEpsilon(end2, end);
-        return end;
+    void add(RuleDecl decl) {
+        int start = startMap.get(decl.ref);
+        if (decl.rhs.isOr()) {
+            int i = 0;
+            for (Node ch : decl.rhs.asOr()) {
+                int end0 = add(ch, start);
+                int end1 = finalMap.get(decl.ref).get(i++);
+                dfa.addEpsilon(end0, end1);
+            }
+        }
+        else {
+            int end = finalMap.get(decl.ref).get(0);
+            dfa.names[end] = decl.baseName();
+            dfa.setAccepting(end, true);
+            int end0 = add(decl.rhs, start);
+            int end1 = finalMap.get(decl.ref).get(0);
+            dfa.addEpsilon(end0, end1);
+        }
     }
 
     int getId(Name token) {
-        return tree.alphabet.getId(token);
+        return alphabet.getId(token);
     }
 
     int add(Node node, int start) {
-        //todo merge start nodes
         if (node.isGroup()) {
             return add(node.asGroup().node, start);
         }
@@ -61,19 +105,10 @@ public class LLDfaBuilder {
                 return end;
             }
             else {
-                Integer tmpEnd = finalMap.get(name);
-                if (tmpEnd != null) {
-                    //already inserted
-                    //todo what if
-                    dfa.addEpsilon(tmpEnd, start);
-                    dfa.addEpsilon(start, tmpEnd);
-                    return tmpEnd;
-                }
-                else {
-                    int end = dfa.newState();
-                    //dfa.addEpsilon(start, start2);
-                    return end;
-                }
+                int end = finalMapReal.get(name);
+                int s = startMap.get(name);
+                dfa.addEpsilon(start, s);
+                return end;
             }
         }
         else if (node.isSequence()) {

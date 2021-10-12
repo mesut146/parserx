@@ -1,0 +1,114 @@
+$package$
+import java.io.*;
+import java.util.*;
+
+public class $parser_class$ {
+
+    int[] accepting = {$final_list$};
+    //id -> rule name
+    String[] names = {$name_list$};
+    //state->rule id
+    int[] ids = {$id_list$};
+    static final int INITIAL = 0;
+    static final int EOF = 0;
+    $lexer_class$ lexer;
+    int yypos = 0;//pos in file
+    $token_class$ yychar;
+    public static int bufSize = 1000;
+    int bufPos = 0;//pos in buffer
+    int bufStart = bufPos;
+    int bufEnd;
+    $token_class$[] yybuf = new $token_class$[bufSize];
+    static String trans_packed = $trans$;
+    static int[][] trans = unpackTrans(trans_packed);
+    int curState = INITIAL;
+    int lastState = -1;
+    static int ruleOffset = $ruleOffset$;
+
+    public $parser_class$($lexer_class$ lexer) throws IOException{
+        this.lexer = lexer;
+        init();
+    }
+
+    public $parser_class$(File file) throws IOException {
+        this(new $lexer_class$(new BufferedReader(new FileReader(file))));
+    }
+
+    static boolean getBit(int[] arr, int state) {
+        return ((arr[state / 32] >> (state % 32)) & 1) != 0;
+    }
+
+    static int[][] unpackTrans(String str) {
+        int pos = 0;
+        int max = str.charAt(pos++);
+        List<int[]> list = new ArrayList<>();
+        while (pos < str.length()) {
+            int[] arr = new int[max];
+            Arrays.fill(arr, -1);
+            int trCount = str.charAt(pos++);
+            for (int input = 0; input < trCount; input++) {
+                //input -> target state
+                arr[str.charAt(pos++)] = str.charAt(pos++);
+            }
+            list.add(arr);
+        }
+        return list.toArray(new int[0][]);
+    }
+
+    void init() throws IOException{
+      int i = 0;
+      while(true){
+        $token_class$ tok = lexer.next();
+        yybuf[i++] = tok;
+        if(tok.type == 0){
+          break;
+        }
+      }
+    }
+
+    void fill() throws IOException{
+      /*if(bufPos == yybuf.length){
+        char[] newBuf = new char[yybuf.length * 2];
+        System.arraycopy(yybuf, 0, newBuf, 0, yybuf.length);
+        reader.read(newBuf, bufPos, yybuf.length);
+        yybuf = newBuf;
+      }*/
+    }
+
+
+    public void parse() throws IOException {
+        fill();
+
+        int startPos = yypos;
+        yychar = yybuf[bufPos];
+        if (yychar.type == EOF) return;
+        int backupState = -1;
+        while (true) {
+            fill();
+            yychar = yybuf[bufPos];
+            if(yychar.type == EOF){
+                curState = -1;
+            }else{
+                backupState = curState;
+                curState = trans[curState][yychar.type];
+            }
+            if (curState == -1) {
+                if (lastState != -1) {
+                    int id = ids[lastState];
+                    String name = names[id - ruleOffset];
+                    System.out.println("rule: " + name);
+                    bufStart = bufPos;
+                    return;
+                }
+                else {
+                    throw new IOException(String.format("invalid input=%s",yychar));
+                }
+            }
+            else {
+                if (getBit(accepting, curState)) lastState = curState;
+                bufPos++;
+                yypos++;
+            }
+        }
+    }
+}

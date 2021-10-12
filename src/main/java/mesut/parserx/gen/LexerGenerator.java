@@ -26,6 +26,29 @@ public class LexerGenerator {
         this.options = tree.options;
     }
 
+    //compress boolean bits to integers
+    public static int[] makeIntArr(boolean[] arr) {
+        int[] res = new int[arr.length / 32 + 1];
+        int pos = 0;
+        int cur;
+        for (int start = 0; start < arr.length; start += 32) {
+            cur = 0;
+            for (int j = 0; j < 32 && start + j < arr.length; j++) {
+                int bit = arr[start + j] ? 1 : 0;
+                cur |= bit << j;
+            }
+            res[pos++] = cur;
+        }
+        return res;
+    }
+
+    public static String makeOctal(int val) {
+        if (val <= 255) {
+            return "\\" + Integer.toOctalString(val);
+        }
+        return UnicodeUtils.escapeUnicode(val);
+    }
+
     public void generate() throws IOException {
         template = new Template("lexer.java.template");
         if (options.packageName == null) {
@@ -188,29 +211,6 @@ public class LexerGenerator {
             }
         }
         template.set("trans", transWriter.getString());
-    }
-
-    String makeOctal(int val) {
-        if (val <= 255) {
-            return "\\" + Integer.toOctalString(val);
-        }
-        return UnicodeUtils.escapeUnicode(val);
-    }
-
-    //compress boolean bits to integers
-    int[] makeIntArr(boolean[] arr) {
-        int[] res = new int[arr.length / 32 + 1];
-        int pos = 0;
-        int cur;
-        for (int start = 0; start < arr.length; start += 32) {
-            cur = 0;
-            for (int j = 0; j < 32 && start + j < arr.length; j++) {
-                int bit = arr[start + j] ? 1 : 0;
-                cur |= bit << j;
-            }
-            res[pos++] = cur;
-        }
-        return res;
     }
 
     void writeTokenClass() throws IOException {

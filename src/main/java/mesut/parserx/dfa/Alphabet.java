@@ -5,7 +5,6 @@ import mesut.parserx.nodes.Range;
 
 import java.io.*;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 //character classes used by nfa,dfa
@@ -13,7 +12,7 @@ public class Alphabet {
     public static int min = Character.MIN_VALUE;//0x0000
     public static int max = Character.MAX_VALUE;//0xFFFF
     public Map<Node, Integer> map = new HashMap<>();
-    int lastId = 0;
+    public int lastId = 0;
 
     public int size() {
         return map.size();

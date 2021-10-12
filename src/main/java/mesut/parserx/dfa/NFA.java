@@ -87,14 +87,13 @@ public class NFA {
     }
 
     //state,input index,target state
-    public Transition addTransition(int state, int target, int input) {
+    public void addTransition(int state, int target, int input) {
         if (debugTransition) {
             System.out.printf("st:%d to st:%d with:%s\n", state, target, getAlphabet().getRange(input));
         }
         Transition transition=new Transition(state, target, input);
         add(transition);
         lastState = Math.max(lastState, Math.max(state, target));
-        return transition;
     }
 
     private void add(Transition tr) {
