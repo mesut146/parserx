@@ -137,12 +137,12 @@ public class RecDescent {
         }
 
         Factor.allowRecursion = true;
-        Factor factor = new Factor(tree);
+        Factor.factorSequence = true;
+        Factor factor = recursion.factor;
         factor.factorize();
         if (debug && factor.any) {
             tree.printRules();
         }
-
 
         File out = new File(options.outDir, Utils.newName(tree.file.getName(), "-final.g"));
         //Name.autoEncode = true;
@@ -301,6 +301,19 @@ public class RecDescent {
         return sb.toString();
     }
 
+    String withArgs(Name name) {
+        StringBuilder args = new StringBuilder();
+        if (!name.args.isEmpty()) {
+            for (int i = 0; i < name.args.size(); i++) {
+                args.append(name.args.get(i).astInfo.factorName);
+                if (i < name.args.size() - 1) {
+                    args.append(",");
+                }
+            }
+        }
+        return name.name + "(" + args + ")";
+    }
+
     private void writeName(Name name) {
         if (name.astInfo.isFactored && name.astInfo.isFactor) {
             return;
@@ -315,7 +328,7 @@ public class RecDescent {
         }
         else if (curRule.isRecursive) {
             if (name.astInfo.isPrimary) {
-                code.append("%s = %s();", name.astInfo.outerVar, name.name);
+                code.append("%s = %s;", name.astInfo.outerVar, withArgs(name));
             }
             else {
                 code.append("%s = %s(%s);", name.astInfo.outerVar, name.name, name.astInfo.outerVar);
@@ -324,16 +337,7 @@ public class RecDescent {
         else {
             String rhs;
             if (name.isRule()) {
-                StringBuilder args = new StringBuilder();
-                if (!name.args.isEmpty()) {
-                    for (int i = 0; i < name.args.size(); i++) {
-                        args.append(name.args.get(i).astInfo.factorName);
-                        if (i < name.args.size() - 1) {
-                            args.append(",");
-                        }
-                    }
-                }
-                rhs = name.name + "(" + args + ")";
+                rhs = withArgs(name);
             }
             else {
                 rhs = "consume(" + tokens + "." + name.name + ")";

@@ -1,5 +1,6 @@
 package mesut.parserx.dfa;
 
+import mesut.parserx.nodes.Bracket;
 import mesut.parserx.nodes.StringNode;
 import mesut.parserx.utils.Utils;
 
@@ -42,14 +43,15 @@ public class NfaReader {
                 Pattern p = Pattern.compile("final\\s*=\\s*(.*)");
                 Matcher m = p.matcher(line);
                 m.find();
-                for (String f : m.group(1).split(" ")) {
+                String sep = line.contains(",") ? "," : " ";
+                for (String f : m.group(1).split(sep)) {
                     f = f.trim();
                     if (f.isEmpty()) continue;
                     if (f.contains("(")) {
                         int i = f.indexOf('(');
                         int num = Integer.parseInt(f.substring(0, i));
                         nfa.setAccepting(num, true);
-                        nfa.names[num] = f.substring(i + 1, f.indexOf(')'));
+                        nfa.addName(f.substring(i + 1, f.indexOf(')')), num);
                     }
                     else {
                         int num = Integer.parseInt(f);
@@ -72,8 +74,15 @@ public class NfaReader {
             else {
                 //with input
                 int target = Integer.parseInt(line.substring(arrow + 2, comma).trim());
-                StringNode node = new StringNode(line.substring(comma + 1).trim());
-                nfa.addTransition(state, target, alphabet.addRegex(node));
+                String input = line.substring(comma + 1).trim();
+                if (input.startsWith("[") && input.endsWith("]")) {
+                    Bracket b = new Bracket(input);
+                    nfa.addTransition(state, target, alphabet.addRegex(b));
+                }
+                else {
+                    StringNode node = new StringNode(input);
+                    nfa.addTransition(state, target, alphabet.addRegex(node));
+                }
             }
         }
         if (!gotInitial) {

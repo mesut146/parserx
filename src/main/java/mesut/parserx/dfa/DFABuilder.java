@@ -66,7 +66,7 @@ public class DFABuilder {
                 dfa.setAccepting(target_state, nfa.isAccepting(targets));
                 dfa.addTransition(dfaState, target_state, input);
                 dfa.isSkip[target_state] = nfa.isSkip(targets);
-                dfa.names[target_state] = nfa.getName(targets);
+                dfa.addName(nfa.getName(targets), target_state);
             }
         }
         return dfa;

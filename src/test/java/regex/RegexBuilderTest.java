@@ -10,12 +10,9 @@ import mesut.parserx.nodes.Shortcut;
 import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.regex.RegexBuilder;
-import mesut.parserx.regex.RegexOptimizer;
-import mesut.parserx.regex.RegexUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -30,32 +27,21 @@ public class RegexBuilderTest {
 
     @Test
     public void blockComment() throws IOException {
-        Node node = RegexUtils.blockComment();
+        Node node = Shortcut.from("block_comment");
         Tree tree = new Tree();
         tree.addToken(new TokenDecl("comment", node));
         NFA nfa = NFABuilder.build(tree).dfa();
         Minimization.optimize(nfa);
-        nfa.dot(new FileWriter(Env.dotFile("dfa")));
-    }
-
-    @Test
-    @Ignore
-    public void fromGrammar() throws Exception {
-        NFA nfa = Env.tree("javaLexer.g").makeNFA();
-        //nfa.dump(null);
-        Node node = new RegexBuilder(nfa).buildRegex();
-        node = new RegexOptimizer(node).optimize();
-        System.out.println(node);
+        nfa.dot(new FileWriter(Env.dotFile("a.dfa")));
     }
 
     @Test
     @Ignore
     public void build() throws Exception {
-        //NFA nfa = NfaReader.read(Env.getResFile("fsm/comment.nfa"));
-        NFA nfa = NfaReader.read(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/regex/in.nfa"));
+        NFA nfa = NfaReader.read(Env.getResFile("fsm/comment.nfa"));
         RegexBuilder regexBuilder = new RegexBuilder(nfa);
-        //regexBuilder.setOrder(5,4,3,2,1);
-        //regexBuilder.setOrder(2, 3, 4, 1, 5);
+        //regexBuilder.setOrder(5, 4, 3, 2, 1);
+        regexBuilder.setOrder(2, 3, 4, 1, 5);
         System.out.println(regexBuilder.buildRegex());
     }
 

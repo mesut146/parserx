@@ -51,12 +51,15 @@ public class RuleDecl extends Node {
 
     @Override
     public String toString() {
-        String s;
+        String s = ref.name;
+        if (!ref.args.isEmpty()) {
+            s += "(" + NodeList.join(ref.args, ", ") + ")";
+        }
         if (rhs.isOr()) {
-            s = ref + ":\n" + rhs.asOr().withNewline() + ";";
+            s += ":\n" + rhs.asOr().withNewline() + ";";
         }
         else {
-            s = ref + ": " + rhs + ";";
+            s += ": " + rhs + ";";
         }
 
         if (hidden) {

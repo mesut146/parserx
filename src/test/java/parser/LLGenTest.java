@@ -5,6 +5,8 @@ import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.VisitorGenerator;
 import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.lr.LrDFAGen;
+import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.transform.Epsilons;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.nodes.Name;
@@ -167,7 +169,18 @@ public class LLGenTest {
 //        DescTester.check(Env.tree("rec/direct2.g"), "A", "c", "cb", "cca", "ccba");
 //        DescTester.check(Env.tree("rec/direct-double.g"), "A", "b", "bba", "bbbaa");
         //DescTester.check(Env.tree("rec/indirect.g"), "A", "d", "aec", "ec", "adbc", "dbc");
-        DescTester.check(Env.tree("rec/cyc1.g"), "A", "c", "db", "cab", "dbab");
+        //DescTester.check(Env.tree("rec/cyc1.g"), "A", "c", "db", "cab", "dbab");
         DescTester.check(Env.tree("rec/cyc1.g"), "B", "d", "ca", "dba");
+    }
+
+    @Test
+    public void lr() throws IOException {
+        //EbnfToBnf.leftRecursive = false;
+        Tree tree = Env.tree("rec/cyc1-lr.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        LrDFAGen gen = new LrDFAGen(tree, "lr");
+        gen.generate();
+        gen.checkAndReport();
+        LrTest.dots(gen, tree.file.getName());
     }
 }

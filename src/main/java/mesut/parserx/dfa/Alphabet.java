@@ -13,6 +13,7 @@ public class Alphabet {
     public static int max = Character.MAX_VALUE;//0xFFFF
     public Map<Node, Integer> map = new HashMap<>();
     public int lastId = 0;
+    private final Map<Integer, Node> reverseMap = new HashMap<>();
 
     public int size() {
         return map.size();
@@ -23,7 +24,10 @@ public class Alphabet {
             check(node.asRange());
         }
         if (!map.containsKey(node)) {
-            map.put(node, lastId++);
+            map.put(node, lastId);
+            reverseMap.put(lastId, node);
+            lastId++;
+            return lastId - 1;
         }
         return map.get(node);
     }
@@ -48,12 +52,10 @@ public class Alphabet {
     }
 
     public Node getRegex(int id) {
-        for (Map.Entry<Node, Integer> entry : map.entrySet()) {
-            if (entry.getValue() == id) {
-                return entry.getKey();
-            }
+        if (reverseMap.containsKey(id)) {
+            return reverseMap.get(id);
         }
-        throw new RuntimeException("invalid alphabet id: " + id);
+        throw new RuntimeException("invalid input id: " + id);
     }
 
     //find intersecting range

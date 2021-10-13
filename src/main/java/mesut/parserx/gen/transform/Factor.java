@@ -19,7 +19,7 @@ public class Factor extends SimpleTransformer {
     boolean modified;
     RuleDecl curRule;
     CountingMap2<RuleDecl, Name> factorCount = new CountingMap2<>();
-    HashSet<RuleDecl> declSet = new HashSet<>();//new rules produced by this class
+    public HashSet<RuleDecl> declSet = new HashSet<>();//new rules produced by this class
     CountingMap<String> nameMap = new CountingMap<>();
     HashMap<Name, Name> senderMap = new HashMap<>();
 

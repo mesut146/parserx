@@ -37,21 +37,21 @@ public class LLDfaBuilder {
             if (decl.rhs.isOr()) {
                 int realEnd = dfa.newState();
                 finalMapReal.put(decl.ref, realEnd);
+                dfa.addName(decl.baseName(), realEnd);
                 for (int i = 0; i < decl.rhs.asOr().size(); i++) {
                     int curEnd = dfa.newState();
                     finals.add(curEnd);
                     dfa.setAccepting(curEnd, true);
-                    dfa.names[curEnd] = decl.baseName() + (i + 1);
+                    dfa.addName(decl.baseName() + (i + 1), curEnd);
                     dfa.addEpsilon(curEnd, realEnd);
                     dfa.setAccepting(realEnd, true);
-                    dfa.names[realEnd] = decl.baseName();
                 }
             }
             else {
                 int end = dfa.newState();
                 finals.add(end);
                 dfa.setAccepting(end, true);
-                dfa.names[end] = decl.baseName();
+                dfa.addName(decl.baseName(), end);
                 finalMapReal.put(decl.ref, end);
             }
         }
@@ -62,6 +62,7 @@ public class LLDfaBuilder {
 
     void makeAlphabet() {
         alphabet = new Alphabet();
+        tree.alphabet = alphabet;
         alphabet.lastId = 1;//skip eof
         for (TokenDecl decl : tree.tokens) {
             if (decl.fragment) continue;
@@ -80,9 +81,6 @@ public class LLDfaBuilder {
             }
         }
         else {
-            int end = finalMap.get(decl.ref).get(0);
-            dfa.names[end] = decl.baseName();
-            dfa.setAccepting(end, true);
             int end0 = add(decl.rhs, start);
             int end1 = finalMap.get(decl.ref).get(0);
             dfa.addEpsilon(end0, end1);

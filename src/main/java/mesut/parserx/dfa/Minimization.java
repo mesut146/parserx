@@ -1,12 +1,12 @@
 package mesut.parserx.dfa;
 
-import mesut.parserx.nodes.Bracket;
-import mesut.parserx.nodes.Tree;
+import mesut.parserx.nodes.*;
 
 import java.util.*;
 
 public class Minimization {
 
+    //merge transitions and inputs so that its easier to write graph
     public static NFA combineAlphabet(NFA dfa) {
         Alphabet alphabet = dfa.getAlphabet();
         Alphabet alp = new Alphabet();
@@ -18,24 +18,43 @@ public class Minimization {
         res.names = dfa.names;
         for (int i = dfa.initial; i <= dfa.lastState; i++) {
             //target -> symbol
-            Map<Integer, Bracket> map = new HashMap<>();
+            Map<Integer, List<Node>> map = new HashMap<>();
             if (dfa.hasTransitions(i)) {
                 for (Transition tr : dfa.trans[i]) {
-                    Bracket bracket = map.get(tr.target);
-                    if (bracket == null) {
-                        bracket = new Bracket();
-                        map.put(tr.target, bracket);
+                    List<Node> nodes = map.get(tr.target);
+                    if (nodes == null) {
+                        nodes = new ArrayList<>();
+                        map.put(tr.target, nodes);
                     }
-                    bracket.add(alphabet.getRange(tr.input));
-                }
-                for (int target : map.keySet()) {
-                    Bracket b = map.get(target).optimize();
-                    int id;
-                    if (alp.map.containsKey(b)) {
-                        id = alp.getId(b);
+                    if (tr.epsilon) {
+                        nodes.add(new Epsilon());
                     }
                     else {
-                        id = alp.addRegex(b);
+                        nodes.add(alphabet.getRegex(tr.input));
+                    }
+                }
+                for (int target : map.keySet()) {
+                    List<Node> nodes = map.get(target);//optimize()
+                    Bracket bracket = new Bracket();
+                    Or or = new Or();
+                    for (Node node : nodes) {
+                        if (node.isRange()) {
+                            bracket.add(node);
+                        }
+                        else {
+                            or.add(node);
+                        }
+                    }
+                    if (bracket.size() > 0) {
+                        or.add(bracket);
+                    }
+                    Node node = or.normal();
+                    int id;
+                    if (alp.map.containsKey(node)) {
+                        id = alp.getId(node);
+                    }
+                    else {
+                        id = alp.addRegex(node);
                     }
                     res.addTransition(i, target, id);
                 }
@@ -132,16 +151,19 @@ public class Minimization {
         for (int s = dfa.initial; s <= dfa.lastState; s++) {
             if (dfa.isDead(s)) continue;
             if (dfa.isAccepting(s)) {
-                if (names.containsKey(dfa.names[s])) {
-                    //group same token states
-                    names.get(dfa.names[s]).addState(s);
-                }
-                else {
-                    //each final state represents a different token so they can't be merged
-                    StateSet acc = new StateSet();
-                    acc.addState(s);
-                    list.add(acc);
-                    names.put(dfa.names[s], acc);
+                List<String> l = dfa.names[s];
+                for (String nm : l) {
+                    if (names.containsKey(nm)) {
+                        //group same token states
+                        names.get(nm).addState(s);
+                    }
+                    else {
+                        //each final state represents a different token so they can't be merged
+                        StateSet acc = new StateSet();
+                        acc.addState(s);
+                        list.add(acc);
+                        names.put(nm, acc);
+                    }
                 }
             }
             else {
@@ -195,6 +217,7 @@ public class Minimization {
         NFA d = new NFA(dfa.lastState);
         d.initial = dfa.initial;
         d.tree = dfa.tree;
+        //state -> target
         Map<Integer, Integer> map = new HashMap<>();
         for (StateSet set : list) {
             Iterator<Integer> iterator = set.iterator();
@@ -217,8 +240,11 @@ public class Minimization {
                     d.names[map.get(i)] = dfa.names[i];
                 }
                 else {
-                    if (!d.names[map.get(i)].contains(dfa.names[i])) {
-                        d.names[map.get(i)] += "," + dfa.names[i];
+                    List<String> l = dfa.names[i];
+                    for (String nm : l) {
+                        if (!d.names[map.get(i)].contains(nm)) {
+                            d.addName(nm, map.get(i));
+                        }
                     }
                 }
             }

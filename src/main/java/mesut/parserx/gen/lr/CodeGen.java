@@ -26,15 +26,10 @@ public class CodeGen {
     IdMap idMap;
 
     public CodeGen(Tree tree, String type) {
-        if (type.equals("lalr") || type.equals("lr1")) {
+        if (type.equals("lalr") || type.equals("lr1") | type.equals("lr0")) {
             LrDFAGen generator = new LrDFAGen(tree, type);
             generator.generate();
-            generator.checkAll();
-            this.gen = generator;
-        }
-        else if (type.equals("lr0")) {
-            LrDFAGen generator = new LrDFAGen(tree, type);
-            generator.generate();
+            generator.checkAndReport();
             this.gen = generator;
         }
         else {

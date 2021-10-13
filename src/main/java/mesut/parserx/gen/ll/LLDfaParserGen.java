@@ -85,9 +85,12 @@ public class LLDfaParserGen {
         int[] idArr = new int[dfa.lastState + 1];//state->id
         for (int state = dfa.initial; state <= dfa.lastState; state++) {
             //make id for token
-            String name = dfa.names[state];
-            if (name != null && dfa.isAccepting(state)) {
-                idArr[state] = idMap.getId(new Name(name, false));
+            List<String> names = dfa.names[state];
+            if (names != null && dfa.isAccepting(state)) {
+                if (names.size() != 1) {
+                    throw new RuntimeException("only one token per state");
+                }
+                idArr[state] = idMap.getId(new Name(names.get(0), false));
             }
         }
         //id list

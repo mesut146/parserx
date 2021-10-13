@@ -1,5 +1,7 @@
 package mesut.parserx.dfa;
 
+import mesut.parserx.nodes.Epsilon;
+
 import java.util.Objects;
 
 //a single arrow
@@ -43,7 +45,7 @@ public class Transition {
         return "Transition{" +
                 "state=" + state +
                 ", target=" + target +
-                ", symbol=" + (epsilon ? "E" : (alphabet != null ? alphabet.getRegex(input) : input)) +
+                ", symbol=" + (epsilon ? Epsilon.str() : (alphabet != null ? alphabet.getRegex(input) : input)) +
                 '}';
     }
 }

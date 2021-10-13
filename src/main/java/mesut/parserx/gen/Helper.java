@@ -1,5 +1,6 @@
 package mesut.parserx.gen;
 
+import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.nodes.*;
 
 import java.util.*;
@@ -188,17 +189,14 @@ public class Helper {
         }
     }
 
-    static void followFirst(Node node, Name sym, Tree tree, Set<Name> set) {
-    }
-
     public static Map<Name, Integer> firstMap(Node node, Tree tree) {
         Map<Name, Integer> map = new HashMap<>();
-        firstMap(node, null, tree, true, map);
+        firstMap(node, tree, map);
         return map;
     }
 
     //freq of first set of regex
-    public static void firstMap(Node node, Node parent, Tree tree, boolean rec, Map<Name, Integer> map) {
+    public static void firstMap(Node node, Tree tree, Map<Name, Integer> map) {
         if (node.isName()) {
             Name name = node.asName();
             if (name.astInfo.isFactored) return;
@@ -210,92 +208,59 @@ public class Helper {
             }
             else {
                 map.put(name, 1);
-                if (rec && name.isRule()) {
-                    firstMap(tree.getRule(name).rhs, null, tree, rec, map);
+                if (name.isRule()) {
+                    firstMap(tree.getRule(name).rhs, tree, map);
                 }
             }
         }
         else if (node.isOr()) {
             for (Node ch : node.asOr()) {
-                firstMap(ch, node, tree, rec, map);
+                firstMap(ch, tree, map);
             }
         }
         else if (node.isSequence()) {
             Sequence seq = node.asSequence();
-            for (Node ch : seq) {
-                firstMap(ch, node, tree, rec, map);
-                if (!canBeEmpty(ch, tree)) {
-                    break;
-                }
+            Node a = seq.first();
+            Node b = trim(seq);
+            //todo overflow
+            Map<Name, Integer> amap = firstMap(a, tree);
+            if (canBeEmpty(a, tree)) {
+                //a b | b
+                Map<Name, Integer> bmap = firstMap(b, tree);
+                map.putAll(amap);
+                map.putAll(bmap);
+            }
+            else {
+                map.putAll(amap);
             }
         }
         else if (node.isGroup()) {
-            firstMap(node.asGroup().node, node, tree, rec, map);
+            firstMap(node.asGroup().node, tree, map);
         }
         else if (node.isRegex()) {
             Regex regex = node.asRegex();
             if (!regex.isOptional()) {
                 //infinite
                 Map<Name, Integer> tmp = new HashMap<>();
-                firstMap(regex.node, node, tree, rec, tmp);
+                firstMap(regex.node, tree, tmp);
                 for (Map.Entry<Name, Integer> entry : tmp.entrySet()) {
-                    entry.setValue(Integer.MAX_VALUE);
+                    Factor factor = new Factor(tree);
+                    Factor.PullInfo info = factor.pull(regex.node, entry.getKey());
+                    if (info.one.isEpsilon() || info.one.astInfo.isFactored) {
+                        entry.setValue(Integer.MAX_VALUE);
+                    }
+                    else {
+                        //once
+                    }
+                    for (RuleDecl decl : factor.declSet) {
+                        tree.rules.remove(decl);
+                    }
                 }
                 map.putAll(tmp);
             }
             else {
-                firstMap(regex.node, node, tree, rec, map);
+                firstMap(regex.node, tree, map);
             }
-        }
-    }
-
-    public static List<Name> firstList(Node node, Tree tree) {
-        return firstList(node, tree, true);
-    }
-
-    public static List<Name> firstList(Node node, Tree tree, boolean rec) {
-        List<Name> list = new ArrayList<>();
-        firstList(node, tree, rec, list);
-        return list;
-    }
-
-    public static void firstList(Node node, Tree tree, boolean rec, List<Name> list) {
-        if (node.isName()) {
-            if (node.astInfo.isFactored) return;
-            Name name = node.asName();
-            if (name.isToken) {
-                list.add(name);
-            }
-            else {
-                //same ref
-                //todo recursion
-                list.add(name);
-                if (rec) {
-                    RuleDecl decl = tree.getRule(name);
-                    firstList(decl.rhs, tree, rec, list);
-                }
-            }
-        }
-        else if (node.isOr()) {
-            for (Node ch : node.asOr()) {
-                firstList(ch, tree, rec, list);
-            }
-        }
-        else if (node.isSequence()) {
-            for (Node ch : node.asSequence()) {
-                firstList(ch, tree, rec, list);
-                if (!canBeEmpty(ch, tree)) {
-                    break;
-                }
-            }
-        }
-        else if (node.isGroup()) {
-            firstList(node.asGroup().node, tree, rec, list);
-        }
-        else if (node.isRegex()) {
-            Regex r = node.asRegex();
-            firstList(r.node, tree, rec, list);
-
         }
     }
 

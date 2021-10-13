@@ -20,6 +20,7 @@ public class LrDFAGen {
     public RuleDecl start;
     public Tree tree;
     public String type;
+    public List<ConflictInfo> conflicts = new ArrayList<>();
     LrItem first;
     boolean isResolved;//is conflicts checked
     Queue<LrItemSet> queue = new LinkedList<>();//itemsets
@@ -33,6 +34,9 @@ public class LrDFAGen {
     public void makeStart() {
         if (tree.start == null) {
             throw new RuntimeException("no start rule is defined");
+        }
+        if (tree.getRule(tree.start) == null) {
+            throw new RuntimeException("start rule is not defined");
         }
         start = new RuleDecl(startName, new Sequence(tree.start));
         tree.addRule(start);
@@ -149,11 +153,9 @@ public class LrDFAGen {
                         addQueue(targetSet);
                     }
                 }
-                if (curSet == firstSet && symbol.equals(tree.start)) {
-                    acc = table.getId(targetSet);
-                }
             }
         }
+        acc = table.getTargetSet(firstSet, start.ref).stateId;
     }
 
     void addQueue(LrItemSet set) {
@@ -206,6 +208,11 @@ public class LrDFAGen {
         }
     }
 
+    public void checkAndReport() {
+        checkAll();
+        report();
+    }
+
     public void checkAll() {
         isResolved = false;
         for (LrItemSet set : table.itemSets) {
@@ -213,6 +220,21 @@ public class LrDFAGen {
         }
         if (isResolved) {
             checkAll();
+        }
+    }
+
+    private void report() {
+        if (!conflicts.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            for (ConflictInfo info : conflicts) {
+                if (info.rr) {
+                    sb.append("reduce/reduce conflict in ").append(info.state).append("\n");
+                }
+                else {
+                    sb.append(String.format("shift/reduce conflict in %d sym=%s", info.state, info.shift.getDotNode())).append("\n");
+                }
+            }
+            throw new RuntimeException(sb.toString());
         }
     }
 
@@ -225,14 +247,24 @@ public class LrDFAGen {
                 LrItem i2 = set.all.get(j);
                 if (i1.hasReduce() && i2.hasReduce()) {
                     if (lr0) {
-                        throw new RuntimeException("reduce/reduce conflict " + table.getId(set) + "\n" + set);
+                        ConflictInfo info = new ConflictInfo();
+                        info.rr = true;
+                        info.state = table.getId(set);
+                        info.reduce = i1;
+                        info.reduce2 = i2;
+                        conflicts.add(info);
                     }
                     else {
                         //if any lookahead conflict
                         HashSet<Name> la = new HashSet<>(i1.lookAhead);
                         la.retainAll(i2.lookAhead);
                         if (!la.isEmpty()) {
-                            throw new RuntimeException("reduce/reduce conflict " + table.getId(set) + "\n" + set);
+                            ConflictInfo info = new ConflictInfo();
+                            info.rr = true;
+                            info.state = table.getId(set);
+                            info.reduce = i1;
+                            info.reduce2 = i2;
+                            conflicts.add(info);
                         }
                     }
                 }
@@ -305,16 +337,16 @@ public class LrDFAGen {
                         }
                     }
                     if (!removed) {
-                        throw new RuntimeException(String.format("shift/reduce conflict %d sym=%s\n%s", table.getId(set), shift.getDotNode(), set));
+                        ConflictInfo info = new ConflictInfo();
+                        info.rr = false;
+                        info.state = table.getId(set);
+                        info.shift = shift;
+                        info.reduce = reduce;
+                        conflicts.add(info);
                     }
-
                 }
             }
         }
-    }
-
-    void handleAssoc() {
-
     }
 
     Assoc getAssoc(Name sym) {
@@ -382,5 +414,14 @@ public class LrDFAGen {
                 }
             }
         }
+    }
+
+    static class ConflictInfo {
+        public boolean rr;
+        public LrItem shift;
+        public LrItem reduce;
+        public LrItem reduce2;
+        int state;
+
     }
 }

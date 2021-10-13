@@ -94,10 +94,13 @@ public class LexerGenerator {
         int[] idArr = new int[dfa.lastState + 1];//state->id
         for (int state = dfa.initial; state <= dfa.lastState; state++) {
             //make id for token
-            String name = dfa.names[state];
-            if (name != null && dfa.isAccepting(state)) {
+            List<String> names = dfa.names[state];
+            if (names != null && dfa.isAccepting(state)) {
                 //!dfa.isSkip[state]
-                idArr[state] = idMap.getId(new Name(name, true));
+                if (names.size() != 1) {
+                    throw new RuntimeException("only one token per state");
+                }
+                idArr[state] = idMap.getId(new Name(names.get(0), true));
             }
         }
         //id list

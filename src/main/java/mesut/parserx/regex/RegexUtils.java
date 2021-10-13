@@ -23,10 +23,6 @@ public class RegexUtils {
         return node;
     }
 
-    public static Node blockComment() {
-        return Sequence.of(new StringNode("/*"), new Regex(new Or(new Bracket("[^*]"), new Sequence(new StringNode("*"), new Bracket("[^/]"))), "*"), new StringNode("*/"));
-    }
-
     //de morgan laws
     public static Node negate(Node regex) throws Exception {
         if (regex.isOr()) {

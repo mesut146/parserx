@@ -24,7 +24,7 @@ public class LrStateGenTest {
         LrDFA.debugTransition = true;
         LrDFAGen dfaGen = new LrDFAGen(tree, "lalr");
         dfaGen.generate();
-        dfaGen.checkAll();
+        dfaGen.checkAndReport();
         dfaGen.genGoto();
         dots(dfaGen, tree.file.getName());
         LexerGenerator lexerGenerator = new LexerGenerator(tree);
@@ -53,7 +53,7 @@ public class LrStateGenTest {
         LrDFA.debugTransition = true;
         LrDFAGen dfaGen = new LrDFAGen(tree, "lalr");
         dfaGen.generate();
-        dfaGen.checkAll();
+        dfaGen.checkAndReport();
         dfaGen.genGoto();
         dots(dfaGen, tree.file.getName());
         LexerGenerator lexerGenerator = new LexerGenerator(tree);

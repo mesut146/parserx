@@ -28,87 +28,85 @@ public class NFABuilder {
     }
 
     public void addRegex(TokenDecl decl) {
-        Pair p = insert(decl.rhs, nfa.initial);
-        nfa.setAccepting(p.end, true);
-        nfa.names[p.end] = decl.name;
-        nfa.isSkip[p.end] = decl.isSkip;
+        int end = insert(decl.rhs, nfa.initial);
+        nfa.setAccepting(end, true);
+        nfa.addName(decl.name, end);
+        nfa.isSkip[end] = decl.isSkip;
     }
 
-    public Pair insert(Node node, int start) {
-        Pair p = new Pair(start, start);
+    public int insert(Node node, int start) {
         if (node.isString()) {
             String str = node.asString().value;
-            int st = start;
-            int ns = start;
+            int end = start;
+            int newEnd = end;
             for (char ch : str.toCharArray()) {
-                ns = nfa.newState();
-                nfa.addTransitionRange(st, ns, ch, ch);
-                st = ns;
+                newEnd = nfa.newState();
+                nfa.addTransitionRange(end, newEnd, ch, ch);
+                end = newEnd;
             }
-            p.end = ns;
+            return newEnd;
         }
         else if (node.isDot()) {
-            p = insert(Dot.bracket, start);
+            return insert(Dot.bracket, start);
         }
         else if (node.isBracket()) {
             Bracket b = node.asBracket();//already normalized
-            int end = p.end = nfa.newState();
+            int end = nfa.newState();
             //in order to have only one end state we add epsilons?
             for (int i = 0; i < b.size(); i++) {
                 Range rn = b.ranges.get(i);
                 nfa.addTransitionRange(start, end, rn.start, rn.end);
             }
+            return end;
         }
         else if (node.isSequence()) {
             Sequence seq = node.asSequence();
-            int st = start;
+            int end = start;
             for (Node child : seq) {
-                st = insert(child, st).end;
+                end = insert(child, end);
             }
-            p.end = st;
+            return end;
         }
         else if (node.isRegex()) {
             Regex rn = node.asRegex();
             if (rn.isStar()) {
                 int end = nfa.newState();
                 nfa.addEpsilon(start, end);//zero
-                Pair st = insert(rn.node, start);
-                nfa.addEpsilon(st.end, start);//repeat
-                p.end = end;
+                int st = insert(rn.node, start);
+                nfa.addEpsilon(st, start);//repeat
+                return end;
             }
             else if (rn.isPlus()) {
                 int newState = nfa.newState();
                 nfa.addEpsilon(start, newState);
-                Pair st = insert(rn.node, newState);
-                nfa.addEpsilon(st.end, newState);//repeat
-                p = st;
+                int end = insert(rn.node, newState);
+                nfa.addEpsilon(end, newState);//repeat
+                return end;
             }
-            else if (rn.isOptional()) {
+            else {
                 int end = nfa.newState();
                 nfa.addEpsilon(start, end);//zero times
-                Pair st = insert(rn.node, start);
-                nfa.addEpsilon(st.end, end);
-                p.end = end;
+                int st = insert(rn.node, start);
+                nfa.addEpsilon(st, end);
+                return end;
             }
         }
         else if (node.isOr()) {
             Or or = (Or) node;
             int end = nfa.newState();
             for (Node n : or) {
-                int e = insert(n, start).end;
+                int e = insert(n, start);
                 nfa.addEpsilon(e, end);
             }
-            p.end = end;
+            return end;
         }
         else if (node.isGroup()) {
-            Group group = node.asGroup();
-            Node rhs = group.node;
-            p.end = insert(rhs, start).end;
+            return insert(node.asGroup().node, start);
         }
         else if (node.isName()) {//?
             //we have lexer ref just replace with target's regex
             Name name = node.asName();
-            p.end = insert(tree.getToken(name.name).rhs, start).end;
+            return insert(tree.getToken(name.name).rhs, start);
         }
         else if (node instanceof Until) {
             Until until = (Until) node;
@@ -116,23 +114,23 @@ public class NFABuilder {
             if (!reg.isString()) {
                 throw new RuntimeException("until node only supports strings");
             }
-            int ns;
-            int st = start;
+            int end = start;
+            int newEnd = -1;
             int i = 0;
             for (char ch : reg.asString().value.toCharArray()) {
-                ns = p.end = nfa.newState();
-                nfa.addTransitionRange(st, ns, ch, ch);
+                newEnd = nfa.newState();
+                nfa.addTransitionRange(end, newEnd, ch, ch);
                 //add negated transitions
                 for (Range r : until.brackets.get(i).getRanges()) {
-                    nfa.addTransitionRange(st, start, r.start, r.end);
+                    nfa.addTransitionRange(newEnd, start, r.start, r.end);
                 }
-                st = ns;
+                end = newEnd;
                 i++;
             }
+            return newEnd;
         }
         else {
             throw new RuntimeException("invalid node: " + node.getClass() + " , " + node);
         }
-        return p;
     }
 }

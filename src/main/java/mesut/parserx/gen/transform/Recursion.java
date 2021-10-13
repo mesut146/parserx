@@ -8,9 +8,11 @@ public class Recursion {
     public static boolean debug = false;
     public boolean any;
     Tree tree;
+    public Factor factor;
 
     public Recursion(Tree tree) {
         this.tree = tree;
+        factor = new Factor(tree);
     }
 
     public void all() {
@@ -33,7 +35,7 @@ public class Recursion {
         sym.astInfo.outerVar = "res";
         //sym.astInfo.isFactor = true;
         //sym.astInfo.factorName =;
-        Factor.PullInfo info = new Factor(tree).pullRule(sym, sym);
+        Factor.PullInfo info = factor.pullRule(sym, sym);
         //info.zero.astInfo.outerVar = "res";
         //info.one.astInfo.outerVar = "res";
         decl.rhs = Sequence.of(info.zero, new Regex(info.one, "*"));

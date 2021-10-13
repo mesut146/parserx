@@ -5,7 +5,7 @@ token{
  SKIP: "skip";
  INCLUDE: "include";
  START: "%start";
- EPSILON: "%epsilon" | "ε";
+ EPSILON: "%epsilon" | "%empty" | "ε";
  LEFT: "%left";
  RIGHT: "%right";
  IDENT: [a-zA-Z_] [a-zA-Z0-9_]*;

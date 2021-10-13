@@ -39,7 +39,7 @@ public class LrTest {
         Tree tree = Env.tree(grammar);
         LrDFAGen generator = new LrDFAGen(tree, type);
         generator.generate();
-        generator.checkAll();
+        generator.checkAndReport();
     }
 
     @Ignore
@@ -89,7 +89,7 @@ public class LrTest {
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         LrDFAGen generator = new LrDFAGen(tree, "lalr");
         generator.generate();
-        generator.checkAll();
+        generator.checkAndReport();
         dots(generator, tree.file.getName());
     }
 
@@ -99,7 +99,7 @@ public class LrTest {
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         LrDFAGen generator = new LrDFAGen(tree, "lalr");
         generator.generate();
-        generator.checkAll();
+        generator.checkAndReport();
         dots(generator, tree.file.getName());
     }
 
@@ -135,7 +135,7 @@ public class LrTest {
         LrDFAGen dfaGen = new LrDFAGen(tree, "lr1");
         LrDFAGen.debug = true;
         dfaGen.generate();
-        dfaGen.checkAll();
+        dfaGen.checkAndReport();
         dots(dfaGen, tree.file.getName());
     }
 

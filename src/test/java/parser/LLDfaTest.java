@@ -1,6 +1,7 @@
 package parser;
 
 import common.Env;
+import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.gen.ll.LLDfaBuilder;
 import mesut.parserx.gen.ll.LLDfaParserGen;
@@ -14,8 +15,8 @@ import java.io.IOException;
 
 public class LLDfaTest {
 
-    void dots(NFA nfa) throws IOException {
-        File file = Env.dotFile(Utils.newName(nfa.tree.file.getName(), ".dot"));
+    void dots(NFA nfa, File f) throws IOException {
+        File file = Env.dotFile(Utils.newName(f.getName(), ".dot"));
         nfa.dot(new FileWriter(file));
         Runtime.getRuntime().exec("dot -Tpng -O " + file);
     }
@@ -29,8 +30,8 @@ public class LLDfaTest {
         builder.build();
         NFA nfa = builder.dfa;
         NFA dfa = nfa.dfa();
-        //dfa = Minimization.optimize(dfa);
-        dots(dfa);
+        dfa = Minimization.optimize(dfa);
+        dots(Minimization.combineAlphabet(dfa), tree.file);
     }
 
     @Test

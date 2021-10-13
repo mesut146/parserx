@@ -17,7 +17,7 @@ public class NFA {
     public List<Transition>[] trans;
     public boolean[] accepting;
     public boolean[] isSkip;
-    public String[] names;
+    public List<String>[] names;
     public int initial = 0;
     public int lastState = 0;
 
@@ -25,7 +25,7 @@ public class NFA {
         trans = new List[maxStates];
         accepting = new boolean[maxStates];
         isSkip = new boolean[maxStates];
-        names = new String[maxStates];
+        names = new List[maxStates];
         this.tree = tree;
     }
 
@@ -55,7 +55,7 @@ public class NFA {
         accepting = expand(accepting, new boolean[max], len);
         trans = expand(trans, new List[max], len);
         isSkip = expand(isSkip, new boolean[max], len);
-        names = expand(names, new String[max], len);
+        names = expand(names, new List[max], len);
     }
 
     <T> T expand(Object src, Object target, int len) {
@@ -91,7 +91,7 @@ public class NFA {
         if (debugTransition) {
             System.out.printf("st:%d to st:%d with:%s\n", state, target, getAlphabet().getRange(input));
         }
-        Transition transition=new Transition(state, target, input);
+        Transition transition = new Transition(state, target, input);
         add(transition);
         lastState = Math.max(lastState, Math.max(state, target));
     }
@@ -166,16 +166,30 @@ public class NFA {
         return false;
     }
 
+    public void addName(String name, int state) {
+        List<String> list = names[state];
+        if (list == null) {
+            list = new ArrayList<>();
+            names[state] = list;
+        }
+        if (!list.contains(name)) {
+            list.add(name);
+        }
+    }
+
     //get token name for state set as defined order
     String getName(StateSet set) {
         int minIndex = Integer.MAX_VALUE;
         String name = null;
         for (int state : set) {
             if (names[state] != null) {
-                int i = tree.indexOf(names[state]);
-                if (i < minIndex) {
-                    name = names[state];
-                    minIndex = i;
+                List<String> list = names[state];
+                for (String nm : list) {
+                    int i = tree.indexOf(nm);
+                    if (i < minIndex) {
+                        name = nm;
+                        minIndex = i;
+                    }
                 }
             }
         }
@@ -285,7 +299,7 @@ public class NFA {
             }
         }
 
-        for (int state = 0; state <= lastState; state++) {
+        for (int state = initial; state <= lastState; state++) {
             for (Transition tr : get(state)) {
                 String label;
                 if (tr.epsilon) {
@@ -294,7 +308,7 @@ public class NFA {
                 else {
                     label = UnicodeUtils.escapeString(getAlphabet().getRegex(tr.input).toString());
                 }
-                w.printf("%s -> %s [label=\"[%s]\"]\n", state, tr.target, label);
+                w.printf("%s -> %s [label=\"%s\"]\n", state, tr.target, label);
             }
         }
         w.println("}");

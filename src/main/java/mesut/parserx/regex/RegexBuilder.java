@@ -3,12 +3,10 @@ package mesut.parserx.regex;
 
 import mesut.parserx.dfa.Alphabet;
 import mesut.parserx.dfa.NFA;
-import mesut.parserx.dfa.NfaReader;
 import mesut.parserx.dfa.Transition;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.UnicodeUtils;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,10 +24,6 @@ public class RegexBuilder {
         this.nfa = nfa;
         alphabet = nfa.getAlphabet();
         regexAlphabet = new Alphabet();
-    }
-
-    public static Node fromFsm(String input) throws IOException {
-        return new RegexBuilder(NfaReader.read(input)).buildRegex();
     }
 
     public static Node from(NFA nfa) {
