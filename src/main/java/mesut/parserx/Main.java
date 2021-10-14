@@ -179,7 +179,7 @@ public class Main {
                 //nfa2regex
                 NFA nfa = NfaReader.read(input);
                 if (!Validator.isDFA(nfa)) {
-                    System.out.println("input is nfa converting to nfa first");
+                    System.out.println("input is nfa converting to dfa first");
                     nfa = nfa.dfa();
                 }
                 Node node = RegexBuilder.from(nfa);

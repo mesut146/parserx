@@ -131,13 +131,10 @@ public class NFA {
 
     public List<Transition> findIncoming(int to) {
         List<Transition> all = new ArrayList<>();
-        for (int state = 0; state <= lastState; state++) {
-            if (hasTransitions(state)) {
-                List<Transition> list = trans[state];
-                for (Transition transition : list) {
-                    if (transition.target == to) {
-                        all.add(transition);
-                    }
+        for (int state : it()) {
+            for (Transition transition : get(state)) {
+                if (transition.target == to) {
+                    all.add(transition);
                 }
             }
         }
@@ -208,7 +205,7 @@ public class NFA {
             @Override
             public Iterator<Integer> iterator() {
                 return new Iterator<Integer>() {
-                    int cur = initial;
+                    int cur = 0;
 
                     @Override
                     public boolean hasNext() {
@@ -217,8 +214,7 @@ public class NFA {
 
                     @Override
                     public Integer next() {
-                        cur++;
-                        return cur - 1;
+                        return cur++;
                     }
 
                     @Override
@@ -289,17 +285,17 @@ public class NFA {
         w.println("digraph G{");
         w.println("rankdir = LR");
         w.printf("%d [color=%s]\n", initial, initialColor);
-        for (int state = 0; state <= lastState; state++) {
+        for (int state : it()) {
             if (isDead(state)) continue;
             if (isAccepting(state)) {
-                w.printf("%d [shape = doublecircle color=%s xlabel=\"%s\"]\n", state, finalColor, names[state]);
+                w.printf("%d [shape = doublecircle color=%s xlabel=\"%s\"]\n", state, finalColor, names[state] == null ? "" : names[state]);
             }
             if (isSkip[state]) {
-                w.printf("%d [color=%s xlabel=\"%s\"]\n", state, skipColor, names[state]);
+                w.printf("%d [color=%s xlabel=\"%s\"]\n", state, skipColor, names[state] == null ? "" : names[state]);
             }
         }
 
-        for (int state = initial; state <= lastState; state++) {
+        for (int state : it()) {
             for (Transition tr : get(state)) {
                 String label;
                 if (tr.epsilon) {

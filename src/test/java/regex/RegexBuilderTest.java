@@ -10,6 +10,7 @@ import mesut.parserx.nodes.Shortcut;
 import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.regex.RegexBuilder;
+import mesut.parserx.regex.RegexOptimizer;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -43,6 +44,17 @@ public class RegexBuilderTest {
         //regexBuilder.setOrder(5, 4, 3, 2, 1);
         regexBuilder.setOrder(2, 3, 4, 1, 5);
         System.out.println(regexBuilder.buildRegex());
+    }
+
+    @Test
+    public void name() throws IOException {
+        NFA nfa = NfaReader.read(Env.getResFile("fsm/a.nfa"));
+        //NFA dfa = nfa.dfa();
+        //nfa.dfa().dot(new FileWriter(Env.dotFile("a.dot")));
+        RegexBuilder regexBuilder = new RegexBuilder(nfa);
+        Node regex = regexBuilder.buildRegex();
+        System.out.println(regex);
+        System.out.println(new RegexOptimizer(regex).optimize());
     }
 
     @Test

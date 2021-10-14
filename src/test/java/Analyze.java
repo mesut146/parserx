@@ -15,7 +15,7 @@ public class Analyze {
         Set<InputTarget> inputTargets = new HashSet<>();
         int count = 0;
         Map<Integer, Integer> inputFreq = new HashMap<>();
-        for (int state = 0; state <= dfa.lastState; state++) {
+        for (int state :dfa.it()) {
             if (dfa.hasTransitions(state)) {
                 List<Transition> list = dfa.trans[state];
                 count += list.size();

@@ -92,7 +92,7 @@ public class LexerGenerator {
         idMap.genSymbolIds(dfa.tree);
 
         int[] idArr = new int[dfa.lastState + 1];//state->id
-        for (int state = dfa.initial; state <= dfa.lastState; state++) {
+        for (int state : dfa.it()) {
             //make id for token
             List<String> names = dfa.names[state];
             if (names != null && dfa.isAccepting(state)) {
@@ -105,11 +105,11 @@ public class LexerGenerator {
         }
         //id list
         Writer idWriter = new Writer();
-        for (int state = dfa.initial; state <= dfa.lastState; state++) {
+        for (int state :dfa.it()) {
             idWriter.print(idArr[state]);
             if (state <= dfa.lastState - 1) {
                 idWriter.print(",");
-                if (state > dfa.initial && state % 20 == 0) {
+                if (state > 0 && state % 20 == 0) {
                     idWriter.print("\n            ");
                 }
             }
@@ -194,7 +194,7 @@ public class LexerGenerator {
         transWriter.print(makeOctal(dfa.getAlphabet().size()));
         transWriter.print("\" +");
         transWriter.print("\n");
-        for (int state = 0; state <= dfa.lastState; state++) {
+        for (int state : dfa.it()) {
             List<Transition> list = dfa.trans[state];
             transWriter.print(indent);
             transWriter.print("\"");

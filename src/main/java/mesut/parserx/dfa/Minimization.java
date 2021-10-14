@@ -16,7 +16,7 @@ public class Minimization {
         res.tree = tree;
         res.initial = dfa.initial;
         res.names = dfa.names;
-        for (int i = dfa.initial; i <= dfa.lastState; i++) {
+        for (int i = 0; i <= dfa.lastState; i++) {
             //target -> symbol
             Map<Integer, List<Node>> map = new HashMap<>();
             if (dfa.hasTransitions(i)) {
@@ -66,7 +66,6 @@ public class Minimization {
         return res;
     }
 
-
     //https://en.wikipedia.org/wiki/DFA_minimization
     public static void removeUnreachable(NFA dfa) {
         StateSet reachable_states = new StateSet();
@@ -90,7 +89,7 @@ public class Minimization {
             reachable_states.addAll(new_states);
         } while (!new_states.states.isEmpty());
 
-        for (int s = dfa.initial; s <= dfa.lastState; s++) {
+        for (int s : dfa.it()) {
             if (!reachable_states.contains(s)) {
                 //remove all transitions from dead state
                 dfa.trans[s] = null;
@@ -101,24 +100,23 @@ public class Minimization {
 
     //remove dead(non final and no outgoing transitions)
     public static void removeDead(NFA dfa) {
-        for (int i = dfa.initial; i <= dfa.lastState; i++) {
+        for (int i : dfa.it()) {
             if (dfa.isAccepting(i)) continue;
             if (!dfa.hasTransitions(i)) {
-                if (dfa.hasTransitions(i)) {
-                    boolean dead = !dfa.hasTransitions(i);
-                    for (Transition tr : dfa.get(i)) {
-                        if (tr.target != i) {
-                            dead = false;
-                            break;
-                        }
-                    }
-                    if (dead) {
-                        System.out.println("removed dead state: " + i);
-                        dfa.trans[i] = null;
-                        removeDead(dfa);
-                        return;
-                    }
+                dfa.trans[i] = null;
+                continue;
+            }
+            boolean dead = true;
+            for (Transition tr : dfa.get(i)) {
+                //looping is not considered as transition
+                if (tr.target != i) {
+                    dead = false;
+                    break;
                 }
+            }
+            if (dead) {
+                System.out.println("removed dead state: " + i);
+                dfa.trans[i] = null;
             }
         }
     }
@@ -135,7 +133,7 @@ public class Minimization {
 
     public static int numOfStates(NFA nfa) {
         StateSet set = new StateSet();
-        for (int i = nfa.initial; i <= nfa.lastState; i++) {
+        for (int i : nfa.it()) {
             if (!nfa.isDead(i) && (nfa.isAccepting(i) || nfa.hasTransitions(i))) {
                 set.addState(i);
             }
@@ -148,7 +146,7 @@ public class Minimization {
         List<StateSet> list = new ArrayList<>();
         StateSet noacc = new StateSet();
         Map<String, StateSet> names = new HashMap<>();
-        for (int s = dfa.initial; s <= dfa.lastState; s++) {
+        for (int s : dfa.it()) {
             if (dfa.isDead(s)) continue;
             if (dfa.isAccepting(s)) {
                 List<String> l = dfa.names[s];
@@ -227,7 +225,7 @@ public class Minimization {
                 map.put(iterator.next(), first);
             }
         }
-        for (int i = dfa.initial; i <= dfa.lastState; i++) {
+        for (int i : dfa.it()) {
             if (dfa.isDead(i)) continue;
             for (Transition tr : dfa.get(i)) {
                 d.addTransition(map.get(i), map.get(tr.target), tr.input);
@@ -319,9 +317,8 @@ public class Minimization {
     //if c reaches to any in target set
     static StateSet lead(NFA dfa, int c, StateSet target) {
         StateSet x = new StateSet();
-        for (int s = dfa.initial; s <= dfa.lastState; s++) {
-            if (!dfa.hasTransitions(s)) continue;
-            for (Transition tr : dfa.trans[s]) {
+        for (int s : dfa.it()) {
+            for (Transition tr : dfa.get(s)) {
                 if (tr.input == c) {
                     //get all incomings and outgoings as closures
                     StateSet out = out(dfa, tr.target, new StateSet());

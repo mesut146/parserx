@@ -25,7 +25,7 @@ public class RegexOptimizer extends SimpleTransformer {
     //shrink or into bracket by combining single length strings
     @Override
     public Node transformOr(Or node, Node parent) {
-        Or newNode = new Or();
+        Or res = new Or();
         Bracket bracket = new Bracket();
         for (Node ch : node) {
             ch = transformNode(ch, node);
@@ -36,18 +36,23 @@ public class RegexOptimizer extends SimpleTransformer {
                 bracket.add(ch);
             }
             else {
-                newNode.add(ch);
+                res.add(ch);
             }
         }
         if (bracket.size() != 0) {
             bracket.normalize().optimize();
-            newNode.add(bracket);
+            if (bracket.size() == 1 && bracket.get(0).asRange().isSingle()) {
+                res.add(new StringNode("" + (char) bracket.get(0).asRange().start));
+            }
+            else {
+                res.add(bracket);
+            }
         }
-        return newNode.normal();
+        return res.normal();
     }
 
     //shrink sequence by merging consecutive strings
-    @Override
+    /*@Override
     public Node transformSequence(Sequence node, Node parent) {
         StringBuilder sb = new StringBuilder();
         Sequence res = new Sequence();
@@ -81,6 +86,6 @@ public class RegexOptimizer extends SimpleTransformer {
             res.add(new StringNode(sb.toString()));
         }
         return res.normal();
-    }
+    }*/
 
 }
