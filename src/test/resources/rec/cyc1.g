@@ -6,6 +6,11 @@ A: B b | c;
 B: A a | d;
 
 /*
+A: (A a | d) b | c;
+
+*/
+
+/*
 A: A a b | d b | c;
 A: (d b | c) (a b)*;
 B: (d b | c) (a b)* a | d;

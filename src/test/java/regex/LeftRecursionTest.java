@@ -5,16 +5,14 @@ import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.transform.LeftRecursive;
 import mesut.parserx.gen.transform.Recursion;
-import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
-import parser.DescTester;
 
 import java.io.IOException;
 
-public class LeftRecursion {
+public class LeftRecursionTest {
 
     @Test
     public void withAst() throws Exception {
@@ -56,7 +54,7 @@ public class LeftRecursion {
         Or.newLine = false;
         Tree tree = Env.tree("rec/direct.g");
         tree = LeftRecursive.transform(tree);
-        System.out.println(NodeList.join(tree.rules, "\n"));
+        tree.printRules();
     }
 
     @Test
@@ -64,6 +62,17 @@ public class LeftRecursion {
         Or.newLine = false;
         Tree tree = Env.tree("rec/cyc2.g");
         tree = LeftRecursive.transform(tree);
-        System.out.println(NodeList.join(tree.rules, "\n"));
+        tree.printRules();
+    }
+
+    @Test
+    public void indirect3() throws IOException {
+        Tree tree = Env.tree("rec/cyc3.g");
+        LeftRecursive l = new LeftRecursive(tree);
+        for (RuleDecl rule : tree.rules) {
+            l.cutIndirect(rule);
+        }
+        l.process();
+        tree.printRules();
     }
 }

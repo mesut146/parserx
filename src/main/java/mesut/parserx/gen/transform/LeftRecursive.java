@@ -3,7 +3,7 @@ package mesut.parserx.gen.transform;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
-import java.util.*;
+import java.util.Set;
 
 //remove left recursions by substitutions
 public class LeftRecursive {
@@ -57,6 +57,22 @@ public class LeftRecursive {
             }
         }
         return node;
+    }
+
+    public void cutIndirect(RuleDecl rule) {
+        Name ref = rule.ref;
+        //cut last transition that reaches rule
+        Set<Name> set = Helper.first(rule.rhs, tree, true, true, false);
+        for (Name any : set) {
+            if (any.equals(ref)) continue;
+            //if any start with rule
+            RuleDecl anyDecl = tree.getRule(any);
+            Node rhs = anyDecl.rhs;
+            if (start(rhs, ref)) {
+                //cut transition
+                anyDecl.rhs = subFirst(rhs, ref);
+            }
+        }
     }
 
     //make sure node doesn't start with ref
@@ -132,7 +148,6 @@ public class LeftRecursive {
     public SplitInfo split(Node r, Name name) {
         Node zero = null;
         Or one = null;
-        //info.eps = Helper.canBeEmpty(r, tree);
         if (r.isGroup()) {
             SplitInfo info = split(r.asGroup().node, name);
             zero = info.zero;
@@ -268,31 +283,6 @@ public class LeftRecursive {
         public SplitInfo(Node zero, Or one) {
             this.zero = zero;
             this.one = one;
-        }
-    }
-
-    class PathNode {
-        String name;
-        List<PathNode> next = new ArrayList<>();
-
-        public PathNode(String name) {
-            this.name = name;
-        }
-
-        PathNode makePath(Name prod) {
-            return makePath(prod, new HashMap<Name, PathNode>());
-        }
-
-        PathNode makePath(Name name, Map<Name, PathNode> map) {
-            if (map.containsKey(name)) return map.get(name);
-            PathNode pathNode = new PathNode(name.name);
-            map.put(name, pathNode);
-            //get start nodes
-            Set<Name> set = Helper.first(tree.getRule(name).rhs, tree, false, true, false);
-            for (Name ch : set) {
-                pathNode.next.add(makePath(ch, map));
-            }
-            return pathNode;
         }
     }
 
