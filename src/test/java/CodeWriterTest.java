@@ -1,7 +1,7 @@
 import mesut.parserx.gen.CodeWriter;
 import org.junit.Test;
 
-public class CodeGenTest {
+public class CodeWriterTest {
 
     @Test
     public void append() {

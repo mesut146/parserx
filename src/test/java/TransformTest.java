@@ -4,7 +4,6 @@ import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.transform.PrecedenceHelper;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Tree;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TransformTest {
@@ -16,12 +15,6 @@ public class TransformTest {
         EbnfToBnf.transform(tree).printRules();
     }
 
-    @Test
-    @Ignore
-    public void test() throws Exception {
-        Tree tree = Env.tree("java/parser-jls.g");
-        //System.out.println(new EbnfToBnf(tree).transform());
-    }
 
     @Test
     public void pred() throws Exception {

@@ -93,11 +93,4 @@ public class Or extends NodeList {
         }
         return this;
     }
-
-    @Override
-    public Node copy() {
-        Or res = new Or(list);
-        res.label = label;
-        return res;
-    }
 }

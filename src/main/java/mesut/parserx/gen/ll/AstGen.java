@@ -26,6 +26,7 @@ public class AstGen {
     }
 
     public void genAst() throws IOException {
+        new Normalizer(tree).normalize();
         if (options.packageName != null) {
             astWriter.append("package %s;", options.packageName);
             astWriter.append("");
@@ -57,6 +58,7 @@ public class AstGen {
             astWriter.append("public <R,P> R accept(%sVisitor<R,P> visitor, P arg){", options.parserClass);
             astWriter.all("return visitor.visit%s(this, arg);\n}", Utils.camel(decl.baseName()));
         }
+        //todo create parent
         writePrinter(decl.rhs, astWriter);
         astWriter.append("}");
     }
@@ -131,28 +133,44 @@ public class AstGen {
         }
     }
 
-    private void model(Node node, Type parentClass, String outerVar, CodeWriter parent) {
-//        node.astInfo.outerVar = outerVar;
-//        node.astInfo.outerCls = parentClass;
+    private void model(Node node, Type outerCls, String outerVar, CodeWriter parent) {
         if (node.isSequence()) {
             for (Node ch : node.asSequence()) {
-                model(ch, parentClass, outerVar, parent);
+                model(ch, outerCls, outerVar, parent);
             }
         }
         else if (node.isName()) {
             node.astInfo.outerVar = outerVar;
-            node.astInfo.outerCls = parentClass;
+            node.astInfo.outerCls = outerCls;
             Name name = node.asName();
-            String vname = name.astInfo.varName;
-            if (vname == null) {
-                vname = vName(name, parentClass.toString());
-                name.astInfo.varName = vname;
+            //check if user supplied var name
+            String varName = name.astInfo.varName;
+            if (varName == null) {
+                varName = vName(name, outerCls.toString());
+                name.astInfo.varName = varName;
             }
-            if (name.isToken) {
-                parent.append("public Token %s;", vname);
+            parent.append("public %s %s;", name.isToken ? options.tokenClass : name.name, varName);
+        }
+        else if (node.isRegex()) {
+            node.astInfo.outerVar = outerVar;
+            node.astInfo.outerCls = outerCls;
+            Regex regex = node.asRegex();
+            Node ch = regex.node;
+            if (regex.isOptional()) {
+                model(ch, outerCls, outerVar, parent);
             }
             else {
-                parent.append("public %s %s;", name.name, vname);
+                Name name = ch.asName();
+                String vname = ch.astInfo.varName;
+                if (vname == null) {
+                    vname = vName(name, outerCls.toString());
+                    ch.astInfo.varName = vname;
+                }
+                ch.astInfo.isInLoop = true;
+                ch.astInfo.outerCls = outerCls;
+                ch.astInfo.outerVar = outerVar;
+                String type = name.isToken ? options.tokenClass : name.name;
+                parent.append("public List<%s> %s = new ArrayList<>();", type, vname);
             }
         }
         else if (node.isOr()) {
@@ -160,23 +178,25 @@ public class AstGen {
             int num = 1;
             for (Node ch : node.asOr()) {
                 if (ch.isEpsilon()) continue;
-                Type clsName = new Type(parentClass, Utils.camel(parentClass.name) + num);
-                String v = parentClass.name.toLowerCase() + num;
+                Type clsName = new Type(outerCls, Utils.camel(outerCls.name) + num);
+                String v = outerCls.name.toLowerCase() + num;
 
                 //in case of factorization pre-write some code
-                String code = String.format("%s.which = %d;\n", outerVar, num);
-                if (!RecDescent.isSimple(ch)) {
-                    code += String.format("%s %s = %s.%s = new %s();", clsName, v, outerVar, v, clsName);
-                }
-                ch.astInfo.code = code;
-
+                ch.astInfo.which = num;
                 if (RecDescent.isSimple(ch)) {
                     //todo vname
                     //ch.astInfo.varName = parentClass.toLowerCase() + num;
-                    model(ch, parentClass, outerVar, parent);
+                    model(ch, outerCls, outerVar, parent);
                 }
                 else {
                     //sequence
+                    //complex choice point inits holder
+                    ch.astInfo.createNode = true;
+                    ch.astInfo.nodeType = clsName;
+                    ch.astInfo.varName = v;
+                    ch.astInfo.outerVar = outerVar;
+                    ch.astInfo.outerCls = outerCls;
+                    ch.astInfo.assign = true;
                     parent.append(String.format("%s %s;", clsName.name, v));
                     CodeWriter c = new CodeWriter(false);
                     c.append("public static class %s{", clsName.name);
@@ -184,67 +204,9 @@ public class AstGen {
                     writePrinter(ch, c);
                     c.append("}");
                     classes.all(c.get());
-                    ch.astInfo.varName = v;
-                    ch.astInfo.outerVar = outerVar;
-                    ch.astInfo.outerCls = parentClass;
                 }
                 num++;
             }
-        }
-        else if (node.isRegex()) {
-            node.astInfo.outerVar = outerVar;
-            node.astInfo.outerCls = parentClass;
-            Regex regex = node.asRegex();
-            Node ch = regex.node;
-            if (regex.isOptional()) {
-                model(ch, parentClass, outerVar, parent);
-            }
-            else {
-                ch.astInfo.isInLoop = true;
-                if (ch.isName()) {
-                    String vname = ch.astInfo.varName;
-                    if (vname == null) {
-                        vname = vName(ch.asName(), parentClass.toString());
-                        ch.astInfo.varName = vname;
-                    }
-                    ch.astInfo.outerCls = parentClass;
-                    ch.astInfo.outerVar = outerVar;
-                    String type = ch.asName().isToken ? "Token" : ch.asName().name;
-                    parent.append("public List<%s> %s = new ArrayList<>();", type, vname);
-                }
-                else {
-                    //group
-                    String var = "g" + groupCount++;
-                    Type cls = new Type(parentClass, curRule + var);
-                    parent.append("public List<%s> %s = new ArrayList<>();", cls.name, var);
-                    CodeWriter c = new CodeWriter(true);
-                    c.append("public static class %s{", cls.name);
-                    model(ch.asGroup().node, cls, var, c);
-                    c.append("}");
-                    classes.all(c.get());
-                }
-            }
-        }
-        else if (node.isGroup()) {
-            node.astInfo.outerVar = outerVar;
-            node.astInfo.outerCls = parentClass;
-            Group group = node.asGroup();
-            String var;
-            if (node.astInfo.varName != null) {
-                var = node.astInfo.varName;
-            }
-            else {
-                var = "g" + groupCount++;
-            }
-            Type cls = new Type(parentClass, curRule + var);
-            group.astInfo.varName = var;
-            parent.append("public %s %s;", cls.name, var);
-
-            CodeWriter c = new CodeWriter(true);
-            c.append("public static class %s{", cls.name);
-            model(group.node, cls, var, c);
-            c.append("}");
-            classes.all(c.get());
         }
         else if (!node.isEpsilon()) {
             throw new RuntimeException("invalid node: " + node.getClass());

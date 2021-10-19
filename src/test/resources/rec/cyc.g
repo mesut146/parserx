@@ -8,6 +8,11 @@ B: A | E e | x;
 C: B b | y;
 
 /*
+A: (A | E e | x) b | C c;
+
+*/
+
+/*
 E(E): A(E) a | B(E) c c;
 E_no_E: A_no_E a | B_no_E c c;
 A(E): B(E) b | C(E) c;

@@ -48,11 +48,6 @@ public class Regex extends Node {
     }
 
     @Override
-    public Regex copy() {
-        return new Regex(node, type);
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

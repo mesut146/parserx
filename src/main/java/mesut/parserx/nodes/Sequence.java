@@ -28,7 +28,7 @@ public class Sequence extends NodeList {
     public Node normal() {
         normalCh();
         if (size() == 1) {
-            if (astInfo.code != null) {
+            if (astInfo.which != -1) {
                 throw new RuntimeException("norm with code");
             }
             return first();
@@ -39,7 +39,7 @@ public class Sequence extends NodeList {
                 res.addAll(ch.asSequence().list);
             }
             else if (ch.isOr()) {
-                res.add(new Group(ch));
+                throw new RuntimeException();
             }
             else if (!ch.isEpsilon()) {
                 res.add(ch);
@@ -47,10 +47,5 @@ public class Sequence extends NodeList {
         }
         res.astInfo = astInfo.copy();
         return res;
-    }
-
-    @Override
-    public Node copy() {
-        return new Sequence(list);
     }
 }

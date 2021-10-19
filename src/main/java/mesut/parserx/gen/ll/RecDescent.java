@@ -4,10 +4,7 @@ import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
-import mesut.parserx.gen.transform.EbnfToBnf;
-import mesut.parserx.gen.transform.Factor;
-import mesut.parserx.gen.transform.Recursion;
-import mesut.parserx.gen.transform.Simplify;
+import mesut.parserx.gen.transform.*;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
@@ -25,7 +22,6 @@ public class RecDescent {
     CodeWriter code = new CodeWriter(true);
     RuleDecl curRule;
     String tokens = "Tokens";
-    AstGen astGen;
     int flagCount;
     int firstCount;
 
@@ -124,11 +120,12 @@ public class RecDescent {
     private void prepare() throws IOException {
         Simplify.all(tree);
         tree = EbnfToBnf.combineOr(tree);
-        new Normalizer(tree).normalize();
-        astGen = new AstGen(tree);
+        AstGen astGen = new AstGen(tree);
         astGen.genAst();
-        if (debug) tree.printRules();
+        //if (debug) tree.printRules();
 
+        LeftRecursive ll = new LeftRecursive(tree);
+        ll.normalizeIndirects();
 
         Recursion recursion = new Recursion(tree);
         recursion.all();
@@ -139,7 +136,7 @@ public class RecDescent {
         Factor.allowRecursion = true;
         Factor.factorSequence = true;
         Factor factor = recursion.factor;
-        factor.factorize();
+        //factor.factorize();
         if (debug && factor.any) {
             tree.printRules();
         }
@@ -197,8 +194,14 @@ public class RecDescent {
     }
 
     void write(Node node) {
-        if (node.astInfo.code != null) {
-            code.all(node.astInfo.code);
+        if (node.astInfo.which != -1) {
+            code.all(node.astInfo.writeWhich());
+        }
+        if (node.astInfo.createNode) {
+            code.all(node.astInfo.writeNode());
+        }
+        if (node.astInfo.substitution) {
+            code.append("%s.%s = %s;", node.astInfo.outerVar, node.astInfo.subVar, node.astInfo.varName);
         }
         if (node.isOr()) {
             Or or = node.asOr();
@@ -206,7 +209,7 @@ public class RecDescent {
         }
         else if (node.isGroup()) {
             Group group = node.asGroup();
-            writeGroup(node, group);
+            write(group.node);
         }
         else if (node.isSequence()) {
             Sequence s = node.asSequence();
@@ -357,23 +360,6 @@ public class RecDescent {
         }
     }
 
-    private void writeGroup(Node node, Group group) {
-        if (!node.astInfo.isFactorGroup) {
-            String var = group.astInfo.varName;
-            code.append("%s %s = new %s();", group.astInfo.outerCls, var, group.astInfo.outerCls);
-            if (group.astInfo.isInLoop) {
-                code.append("%s.%s.add(%s);", group.astInfo.outerVar, var, var);
-            }
-            else {
-                code.append("%s.%s = %s;", group.astInfo.outerVar, var, var);
-            }
-            write(group.node);
-        }
-        else {
-            write(group.node);
-        }
-    }
-
     private void writeOr(Or or) {
         code.append(String.format("switch(%s){", peekExpr()));
         Node empty = null;
@@ -385,13 +371,7 @@ public class RecDescent {
                     code.append(String.format("case %s.%s:", tokens, la.name));
                 }
                 code.append("{");
-                if (isSimple(ch)) {
-                    write(ch);
-                }
-                else {
-                    //which
-                    write(ch);
-                }
+                write(ch);
                 code.append("break;");
                 code.append("}");
                 if (Helper.canBeEmpty(ch, tree)) {

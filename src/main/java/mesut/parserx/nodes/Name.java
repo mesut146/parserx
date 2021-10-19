@@ -80,15 +80,12 @@ public class Name extends Node {
         return Objects.hash(name, isToken);
     }
 
-    @Override
-    public Name copy() {
-        Name res = new Name(name, isToken);
-        res.args = new ArrayList<>(args);
-        res.astInfo = astInfo.copy();
-        return res;
-    }
-
     public RuleDecl makeRule() {
         return new RuleDecl(this);
+    }
+
+    @Override
+    public Name copy() {
+        return (Name) super.copy();
     }
 }

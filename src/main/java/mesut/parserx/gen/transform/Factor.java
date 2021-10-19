@@ -1,7 +1,7 @@
 package mesut.parserx.gen.transform;
 
 import mesut.parserx.gen.Helper;
-import mesut.parserx.gen.ll.AstInfo;
+import mesut.parserx.gen.AstInfo;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap;
 import mesut.parserx.utils.CountingMap2;
@@ -15,11 +15,11 @@ public class Factor extends SimpleTransformer {
     public static boolean factorSequence = true;
     public static boolean allowRecursion = false;
     public boolean any;
+    public HashSet<RuleDecl> declSet = new HashSet<>();//new rules produced by this class
     HashMap<String, PullInfo> cache = new HashMap<>();
     boolean modified;
     RuleDecl curRule;
     CountingMap2<RuleDecl, Name> factorCount = new CountingMap2<>();
-    public HashSet<RuleDecl> declSet = new HashSet<>();//new rules produced by this class
     CountingMap<String> nameMap = new CountingMap<>();
     HashMap<Name, Name> senderMap = new HashMap<>();
 
@@ -47,9 +47,9 @@ public class Factor extends SimpleTransformer {
 
     public static void check(Node s) {
         if (s == null || !s.isSequence()) return;
-        if (s.astInfo.code == null) return;
+        if (s.astInfo.which == -1) return;
         for (Node ch : s.asSequence()) {
-            if (ch.astInfo.code != null) {
+            if (ch.astInfo.which != -1) {
                 throw new RuntimeException("");
             }
         }
@@ -301,11 +301,11 @@ public class Factor extends SimpleTransformer {
                     Sequence s1 = new Sequence(ai.one, B.copy());
                     if (ai.zero != null) {
                         Sequence s2 = new Sequence(ai.zero, B.copy());
-                        s2.astInfo.code = s.astInfo.code;
+                        s2.astInfo = s.astInfo.copy();
                         info.zero = s2;
                         check(s2);
                     }
-                    s1.astInfo.code = s.astInfo.code;
+                    s1.astInfo = s.astInfo.copy();
                     info.one = s1;
                     check(s1);
                     return info;
@@ -317,10 +317,10 @@ public class Factor extends SimpleTransformer {
                 //a A1 B | A0 B
                 if (ai.zero != null) {
                     info.zero = new Sequence(ai.zero, B);
-                    info.zero.astInfo.code = s.astInfo.code;
+                    info.zero.astInfo = s.astInfo.copy();
                 }
                 info.one = Sequence.of(ai.one, B);
-                info.one.astInfo.code = s.astInfo.code;
+                info.one.astInfo = s.astInfo.copy();
                 check(info.one);
                 check(info.zero);
             }
@@ -335,18 +335,18 @@ public class Factor extends SimpleTransformer {
             Node s2 = a1.eps.isEpsilon() ? pb.one : new Sequence(a1.eps, pb.one);
             Node s3 = pb.zero == null ? null : (a1.eps.isEpsilon() ? pb.zero : new Sequence(a1.eps, pb.zero));
 
-            if (s2.astInfo.code == null) s2.astInfo.code = s.astInfo.code;
+            if (s2.astInfo.which == -1) s2.astInfo = s.astInfo.copy();
 
             if (s1 == null) {
                 info.zero = s3;
             }
             else {
-                s1.astInfo.code = s.astInfo.code;
+                s1.astInfo = s.astInfo.copy();
                 if (s3 == null) {
                     info.zero = s1;
                 }
                 else {
-                    if (s3.astInfo.code == null) s3.astInfo.code = s.astInfo.code;
+                    if (s3.astInfo.which == -1) s3.astInfo = s.astInfo.copy();
                     info.zero = new Or(s1, s3);
                 }
             }
@@ -356,11 +356,6 @@ public class Factor extends SimpleTransformer {
             check(s3);
         }
         return info;
-    }
-
-    private Node withCode(Node node, Node astHolder) {
-        node.astInfo.code = astHolder.astInfo.code;
-        return node;
     }
 
     PullInfo pullOr(Or or, Name sym) {

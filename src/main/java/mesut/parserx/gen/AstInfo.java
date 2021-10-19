@@ -1,16 +1,23 @@
-package mesut.parserx.gen.ll;
+package mesut.parserx.gen;
+
+import mesut.parserx.gen.ll.Type;
 
 public class AstInfo {
     public String varName;
     public String outerVar;
     public Type outerCls;
+    public Type nodeType;
     public boolean isFactor;//no assign
     public boolean isFactored;//epsilon
     public boolean isFactorGroup;//follows a factor
     public boolean isInLoop;
     public boolean isPrimary;//recursion left
-    public String code;
     public String factorName;
+    public int which = -1;
+    public boolean createNode;
+    public boolean substitution;
+    public String subVar;
+    public boolean assign;
 
     public AstInfo copy() {
         AstInfo res = new AstInfo();
@@ -20,10 +27,26 @@ public class AstInfo {
         res.isFactor = isFactor;
         res.isFactored = isFactored;
         res.isInLoop = isInLoop;
-        res.code = code;
+        res.which = which;
+        res.createNode = createNode;
+        res.nodeType = nodeType;
+        res.substitution = substitution;
+        res.subVar = subVar;
+        res.assign = assign;
         res.factorName = factorName;
         res.isPrimary = isPrimary;
         return res;
+    }
+
+    public String writeNode() {
+        if (assign) {
+            return String.format("%s %s = %s.%s = new %s();", nodeType, varName, outerVar, varName, nodeType);
+        }
+        return String.format("%s %s = new %s();", nodeType, varName, nodeType);
+    }
+
+    public String writeWhich() {
+        return String.format("%s.which = %d;", outerVar, which);
     }
 
     @Override
@@ -33,7 +56,7 @@ public class AstInfo {
             sb.append("factor ");
         }
         sb.append(String.format("%s.%s", outerVar, varName));
-        if (code != null) {
+        if (which != -1) {
             sb.append(" code");
         }
         sb.append('}');

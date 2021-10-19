@@ -7,8 +7,8 @@ import mesut.parserx.nodes.*;
 public class Recursion {
     public static boolean debug = false;
     public boolean any;
-    Tree tree;
     public Factor factor;
+    Tree tree;
 
     public Recursion(Tree tree) {
         this.tree = tree;

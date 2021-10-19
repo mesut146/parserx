@@ -1,6 +1,7 @@
 package mesut.parserx.nodes;
 
-import mesut.parserx.gen.ll.AstInfo;
+import mesut.parserx.gen.Copier;
+import mesut.parserx.gen.AstInfo;
 
 //base class used in grammar file
 public abstract class Node {
@@ -95,8 +96,9 @@ public abstract class Node {
         return toString().hashCode();
     }
 
-    public Node copy() {
-        return this;
+    @SuppressWarnings("unchecked")
+    public <T extends Node> T copy() {
+        return (T) new Copier(null).transformNode(this, null);
     }
 
     public boolean isDot() {

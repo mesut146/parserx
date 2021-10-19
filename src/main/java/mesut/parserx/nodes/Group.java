@@ -53,9 +53,4 @@ public class Group extends Node implements Iterable<Node> {
         result = 31 * result + (node != null ? node.hashCode() : 0);
         return result;
     }
-
-    @Override
-    public Node copy() {
-        return new Group(node);
-    }
 }

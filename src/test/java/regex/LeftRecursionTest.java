@@ -2,9 +2,11 @@ package regex;
 
 import common.Env;
 import mesut.parserx.gen.Helper;
+import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.transform.LeftRecursive;
 import mesut.parserx.gen.transform.Recursion;
+import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
@@ -67,12 +69,22 @@ public class LeftRecursionTest {
 
     @Test
     public void indirect3() throws IOException {
-        Tree tree = Env.tree("rec/cyc3.g");
-        LeftRecursive l = new LeftRecursive(tree);
-        for (RuleDecl rule : tree.rules) {
-            l.cutIndirect(rule);
-        }
-        l.process();
-        tree.printRules();
+        Tree tree = Env.tree("rec/cyc0.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        /*LeftRecursive l = new LeftRecursive(tree);
+        l.normalizeIndirects();
+        tree.printRules();*/
+        //l.process();
+        RecDescent recDescent = new RecDescent(tree);
+        recDescent.gen();
+    }
+
+    @Test
+    public void sub() throws IOException {
+        Tree tree = Env.tree("ll/substitude.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        //l.process();
+        RecDescent recDescent = new RecDescent(tree);
+        recDescent.gen();
     }
 }

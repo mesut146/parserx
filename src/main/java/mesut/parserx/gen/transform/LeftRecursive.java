@@ -1,5 +1,6 @@
 package mesut.parserx.gen.transform;
 
+import mesut.parserx.gen.Copier;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
@@ -19,9 +20,25 @@ public class LeftRecursive {
         return lr.tree;
     }
 
+    static Node wrap(Node node) {
+        if (node.isOr()) {
+            return new Group(node);
+        }
+        return node;
+    }
+
     public void process() {
         for (RuleDecl rule : tree.rules) {
             handleRule(rule);
+        }
+    }
+
+    public void normalizeIndirects() {
+        for (RuleDecl rule : tree.rules) {
+            if (startr(rule.rhs, rule.ref) && !start(rule.rhs, rule.ref)) {
+                //indirect
+                cutIndirect(rule);
+            }
         }
     }
 
@@ -76,9 +93,10 @@ public class LeftRecursive {
     }
 
     //make sure node doesn't start with ref
-    Node subFirst(Node node, Name ref) {
+    public Node subFirst(Node node, Name ref) {
         if (node.isOr()) {
             Or res = new Or();
+            res.astInfo = node.astInfo.copy();
             for (Node ch : node.asOr()) {
                 if (start(ch, ref)) {
                     ch = subFirst(ch, ref);
@@ -89,10 +107,12 @@ public class LeftRecursive {
         }
         else if (node.isSequence()) {
             Sequence res = new Sequence(node.asSequence().list);
+            res.astInfo = node.astInfo.copy();
             for (int i = 0; i < node.asSequence().size(); i++) {
                 Node ch = res.get(i);
                 if (start(ch, ref)) {
-                    res.set(i, subFirst(ch, ref));
+                    ch = wrap(subFirst(ch, ref));
+                    res.set(i, ch);
                     if (!Helper.canBeEmpty(ch, tree)) {
                         //go on if epsilon
                         break;
@@ -104,16 +124,47 @@ public class LeftRecursive {
         else if (node.isName()) {
             if (node.equals(ref)) {
                 //substitute
-                return tree.getRule(ref).rhs.copy();
+                RuleDecl decl = tree.getRule(ref);
+                Node copy = new Copier(tree).transformNode(decl.rhs, null);
+                Group sub = new Group(copy);
+
+                sub.astInfo.which = node.astInfo.which;
+                sub.astInfo.varName = "res2";
+                sub.astInfo.createNode = true;
+                sub.astInfo.nodeType = decl.retType;
+                sub.astInfo.substitution = true;
+                sub.astInfo.outerVar = node.astInfo.outerVar;
+                sub.astInfo.subVar = node.astInfo.varName;
+                update(sub.node, "res", "res2");
+                return sub;
             }
         }
         else if (node.isGroup()) {
-            return new Group(subFirst(node.asGroup().node, ref)).normal();
+            Group group = node.asGroup();
+            group.node = subFirst(group.node, ref);
+            return group;
         }
         else if (node.isRegex()) {
-            return new Regex(subFirst(node.asRegex().node, ref), node.asRegex().type);
+            Regex regex = node.asRegex();
+            regex.node = subFirst(regex.node, ref);
+            return regex;
         }
         return node;
+    }
+
+    void update(Node node, String from, String to) {
+        if (node.isOr()) {
+            for (Node ch : node.asOr()) {
+                if (ch.astInfo.outerVar.equals(from)) {
+                    ch.astInfo.outerVar = to;
+                }
+            }
+        }
+        else {
+            if (node.astInfo.outerVar.equals(from)) {
+                node.astInfo.outerVar = to;
+            }
+        }
     }
 
     public Node removeDirect(Node node, Name ref) {

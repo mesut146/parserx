@@ -133,18 +133,18 @@ public class Epsilons {
         Node s2 = a.noEps == null ? null : new Sequence(a.noEps, b.eps).normal();
         Node s3 = b.noEps == null ? null : new Sequence(a.eps, b.noEps).normal();
         Node s4 = new Sequence(a.eps, b.eps).normal();
-        s4.astInfo.code = s.astInfo.code;
+        s4.astInfo = s.astInfo.copy();
         Or or = new Or();
         if (s1 != null) {
-            s1.astInfo.code = s.astInfo.code;
+            s1.astInfo = s.astInfo.copy();
             or.add(s1);
         }
         if (s2 != null) {
-            s2.astInfo.code = s.astInfo.code;
+            s2.astInfo = s.astInfo.copy();
             or.add(s2);
         }
         if (s3 != null) {
-            s3.astInfo.code = s.astInfo.code;
+            s3.astInfo = s.astInfo.copy();
             or.add(s3);
         }
         res.noEps = or.normal();

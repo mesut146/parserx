@@ -1,6 +1,6 @@
 package mesut.parserx.gen.transform;
 
-import mesut.parserx.gen.ll.AstInfo;
+import mesut.parserx.gen.AstInfo;
 import mesut.parserx.nodes.*;
 
 //remove unnecessary nodes & merge
@@ -22,6 +22,7 @@ public class Simplify extends SimpleTransformer {
         return node.isName() || node.isGroup() || node.isRegex() || node.isString();
     }
 
+    //unwrap simple child
     @Override
     public Node transformGroup(Group node, Node parent) {
         Node ch = transformNode(node.node, node);
@@ -63,6 +64,7 @@ public class Simplify extends SimpleTransformer {
         return res;
     }
 
+    //todo get rid of merger
     @Override
     public Node transformOr(Or node, Node parent) {
         Or res = new Or();
