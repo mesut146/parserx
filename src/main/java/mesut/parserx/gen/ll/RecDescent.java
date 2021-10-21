@@ -124,9 +124,6 @@ public class RecDescent {
         astGen.genAst();
         //if (debug) tree.printRules();
 
-        LeftRecursive ll = new LeftRecursive(tree);
-        ll.normalizeIndirects();
-
         Recursion recursion = new Recursion(tree);
         recursion.all();
         if (debug && recursion.any) {
@@ -136,7 +133,7 @@ public class RecDescent {
         Factor.allowRecursion = true;
         Factor.factorSequence = true;
         Factor factor = recursion.factor;
-        //factor.factorize();
+        factor.factorize();
         if (debug && factor.any) {
             tree.printRules();
         }

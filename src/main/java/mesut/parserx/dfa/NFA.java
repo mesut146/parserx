@@ -287,11 +287,12 @@ public class NFA {
         w.printf("%d [color=%s]\n", initial, initialColor);
         for (int state : it()) {
             if (isDead(state)) continue;
+            String name = names[state] == null ? "" : names[state].toString();
             if (isAccepting(state)) {
-                w.printf("%d [shape = doublecircle color=%s xlabel=\"%s\"]\n", state, finalColor, names[state] == null ? "" : names[state]);
+                w.printf("%d [shape = doublecircle color=%s xlabel=\"%s\"]\n", state, finalColor, name);
             }
             if (isSkip[state]) {
-                w.printf("%d [color=%s xlabel=\"%s\"]\n", state, skipColor, names[state] == null ? "" : names[state]);
+                w.printf("%d [color=%s xlabel=\"%s\"]\n", state, skipColor, name);
             }
         }
 

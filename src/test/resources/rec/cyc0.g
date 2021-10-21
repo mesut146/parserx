@@ -1,26 +1,20 @@
 include "../common.g"
 
-A: B b | c;
 B: A a;
+A: B b | c;
 
 /*
 B: {B b | c} a;
-B: B1 B2(B)*;
-B1: c a;
-B2(B): B(B) b a;
+A: {A a} b | c;
 
-B B_no_B(){
-  B res = new B();
-  res.A = A_no_B();
-  return res;
-}
-
-B B(){
-  B res = B_no_B();
-  while(la == b){
-    res = B(res);
-  }
-  return res;
-}
+B: B_no_B B1(B)*;
+B2(c): B3(c) B1(B)*;
+B_no_B: A_no_B a;
+B3(c): A2(c) a;
+B1(B): A1(B) a;
+A: c (B2(c) b | c(c));
+A_no_B: c;
+A2(c): c(c);
+A1(B): B(B) b;
 
 */

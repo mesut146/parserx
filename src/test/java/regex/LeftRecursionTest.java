@@ -6,11 +6,11 @@ import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.transform.LeftRecursive;
 import mesut.parserx.gen.transform.Recursion;
-import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
+import parser.DescTester;
 
 import java.io.IOException;
 
@@ -77,6 +77,20 @@ public class LeftRecursionTest {
         //l.process();
         RecDescent recDescent = new RecDescent(tree);
         recDescent.gen();
+    }
+
+    @Test
+    public void indirectFactor() throws IOException {
+        Tree tree = Env.tree("rec/cyc0.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        RecDescent recDescent = new RecDescent(tree);
+        recDescent.gen();
+    }
+
+    @Test
+    public void indirectReal() throws Exception {
+        DescTester.check(Env.tree("rec/cyc0.g"), "A", "cab");
+        //DescTester.check(Env.tree("rec/cyc0.g"), "B", "ca");
     }
 
     @Test

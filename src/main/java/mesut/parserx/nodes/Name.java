@@ -7,7 +7,6 @@ import java.util.Objects;
 public class Name extends Node {
 
     public static boolean debug = false;
-    public static boolean autoEncode = false;
     public String name;
     public boolean isToken;
     public ArrayList<Node> args = new ArrayList<>();
@@ -49,14 +48,9 @@ public class Name extends Node {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(varString());
-        if (autoEncode) {
-            sb.append(encode().name);
-        }
-        else {
-            sb.append(name);
-            if (!args.isEmpty()) {
-                sb.append("(").append(NodeList.join(args, ", ")).append(")");
-            }
+        sb.append(name);
+        if (!args.isEmpty()) {
+            sb.append("(").append(NodeList.join(args, ", ")).append(")");
         }
         if (astInfo.isFactored) {
             sb.append("(").append(name).append(")");
@@ -82,10 +76,5 @@ public class Name extends Node {
 
     public RuleDecl makeRule() {
         return new RuleDecl(this);
-    }
-
-    @Override
-    public Name copy() {
-        return (Name) super.copy();
     }
 }

@@ -26,11 +26,9 @@ public class LLDfaBuilder {
         makeAlphabet();
 
         //make start & end states
+
         for (RuleDecl decl : tree.rules) {
             int start = dfa.newState();
-            if (decl.ref.equals(tree.start)) {
-                dfa.addEpsilon(dfa.initial, start);
-            }
             startMap.put(decl.ref, start);
             List<Integer> finals = new ArrayList<>();
             finalMap.put(decl.ref, finals);
@@ -55,6 +53,7 @@ public class LLDfaBuilder {
                 finalMapReal.put(decl.ref, end);
             }
         }
+        dfa.addEpsilon(dfa.initial, startMap.get(tree.start));
         for (RuleDecl decl : tree.rules) {
             add(decl);
         }
@@ -103,10 +102,8 @@ public class LLDfaBuilder {
                 return end;
             }
             else {
-                int end = finalMapReal.get(name);
-                int s = startMap.get(name);
-                dfa.addEpsilon(start, s);
-                return end;
+                dfa.addEpsilon(start, startMap.get(name));
+                return finalMapReal.get(name);
             }
         }
         else if (node.isSequence()) {

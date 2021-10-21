@@ -1,0 +1,13 @@
+//A is greedy and not really la1
+A: B a;
+B: B a b | €;
+A: B_eps a | B_noe a
+A: a (B_eps a(a) | B_noe(a) a) | B_noe_no_a a
+B_noe: B a b
+B_noe(a): B(a) a b | B_eps a(a) b
+B(a): B(a) a b
+B_noe_no_a: B_no_a a b
+B_no_a: €
+
+A: a (B_eps a(a) | B_noe(a) a) | a b a
+B_noe(a): B(a) a b | B_eps a(a) b

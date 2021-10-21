@@ -16,6 +16,9 @@ public class Recursion {
     }
 
     public void all() {
+        /*LeftRecursive ll = new LeftRecursive(tree);
+        ll.normalizeIndirects();*/
+
         for (int i = 0; i < tree.rules.size(); ) {
             RuleDecl decl = tree.rules.get(i++);
             if (Helper.first(decl.rhs, tree, true).contains(decl.ref)) {
@@ -38,7 +41,7 @@ public class Recursion {
         Factor.PullInfo info = factor.pullRule(sym, sym);
         //info.zero.astInfo.outerVar = "res";
         //info.one.astInfo.outerVar = "res";
-        decl.rhs = Sequence.of(info.zero, new Regex(info.one, "*"));
+        decl.rhs = new Sequence(info.zero, new Regex(info.one, "*"));
         decl.isRecursive = true;
     }
 

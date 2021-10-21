@@ -25,7 +25,6 @@ public class EpsilonTrimmer2 extends SimpleTransformer {
 
     public Tree trim() {
         for (int i = 0; i < tree.rules.size(); i++) {
-            //System.out.println(i + "/" + tree.rules.size());
             RuleDecl rule = tree.rules.get(i);
             modified = false;
             if (canBeEmpty(rule.rhs)) {
@@ -67,12 +66,12 @@ public class EpsilonTrimmer2 extends SimpleTransformer {
         for (int i = 0; i < seq.size(); i++) {
             Node ch = seq.get(i);
             if (canBeEmpty(ch)) {//!ch.isName()
-                Or res = new Or();
                 ch = transformNode(ch, seq);
                 List<Node> l1 = new ArrayList<>(seq.list);
                 l1.remove(i);
                 List<Node> l2 = new ArrayList<>(l1);
                 l2.add(i, ch);
+                Or res = new Or();
                 res.add(new Sequence(l1));
                 res.add(new Sequence(l2));
                 //modified = true;

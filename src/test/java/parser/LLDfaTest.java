@@ -5,6 +5,7 @@ import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.gen.ll.LLDfaBuilder;
 import mesut.parserx.gen.ll.LLDfaParserGen;
+import mesut.parserx.gen.ll.LLDfaRegex;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 import org.junit.Test;
@@ -32,6 +33,15 @@ public class LLDfaTest {
         NFA dfa = nfa.dfa();
         dfa = Minimization.optimize(dfa);
         dots(Minimization.combineAlphabet(dfa), tree.file);
+    }
+
+    @Test
+    public void llregex() throws IOException {
+        Tree tree = Env.tree("lldfa/a.g");
+        LLDfaRegex regex = new LLDfaRegex(tree);
+        System.out.println(regex.makeRegex(tree.getRule("A")));
+        //c | a a* c | c b b* | a a* c b b*
+        dots(regex.dfa, tree.file);
     }
 
     @Test

@@ -4,6 +4,7 @@ import mesut.parserx.gen.Copier;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
+import java.util.Objects;
 import java.util.Set;
 
 //remove left recursions by substitutions
@@ -161,7 +162,7 @@ public class LeftRecursive {
             }
         }
         else {
-            if (node.astInfo.outerVar.equals(from)) {
+            if (Objects.equals(node.astInfo.outerVar, from)) {
                 node.astInfo.outerVar = to;
             }
         }

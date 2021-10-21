@@ -97,7 +97,6 @@ public class FactorLoop extends SimpleTransformer {
                         modified = true;
                         Factor.PullInfo info = pullOr(or, regex);
                         Group g = new Group(info.one);
-                        g.astInfo.isFactorGroup = true;
                         Node one = Sequence.of(regex, g);
                         if (info.zero == null) {
                             return one;

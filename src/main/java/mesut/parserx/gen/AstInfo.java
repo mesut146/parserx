@@ -9,7 +9,6 @@ public class AstInfo {
     public Type nodeType;
     public boolean isFactor;//no assign
     public boolean isFactored;//epsilon
-    public boolean isFactorGroup;//follows a factor
     public boolean isInLoop;
     public boolean isPrimary;//recursion left
     public String factorName;

@@ -1,0 +1,20 @@
+//A is greedy and not really la1
+A: (a b)* a;
+A: Ag1* a;
+
+//after making dfa and re-converting to regex by different state order
+A: a (b a)*;
+A: a (Ag1(a) a)*
+
+//now it is la1 but ast creation much harder
+
+A A(){
+ A res = new A();
+ Token af1 = consume(a);
+ while(la == b){
+  res.g1.add(Ag1(af1));
+  af1 = consume(a);
+ }
+ res.a = af1;
+ return res;
+}
