@@ -7,6 +7,7 @@ import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.gen.transform.Recursion;
 import mesut.parserx.nodes.*;
+import mesut.parserx.utils.Utils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -14,7 +15,7 @@ public class FactorTest {
 
     @Test
     public void helper() {
-        Tree tree = Env.makeRule("A: (a | b y)* c | (a | d)+ e | c c;");
+        Tree tree = Utils.makeTokenLessTree("A: (a | b y)* c | (a | d)+ e | c c;", false);
         RuleDecl decl = tree.rules.get(0);
         System.out.println(Helper.firstMap(decl.rhs, tree));
     }

@@ -1,6 +1,9 @@
 package common;
 
+import mesut.parserx.nodes.Node;
+import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
+import mesut.parserx.regex.RegexFromStr;
 import mesut.parserx.utils.Utils;
 import org.junit.Test;
 
@@ -35,16 +38,20 @@ public class Env {
         return new File(url.getPath());
     }
 
-    public static Tree makeRule(String grammar) {
-        return Utils.makeTokenLessTree(grammar);
-    }
-
     public static Tree tree(String res) throws IOException {
         return Tree.makeTree(getResFile(res));
     }
 
     @Test
     public void tokenLessTest() {
-        System.out.println(Utils.makeTokenLessTree("A: \"asd\" \"a\"*;"));
+        System.out.println(Utils.makeTokenLessTree("A: \"asd\" \"a\"*;", false));
+    }
+
+    @Test
+    public void tokenLessTest2() {
+        Node rhs = RegexFromStr.build("a*b");
+        Tree tree = new Tree();
+        tree.addToken(new TokenDecl("START", rhs));
+        System.out.println(Utils.makeTokenLessTree(tree.toString(), true));
     }
 }

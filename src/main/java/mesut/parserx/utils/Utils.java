@@ -4,14 +4,17 @@ import mesut.parserx.nodes.*;
 import mesut.parserx.parser.AstBuilder;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Utils {
 
-    public static Tree makeTokenLessTree(String grammar) {
+    public static Tree makeTokenLessTree(String grammar, final boolean fromRegex) {
         try {
             final Tree tree = AstBuilder.makeTree(grammar);
             new SimpleTransformer(tree) {
                 int count = 1;
+                Map<String, TokenDecl> newTokens = new HashMap<>();
 
                 @Override
                 public Node transformName(Name node, Node parent) {
@@ -28,10 +31,23 @@ public class Utils {
                 public Node transformString(StringNode node, Node parent) {
                     TokenDecl decl = tree.getTokenByValue(node.value);
                     if (decl == null) {
-                        decl = new TokenDecl("T" + count++, node);
-                        tree.addToken(decl);
+                        if (fromRegex) {
+                            return node;
+                        }
+                        else {
+                            decl = new TokenDecl("T" + count++, node);
+                            newTokens.put(decl.name, decl);
+                        }
                     }
                     return decl.ref();
+                }
+
+                @Override
+                public void transformAll() {
+                    super.transformAll();
+                    for (TokenDecl decl : newTokens.values()) {
+                        tree.addToken(decl);
+                    }
                 }
             }.transformAll();
             return tree;
