@@ -1,4 +1,5 @@
 # parserx
+[![](https://jitpack.io/v/mesut146/parserx.svg)](https://jitpack.io/#mesut146/parserx)
 
 lexer &amp; parser generator and grammar toolkit written in java
 
