@@ -21,10 +21,12 @@ public class LexerGenTest {
 
     @Test
     public void shortCut() {
-        System.out.println(Shortcut.from("string"));
         System.out.println(Shortcut.from("line_comment"));
+        System.out.println(Shortcut.from("block_comment"));
         System.out.println(Shortcut.from("ident"));
         System.out.println(Shortcut.from("integer"));
+        System.out.println(Shortcut.from("decimal"));
+        System.out.println(Shortcut.from("string"));
     }
 
     @Test

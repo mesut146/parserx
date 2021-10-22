@@ -36,7 +36,6 @@ public class Bracket extends NodeList {
     }
 
     public void parse(String str) {
-        //System.out.println(str);
         pos = 0;
         if (str.charAt(pos) != '[') {
             err();

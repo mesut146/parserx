@@ -10,6 +10,7 @@ import mesut.parserx.nodes.Shortcut;
 import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.regex.RegexBuilder;
+import mesut.parserx.regex.RegexFromStr;
 import mesut.parserx.regex.RegexOptimizer;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -47,7 +48,7 @@ public class RegexBuilderTest {
     }
 
     @Test
-    public void name() throws IOException {
+    public void fsm() throws IOException {
         NFA nfa = NfaReader.read(Env.getResFile("fsm/a.nfa"));
         //NFA dfa = nfa.dfa();
         //nfa.dfa().dot(new FileWriter(Env.dotFile("a.dot")));
@@ -59,12 +60,7 @@ public class RegexBuilderTest {
 
     @Test
     public void fromStr() {
-        //System.out.println(RegexFromStr.build("(asd)"));
-        System.out.println(Shortcut.from("line_comment"));
-        System.out.println(Shortcut.from("block_comment"));
-        System.out.println(Shortcut.from("ident"));
-        System.out.println(Shortcut.from("integer"));
-        System.out.println(Shortcut.from("decimal"));
-        System.out.println(Shortcut.from("string"));
+        System.out.println(RegexFromStr.build("(asd?(ab)+)\\["));
+        System.out.println(RegexFromStr.build("[a-z*+?()][^\r\n][[abc][a\\]]"));
     }
 }

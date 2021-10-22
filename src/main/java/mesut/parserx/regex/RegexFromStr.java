@@ -81,7 +81,9 @@ public class RegexFromStr {
                     }
                 }
                 i = end + 1;
-                return new Bracket(s.substring(begin, end));
+                String br = s.substring(begin, end + 1);
+                br = br.replaceAll("\\\\]", "]");
+                return new Bracket(br);
             }
             case '~': {
                 i++;

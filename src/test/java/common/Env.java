@@ -1,7 +1,8 @@
 package common;
 
-import mesut.parserx.nodes.*;
-import mesut.parserx.parser.AstBuilder;
+import mesut.parserx.nodes.Tree;
+import mesut.parserx.utils.Utils;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -35,26 +36,15 @@ public class Env {
     }
 
     public static Tree makeRule(String grammar) {
-        try {
-            final Tree tree = AstBuilder.makeTree(grammar);
-            new SimpleTransformer(tree) {
-                @Override
-                public Node transformName(Name node, Node parent) {
-                    if (tree.getRule(node) == null) {
-                        node.isToken = true;
-                        //add fake token
-                        tree.tokens.add(new TokenDecl(node.name, new StringNode(node.name)));
-                    }
-                    return node;
-                }
-            }.transformAll();
-            return tree;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return Utils.makeTokenLessTree(grammar);
     }
 
     public static Tree tree(String res) throws IOException {
         return Tree.makeTree(getResFile(res));
+    }
+
+    @Test
+    public void tokenLessTest() {
+        System.out.println(Utils.makeTokenLessTree("A: \"asd\" \"a\"*;"));
     }
 }

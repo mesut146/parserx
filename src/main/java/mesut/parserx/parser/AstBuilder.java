@@ -17,7 +17,7 @@ public class AstBuilder {
     }
 
     public static Tree makeTree(File path) throws IOException {
-        Lexer.bufSize = (int) path.length()+1;
+        Lexer.bufSize = (int) path.length() + 1;
         Parser parser = new Parser(new Lexer(new FileReader(path)));
         Tree tree = new AstBuilder().visitTree(parser.tree());
         tree.file = path;
