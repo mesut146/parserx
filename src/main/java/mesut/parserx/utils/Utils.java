@@ -2,6 +2,7 @@ package mesut.parserx.utils;
 
 import mesut.parserx.nodes.*;
 import mesut.parserx.parser.AstBuilder;
+import mesut.parserx.regex.RegexFromStr;
 
 import java.io.*;
 import java.util.HashMap;
@@ -9,51 +10,69 @@ import java.util.Map;
 
 public class Utils {
 
-    public static Tree makeTokenLessTree(String grammar, final boolean fromRegex) {
+    public static Tree fromRegex(String regex) {
+        Node rhs = RegexFromStr.build(regex);
+        Tree tree = new Tree();
+        tree.addToken(new TokenDecl("START", rhs));
+        makeTokens(tree, true);
+        return tree;
+    }
+
+    public static Tree fromGrammar(String grammar) throws IOException {
+        Tree tree = AstBuilder.makeTree(grammar);
+        makeTokens(tree, false);
+        return tree;
+    }
+
+    public static Tree makeTokenLessTree(String grammar, boolean fromRegex) {
         try {
-            final Tree tree = AstBuilder.makeTree(grammar);
-            new SimpleTransformer(tree) {
-                int count = 1;
-                Map<String, TokenDecl> newTokens = new HashMap<>();
-
-                @Override
-                public Node transformName(Name node, Node parent) {
-                    //if it is not a rule then must be a token
-                    if (tree.getRule(node) == null) {
-                        //add fake token
-                        node.isToken = true;
-                        tree.tokens.add(new TokenDecl(node.name, new StringNode(node.name)));
-                    }
-                    return node;
-                }
-
-                @Override
-                public Node transformString(StringNode node, Node parent) {
-                    TokenDecl decl = tree.getTokenByValue(node.value);
-                    if (decl == null) {
-                        if (fromRegex) {
-                            return node;
-                        }
-                        else {
-                            decl = new TokenDecl("T" + count++, node);
-                            newTokens.put(decl.name, decl);
-                        }
-                    }
-                    return decl.ref();
-                }
-
-                @Override
-                public void transformAll() {
-                    super.transformAll();
-                    for (TokenDecl decl : newTokens.values()) {
-                        tree.addToken(decl);
-                    }
-                }
-            }.transformAll();
+            Tree tree = AstBuilder.makeTree(grammar);
+            makeTokens(tree, fromRegex);
             return tree;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void makeTokens(final Tree tree, final boolean fromRegex) {
+        new SimpleTransformer(tree) {
+            int count = 1;
+            Map<String, TokenDecl> newTokens = new HashMap<>();
+
+            @Override
+            public Node transformName(Name node, Node parent) {
+                //if it is not a rule then must be a token
+                if (tree.getRule(node) == null) {
+                    //add fake token
+                    node.isToken = true;
+                    tree.tokens.add(new TokenDecl(node.name, new StringNode(node.name)));
+                }
+                return node;
+            }
+
+            @Override
+            public Node transformString(StringNode node, Node parent) {
+                TokenDecl decl = tree.getTokenByValue(node.value);
+                if (decl == null) {
+                    if (fromRegex) {
+                        return node;
+                    }
+                    else {
+                        decl = new TokenDecl("T" + count++, node);
+                        newTokens.put(decl.name, decl);
+                    }
+                }
+                return decl.ref();
+            }
+
+            @Override
+            public void transformAll() {
+                super.transformAll();
+                for (TokenDecl decl : newTokens.values()) {
+                    tree.addToken(decl);
+                }
+            }
+        }.transformAll();
     }
 
     public static String camel(String s) {

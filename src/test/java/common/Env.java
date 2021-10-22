@@ -43,15 +43,12 @@ public class Env {
     }
 
     @Test
-    public void tokenLessTest() {
-        System.out.println(Utils.makeTokenLessTree("A: \"asd\" \"a\"*;", false));
+    public void tokenLessTest() throws IOException {
+        System.out.println(Utils.fromGrammar("A: \"asd\" \"a\"*;"));
     }
 
     @Test
     public void tokenLessTest2() {
-        Node rhs = RegexFromStr.build("a*b");
-        Tree tree = new Tree();
-        tree.addToken(new TokenDecl("START", rhs));
-        System.out.println(Utils.makeTokenLessTree(tree.toString(), true));
+        System.out.println(Utils.fromRegex("a*b"));
     }
 }
