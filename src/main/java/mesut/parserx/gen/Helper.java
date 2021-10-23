@@ -278,8 +278,8 @@ public class Helper {
                         return true;
                     }
                 }
-                return false;
             }
+            return false;
         }
         else if (node.isGroup()) {
             return canBeEmpty(node.asGroup().node, tree, set);

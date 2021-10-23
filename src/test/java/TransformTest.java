@@ -1,9 +1,12 @@
 import common.Env;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.transform.EbnfToBnf;
+import mesut.parserx.gen.transform.EpsilonTrimmer2;
 import mesut.parserx.gen.transform.PrecedenceHelper;
 import mesut.parserx.nodes.NodeList;
+import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.Tree;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TransformTest {
@@ -12,9 +15,31 @@ public class TransformTest {
     @Test
     public void ebnf() throws Exception {
         Tree tree = Env.tree("ebnf.g");
-        EbnfToBnf.transform(tree).printRules();
+        tree = EbnfToBnf.transform(tree);
+        EpsilonTrimmer2.preserveNames = true;
+        EpsilonTrimmer2.trim(tree).printRules();
+        //tree.printRules();
     }
 
+    @Test
+    @Ignore
+    public void jls() throws Exception {
+        Tree tree = Env.tree("java/parser-jls.g");
+        //tree = EbnfToBnf.transform(tree);
+        //tree = EbnfToBnf.combineOr(tree);
+        tree = EpsilonTrimmer2.trim(tree);
+        tree.printRules();
+        //Helper.revert(tree);
+        //Simplify.all(tree);
+    }
+
+    @Test
+    public void trim() throws Exception {
+        Or.newLine = false;
+        Tree tree = Env.tree("eps.g");
+        tree = EpsilonTrimmer2.trim(tree);
+        tree.printRules();
+    }
 
     @Test
     public void pred() throws Exception {

@@ -288,6 +288,9 @@ public class NFA {
         for (int state : it()) {
             if (isDead(state)) continue;
             String name = names[state] == null ? "" : names[state].toString();
+            if (names[state].size() == 1) {
+                name = names[state].get(0);
+            }
             if (isAccepting(state)) {
                 w.printf("%d [shape = doublecircle color=%s xlabel=\"%s\"]\n", state, finalColor, name);
             }

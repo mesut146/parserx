@@ -52,6 +52,8 @@ public class LrDFAGen {
 
     void prepare() {
         EbnfToBnf.rhsSequence = true;
+        EbnfToBnf.expand_or = true;
+        EbnfToBnf.combine_or = false;
         tree = EbnfToBnf.transform(tree);
         tree.prepare();
 
