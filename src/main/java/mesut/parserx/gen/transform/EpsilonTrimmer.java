@@ -7,102 +7,177 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-//convert epsilons to '?'
-//or eliminate them by expanding
+//make grammar epsilon free
 public class EpsilonTrimmer extends SimpleTransformer {
+    public static boolean preserveNames = false;
     boolean modified;
+    Tree out;
 
     public EpsilonTrimmer(Tree tree) {
         super(tree);
+        out = new Tree(tree);
     }
 
     public static Tree trim(Tree input) {
+        Simplify.all(input);
         EpsilonTrimmer trimmer = new EpsilonTrimmer(input);
         return trimmer.trim();
     }
 
-    public Tree trim() {
-        for (RuleDecl rule : tree.rules) {
-            modified = false;
-            transformRule(rule);
-            if (Helper.canBeEmpty(rule.rhs, tree)) {
-                rule.hidden = true;
-            }
-            if (modified) {
-                trim();
-                break;
-            }
+    static String trimSuffix(String s) {
+        if (s.endsWith("_noe")) {
+            return s.substring(0, s.length() - 4);
         }
-        return tree;
+        return s;
     }
 
-    Or replace(Sequence node, int i, Node opt) {
-        //A B? C = A B C | A C
-        List<Node> l1 = new ArrayList<>(node.list);
-        List<Node> l2 = new ArrayList<>(node.list);
-        l1.remove(i);
-        l2.remove(i);
-        l1.add(i, opt);
-        return new Or(new Sequence(l1).normal(), new Sequence(l2)).dups();
+    public Tree trim() {
+        for (int i = 0; i < tree.rules.size(); i++) {
+            RuleDecl rule = tree.rules.get(i);
+            Node rhs = transformNode(rule.rhs, null);
+            RuleDecl res = new RuleDecl(rule.ref.name + "_noe", rhs);
+            if (rhs.isEpsilon()) {
+                res.hidden = true;
+            }
+            else {
+                res.rhs = Simplify.simplifyNode(rhs);
+            }
+            out.addRule(res);
+        }
+        if (preserveNames) {
+            for (RuleDecl decl : out.rules) {
+                decl.ref.name = trimSuffix(decl.ref.name);
+            }
+            new SimpleTransformer(out) {
+                @Override
+                public Node transformName(Name node, Node parent) {
+                    if (node.isRule()) {
+                        return new Name(trimSuffix(node.name));
+                    }
+                    return node;
+                }
+            }.transformRules();
+        }
+        return out;
+    }
+
+    boolean canBeEmpty(Node node) {
+        return Helper.canBeEmpty(node, tree);
+    }
+
+    boolean isEmpty(Node node) {
+        return Helper.first(node, tree, true, false, true).isEmpty();
+    }
+
+    boolean hasEpsilon(Node node) {
+        final boolean[] has = {false};
+        new SimpleTransformer(tree) {
+            @Override
+            public Node transformName(Name node, Node parent) {
+                if (Helper.canBeEmpty(node, tree)) {
+                    has[0] = true;
+                }
+                return super.transformName(node, parent);
+            }
+
+            @Override
+            public Node transformEpsilon(Epsilon node, Node parent) {
+                has[0] = true;
+                return node;
+            }
+
+            @Override
+            public Node transformRegex(Regex regex, Node parent) {
+                if (regex.isOptional() || regex.isStar()) {
+                    has[0] = true;
+                    return regex;
+                }
+                return super.transformRegex(regex, parent);
+            }
+        }.transformNode(node, null);
+        return has[0];
     }
 
     @Override
-    public Node transformSequence(Sequence node, Node parent) {
-        Node tmp = super.transformSequence(node, parent);
-        if (tmp.isSequence()) {
-            node = tmp.asSequence();
-        }
-        else {
-            return node;
-        }
-        for (int i = 0; i < node.size(); i++) {
-            Node ch = node.get(i);
-            if (ch.isRegex()) {
-                Regex regex = ch.asRegex();
-                if (regex.isOptional()) {
-                    //A B? C = A B C | A C
-                    return transformOr(replace(node, i, regex.node), parent);
-                }
-                else if (regex.isStar()) {
-                    //A B* C = A B+ C | A C
-                    return transformOr(replace(node, i, new Regex(regex.node, "+")), parent);
-                }
-            }
-            else if (ch.isName()) {
-                Name name = ch.asName();
-                if (name.isRule()) {
-                    RuleDecl decl = tree.getRule(name);
-                    if (decl.rhs.isOptional()) {
-                        //substitute
-                        return transformOr(replace(node, i, decl.rhs.asRegex().node), parent);
-                    }
-                    else if (decl.rhs.isStar()) {
-                        //substitute
-                        return transformOr(replace(node, i, new Regex(decl.rhs.asRegex().node, "+")), parent);
-                    }
-                }
-            }
-        }
+    public Node transformGroup(Group node, Node parent) {
+        node.node = transformNode(node.node, node);
         return node;
+    }
+
+    @Override
+    public Node transformSequence(Sequence seq, Node parent) {
+        for (int i = 0; i < seq.size(); i++) {
+            Node ch = seq.get(i);
+            if (canBeEmpty(ch)) {//!ch.isName()
+                List<Node> l1 = new ArrayList<>(seq.list);
+                l1.remove(i);
+                if (isEmpty(ch)) {
+                    return new Sequence(l1);
+                }
+                List<Node> l2 = new ArrayList<>(l1);
+                l2.add(i, transformNode(ch, seq));
+                Or res = new Or();
+                res.add(new Sequence(l1));
+                res.add(new Sequence(l2));
+                //modified = true;
+                if (hasEpsilon(res)) {
+                    return transformNode(res, parent);
+                }
+                return res;
+            }
+            else if (hasEpsilon(ch)) {
+                seq.set(i, transformNode(ch, seq));
+            }
+        }
+        return seq;
     }
 
     @Override
     public Node transformName(Name node, Node parent) {
-        if (node.isRule() && Helper.canBeEmpty(node, tree)) {
-            Node noe = Epsilons.trim(node,tree);
-            modified = true;
-            return noe;
+        if (Helper.canBeEmpty(node, tree)) {
+            Name res = new Name(node.name + "_noe");
+            return res;
         }
         return node;
     }
 
     @Override
-    public Node transformRegex(Regex node, Node parent) {
-        if (node.isOptional()) {
-            if (!parent.isSequence() && !parent.isOr() && !(parent instanceof RuleDecl)) {
-                throw new RuntimeException("invalid parent of optional: " + parent);
+    public Node transformRegex(Regex regex, Node parent) {
+        Node ch = transformNode(regex.node, regex);
+        if (regex.isOptional()) {
+            //a?=a|€
+            modified = true;
+            return ch;
+        }
+        else if (regex.isStar()) {
+            modified = true;
+            return new Regex(ch, "+");
+        }
+        else {
+            return new Regex(ch, "+");
+        }
+    }
+
+    @Override
+    public Node transformOr(Or or, Node parent) {
+        Or res = new Or();
+        for (Node ch : or) {
+            if (ch.isEpsilon()) continue;
+            if (hasEpsilon(ch)) {
+                ch = transformNode(ch, or);
+            }
+            if (!ch.isEpsilon()) {
+                res.add(ch);
             }
         }
-        return super.transformRegex(node, parent);
+        if (res.size() == 0) return new Epsilon();
+        if (res.size() == 1) return res.first();
+        return res;
     }
+
+    @Override
+    public Node transformEpsilon(Epsilon node, Node parent) {
+        return node;
+    }
+
 }

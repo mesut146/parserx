@@ -55,11 +55,14 @@ public class Factor extends SimpleTransformer {
         }
     }
 
-    String factorName(Name sym) {
+    public String factorName(Name sym) {
         return sym.name + "f" + factorCount.get(curRule, sym);
     }
 
     public void factorize() {
+        FactorLoop factorLoop = new FactorLoop(tree);
+        factorLoop.factorize();
+
         for (int i = 0; i < tree.rules.size(); ) {
             RuleDecl decl = tree.rules.get(i);
             curRule = decl;

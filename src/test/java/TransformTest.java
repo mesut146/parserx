@@ -1,7 +1,7 @@
 import common.Env;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.transform.EbnfToBnf;
-import mesut.parserx.gen.transform.EpsilonTrimmer2;
+import mesut.parserx.gen.transform.EpsilonTrimmer;
 import mesut.parserx.gen.transform.PrecedenceHelper;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Or;
@@ -16,8 +16,8 @@ public class TransformTest {
     public void ebnf() throws Exception {
         Tree tree = Env.tree("ebnf.g");
         tree = EbnfToBnf.transform(tree);
-        EpsilonTrimmer2.preserveNames = true;
-        EpsilonTrimmer2.trim(tree).printRules();
+        EpsilonTrimmer.preserveNames = true;
+        EpsilonTrimmer.trim(tree).printRules();
         //tree.printRules();
     }
 
@@ -27,7 +27,7 @@ public class TransformTest {
         Tree tree = Env.tree("java/parser-jls.g");
         //tree = EbnfToBnf.transform(tree);
         //tree = EbnfToBnf.combineOr(tree);
-        tree = EpsilonTrimmer2.trim(tree);
+        tree = EpsilonTrimmer.trim(tree);
         tree.printRules();
         //Helper.revert(tree);
         //Simplify.all(tree);
@@ -37,7 +37,7 @@ public class TransformTest {
     public void trim() throws Exception {
         Or.newLine = false;
         Tree tree = Env.tree("eps.g");
-        tree = EpsilonTrimmer2.trim(tree);
+        tree = EpsilonTrimmer.trim(tree);
         tree.printRules();
     }
 

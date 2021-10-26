@@ -4,7 +4,10 @@ import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
-import mesut.parserx.gen.transform.*;
+import mesut.parserx.gen.transform.EbnfToBnf;
+import mesut.parserx.gen.transform.Factor;
+import mesut.parserx.gen.transform.Recursion;
+import mesut.parserx.gen.transform.Simplify;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
@@ -156,7 +159,6 @@ public class RecDescent {
                 Name name = arg.asName();
                 if (name.isToken) {
                     params.append("Token ").append(arg.astInfo.factorName);
-
                 }
                 else {
                     params.append(String.format("%s %s", tree.getRule(arg.asName()).retType, arg.astInfo.factorName));
@@ -228,6 +230,11 @@ public class RecDescent {
     }
 
     private void writeRegex(Regex regex) {
+        if (regex.astInfo.isFactored) {
+            Name name = regex.node.asName();
+            code.append("%s.%s.addAll(%s);", regex.astInfo.outerVar, regex.astInfo.factorName, regex.astInfo.factorName);
+            return;
+        }
         Set<Name> set = Helper.first(regex, tree, true, false, true);
         regex.node.astInfo.isInLoop = regex.isStar() || regex.isPlus();
         if (regex.isOptional()) {
@@ -264,10 +271,22 @@ public class RecDescent {
         else {
             //plus
             if (set.size() <= loopLimit) {
-                code.append("do{");
-                write(regex.node);
-                code.down();
-                code.append("}while(%s);", loopExpr(set));
+                if (regex.astInfo.isFactor) {
+                    Name name = regex.node.asName();
+                    String type = name.isToken ? options.tokenClass : options.astClass + "." + name.name;
+                    code.append("List<%s> %s = new ArrayList<>();", type, regex.astInfo.factorName);
+                    code.append("do{");
+                    String consumer = name.isToken ? "consume(" + tokens + "." + name.name + ")" : name + "()";
+                    code.append("%s.add(%s);", regex.astInfo.factorName, consumer);
+                    code.down();
+                    code.append("}while(%s);", loopExpr(set));
+                }
+                else {
+                    code.append("do{");
+                    write(regex.node);
+                    code.down();
+                    code.append("}while(%s);", loopExpr(set));
+                }
             }
             else {
                 flagCount++;

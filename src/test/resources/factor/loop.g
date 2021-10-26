@@ -1,11 +1,17 @@
 include "../common.g"
 
-//a? a* b | a* c
+/*
+double factor
+A: a* b | a* c | a d;
+A: a+ (b | c) | b | c | a d;
+A: a (a* (b | c) | a(a) d) | b | c;
+*/
 
 A: a* b | a* c;
 
-B: a* b | C c;
-C: a* d | e;
+
+//B: a* b | C c;
+//C: a* d | e;
 
 /*
 A: a (a[a] a* b | a[a] a* c) | b | c;

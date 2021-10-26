@@ -34,8 +34,8 @@ public class Regex extends Node {
 
     @Override
     public String toString() {
-        if (node.isSequence() || node.isOr()) {
-            return "(" + node + ")" + type;
+        if (astInfo.isFactored) {
+            return node + type + "()";
         }
         return node + type;
     }

@@ -13,6 +13,11 @@ public class Sequence extends NodeList {
 
     public Sequence(List<Node> arr) {
         super(arr);
+        for (Node ch : arr) {
+            if (ch.isOr()) {
+                throw new RuntimeException("invalid child");
+            }
+        }
     }
 
     public static Sequence of(Node... a) {
@@ -39,7 +44,7 @@ public class Sequence extends NodeList {
                 res.addAll(ch.asSequence().list);
             }
             else if (ch.isOr()) {
-                throw new RuntimeException();
+                throw new RuntimeException("invalid child");
             }
             else if (!ch.isEpsilon()) {
                 res.add(ch);

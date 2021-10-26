@@ -2,6 +2,7 @@ package regex;
 
 import common.Env;
 import mesut.parserx.gen.Helper;
+import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.transform.Epsilons;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorLoop;
@@ -10,6 +11,8 @@ import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.IOException;
 
 public class FactorTest {
 
@@ -80,13 +83,22 @@ public class FactorTest {
     @Test
     @Ignore
     public void loop() throws Exception {
-        Tree tree = Env.tree("factor/loop4.g");
-        Node node = tree.getRule("E").rhs;
+        Tree tree = Env.tree("factor/loop.g");
+        Node node = tree.getRule("A").rhs;
         FactorLoop factorLoop = new FactorLoop(tree);
+        factorLoop.factorize();
         //node = new Regex(new Name("B"), "*");
-        Factor.PullInfo info = factorLoop.pull(node, new Regex(new Name("C"), "*"));
+       /* Factor.PullInfo info = factorLoop.pull(node, new Regex(new Name("a", true), "+"));
         System.out.println("one: " + info.one);
-        System.out.println("zero: " + info.zero);
+        System.out.println("zero: " + info.zero);*/
         tree.printRules();
+    }
+
+    @Test
+    public void loopCode() throws IOException {
+        Tree tree = Env.tree("factor/loop.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        RecDescent recDescent = new RecDescent(tree);
+        recDescent.gen();
     }
 }

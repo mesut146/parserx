@@ -237,13 +237,19 @@ public class NFA {
         dump(new PrintWriter(System.out));
     }
 
+    String getName(int i) {
+        if (names[i] == null) return "";
+        if (names[i].size() == 1) return "(" + names[i].get(0) + ")";
+        return "(" + names[i].toString() + ")";
+    }
+
     public void dump(Writer writer) {
         PrintWriter w = new PrintWriter(writer);
         w.println("initial=" + initial);
         w.print("final=");
         for (int i : it()) {
             if (isAccepting(i)) {
-                w.print(i + (names[i] != null ? "(" + names[i] + ") " : " "));
+                w.print(i + getName(i));
             }
         }
         w.println();
