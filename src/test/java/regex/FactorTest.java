@@ -11,6 +11,7 @@ import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 import org.junit.Ignore;
 import org.junit.Test;
+import parser.DescTester;
 
 import java.io.IOException;
 
@@ -57,7 +58,7 @@ public class FactorTest {
     @Ignore
     public void loopAll() throws Exception {
         Tree tree = Env.tree("factor/loop4.g");
-        FactorLoop factorLoop = new FactorLoop(tree);
+        FactorLoop factorLoop = new FactorLoop(tree, null);
         factorLoop.factorize();
         tree.printRules();
     }
@@ -85,7 +86,7 @@ public class FactorTest {
     public void loop() throws Exception {
         Tree tree = Env.tree("factor/loop.g");
         Node node = tree.getRule("A").rhs;
-        FactorLoop factorLoop = new FactorLoop(tree);
+        FactorLoop factorLoop = new FactorLoop(tree, null);
         factorLoop.factorize();
         //node = new Regex(new Name("B"), "*");
        /* Factor.PullInfo info = factorLoop.pull(node, new Regex(new Name("a", true), "+"));
@@ -100,5 +101,11 @@ public class FactorTest {
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         RecDescent recDescent = new RecDescent(tree);
         recDescent.gen();
+    }
+
+    @Test
+    public void loopReal() throws Exception {
+        DescTester.check(Env.tree("factor/loop.g"), "A1", "b", "c", "ab", "ac", "aaaab");
+        DescTester.check(Env.tree("factor/loop.g"), "B", "b", "dc", "ec", "aaab", "aaadc");
     }
 }

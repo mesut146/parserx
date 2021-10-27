@@ -18,7 +18,7 @@ public class Factor extends SimpleTransformer {
     public HashSet<RuleDecl> declSet = new HashSet<>();//new rules produced by this class
     HashMap<String, PullInfo> cache = new HashMap<>();
     boolean modified;
-    RuleDecl curRule;
+    public RuleDecl curRule;
     CountingMap2<RuleDecl, Name> factorCount = new CountingMap2<>();
     CountingMap<String> nameMap = new CountingMap<>();
     HashMap<Name, Name> senderMap = new HashMap<>();
@@ -60,7 +60,7 @@ public class Factor extends SimpleTransformer {
     }
 
     public void factorize() {
-        FactorLoop factorLoop = new FactorLoop(tree);
+        FactorLoop factorLoop = new FactorLoop(tree, this);
         factorLoop.factorize();
 
         for (int i = 0; i < tree.rules.size(); ) {
@@ -107,8 +107,8 @@ public class Factor extends SimpleTransformer {
                 if (sym == null) continue;
                 sym = sym.copy();
                 sym.astInfo = new AstInfo();
-                //sym.astInfo.isFactor = true;
-                //sym.astInfo.factorName = factorName(sym);
+                sym.astInfo.isFactor = true;
+                sym.astInfo.factorName = factorName(sym);
                 if (debug) {
                     System.out.printf("factoring %s in %s\n", sym, curRule.ref);
                 }
@@ -371,10 +371,10 @@ public class Factor extends SimpleTransformer {
             }
         }
         if (zero.size() > 0) {
-            info.zero = zero.normal();
+            info.zero = zero;
             //info.zero = zero;
         }
-        info.one = one.normal();
+        info.one = one;
         return info;
     }
 

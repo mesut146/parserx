@@ -232,7 +232,7 @@ public class RecDescent {
     private void writeRegex(Regex regex) {
         if (regex.astInfo.isFactored) {
             Name name = regex.node.asName();
-            code.append("%s.%s.addAll(%s);", regex.astInfo.outerVar, regex.astInfo.factorName, regex.astInfo.factorName);
+            code.append("%s.%s.addAll(%s);", name.astInfo.outerVar, name.astInfo.varName, regex.astInfo.factorName);
             return;
         }
         Set<Name> set = Helper.first(regex, tree, true, false, true);
@@ -419,7 +419,6 @@ public class RecDescent {
         }
         code.append("}");
     }
-
 
     void beginSwitch(Set<Name> set) {
         code.append("switch(" + peekExpr() + "){");
