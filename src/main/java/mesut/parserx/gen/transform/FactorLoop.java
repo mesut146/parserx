@@ -219,7 +219,7 @@ public class FactorLoop extends SimpleTransformer {
                     sym.astInfo = new AstInfo();
                     Regex factor = new Regex(sym, "+");//todo what about star?
                     if (hasLoop(or.get(i), sym) && hasLoop(or.get(j), sym)) {
-                        if (debug) System.out.printf("factoring %s in %s\n", factor, curRule.ref);
+                        if (debug) System.out.printf("factoring loop %s in %s\n", factor, curRule.ref);
                         modified = true;
                         factor.astInfo.isFactor = true;
                         factor.node.astInfo.isFactor = true;

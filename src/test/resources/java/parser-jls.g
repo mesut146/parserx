@@ -896,7 +896,7 @@ AdditiveExpression:
 //15.19. Shift Operators
 ShiftExpression:
    AdditiveExpression
- | ShiftExpression ("<<" | ">>" | ">>>") AdditiveExpression;
+ | ShiftExpression ("<<" | ">" ">" | ">" ">" ">") AdditiveExpression;
 
 
 //15.20. Relational Operators

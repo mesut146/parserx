@@ -6,7 +6,6 @@ import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.transform.Epsilons;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorLoop;
-import mesut.parserx.gen.transform.Recursion;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 import org.junit.Ignore;
@@ -69,16 +68,11 @@ public class FactorTest {
         //Tree tree = Env.tree("java/parser-jls-eps.g");
         //Tree tree = Env.tree("java/parser-jls-rec.g");
         Tree tree = Env.tree("java/parser-jls.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
         //Tree tree = Env.tree("java/factor-eps.g");
-        Recursion.debug = true;
-        new Recursion(tree).all();
-        //EpsilonTrimmer2.trim(tree);
-        tree.printRules();
-
-        //FactorLoop.debug = true;
-        /*FactorLoop factorLoop = new FactorLoop(tree);
-        factorLoop.factorize();
-        tree.printRules();*/
+        FactorLoop.debug = true;
+        Factor.debug = true;
+        new RecDescent(tree).gen();
     }
 
     @Test
