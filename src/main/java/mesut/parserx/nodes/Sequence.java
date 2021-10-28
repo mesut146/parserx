@@ -5,8 +5,6 @@ import java.util.List;
 
 public class Sequence extends NodeList {
 
-    public static boolean hasSpace = true;
-
     public Sequence(Node... arr) {
         this(Arrays.asList(arr));
     }
@@ -20,13 +18,9 @@ public class Sequence extends NodeList {
         }
     }
 
-    public static Sequence of(Node... a) {
-        return new Sequence(a);
-    }
-
     @Override
     public String toString() {
-        return NodeList.join(list, hasSpace ? " " : "");
+        return NodeList.join(list, " ");
     }
 
     @Override

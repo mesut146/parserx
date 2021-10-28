@@ -46,7 +46,7 @@ public class Normalizer extends SimpleTransformer {
             ref.astInfo.varName = "g" + groupCount;
         }
         groupCount++;
-        tmp.rhs = transformNode(tmp.rhs, tmp);
+        tmp.rhs = transformNode(tmp.rhs, null);
         return ref;
     }
 

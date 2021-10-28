@@ -29,14 +29,14 @@ public class SimpleTransformer {
 
     public RuleDecl transformRule(RuleDecl decl) {
         curRule = decl;
-        decl.rhs = transformNode(decl.rhs, decl);
+        decl.rhs = transformNode(decl.rhs, null);
         curRule = null;
         return decl;
     }
 
     public TokenDecl transformToken(TokenDecl decl) {
         curToken = decl;
-        decl.rhs = transformNode(decl.rhs, decl);
+        decl.rhs = transformNode(decl.rhs, null);
         curToken = null;
         return decl;
     }

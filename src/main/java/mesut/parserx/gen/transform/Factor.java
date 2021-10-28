@@ -16,9 +16,9 @@ public class Factor extends SimpleTransformer {
     public static boolean allowRecursion = false;
     public boolean any;
     public HashSet<RuleDecl> declSet = new HashSet<>();//new rules produced by this class
+    public RuleDecl curRule;
     HashMap<String, PullInfo> cache = new HashMap<>();
     boolean modified;
-    public RuleDecl curRule;
     CountingMap2<RuleDecl, Name> factorCount = new CountingMap2<>();
     CountingMap<String> nameMap = new CountingMap<>();
     HashMap<Name, Name> senderMap = new HashMap<>();
@@ -85,7 +85,7 @@ public class Factor extends SimpleTransformer {
 
     private void factorRule(RuleDecl decl) {
         if (allowRecursion || !first(decl.rhs).contains(decl.ref)) {
-            decl.rhs = transformNode(decl.rhs, decl);
+            decl.rhs = transformNode(decl.rhs, null);
         }
     }
 
@@ -149,7 +149,7 @@ public class Factor extends SimpleTransformer {
             Set<Name> s2 = first(B);
             if (common(s1, s2) != null) {
                 Node trimmed = Epsilons.trim(A, tree);
-                return transformOr(new Or(Sequence.of(trimmed, B), B), parent);
+                return transformOr(new Or(new Sequence(trimmed, B), B), parent);
             }
         }
         return s;
@@ -383,25 +383,34 @@ public class Factor extends SimpleTransformer {
         if (regex.isOptional()) {
             //A?=A | € = sym A1 | A0 | €
             PullInfo pi = pull(regex.node, sym);
-            if (pi.one != null) {
-                info.one = pi.one;
-            }
+            info.one = withAst(pi.one, regex);
             if (pi.zero != null) {
-                //info.zero = new Or(pi.zero, new Epsilon());
-                info.zero = new Regex(pi.zero, "?");
+                info.zero = withAst(new Regex(pi.zero, "?"), regex);
             }
         }
         else if (regex.isPlus()) {
             //A+=A A*
-            Sequence s = new Sequence(regex.node, new Regex(regex.node, "*"));
+            Node star = withAst(new Regex(regex.node, "*"), regex);
+            if (regex.astInfo.isFactor) {
+                star.astInfo.loopExtra = sym.astInfo.factorName;
+            }
+            Sequence s = new Sequence(regex.node, star);
             return pull(s, sym);
         }
         else {
             //A* = A+ | €
-            Regex plus = new Regex(regex.node, "+");
+            Node plus = withAst(new Regex(regex.node, "+"), regex);
+            if (regex.astInfo.isFactor) {
+                plus.astInfo.loopExtra = sym.astInfo.factorName;
+            }
             return pull(new Or(plus, new Epsilon()), sym);
         }
         return info;
+    }
+
+    private Node withAst(Node node, Node other) {
+        node.astInfo = other.astInfo.copy();
+        return node;
     }
 
     Set<Name> first(Node node) {

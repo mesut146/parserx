@@ -6,7 +6,7 @@ import java.util.Objects;
 
 //rule decl in grammar
 //name=rules;
-public class RuleDecl extends Node {
+public class RuleDecl {
 
     public static boolean printIndex = false;
     public Node rhs;

@@ -105,7 +105,9 @@ public class FactorTest {
 
     @Test
     public void loopReal() throws Exception {
-        DescTester.check(Env.tree("factor/loop.g"), "A1", "b", "c", "ab", "ac", "aaaab");
-        DescTester.check(Env.tree("factor/loop.g"), "B", "b", "dc", "ec", "aaab", "aaadc");
+        //DescTester.check(Env.tree("factor/loop.g"), "A1", "b", "c", "ab", "ac", "aaaab");
+        //DescTester.check(Env.tree("factor/loop.g"), "B", "b", "dc", "ec", "aaab", "aaadc");
+        //DescTester.check(Env.tree("factor/loop.g"), "A", "b", "c", "ad", "ab", "ac", "aaab", "aaac");
+        DescTester.check(Env.tree("factor/loop.g"), "A", "b", "dc", "aab", "aadc", "aaec", "af");
     }
 }

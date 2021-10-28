@@ -1,6 +1,6 @@
 package mesut.parserx.nodes;
 
-public class TokenDecl extends Node {
+public class TokenDecl{
 
     public String name;
     public boolean fragment = false;

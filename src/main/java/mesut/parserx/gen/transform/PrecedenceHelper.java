@@ -141,7 +141,7 @@ public class PrecedenceHelper {
         rule.rhs = res;
 
         //remove lowest because it accepts any so it is in main rule
-        res.add(Sequence.of(rule.ref.copy(), groups.remove(lastLevel + 1).normal(), rule.ref.copy()));
+        res.add(new Sequence(rule.ref.copy(), groups.remove(lastLevel + 1).normal(), rule.ref.copy()));
 
         Node prev = new Or(rest.list);
         //start from highest
@@ -151,7 +151,7 @@ public class PrecedenceHelper {
             String lhsName = name + "0";
             Name ref = new Name(name, false);
             res.add(new Name(name, false));
-            tree.addRule(new RuleDecl(name, Sequence.of(new Name(lhsName), or.normal(), new Name(lhsName))));
+            tree.addRule(new RuleDecl(name, new Sequence(new Name(lhsName), or.normal(), new Name(lhsName))));
             //make lhs rhs
             RuleDecl lhsRule = new RuleDecl(lhsName, new Or(ref, prev).normal());
             tree.addRule(lhsRule);

@@ -9,6 +9,7 @@ public class AstInfo {
     public Type nodeType;
     public boolean isFactor;//no assign
     public boolean isFactored;//epsilon
+    public String loopExtra;
     public boolean isInLoop;
     public boolean isPrimary;//recursion left
     public String factorName;
@@ -34,6 +35,7 @@ public class AstInfo {
         res.assign = assign;
         res.factorName = factorName;
         res.isPrimary = isPrimary;
+        res.loopExtra = loopExtra;
         return res;
     }
 

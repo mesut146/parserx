@@ -13,11 +13,10 @@ C: a* d | e;
 
 
 //double factor
-A: a* b | a* c | a d;
+//A: a* b | a* c | a d;
 
-//A: a+ (b | c) | b | c | a d;
-//A: af2=a (a(a) af1=a* (b | c) | a(a) d) | b | c;
-
-
+//double loop
+A: a* b | B c | a f;
+B: a* d | a* e;
 
 

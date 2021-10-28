@@ -194,7 +194,7 @@ public class FactorLoop extends SimpleTransformer {
     }
 
     private void factorRule(RuleDecl decl) {
-        decl.rhs = transformNode(decl.rhs, decl);
+        decl.rhs = transformNode(decl.rhs, null);
     }
 
     @Override
@@ -217,14 +217,14 @@ public class FactorLoop extends SimpleTransformer {
                 for (Name sym : syms) {
                     sym = sym.copy();
                     sym.astInfo = new AstInfo();
-                    Regex regex = new Regex(sym, "+");//todo what about star?
+                    Regex factor = new Regex(sym, "+");//todo what about star?
                     if (hasLoop(or.get(i), sym) && hasLoop(or.get(j), sym)) {
-                        if (debug) System.out.printf("factoring %s in %s\n", regex, curRule.ref);
+                        if (debug) System.out.printf("factoring %s in %s\n", factor, curRule.ref);
                         modified = true;
-                        regex.astInfo.isFactor = true;
-                        Factor.PullInfo info = pull(or, regex);
-                        Group g = new Group(info.one);
-                        Node one = Sequence.of(regex, g);
+                        factor.astInfo.isFactor = true;
+                        factor.node.astInfo.isFactor = true;
+                        Factor.PullInfo info = pull(or, factor);
+                        Node one = new Sequence(factor, new Group(info.one));
                         if (info.zero == null) {
                             return one;
                         }
@@ -236,6 +236,10 @@ public class FactorLoop extends SimpleTransformer {
             }
         }
         return or;
+    }
+
+    boolean isLeftRec(RuleDecl decl) {
+        return Helper.start(decl.rhs, decl.ref, tree);
     }
 
     public Factor.PullInfo pull(Node node, Regex sym) {

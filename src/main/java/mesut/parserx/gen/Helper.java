@@ -12,7 +12,9 @@ public class Helper {
     }
 
     public static Node trim(Or s) {
-        return new Or(s.list.subList(1, s.size())).normal();
+        Or res = new Or(s.list.subList(1, s.size()));
+        if (res.size() == 1) return res.get(0);
+        return res;
     }
 
     public static boolean start(Node node, Name name, Tree tree) {

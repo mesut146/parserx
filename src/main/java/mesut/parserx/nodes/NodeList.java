@@ -45,15 +45,6 @@ public class NodeList extends Node implements Iterable<Node> {
         return sb.toString();
     }
 
-    public int indexOf(Node node) {
-        for (int i = 0; i < size(); i++) {
-            if (get(i).equals(node)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
     public Node last() {
         return list.get(size() - 1);
     }

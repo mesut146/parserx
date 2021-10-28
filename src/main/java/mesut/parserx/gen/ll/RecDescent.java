@@ -251,9 +251,23 @@ public class RecDescent {
         }
         else if (regex.isStar()) {
             if (set.size() <= loopLimit) {
-                code.append("while(%s){", loopExpr(set));
-                write(regex.node);
-                code.append("}");
+                if (regex.astInfo.isFactor) {
+                    Name name = regex.node.asName();
+                    String type = name.isToken ? options.tokenClass : options.astClass + "." + name.name;
+                    code.append("List<%s> %s = new ArrayList<>();", type, regex.astInfo.factorName);
+                    if (regex.astInfo.loopExtra != null) {
+                        code.append("%s.add(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra);
+                    }
+                    code.append("while(%s){", loopExpr(set));
+                    String consumer = name.isToken ? "consume(" + tokens + "." + name.name + ")" : name + "()";
+                    code.append("%s.add(%s);", regex.astInfo.factorName, consumer);
+                    code.append("}");
+                }
+                else {
+                    code.append("while(%s){", loopExpr(set));
+                    write(regex.node);
+                    code.append("}");
+                }
             }
             else {
                 flagCount++;
@@ -275,6 +289,9 @@ public class RecDescent {
                     Name name = regex.node.asName();
                     String type = name.isToken ? options.tokenClass : options.astClass + "." + name.name;
                     code.append("List<%s> %s = new ArrayList<>();", type, regex.astInfo.factorName);
+                    if (regex.astInfo.loopExtra != null) {
+                        code.append("%s.add(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra);
+                    }
                     code.append("do{");
                     String consumer = name.isToken ? "consume(" + tokens + "." + name.name + ")" : name + "()";
                     code.append("%s.add(%s);", regex.astInfo.factorName, consumer);
@@ -335,9 +352,11 @@ public class RecDescent {
 
     private void writeName(Name name) {
         if (name.astInfo.isFactored && name.astInfo.isFactor) {
+            //factor names may be different?
             return;
         }
         if (name.astInfo.isFactored) {
+            //no consume
             if (name.astInfo.isInLoop) {
                 code.append("%s.%s.add(%s);", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName);
             }
