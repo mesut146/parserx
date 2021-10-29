@@ -35,7 +35,7 @@ public class Normalizer extends SimpleTransformer {
         String cls = curRule.baseName() + "g" + groupCount;
         RuleDecl tmp = new RuleDecl(cls, node.node);
         tmp.retType = new Type(tree.options.astClass, cls);
-        tree.addRule(tmp);
+        tree.addRuleBelow(tmp, curRule);
         map.add(tmp.ref);
 
         Name ref = tmp.ref.copy();

@@ -380,7 +380,10 @@ public class FactorLoop extends SimpleTransformer {
     }
 
     Factor.PullInfo pullRule(Name name, Regex sym) {
-        String key = name + "-" + sym;
+        if (debug) {
+            System.out.println("pullRule2 " + name + " " + sym);
+        }
+        String key = name.name + "-" + sym;
         if (cache.containsKey(key)) {
             return cache.get(key);
         }

@@ -228,7 +228,7 @@ public class Factor extends SimpleTransformer {
         if (debug)
             System.out.println("pullRule " + name + " sym=" + sym);
         PullInfo info = new PullInfo();
-        String key = name + "-" + sym;
+        String key = name.name + "-" + sym;
         if (cache.containsKey(key)) {
             info = cache.get(key);
             info.one = info.one.copy();
