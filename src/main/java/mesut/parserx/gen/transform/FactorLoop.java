@@ -51,7 +51,9 @@ public class FactorLoop extends SimpleTransformer {
     }
 
     boolean hasLoop(Node node, Name sym) {
+        if (!Helper.start(node, sym, tree)) return false;
         if (node.isRegex()) {
+            if (node.astInfo.isFactored) return false;
             Regex regex = node.asRegex();
             if (!regex.isOptional()) {
                 if (regex.node.equals(sym)) {
@@ -66,6 +68,7 @@ public class FactorLoop extends SimpleTransformer {
             }
         }
         else if (node.isName()) {
+            if (node.astInfo.isFactored) return false;
             Name name = node.asName();
             if (name.isRule()) {
                 return hasLoop(tree.getRule(name).rhs, sym);
@@ -101,6 +104,8 @@ public class FactorLoop extends SimpleTransformer {
     }
 
     public Node follow(Node node, Name first) {
+        //if (!Helper.start(node, first, tree)) return null;
+        //if (node.astInfo.isFactored) return null;
         if (node.isSequence()) {
             Node A = node.asSequence().first();
             Node B = Helper.trim(node.asSequence());
@@ -118,7 +123,7 @@ public class FactorLoop extends SimpleTransformer {
                     return B;
                 }
                 else {
-                    return new Sequence(fa, B);
+                    return new Sequence(wrap(fa), B);
                 }
             }
             else {
@@ -165,7 +170,9 @@ public class FactorLoop extends SimpleTransformer {
                 return new Epsilon();
             }
             Name name = node.asName();
-            if (name.isToken) throw new RuntimeException("invalid call to follow");
+            if (name.isToken) {
+                throw new RuntimeException("invalid call to follow");
+            }
             RuleDecl decl = tree.getRule(name);
             return follow(decl.rhs, first);
         }
@@ -184,7 +191,7 @@ public class FactorLoop extends SimpleTransformer {
                 i = 0;
                 if (debug) {
                     //tree.printRules();
-                    System.out.println(decl);
+                    //System.out.println(decl);
                 }
             }
             else {
@@ -299,11 +306,13 @@ public class FactorLoop extends SimpleTransformer {
                 zero.add(ch);
             }
         }
-        if (one.isEmpty()) {
-            return null;
-        }
         Factor.PullInfo res = new Factor.PullInfo();
-        res.one = new Or(one);
+        if (one.size() == 1) {
+            res.one = one.get(0);
+        }
+        else {
+            res.one = new Or(one);
+        }
         if (!zero.isEmpty()) {
             if (zero.size() == 1) {
                 res.zero = zero.get(0);
@@ -384,29 +393,33 @@ public class FactorLoop extends SimpleTransformer {
         }
         cache.put(key, info);
 
-        Name oneSym = new Name(name.name);
-        oneSym.args.add(sym);
-        oneSym.astInfo = name.astInfo.copy();
-        RuleDecl oneDecl = oneSym.makeRule();
+        Name base = factor.baseName(name);
+
+        Name oneName = new Name(base.name + factor.nameMap.get(base.name));
+        oneName.args = new ArrayList<>(name.args);
+        oneName.args.add(sym);
+        oneName.astInfo = name.astInfo.copy();
+        RuleDecl oneDecl = oneName.makeRule();
         oneDecl.rhs = info.one;
         oneDecl.retType = decl.retType;
         tree.addRule(oneDecl);
 
-        Name zeroSym;
+        Name zeroName;
         if (sym.isStar()) {
-            zeroSym = new Name(name.name + "_nos_" + noLoop(sym));
+            zeroName = new Name(base.name + "_nos_" + noLoop(sym));
         }
         else {
-            zeroSym = new Name(name.name + "_nop_" + noLoop(sym));
+            zeroName = new Name(base.name + "_nop_" + noLoop(sym));
         }
-        zeroSym.astInfo = name.astInfo.copy();
-        RuleDecl zeroDecl = zeroSym.makeRule();
+        zeroName.args = new ArrayList<>(name.args);
+        zeroName.astInfo = name.astInfo.copy();
+        RuleDecl zeroDecl = zeroName.makeRule();
         zeroDecl.rhs = info.zero;
         zeroDecl.retType = decl.retType;
         tree.addRule(zeroDecl);
 
-        info.one = oneSym;
-        info.zero = zeroSym;
+        info.one = oneName;
+        info.zero = zeroName;
         return info;
     }
 
@@ -449,7 +462,7 @@ public class FactorLoop extends SimpleTransformer {
                 res.one = copy;
                 return res;
             }
-            Factor.PullInfo tmp = new Factor(tree).pull(regex.node, noLoop(sym));
+            Factor.PullInfo tmp = factor.pull(regex.node, noLoop(sym));
             Regex star = new Regex(regex.node, "*");
             star.astInfo = regex.astInfo.copy();
             if (isEpsilon(tmp.one)) {

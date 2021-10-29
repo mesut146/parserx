@@ -203,7 +203,7 @@ ElementValue:
  | Annotation;
 
 ElementValueArrayInitializer:
-  ( ElementValueList? ","? )*;
+  "{" ElementValueList? ","? "}";
 
 ElementValueList:
   ElementValue ("," ElementValue)*;
@@ -483,7 +483,7 @@ UnannArrayType:
 
 FieldModifier:
   Annotation | "public" "protected" | "private"
-  |"static" | "final" | "transient" | "volatile";
+  | "static" | "final" | "transient" | "volatile";
 
 MethodDeclaration:
   MethodModifier* MethodHeader MethodBody;

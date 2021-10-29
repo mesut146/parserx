@@ -231,9 +231,12 @@ public class Factor extends SimpleTransformer {
         String key = name + "-" + sym;
         if (cache.containsKey(key)) {
             info = cache.get(key);
+            info.one = info.one.copy();
             info.one.astInfo = name.astInfo.copy();
-            if (info.zero != null)
+            if (info.zero != null) {
+                info.one = info.zero.copy();
                 info.zero.astInfo = name.astInfo.copy();
+            }
             return info;
         }
         cache.put(key, info);
@@ -382,9 +385,14 @@ public class Factor extends SimpleTransformer {
         }
         if (zero.size() > 0) {
             info.zero = zero;
-            //info.zero = zero;
+            if (zero.size() == 1) {
+                info.zero = zero.get(0);
+            }
         }
         info.one = one;
+        if (one.size() == 1) {
+            info.one = one.get(0);
+        }
         return info;
     }
 
