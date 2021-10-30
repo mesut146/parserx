@@ -472,9 +472,19 @@ public class FactorLoop extends SimpleTransformer {
                 //(a A(a) | A_no_a)+
                 //(a A(a))+ (A_no_a A* | €) | A_no_a A*
                 Factor.PullInfo res = new Factor.PullInfo();
-                Sequence s = new Sequence(tmp.zero, star);
-                res.one = new Or(s, new Epsilon());
-                res.zero = s;
+                if (tmp.zero == null) {
+                    //(a A(a))+
+                    //a+ A(a)+
+                    res.one = new Regex(tmp.one, "+");
+                    res.one.astInfo = regex.astInfo.copy();
+                    res.one.astInfo.isFactored = true;
+                    res.one.astInfo.factor = sym.astInfo;
+                }
+                else {
+                    Sequence s = new Sequence(tmp.zero, star);
+                    res.one = new Or(s, new Epsilon());
+                    res.zero = s;
+                }
                 return res;
             }
             if (Helper.canBeEmpty(tmp.one, tree)) {

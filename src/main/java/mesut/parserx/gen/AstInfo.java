@@ -18,6 +18,8 @@ public class AstInfo {
     public boolean substitution;
     public String subVar;
     public boolean assign;
+    public AstInfo loopBound;
+    public AstInfo factor;
 
     public AstInfo copy() {
         AstInfo res = new AstInfo();
@@ -36,6 +38,8 @@ public class AstInfo {
         res.factorName = factorName;
         res.isPrimary = isPrimary;
         res.loopExtra = loopExtra;
+        res.loopBound = loopBound;
+        res.factor = factor;
         return res;
     }
 

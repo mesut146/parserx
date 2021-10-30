@@ -125,21 +125,14 @@ public class RecDescent {
         tree = EbnfToBnf.combineOr(tree);
         AstGen astGen = new AstGen(tree);
         astGen.genAst();
-        //if (debug) tree.printRules();
 
         Recursion recursion = new Recursion(tree);
         recursion.all();
-        if (debug && recursion.any) {
-            tree.printRules();
-        }
 
         Factor.allowRecursion = true;
         Factor.factorSequence = true;
         Factor factor = recursion.factor;
         factor.factorize();
-        if (debug && factor.any) {
-            tree.printRules();
-        }
 
         File out = new File(options.outDir, Utils.newName(tree.file.getName(), "-final.g"));
         //Name.autoEncode = true;
@@ -229,10 +222,22 @@ public class RecDescent {
         }
     }
 
+    String getType(Name name) {
+        if (name.isToken) return options.tokenClass;
+        return options.astClass + "." + name.name;
+    }
+
     private void writeRegex(Regex regex) {
         if (regex.astInfo.isFactored) {
             Name name = regex.node.asName();
-            code.append("%s.%s.addAll(%s);", name.astInfo.outerVar, name.astInfo.varName, regex.astInfo.factorName);
+            if (regex.astInfo.factor == null) {
+                code.append("%s.%s.addAll(%s);", name.astInfo.outerVar, name.astInfo.varName, regex.astInfo.factorName);
+            }
+            else {
+                code.append("for(int i = 0;i < %s.size();i++){", regex.astInfo.factor.factorName);
+                code.append("%s.%s.add(%s(%s.get(i)));", regex.astInfo.outerVar, name.astInfo.varName, name.name, regex.astInfo.factor.factorName);
+                code.append("}");
+            }
             return;
         }
         Set<Name> set = Helper.first(regex, tree, true, false, true);

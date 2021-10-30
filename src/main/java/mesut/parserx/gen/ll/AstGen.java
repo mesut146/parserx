@@ -65,9 +65,16 @@ public class AstGen {
 
     void writePrinter(Node rhs, CodeWriter c) {
         c.append("public String toString(){");
-        c.append("StringBuilder sb=new StringBuilder();");
-        getPrint(rhs, c);
-        c.append("return sb.toString();");
+        if (rhs.isOr()) {
+            c.append("StringBuilder sb=new StringBuilder(\"%s{\");", curRule);
+            getPrint(rhs, c);
+            c.append("return sb.append(\"}\").toString();");
+        }
+        else {
+            c.append("StringBuilder sb=new StringBuilder(\"%s{\");", curRule);
+            getPrint(rhs, c);
+            c.append("return sb.append(\"}\").toString();");
+        }
         c.append("}");//toString
     }
 
@@ -78,7 +85,8 @@ public class AstGen {
                 c.append("sb.append(%s.value);", node.astInfo.varName);
             }
             else {
-                c.append("sb.append(%s.toString());", node.astInfo.varName);
+                c.append("sb.append(String.format(\"%s{%%s}\",%s.toString()));", node.astInfo.varName, node.astInfo.varName);
+                //c.append("sb.append(%s{%s.toString()} + \" \");", node.astInfo.varName);
             }
         }
         else if (node.isSequence()) {

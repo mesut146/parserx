@@ -16,7 +16,13 @@ C: a* d | e;
 //A: a* b | a* c | a d;
 
 //double loop
+/*
 A: a* b | B c | a f;
 B: a* d | a* e;
+*/
+
+//rule
+E: a* b | EE* c;
+EE: a;
 
 

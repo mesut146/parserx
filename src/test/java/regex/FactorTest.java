@@ -91,6 +91,7 @@ public class FactorTest {
         tree.printRules();
     }
 
+
     @Test
     public void loopCode() throws IOException {
         Tree tree = Env.tree("factor/loop.g");
@@ -104,6 +105,7 @@ public class FactorTest {
         //DescTester.check(Env.tree("factor/loop.g"), "A1", "b", "c", "ab", "ac", "aaaab");
         //DescTester.check(Env.tree("factor/loop.g"), "B", "b", "dc", "ec", "aaab", "aaadc");
         //DescTester.check(Env.tree("factor/loop.g"), "A", "b", "c", "ad", "ab", "ac", "aaab", "aaac");
-        DescTester.check(Env.tree("factor/loop.g"), "A", "b", "dc", "aab", "aadc", "aaec", "af");
+        //DescTester.check(Env.tree("factor/loop.g"), "A", "b", "dc", "aab", "aadc", "aaec", "af");
+        DescTester.check(Env.tree("factor/loop.g"), "E", "b", "c", "aaab", "aaac");
     }
 }
