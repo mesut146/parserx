@@ -59,16 +59,16 @@ public class AstGen {
             astWriter.all("return visitor.visit%s(this, arg);\n}", Utils.camel(decl.baseName()));
         }
         //todo create parent
-        writePrinter(decl.rhs, astWriter);
+        writePrinter(decl.rhs, astWriter, false);
         astWriter.append("}");
     }
 
-    void writePrinter(Node rhs, CodeWriter c) {
+    void writePrinter(Node rhs, CodeWriter c, boolean isAlt) {
         c.append("public String toString(){");
-        if (rhs.isOr()) {
-            c.append("StringBuilder sb=new StringBuilder(\"%s{\");", curRule);
+        if (isAlt) {
+            c.append("StringBuilder sb=new StringBuilder();");
             getPrint(rhs, c);
-            c.append("return sb.append(\"}\").toString();");
+            c.append("return sb.toString();");
         }
         else {
             c.append("StringBuilder sb=new StringBuilder(\"%s{\");", curRule);
@@ -85,8 +85,7 @@ public class AstGen {
                 c.append("sb.append(%s.value);", node.astInfo.varName);
             }
             else {
-                c.append("sb.append(String.format(\"%s{%%s}\",%s.toString()));", node.astInfo.varName, node.astInfo.varName);
-                //c.append("sb.append(%s{%s.toString()} + \" \");", node.astInfo.varName);
+                c.append("sb.append(%s.toString());", node.astInfo.varName);
             }
         }
         else if (node.isSequence()) {
@@ -101,12 +100,12 @@ public class AstGen {
             String v = regex.node.astInfo.varName;
             if (regex.isStar() || regex.isPlus()) {
                 c.append("if(!%s.isEmpty()){", v);
-                c.append("sb.append('{');");
+                c.append("sb.append('[');");
                 c.append("for(int i=0;i<%s.size();i++){", v);
                 c.append("sb.append(%s.get(i));", v);
                 c.append("sb.append(\",\");");
                 c.append("}");
-                c.append("sb.append('}');");
+                c.append("sb.append(']');");
                 c.append("}");
             }
             else {
@@ -132,12 +131,11 @@ public class AstGen {
                 else {
                     c.append("sb.append(%s);", ch.astInfo.varName);
                 }
-
                 c.append("}");//if
             }
         }
         else {
-            throw new RuntimeException();
+            throw new RuntimeException("invalid child");
         }
     }
 
@@ -209,7 +207,7 @@ public class AstGen {
                     CodeWriter c = new CodeWriter(false);
                     c.append("public static class %s{", clsName.name);
                     model(ch, clsName, v, c);
-                    writePrinter(ch, c);
+                    writePrinter(ch, c, true);
                     c.append("}");
                     classes.all(c.get());
                 }
