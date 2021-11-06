@@ -20,6 +20,13 @@ public class LexerGenTest {
 
 
     @Test
+    public void cppTarget() throws IOException {
+        Tree tree = Env.tree("str.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        LexerGenerator.gen(tree, "cpp");
+    }
+
+    @Test
     public void shortCut() {
         System.out.println(Shortcut.from("line_comment"));
         System.out.println(Shortcut.from("block_comment"));
@@ -72,7 +79,7 @@ public class LexerGenTest {
         tree.options.tokenClass = "Token2";
         tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lexer/itself";
         tree.options.packageName = "lexer.itself";
-        LexerGenerator.gen(tree,"java");
+        LexerGenerator.gen(tree, "java");
     }
 
     @Test
@@ -80,7 +87,7 @@ public class LexerGenTest {
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/parserx.g"));
         tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lexer/itself";
         tree.options.packageName = "lexer.itself";
-        LexerGenerator.gen(tree,"java");
+        LexerGenerator.gen(tree, "java");
     }
 
     @Test
@@ -89,7 +96,7 @@ public class LexerGenTest {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         tree.options = options;
-        LexerGenerator.gen(tree,"java");
+        LexerGenerator.gen(tree, "java");
     }
 
     @Test
@@ -105,7 +112,7 @@ public class LexerGenTest {
     @Ignore
     public void all() throws Exception {
         Tree tree = Env.tree("javaLexer.g");
-        LexerGenerator generator=LexerGenerator.gen(tree,"java");
+        LexerGenerator generator = LexerGenerator.gen(tree, "java");
 
         NFA dfa = generator.dfa;
         dfa.dump(new FileWriter(new File(Env.dotDir(), "javaLexer.txt")));

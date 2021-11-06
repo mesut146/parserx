@@ -1,0 +1,140 @@
+#include "$lexer_class$.h"
+
+     $lexer_class$(Reader reader) throws IOException{
+        this.reader = reader;
+        init();
+    }
+
+     $lexer_class$(File file) throws IOException {
+        this.reader = new BufferedReader(new FileReader(file));
+        init();
+    }
+
+    bool $lexer_class$::getBit(int* arr, int state) {
+        return ((arr[state / 32] >> (state % 32)) & 1) != 0;
+    }
+
+    static int[][] unpackTrans(String str) {
+        int pos = 0;
+        int max = str.charAt(pos++);
+        List<int[]> list = new ArrayList<>();
+        while (pos < str.length()) {
+            int[] arr = new int[max];
+            Arrays.fill(arr, -1);
+            int trCount = str.charAt(pos++);
+            for (int input = 0; input < trCount; input++) {
+                //input -> target state
+                arr[str.charAt(pos++)] = str.charAt(pos++);
+            }
+            list.add(arr);
+        }
+        return list.toArray(new int[0][]);
+    }
+
+    static int[] unpackCMap(String str){
+        int pos = 0;
+        int[] arr = new int[0x010FFFF];//covers all code points
+        Arrays.fill(arr, -1);//unused chars leads error
+        while(pos < str.length()){
+            int left = str.charAt(pos++);
+            int right = str.charAt(pos++);
+            int id = str.charAt(pos++);
+            for(int i = left;i <= right;i++){
+                arr[i] = id;
+            }
+      }
+      return arr;
+    }
+
+    void init() throws IOException{
+      reader.read(yybuf, 0, bufSize);
+    }
+
+    void fill() throws IOException{
+      if(bufPos == yybuf.length){
+        char[] newBuf = new char[yybuf.length * 2];
+        System.arraycopy(yybuf, 0, newBuf, 0, yybuf.length);
+        reader.read(newBuf, bufPos, yybuf.length);
+        yybuf = newBuf;
+      }
+    }
+
+    String getText(){
+      return new String(yybuf, bufStart, bufPos - bufStart);
+    }
+
+    String findExpected(int from){
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0 ; i < trans[from].length;i++){
+            sb.append(cMapRegex[i]);
+            sb.append(",");
+        }
+        return sb.toString();
+    }
+
+    $token_class$ getEOF(){
+        $token_class$ res =  new $token_class$(EOF, "");
+        res.name = "EOF";
+        return res;
+    }
+
+    public $token_class$ $next_token$() throws IOException {
+        $token_class$ tok = $next_token$_normal();
+        if(getBit(skip, tok.type)){
+          return $next_token$();
+        }
+        return tok;
+    }
+
+    public $token_class$ $next_token$_normal() throws IOException {
+        fill();
+        int curState = INITIAL;
+        int lastState = -1;
+        int startPos = yypos;
+        int startLine = yyline;
+        yychar = yybuf[bufPos];
+        if (yychar == EOF) return getEOF();
+        int backupState = -1;
+        while (true) {
+            fill();
+            yychar = yybuf[bufPos];
+            if(yychar == EOF){
+                curState = -1;
+            }else{
+                backupState = curState;
+                if(cMap[yychar] == -1){
+                    throw new IOException(String.format("invalid input=%c(%d) buf='%s' expecting=%s",yychar,yychar,getText(),findExpected(backupState)));
+                }
+                curState = trans[curState][cMap[yychar]];
+            }
+            if (curState == -1) {
+                if (lastState != -1) {
+                    $token_class$ token = new $token_class$(ids[lastState], getText());
+                    token.offset = startPos;
+                    token.name = names[ids[lastState]];
+                    token.line = startLine;
+                    bufStart = bufPos;
+                    return token;
+                }
+                else {
+                    throw new IOException(String.format("invalid input=%c(%d) buf='%s' expecting=%s",yychar,yychar,getText(),findExpected(backupState)));
+                    //throw new IOException("invalid input=" + (char)yychar + "(" + yychar + ") " + " yybuf= " + getText());
+                }
+            }
+            else {
+                if (getBit(accepting, curState)) lastState = curState;
+                if(yychar == '\n'){
+                    yyline++;
+                    if(bufPos > 0 && yybuf[bufPos - 1] == '\r'){
+                        yyline--;
+                    }
+                }
+                else if(yychar == '\r'){
+                    yyline++;
+                }
+                bufPos++;
+                yypos++;
+            }
+        }
+    }
+}

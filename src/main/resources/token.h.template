@@ -1,0 +1,22 @@
+#pragma once
+
+#include <string>
+
+$package$
+
+class $token_class${
+public:
+    int type;
+    std::string value;
+    int offset;
+    int line;
+    std::string name;//token name that's declared in grammar
+
+    $token_class$();
+
+    $token_class$(int type);
+
+    $token_class$(int type, std::string value);
+
+    std::string toString();
+};

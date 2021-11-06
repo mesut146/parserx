@@ -1,0 +1,63 @@
+#pragma once
+
+$package$
+
+#include <vector>
+#include <string>
+
+import java.io.*;
+import java.util.*;
+
+class $lexer_class$ {
+
+    static std::string cMapPacked = $cMap$;
+    //input -> input id
+    static int* cMap = unpackCMap(cMapPacked);
+    //input id -> regex string for error reporting
+    static std::string* cMapRegex = {$cMapRegex$};
+    int skip[] = {$skip_list$};
+    int accepting[] = {$final_list$};
+    //id -> token name
+    std::string names[] = {$name_list$};
+    //state->token id
+    int ids[] = {$id_list$};
+    static final int INITIAL = 0;
+    static final int EOF = 0;
+    Reader reader;
+    int yypos = 0;//pos in file
+    int yyline = 1;
+    int yychar;
+    static int bufSize = 100;
+    int bufPos = 0;//pos in buffer
+    int bufStart = bufPos;
+    int bufEnd;
+    char* yybuf[bufSize];
+    static std::string trans_packed = $trans$;
+    static int** trans = unpackTrans(trans_packed);
+
+    public:
+
+    $lexer_class$(Reader reader);
+
+    $lexer_class$(File file);
+
+    static bool getBit(int* arr, int state);
+
+    static int** unpackTrans(std::string str);
+
+    static int* unpackCMap(std::string str);
+
+    void init();
+
+    void fill();
+
+    std::string getText();
+
+    std::string findExpected(int from);
+
+    $token_class$ getEOF();
+
+    $token_class$ $next_token$();
+
+    $token_class$ $next_token$_normal();
+};
