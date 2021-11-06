@@ -4,10 +4,7 @@ import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
-import mesut.parserx.gen.transform.EbnfToBnf;
-import mesut.parserx.gen.transform.Factor;
-import mesut.parserx.gen.transform.Recursion;
-import mesut.parserx.gen.transform.Simplify;
+import mesut.parserx.gen.transform.*;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
@@ -132,14 +129,15 @@ public class RecDescent {
         Factor.allowRecursion = true;
         Factor.factorSequence = true;
         Factor factor = recursion.factor;
-        factor.factorize();
+        FactorLoop loop = new FactorLoop(tree, factor);
+        loop.factorize();
 
         File out = new File(options.outDir, Utils.newName(tree.file.getName(), "-final.g"));
         //Name.autoEncode = true;
         Node.printVarName = false;
         Utils.write(tree.toString(), out);
 
-        new LexerGenerator(tree).generate();
+        LexerGenerator.gen(tree, "java");
     }
 
     void gen(RuleDecl decl) {

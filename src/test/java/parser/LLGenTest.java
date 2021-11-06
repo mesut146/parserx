@@ -84,7 +84,6 @@ public class LLGenTest {
         options.outDir = Env.dotDir().getAbsolutePath();
         Tree tree = Env.tree("calc-1.g");
         tree.options = options;
-        new LexerGenerator(tree).generate();
         RecDescent gen = new RecDescent(tree);
         gen.gen();
     }

@@ -9,6 +9,7 @@ import java.util.*;
 public class FactorLoop extends SimpleTransformer {
     public static boolean keepFactor = true;
     public static boolean debug = false;
+    static boolean debugMethod = true;
     boolean modified;
     RuleDecl curRule;
     boolean any;
@@ -24,12 +25,12 @@ public class FactorLoop extends SimpleTransformer {
     }
 
     public static List<Name> commons(Set<Name> s1, Set<Name> s2) {
-        Set<Name> copy = new HashSet<>(s1);
-        copy.retainAll(s2);
+        Set<Name> common = new HashSet<>(s1);
+        common.retainAll(s2);
         //rule has higher priority
         List<Name> res = new ArrayList<>();
         List<Name> tokens = new ArrayList<>();
-        for (Name name : copy) {
+        for (Name name : common) {
             if (!name.isEpsilon()) {
                 if (name.isRule()) {
                     res.add(name);
@@ -51,6 +52,7 @@ public class FactorLoop extends SimpleTransformer {
     }
 
     boolean hasLoop(Node node, Name sym) {
+        if (debugMethod) System.out.println("hasLoop node = " + node + ", sym = " + sym);
         if (!Helper.start(node, sym, tree)) return false;
         if (node.isRegex()) {
             if (node.astInfo.isFactored) return false;
@@ -82,6 +84,7 @@ public class FactorLoop extends SimpleTransformer {
             Sequence seq = node.asSequence();
             Node a = seq.first();
             Node b = Helper.trim(seq);
+            //return hasLoop(a, sym) || Helper.canBeEmpty(a, tree) && hasLoop(b, sym);
             if (hasLoop(a, sym)) {
                 return true;
             }
@@ -104,6 +107,7 @@ public class FactorLoop extends SimpleTransformer {
     }
 
     public Node follow(Node node, Name first) {
+        if (debugMethod) System.out.println("follow node = " + node + ", first = " + first);
         //if (!Helper.start(node, first, tree)) return null;
         //if (node.astInfo.isFactored) return null;
         if (node.isSequence()) {
@@ -151,6 +155,7 @@ public class FactorLoop extends SimpleTransformer {
             return follow(node.asGroup().node, first);
         }
         else if (node.isRegex()) {
+            if (node.astInfo.isFactored) return null;
             Regex regex = node.asRegex();
             Node f = follow(regex.node, first);
             if (regex.isOptional()) {
@@ -166,6 +171,7 @@ public class FactorLoop extends SimpleTransformer {
             }
         }
         else if (node.isName()) {
+            if (node.astInfo.isFactored) return null;
             if (node.equals(first)) {
                 return new Epsilon();
             }
@@ -182,6 +188,7 @@ public class FactorLoop extends SimpleTransformer {
     public void factorize() {
         for (int i = 0; i < tree.rules.size(); ) {
             RuleDecl decl = tree.rules.get(i);
+            System.out.println("decl=" + decl.ref + " i=" + i);
             curRule = decl;
             modified = false;
             factorRule(decl);
@@ -189,10 +196,6 @@ public class FactorLoop extends SimpleTransformer {
                 any = true;
                 //restart if any modification happens
                 i = 0;
-                if (debug) {
-                    //tree.printRules();
-                    //System.out.println(decl);
-                }
             }
             else {
                 i++;
@@ -207,12 +210,8 @@ public class FactorLoop extends SimpleTransformer {
     @Override
     public Node transformOr(Or or, Node parent) {
         Node node = super.transformOr(or, parent);
-        if (node.isOr()) {
-            or = node.asOr();
-        }
-        else {
-            return node;
-        }
+        if (!node.isOr()) return node;
+        or = node.asOr();
 
         for (int i = 0; i < or.size(); i++) {
             Set<Name> s1 = Helper.first(or.get(i), tree, true);
@@ -224,20 +223,25 @@ public class FactorLoop extends SimpleTransformer {
                 for (Name sym : syms) {
                     sym = sym.copy();
                     sym.astInfo = new AstInfo();
-                    Regex factor = new Regex(sym, "+");//todo what about star?
+                    Regex factorSym = new Regex(sym, "+");//todo what about star?
                     if (hasLoop(or.get(i), sym) && hasLoop(or.get(j), sym)) {
-                        if (debug) System.out.printf("factoring loop %s in %s\n", factor, curRule.ref);
+                        if (debug) System.out.printf("factoring loop %s in %s\n", factorSym, curRule.ref);
                         modified = true;
-                        factor.astInfo.isFactor = true;
-                        factor.node.astInfo.isFactor = true;
-                        Factor.PullInfo info = pull(or, factor);
-                        Node one = new Sequence(factor, new Group(info.one));
+                        factorSym.astInfo.isFactor = true;
+                        factorSym.node.astInfo.isFactor = true;
+                        Factor.PullInfo info = pull(or, factorSym);
+                        Node one = new Sequence(factorSym, new Group(info.one));
                         if (info.zero == null) {
                             return one;
                         }
                         else {
                             return new Or(one, info.zero);
                         }
+                    }
+                    else {
+                        //single factor
+                        factor.curRule = curRule;
+                        return factor.transformNode(or, null);
                     }
                 }
             }

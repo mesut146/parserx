@@ -29,8 +29,7 @@ public class LLDfaParserGen {
     }
 
     public void gen() throws IOException {
-        LexerGenerator lexerGenerator = new LexerGenerator(tree);
-        lexerGenerator.generate();
+        LexerGenerator lexerGenerator = LexerGenerator.gen(tree, "java");
         idMap = lexerGenerator.idMap;
 
         LLDfaBuilder builder = new LLDfaBuilder(tree);
@@ -83,7 +82,7 @@ public class LLDfaParserGen {
 
     private void makeids() {
         int[] idArr = new int[dfa.lastState + 1];//state->id
-        for (int state :dfa.it()) {
+        for (int state : dfa.it()) {
             //make id for token
             List<String> names = dfa.names[state];
             if (names != null && dfa.isAccepting(state)) {
@@ -95,7 +94,7 @@ public class LLDfaParserGen {
         }
         //id list
         Writer idWriter = new Writer();
-        for (int state :dfa.it()) {
+        for (int state : dfa.it()) {
             idWriter.print(idArr[state]);
             if (state <= dfa.lastState - 1) {
                 idWriter.print(",");

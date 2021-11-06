@@ -102,7 +102,12 @@ public class AstGen {
                 c.append("if(!%s.isEmpty()){", v);
                 c.append("sb.append('[');");
                 c.append("for(int i=0;i<%s.size();i++){", v);
-                c.append("sb.append(%s.get(i));", v);
+                if (regex.node.asName().isToken) {
+                    c.append("sb.append(%s.get(i).value);", v);
+                }
+                else {
+                    c.append("sb.append(%s.get(i));", v);
+                }
                 c.append("sb.append(\",\");");
                 c.append("}");
                 c.append("sb.append(']');");

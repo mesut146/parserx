@@ -50,11 +50,11 @@ public class EpsilonTrimmer extends SimpleTransformer {
             }
             new SimpleTransformer(out) {
                 @Override
-                public Node transformName(Name node, Node parent) {
-                    if (node.isRule()) {
-                        return new Name(trimSuffix(node.name));
+                public Node transformName(Name name, Node parent) {
+                    if (name.isRule()) {
+                        return new Name(trimSuffix(name.name));
                     }
-                    return node;
+                    return name;
                 }
             }.transformRules();
         }
@@ -73,11 +73,11 @@ public class EpsilonTrimmer extends SimpleTransformer {
         final boolean[] has = {false};
         new SimpleTransformer(tree) {
             @Override
-            public Node transformName(Name node, Node parent) {
-                if (Helper.canBeEmpty(node, tree)) {
+            public Node transformName(Name name, Node parent) {
+                if (Helper.canBeEmpty(name, tree)) {
                     has[0] = true;
                 }
-                return super.transformName(node, parent);
+                return super.transformName(name, parent);
             }
 
             @Override
@@ -133,12 +133,12 @@ public class EpsilonTrimmer extends SimpleTransformer {
     }
 
     @Override
-    public Node transformName(Name node, Node parent) {
-        if (Helper.canBeEmpty(node, tree)) {
-            Name res = new Name(node.name + "_noe");
+    public Node transformName(Name name, Node parent) {
+        if (Helper.canBeEmpty(name, tree)) {
+            Name res = new Name(name.name + "_noe");
             return res;
         }
-        return node;
+        return name;
     }
 
     @Override

@@ -31,15 +31,15 @@ public class PrepareTree extends SimpleTransformer {
     }
 
     @Override
-    public Node transformName(Name node, Node parent) {
+    public Node transformName(Name name, Node parent) {
         //rule or token
-        if (tree.getRule(node) != null) {
-            node.isToken = false;
+        if (tree.getRule(name) != null) {
+            name.isToken = false;
         }
         else {
-            TokenDecl decl = tree.getToken(node.name);
+            TokenDecl decl = tree.getToken(name.name);
             if (decl == null) {
-                throw new RuntimeException("invalid reference: " + node.name + " in " + getDecl());
+                throw new RuntimeException("invalid reference: " + name.name + " in " + getDecl());
             }
             else {
                 if (decl == curToken) {
@@ -48,13 +48,13 @@ public class PrepareTree extends SimpleTransformer {
                 if (decl.isSkip && curRule != null) {
                     throw new RuntimeException("skip token inside production is not allowed");
                 }
-                node.isToken = true;
+                name.isToken = true;
                 if (curToken != null) {
                     return decl.rhs;
                 }
             }
         }
-        return node;
+        return name;
     }
 
     String getDecl() {

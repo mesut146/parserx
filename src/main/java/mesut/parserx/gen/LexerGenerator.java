@@ -18,12 +18,23 @@ public class LexerGenerator {
     public Tree tree;
     Options options;
     Template template;
+    String target;
 
-    public LexerGenerator(Tree tree) {
+    public LexerGenerator(Tree tree, String target) {
         this.tree = tree;
         this.dfa = tree.makeNFA().dfa();
         this.dfa = Minimization.optimize(this.dfa);
         this.options = tree.options;
+        if (!target.equals("java") && !target.equals("c++")) {
+            throw new RuntimeException("invalid target: " + target);
+        }
+        this.target = target;
+    }
+
+    public static LexerGenerator gen(Tree tree, String target) throws IOException {
+        LexerGenerator lexerGenerator = new LexerGenerator(tree, target);
+        lexerGenerator.generate();
+        return lexerGenerator;
     }
 
     //compress boolean bits to integers
@@ -105,7 +116,7 @@ public class LexerGenerator {
         }
         //id list
         Writer idWriter = new Writer();
-        for (int state :dfa.it()) {
+        for (int state : dfa.it()) {
             idWriter.print(idArr[state]);
             if (state <= dfa.lastState - 1) {
                 idWriter.print(",");

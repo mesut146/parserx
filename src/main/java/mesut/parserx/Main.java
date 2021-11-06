@@ -232,8 +232,8 @@ public class Main {
                 if (tokenClass != null) {
                     tree.options.tokenClass = tokenClass;
                 }
-                LexerGenerator generator = new LexerGenerator(tree);
-                generator.generate();
+
+                LexerGenerator generator = LexerGenerator.gen(tree, "java");
                 if (hasDot) {
                     generator.dfa.dot(new FileWriter(new File(tree.options.outDir, Utils.newName(input.getName(), "dot"))));
                 }

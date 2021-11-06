@@ -317,14 +317,14 @@ public class Helper {
     public static void revert(final Tree tree) {
         SimpleTransformer transformer = new SimpleTransformer(tree) {
             @Override
-            public Node transformName(Name node, Node parent) {
-                if (node.isToken) {
-                    Node rhs = tree.getToken(node.name).rhs;
+            public Node transformName(Name name, Node parent) {
+                if (name.isToken) {
+                    Node rhs = tree.getToken(name.name).rhs;
                     if (rhs.isString()) {
                         return rhs;
                     }
                 }
-                return node;
+                return name;
             }
         };
         for (RuleDecl ruleDecl : tree.rules) {

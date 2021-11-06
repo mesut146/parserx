@@ -47,7 +47,7 @@ public class Name extends Node {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(varString());
+        //sb.append(varString());
         sb.append(name);
         if (!args.isEmpty()) {
             sb.append("(").append(NodeList.join(args, ", ")).append(")");

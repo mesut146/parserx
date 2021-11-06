@@ -72,10 +72,6 @@ public class Factor extends SimpleTransformer {
                 any = true;
                 //restart if any modification happens
                 i = 0;
-                if (debug) {
-                    //tree.printRules();
-                    System.out.println(decl);
-                }
             }
             else {
                 i++;
@@ -83,7 +79,7 @@ public class Factor extends SimpleTransformer {
         }
     }
 
-    private void factorRule(RuleDecl decl) {
+    protected void factorRule(RuleDecl decl) {
         if (allowRecursion || !first(decl.rhs).contains(decl.ref)) {
             decl.rhs = transformNode(decl.rhs, null);
         }
@@ -325,8 +321,8 @@ public class Factor extends SimpleTransformer {
             }
             info.one = new Sequence(ai.one, B.copy());
             info.one.astInfo = s.astInfo.copy();
-            check(info.one);
-            check(info.zero);
+            //check(info.one);
+            //check(info.zero);
             return info;
 
         }

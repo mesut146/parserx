@@ -101,4 +101,12 @@ public class LeftRecursionTest {
         RecDescent recDescent = new RecDescent(tree);
         recDescent.gen();
     }
+
+    @Test
+    public void name() throws IOException {
+        Tree tree = Env.tree("rec/a.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        RecDescent recDescent = new RecDescent(tree);
+        recDescent.gen();
+    }
 }

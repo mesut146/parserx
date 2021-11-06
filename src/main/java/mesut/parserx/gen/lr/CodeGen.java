@@ -21,7 +21,6 @@ public class CodeGen {
     public LrDFA dfa;
     public LrDFAGen gen;
     List<RuleDecl> all;
-    LexerGenerator lexerGenerator;
     String type;
     IdMap idMap;
 
@@ -46,9 +45,7 @@ public class CodeGen {
     }
 
     public void gen() throws IOException {
-        lexerGenerator = new LexerGenerator(gen.tree);
-        lexerGenerator.generate();
-        idMap = lexerGenerator.idMap;
+        idMap = LexerGenerator.gen(gen.tree, "java").idMap;
 
         this.dfa = gen.table;
         Template template = new Template("lalr1.java.template");

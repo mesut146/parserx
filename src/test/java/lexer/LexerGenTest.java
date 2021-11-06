@@ -72,8 +72,7 @@ public class LexerGenTest {
         tree.options.tokenClass = "Token2";
         tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lexer/itself";
         tree.options.packageName = "lexer.itself";
-        LexerGenerator generator = new LexerGenerator(tree);
-        generator.generate();
+        LexerGenerator.gen(tree,"java");
     }
 
     @Test
@@ -81,8 +80,7 @@ public class LexerGenTest {
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/parserx.g"));
         tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lexer/itself";
         tree.options.packageName = "lexer.itself";
-        LexerGenerator generator = new LexerGenerator(tree);
-        generator.generate();
+        LexerGenerator.gen(tree,"java");
     }
 
     @Test
@@ -91,8 +89,7 @@ public class LexerGenTest {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         tree.options = options;
-        LexerGenerator gen = new LexerGenerator(tree);
-        gen.generate();
+        LexerGenerator.gen(tree,"java");
     }
 
     @Test
@@ -108,8 +105,7 @@ public class LexerGenTest {
     @Ignore
     public void all() throws Exception {
         Tree tree = Env.tree("javaLexer.g");
-        LexerGenerator generator = new LexerGenerator(tree);
-        generator.generate();
+        LexerGenerator generator=LexerGenerator.gen(tree,"java");
 
         NFA dfa = generator.dfa;
         dfa.dump(new FileWriter(new File(Env.dotDir(), "javaLexer.txt")));

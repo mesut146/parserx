@@ -58,12 +58,12 @@ public class LLDfaRegex {
     void collect(RuleDecl decl) {
         new SimpleTransformer(tree) {
             @Override
-            public Node transformName(Name node, Node parent) {
-                if (node.isToken) return node;
-                if (onDemandRules.add(node)) {
-                    collect(tree.getRule(node));
+            public Node transformName(Name name, Node parent) {
+                if (name.isToken) return name;
+                if (onDemandRules.add(name)) {
+                    collect(tree.getRule(name));
                 }
-                return super.transformName(node, parent);
+                return super.transformName(name, parent);
             }
         }.transformRule(decl);
     }

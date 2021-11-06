@@ -81,7 +81,6 @@ public class FactorTest {
     @Ignore
     public void loop() throws Exception {
         Tree tree = Env.tree("factor/loop.g");
-        Node node = tree.getRule("A").rhs;
         FactorLoop factorLoop = new FactorLoop(tree, null);
         factorLoop.factorize();
         //node = new Regex(new Name("B"), "*");
@@ -94,6 +93,8 @@ public class FactorTest {
 
     @Test
     public void loopCode() throws IOException {
+        FactorLoop.debug = true;
+        Factor.debug = true;
         Tree tree = Env.tree("factor/loop.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         RecDescent recDescent = new RecDescent(tree);

@@ -119,8 +119,8 @@ public class SimpleTransformer {
         return node;
     }
 
-    public Node transformName(Name node, Node parent) {
-        return node;
+    public Node transformName(Name name, Node parent) {
+        return name;
     }
 
 }

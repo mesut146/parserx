@@ -17,8 +17,7 @@ public class RealTest {
 
         String outDir = Env.dotDir().getAbsolutePath();
         tree.options.outDir = outDir;
-        LexerGenerator gen = new LexerGenerator(tree);
-        gen.generate();
+        LexerGenerator.gen(tree, "java");
 
         File out = new File(outDir, "out");
         if (out.exists()) {

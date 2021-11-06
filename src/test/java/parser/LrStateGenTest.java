@@ -27,8 +27,7 @@ public class LrStateGenTest {
         dfaGen.checkAndReport();
         dfaGen.genGoto();
         dots(dfaGen, tree.file.getName());
-        LexerGenerator lexerGenerator = new LexerGenerator(tree);
-        lexerGenerator.generate();
+        LexerGenerator lexerGenerator = LexerGenerator.gen(tree, "java");
         StateCodeGen.debugState = true;
         StateCodeGen.debugReduce = true;
         StateCodeGen gen = new StateCodeGen(dfaGen.table, dfaGen, lexerGenerator.idMap);
@@ -56,8 +55,7 @@ public class LrStateGenTest {
         dfaGen.checkAndReport();
         dfaGen.genGoto();
         dots(dfaGen, tree.file.getName());
-        LexerGenerator lexerGenerator = new LexerGenerator(tree);
-        lexerGenerator.generate();
+        LexerGenerator lexerGenerator = LexerGenerator.gen(tree,"java");
         StateCodeGen2.debugState = true;
         StateCodeGen2.debugReduce = true;
         StateCodeGen2 gen = new StateCodeGen2(dfaGen.table, dfaGen, lexerGenerator.idMap);

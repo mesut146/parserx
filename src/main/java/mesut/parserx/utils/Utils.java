@@ -40,14 +40,14 @@ public class Utils {
             Map<String, TokenDecl> newTokens = new HashMap<>();
 
             @Override
-            public Node transformName(Name node, Node parent) {
+            public Node transformName(Name name, Node parent) {
                 //if it is not a rule then must be a token
-                if (tree.getRule(node) == null) {
+                if (tree.getRule(name) == null) {
                     //add fake token
-                    node.isToken = true;
-                    tree.tokens.add(new TokenDecl(node.name, new StringNode(node.name)));
+                    name.isToken = true;
+                    tree.tokens.add(new TokenDecl(name.name, new StringNode(name.name)));
                 }
-                return node;
+                return name;
             }
 
             @Override
