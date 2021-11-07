@@ -1,3 +1,5 @@
+#include <stdexcept>
+#include <memory>
 #include "$token_class$.h"
 
 $token_class$::$token_class$() = default;

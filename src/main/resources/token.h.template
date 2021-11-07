@@ -2,8 +2,6 @@
 
 #include <string>
 
-$package$
-
 class $token_class${
 public:
     int type;

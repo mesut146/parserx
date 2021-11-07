@@ -1,140 +1,149 @@
+#include <sstream>
 #include "$lexer_class$.h"
 
-     $lexer_class$(Reader reader) throws IOException{
-        this.reader = reader;
-        init();
-    }
+$lexer_class$::$lexer_class$(std::istream& reader) : reader(reader){
+    init();
+}
 
-     $lexer_class$(File file) throws IOException {
-        this.reader = new BufferedReader(new FileReader(file));
-        init();
-    }
+/*$lexer_class$(File file) {
+    this.reader = new BufferedReader(new FileReader(file));
+    init();
+}*/
 
-    bool $lexer_class$::getBit(int* arr, int state) {
-        return ((arr[state / 32] >> (state % 32)) & 1) != 0;
-    }
+bool $lexer_class$::getBit(const int* arr, int state) {
+    return ((arr[state / 32] >> (state % 32)) & 1) != 0;
+}
 
-    static int[][] unpackTrans(String str) {
-        int pos = 0;
-        int max = str.charAt(pos++);
-        List<int[]> list = new ArrayList<>();
-        while (pos < str.length()) {
-            int[] arr = new int[max];
-            Arrays.fill(arr, -1);
-            int trCount = str.charAt(pos++);
-            for (int input = 0; input < trCount; input++) {
-                //input -> target state
-                arr[str.charAt(pos++)] = str.charAt(pos++);
-            }
-            list.add(arr);
+int** $lexer_class$::unpackTrans(const char* str) {
+    int len = $trans_str_len$;
+    int pos = 0;
+    int res[max_trans][max_input];
+    //std::fill(&res[0][0], &res[0][0] + max_trans * max_input, -1);
+    int state = 0;
+    while (pos < len) {
+        int trCount = str[pos++];
+        for (int input = 0; input < trCount; input++) {
+            //state,input -> target state
+            res[state][str[pos++]] = str[pos++];
         }
-        return list.toArray(new int[0][]);
+        state++;
     }
+    return (int**)res;
+}
 
-    static int[] unpackCMap(String str){
-        int pos = 0;
-        int[] arr = new int[0x010FFFF];//covers all code points
-        Arrays.fill(arr, -1);//unused chars leads error
-        while(pos < str.length()){
-            int left = str.charAt(pos++);
-            int right = str.charAt(pos++);
-            int id = str.charAt(pos++);
-            for(int i = left;i <= right;i++){
-                arr[i] = id;
-            }
-      }
-      return arr;
-    }
-
-    void init() throws IOException{
-      reader.read(yybuf, 0, bufSize);
-    }
-
-    void fill() throws IOException{
-      if(bufPos == yybuf.length){
-        char[] newBuf = new char[yybuf.length * 2];
-        System.arraycopy(yybuf, 0, newBuf, 0, yybuf.length);
-        reader.read(newBuf, bufPos, yybuf.length);
-        yybuf = newBuf;
-      }
-    }
-
-    String getText(){
-      return new String(yybuf, bufStart, bufPos - bufStart);
-    }
-
-    String findExpected(int from){
-        StringBuilder sb = new StringBuilder();
-        for(int i = 0 ; i < trans[from].length;i++){
-            sb.append(cMapRegex[i]);
-            sb.append(",");
+int* $lexer_class$::unpackCMap(const char* str){
+    int pos = 0;
+    int* arr = new int[0x010FFFF];//covers all code points
+    std::fill(arr, arr + sizeof(arr), -1);//unused chars leads error
+    while(pos < max_input * 3){
+        int left = str[pos++];
+        int right = str[pos++];
+        int id = str[pos++];
+        for(int i = left;i <= right;i++){
+            arr[i] = id;
         }
-        return sb.toString();
-    }
+  }
+  return arr;
+}
 
-    $token_class$ getEOF(){
-        $token_class$ res =  new $token_class$(EOF, "");
-        res.name = "EOF";
-        return res;
-    }
+void $lexer_class$::init(){
+  yybuf = new char[bufSize];
+  reader.get(yybuf, bufSize);
+}
 
-    public $token_class$ $next_token$() throws IOException {
-        $token_class$ tok = $next_token$_normal();
-        if(getBit(skip, tok.type)){
-          return $next_token$();
-        }
-        return tok;
-    }
+void $lexer_class$::fill(){
+  if(bufPos == bufSize){
+    char newBuf[bufSize * 2];
+    std::copy(yybuf, yybuf + sizeof(yybuf), newBuf);
+    reader.get(newBuf + bufPos, bufSize);
+    yybuf = newBuf;
+    bufSize *= 2;
+  }
+}
 
-    public $token_class$ $next_token$_normal() throws IOException {
+std::string $lexer_class$::getText(){
+  return std::string(yybuf, bufStart, bufPos - bufStart);
+}
+
+std::string $lexer_class$::findExpected(int from){
+    std::stringstream sb;
+    for(int i = 0 ; i < max_input;i++){
+        sb << cMapRegex[i];
+        sb << ",";
+    }
+    return sb.str();
+}
+
+$token_class$ $lexer_class$::getEOF(){
+    $token_class$ res(EOF_, "");
+    res.name = "EOF";
+    return res;
+}
+
+void Lexer::err(int backupState)
+{
+    std::stringstream ss;
+    ss << "invalid input=" << yychar << "(" << (int)yychar << "buf='" << getText() << "'"
+       << "expecting=" << findExpected(backupState);
+    throw std::runtime_error(ss.str());
+}
+
+$token_class$ $lexer_class$::$next_token$() {
+    $token_class$ tok = $next_token$_normal();
+    if(getBit(skip, tok.type)){
+      return $next_token$();
+    }
+    return tok;
+}
+
+$token_class$ $lexer_class$::$next_token$_normal(){
+    fill();
+    int curState = INITIAL;
+    int lastState = -1;
+    int startPos = yypos;
+    int startLine = yyline;
+    yychar = yybuf[bufPos];
+    if (yychar == EOF_) return getEOF();
+    int backupState = -1;
+    while (true) {
         fill();
-        int curState = INITIAL;
-        int lastState = -1;
-        int startPos = yypos;
-        int startLine = yyline;
         yychar = yybuf[bufPos];
-        if (yychar == EOF) return getEOF();
-        int backupState = -1;
-        while (true) {
-            fill();
-            yychar = yybuf[bufPos];
-            if(yychar == EOF){
-                curState = -1;
-            }else{
-                backupState = curState;
-                if(cMap[yychar] == -1){
-                    throw new IOException(String.format("invalid input=%c(%d) buf='%s' expecting=%s",yychar,yychar,getText(),findExpected(backupState)));
-                }
-                curState = trans[curState][cMap[yychar]];
+        if(yychar == EOF_){
+            curState = -1;
+        }else{
+            backupState = curState;
+            if(cMap[yychar] == -1){
+                err(backupState);
             }
-            if (curState == -1) {
-                if (lastState != -1) {
-                    $token_class$ token = new $token_class$(ids[lastState], getText());
-                    token.offset = startPos;
-                    token.name = names[ids[lastState]];
-                    token.line = startLine;
-                    bufStart = bufPos;
-                    return token;
-                }
-                else {
-                    throw new IOException(String.format("invalid input=%c(%d) buf='%s' expecting=%s",yychar,yychar,getText(),findExpected(backupState)));
-                    //throw new IOException("invalid input=" + (char)yychar + "(" + yychar + ") " + " yybuf= " + getText());
-                }
+            curState = trans[curState][cMap[yychar]];
+        }
+        if (curState == -1) {
+            if (lastState != -1) {
+                $token_class$ token(ids[lastState], getText());
+                token.offset = startPos;
+                token.name = names[ids[lastState]];
+                token.line = startLine;
+                bufStart = bufPos;
+                return token;
             }
             else {
-                if (getBit(accepting, curState)) lastState = curState;
-                if(yychar == '\n'){
-                    yyline++;
-                    if(bufPos > 0 && yybuf[bufPos - 1] == '\r'){
-                        yyline--;
-                    }
-                }
-                else if(yychar == '\r'){
-                    yyline++;
-                }
-                bufPos++;
-                yypos++;
+                err(backupState);
             }
+        }
+        else {
+            if (getBit(accepting, curState)) lastState = curState;
+            if(yychar == '\n'){
+                yyline++;
+                if(bufPos > 0 && yybuf[bufPos - 1] == '\r'){
+                    yyline--;
+                }
+            }
+            else if(yychar == '\r'){
+                yyline++;
+            }
+            bufPos++;
+            yypos++;
         }
     }
 }
+

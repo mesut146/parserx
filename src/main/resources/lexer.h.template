@@ -1,51 +1,49 @@
 #pragma once
 
-$package$
+$namespace_begin$
 
 #include <vector>
 #include <string>
+#include <iostream>
+#include "$token_class$.h"
 
-import java.io.*;
-import java.util.*;
+constexpr const char* cMapPacked = $cMap$;
+//input id -> regex string for error reporting
+const std::string cMapRegex[] = {$cMapRegex$};
+const int skip[] = {$skip_list$};
+const int accepting[] = {$final_list$};
+//id -> token name
+const std::string names[] = {$name_list$};
+//state->token id
+const int ids[] = {$id_list$};
+constexpr const char* trans_packed = $trans$;
+const int max_input = $max_input$;
+const int max_trans = $max_trans$;
 
 class $lexer_class$ {
 
-    static std::string cMapPacked = $cMap$;
-    //input -> input id
-    static int* cMap = unpackCMap(cMapPacked);
-    //input id -> regex string for error reporting
-    static std::string* cMapRegex = {$cMapRegex$};
-    int skip[] = {$skip_list$};
-    int accepting[] = {$final_list$};
-    //id -> token name
-    std::string names[] = {$name_list$};
-    //state->token id
-    int ids[] = {$id_list$};
-    static final int INITIAL = 0;
-    static final int EOF = 0;
-    Reader reader;
+    static const int INITIAL = 0;
+    static const int EOF_ = 0;
+    std::istream& reader;
     int yypos = 0;//pos in file
     int yyline = 1;
     int yychar;
-    static int bufSize = 100;
+    int bufSize = 100;
     int bufPos = 0;//pos in buffer
     int bufStart = bufPos;
-    int bufEnd;
-    char* yybuf[bufSize];
-    static std::string trans_packed = $trans$;
-    static int** trans = unpackTrans(trans_packed);
+    char* yybuf;
 
     public:
 
-    $lexer_class$(Reader reader);
+    $lexer_class$(std::istream& reader);
 
-    $lexer_class$(File file);
+    //$lexer_class$(File file);
 
-    static bool getBit(int* arr, int state);
+    static bool getBit(const int* arr, int state);
 
-    static int** unpackTrans(std::string str);
+    static int** unpackTrans(const char* str);
 
-    static int* unpackCMap(std::string str);
+    static int* unpackCMap(const char* str);
 
     void init();
 
@@ -57,7 +55,16 @@ class $lexer_class$ {
 
     $token_class$ getEOF();
 
+    void err(int backupState);
+
     $token_class$ $next_token$();
 
     $token_class$ $next_token$_normal();
+
+    //input -> input id
+    int *cMap = unpackCMap(cMapPacked);
+    //state,input id -> next state
+    int **trans = unpackTrans(trans_packed);
 };
+
+$namespace_end$

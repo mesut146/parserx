@@ -22,7 +22,7 @@ public class LexerGenTest {
     @Test
     public void cppTarget() throws IOException {
         Tree tree = Env.tree("str.g");
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        tree.options.outDir = Env.dotDir().getAbsolutePath() + "/cpp";
         LexerGenerator.gen(tree, "cpp");
     }
 
