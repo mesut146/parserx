@@ -1,0 +1,250 @@
+package mesut.parserx.gen.targets;
+
+import mesut.parserx.gen.CodeWriter;
+import mesut.parserx.gen.Options;
+import mesut.parserx.gen.ll.Normalizer;
+import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.ll.Type;
+import mesut.parserx.nodes.*;
+import mesut.parserx.utils.CountingMap2;
+import mesut.parserx.utils.Utils;
+
+import java.io.File;
+import java.io.IOException;
+
+public class CppAstGen {
+    public Tree tree;
+    CodeWriter astWriter = new CodeWriter(true);
+    CodeWriter classes;
+    Options options;
+    //class name -> map of node -> count
+    CountingMap2<String, String> varCount = new CountingMap2<>();
+    int groupCount;
+    String curRule;
+    CodeWriter sourceWriter = new CodeWriter(true);
+
+    public CppAstGen(Tree tree) {
+        this.tree = tree;
+        this.options = tree.options;
+    }
+
+    void source() throws IOException {
+        sourceWriter.append("#include \"%s.h\"", options.astClass);
+        sourceWriter.append("");
+        for (RuleDecl decl : tree.rules) {
+            writePrinter(decl.baseName(), decl.rhs, sourceWriter, false);
+        }
+        File file = new File(options.outDir, options.astClass + ".cpp");
+        Utils.write(sourceWriter.get(), file);
+    }
+
+    public void genAst() throws IOException {
+        new Normalizer(tree).normalize();
+        //ns
+        astWriter.append("#pragma once");
+        astWriter.append("");
+        astWriter.append("#include <vector>");
+        astWriter.append("#include <string>");
+        astWriter.append("#include <sstream>");
+        astWriter.append("");
+
+        astWriter.append("class %s{", options.astClass);
+        astWriter.append("public:");
+        for (RuleDecl decl : tree.rules) {
+            groupCount = 1;
+            curRule = decl.baseName();
+            model(decl);
+        }
+        astWriter.append("};");
+
+        File file = new File(options.outDir, options.astClass + ".h");
+        Utils.write(astWriter.get(), file);
+        varCount.clear();
+
+        source();
+    }
+
+    void model(RuleDecl decl) {
+        classes = new CodeWriter(true);
+        astWriter.append("class %s{", decl.baseName());
+        Type type = new Type(options.astClass, decl.baseName());
+        model(decl.rhs, type, "res", astWriter);
+        astWriter.all(classes.get());
+        //todo create parent
+        astWriter.append("std::string toString();");
+        astWriter.append("};");
+    }
+
+    void writePrinter(String rule, Node rhs, CodeWriter c, boolean isAlt) {
+        c.append("std::string %s::%s::toString(){", options.astClass, rule);
+        if (isAlt) {
+            c.append("std::stringstream sb;");
+            getPrint(rhs, c);
+            c.append("return sb.str();");
+        }
+        else {
+            c.append("std::stringstream sb;");
+            c.append("sb << \"%s{\";", curRule);
+            getPrint(rhs, c);
+            c.append("sb << \"}\";");
+            c.append("return sb.str();");
+        }
+        c.append("}");//toString
+    }
+
+    void getPrint(Node node, CodeWriter c) {
+        if (node.isName()) {
+            Name name = node.asName();
+            if (name.isToken) {
+                c.append("sb << %s.value;", node.astInfo.varName);
+            }
+            else {
+                c.append("sb << %s.toString();", node.astInfo.varName);
+            }
+        }
+        else if (node.isSequence()) {
+            Sequence s = node.asSequence();
+            for (int i = 0; i < s.size(); i++) {
+                getPrint(s.get(i), c);
+                //c.append("sb.append(\" \");");
+            }
+        }
+        else if (node.isRegex()) {
+            Regex regex = node.asRegex();
+            String v = regex.node.astInfo.varName;
+            if (regex.isStar() || regex.isPlus()) {
+                c.append("if(!%s.etmpty()){", v);
+                c.append("sb << '[';");
+                c.append("for(int i=0;i<%s.size();i++){", v);
+                if (regex.node.asName().isToken) {
+                    c.append("sb << %s.at(i).value;", v);
+                }
+                else {
+                    c.append("sb << %s.at(i);", v);
+                }
+                c.append("sb << \",\";");
+                c.append("}");
+                c.append("sb << ']';");
+                c.append("}");
+            }
+            else {
+                c.append("if(%s != nullptr) sb << %s", v, v);
+            }
+        }
+        else if (node.isGroup()) {
+            getPrint(node.asGroup().node, c);
+        }
+        else if (node.isOr()) {
+            Or or = node.asOr();
+            for (int i = 0; i < or.size(); i++) {
+                if (i == 0) {
+                    c.append("if(which == 1){");
+                }
+                else {
+                    c.append("else if(which == %d){", i + 1);
+                }
+                Node ch = or.get(i);
+                if (ch.isName()) {
+                    getPrint(ch, c);
+                }
+                else {
+                    c.append("sb << %s.toString();", ch.astInfo.varName);
+                }
+                c.append("}");//if
+            }
+        }
+        else {
+            throw new RuntimeException("invalid child");
+        }
+    }
+
+    private void model(Node node, Type outerCls, String outerVar, CodeWriter parent) {
+        if (node.isSequence()) {
+            for (Node ch : node.asSequence()) {
+                model(ch, outerCls, outerVar, parent);
+            }
+        }
+        else if (node.isName()) {
+            node.astInfo.outerVar = outerVar;
+            node.astInfo.outerCls = outerCls;
+            Name name = node.asName();
+            //check if user supplied var name
+            String varName = name.astInfo.varName;
+            if (varName == null) {
+                varName = vName(name, outerCls.toString());
+                name.astInfo.varName = varName;
+            }
+            parent.append("%s %s;", name.isToken ? options.tokenClass : name.name, varName);
+        }
+        else if (node.isRegex()) {
+            node.astInfo.outerVar = outerVar;
+            node.astInfo.outerCls = outerCls;
+            Regex regex = node.asRegex();
+            Node ch = regex.node;
+            if (regex.isOptional()) {
+                model(ch, outerCls, outerVar, parent);
+            }
+            else {
+                Name name = ch.asName();
+                String vname = ch.astInfo.varName;
+                if (vname == null) {
+                    vname = vName(name, outerCls.toString());
+                    ch.astInfo.varName = vname;
+                }
+                ch.astInfo.isInLoop = true;
+                ch.astInfo.outerCls = outerCls;
+                ch.astInfo.outerVar = outerVar;
+                String type = name.isToken ? options.tokenClass : name.name;
+                parent.append("std::vector<%s> %s;", type, vname);
+            }
+        }
+        else if (node.isOr()) {
+            parent.append("int which;");
+            int num = 1;
+            for (Node ch : node.asOr()) {
+                if (ch.isEpsilon()) continue;
+                Type clsName = new Type(outerCls, Utils.camel(outerCls.name) + num);
+                String v = outerCls.name.toLowerCase() + num;
+
+                //in case of factorization pre-write some code
+                ch.astInfo.which = num;
+                if (RecDescent.isSimple(ch)) {
+                    //todo vname
+                    //ch.astInfo.varName = parentClass.toLowerCase() + num;
+                    model(ch, outerCls, outerVar, parent);
+                }
+                else {
+                    //sequence
+                    //complex choice point inits holder
+                    ch.astInfo.createNode = true;
+                    ch.astInfo.nodeType = clsName;
+                    ch.astInfo.varName = v;
+                    ch.astInfo.outerVar = outerVar;
+                    ch.astInfo.outerCls = outerCls;
+                    ch.astInfo.assign = true;
+                    parent.append(String.format("%s %s;", clsName.name, v));
+                    CodeWriter c = new CodeWriter(false);
+                    c.append("class %s{", clsName.name);
+                    c.append("public:");
+                    model(ch, clsName, v, c);
+                    writePrinter(clsName.toString(), ch, c, true);
+                    c.append("};");
+                    classes.all(c.get());
+                }
+                num++;
+            }
+        }
+        else if (!node.isEpsilon()) {
+            throw new RuntimeException("invalid node: " + node.getClass());
+        }
+    }
+
+    //make incremental variable name with class scoped
+    public String vName(Name name, String cls) {
+        int i = varCount.get(cls, name.name);
+        if (i == 1) {
+            return name.name;
+        }
+        return name.name + i;
+    }
+}

@@ -74,7 +74,7 @@ public class FactorTest {
         FactorLoop.debug = true;
         Factor.debug = true;
         Recursion.debug = true;
-        new RecDescent(tree).gen();
+        RecDescent.gen(tree, "java");
     }
 
     @Test
@@ -97,8 +97,7 @@ public class FactorTest {
         Factor.debug = true;
         Tree tree = Env.tree("factor/loop.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        RecDescent recDescent = new RecDescent(tree);
-        recDescent.gen();
+        RecDescent.gen(tree, "java");
     }
 
     @Test

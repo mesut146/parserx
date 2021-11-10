@@ -24,8 +24,7 @@ public class DescTester {
 
         String outDir = Env.dotDir().getAbsolutePath();
         tree.options.outDir = outDir;
-        RecDescent gen = new RecDescent(tree);
-        gen.gen();
+        RecDescent.gen(tree, "java");
 
         File out = new File(outDir, "out");
         if (out.exists()) {
@@ -67,8 +66,7 @@ public class DescTester {
 
         String outDir = Env.dotDir().getAbsolutePath();
         tree.options.outDir = outDir;
-        RecDescent gen = new RecDescent(tree);
-        gen.gen();
+        RecDescent.gen(tree, "java");
 
         File out = new File(outDir, "out");
         if (out.exists()) {

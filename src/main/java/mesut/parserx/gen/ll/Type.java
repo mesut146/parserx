@@ -3,7 +3,7 @@ package mesut.parserx.gen.ll;
 //qualified ast type;
 public class Type {
     Type scope;
-    String name;
+    public String name;
 
     public Type(String name) {
         this.name = name;

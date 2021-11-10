@@ -264,8 +264,7 @@ public class Main {
                 if (astClass != null) {
                     tree.options.astClass = astClass;
                 }
-                RecDescent gen = new RecDescent(tree);
-                gen.gen();
+                RecDescent.gen(tree, "java");
             }
             else if (cmd.contains("-lalr") || cmd.contains("-lr1") || cmd.contains("-lr0")) {
                 Tree tree = Tree.makeTree(input);

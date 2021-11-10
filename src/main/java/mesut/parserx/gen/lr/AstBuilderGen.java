@@ -3,7 +3,6 @@ package mesut.parserx.gen.lr;
 import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.AstGen;
-import mesut.parserx.gen.ll.Normalizer;
 import mesut.parserx.gen.ll.Type;
 import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.nodes.*;
@@ -23,7 +22,7 @@ public class AstBuilderGen {
 
     public void gen() throws IOException {
         tree = EbnfToBnf.combineOr(tree);
-        new AstGen(tree).genAst();
+        AstGen.gen(tree, "java");
         options = tree.options;
         if (options.packageName != null) {
             writer.append("package %s;", options.packageName);

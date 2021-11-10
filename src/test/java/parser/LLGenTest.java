@@ -1,12 +1,10 @@
 package parser;
 
 import common.Env;
-import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.VisitorGenerator;
 import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.lr.LrDFAGen;
-import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.transform.Epsilons;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.nodes.Name;
@@ -20,6 +18,13 @@ import java.io.IOException;
 public class LLGenTest {
 
     @Test
+    public void cppTarget() throws IOException {
+        Tree tree = Env.tree("ll/norm.g");
+        tree.options.outDir = Env.dotDir() + "/cpp";
+        RecDescent.gen(tree, "cpp");
+    }
+
+    @Test
     public void normalize() throws Exception {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
@@ -28,7 +33,7 @@ public class LLGenTest {
         //new Normalizer(tree).normalize();
         //new Factor(tree).factorize();
         //System.out.println(tree);
-        new RecDescent(tree).gen();
+        RecDescent.gen(tree, "java");
     }
 
     @Test
@@ -72,10 +77,9 @@ public class LLGenTest {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         tree.options = options;
-        RecDescent gen = new RecDescent(tree);
         Name.debug = false;
         Factor.debug = true;
-        gen.gen();
+        RecDescent.gen(tree, "java");
     }
 
     @Test
@@ -84,8 +88,7 @@ public class LLGenTest {
         options.outDir = Env.dotDir().getAbsolutePath();
         Tree tree = Env.tree("calc-1.g");
         tree.options = options;
-        RecDescent gen = new RecDescent(tree);
-        gen.gen();
+        RecDescent.gen(tree, "java");
     }
 
     @Test
@@ -111,8 +114,7 @@ public class LLGenTest {
         options.packageName = "mesut.parserx.parser2";
         tree.options = options;
 
-        RecDescent rec = new RecDescent(tree);
-        rec.gen();
+        RecDescent.gen(tree, "java");
     }
 
     @Test
@@ -124,7 +126,7 @@ public class LLGenTest {
         Factor.factorSequence = false;
         new Factor(tree).factorize();
         tree.printRules();*/
-        new RecDescent(tree).gen();
+        RecDescent.gen(tree, "java");
     }
 
     @Test
@@ -134,7 +136,7 @@ public class LLGenTest {
         //Tree tree = Env.tree("factor/math.g");
         tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/ll1";
         tree.options.packageName = "ll1";
-        new RecDescent(tree).gen();
+        RecDescent.gen(tree, "java");
     }
 
 
@@ -157,8 +159,7 @@ public class LLGenTest {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         tree.options = options;
-        RecDescent rec = new RecDescent(tree);
-        rec.gen();
+        RecDescent.gen(tree, "java");
     }
 
     @Test
