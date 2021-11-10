@@ -70,9 +70,6 @@ public class CppLexer {
     void writeTrans() {
         Writer transWriter = new Writer();
         String indent = "        ";
-        transWriter.print("\"");
-        //transWriter.print(makeOctal(dfa.getAlphabet().size()));
-        transWriter.print("\"\n");
         int len = 0;
         for (int state : dfa.it()) {
             List<Transition> list = dfa.trans[state];
@@ -93,7 +90,7 @@ public class CppLexer {
             }
             transWriter.print("\"");
             if (state <= dfa.lastState - 1) {
-                transWriter.print(" \n");
+                transWriter.print("\n");
             }
         }
         header.set("trans", transWriter.getString());
@@ -135,7 +132,7 @@ public class CppLexer {
     //write char ranges
     private void cmap() {
         Writer cmapWriter = new Writer();
-        cmapWriter.print("\"");
+        cmapWriter.print("L\"");
         int column = 20;
         int i = 0;
         //sorted ranges for error report
@@ -154,10 +151,9 @@ public class CppLexer {
             cmapWriter.print(makeOctal(entry.getValue()));
             i++;
             if (i % column == 0) {
-                cmapWriter.print("\"\n");
+                cmapWriter.print("\"\n");//end line
                 if (it.hasNext()) {
-                    cmapWriter.print("            ");
-                    cmapWriter.print("\"");//next line start
+                    cmapWriter.print("            L\"");
                 }
             }
         }

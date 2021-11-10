@@ -5,9 +5,7 @@ import mesut.parserx.nodes.Range;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.UnicodeUtils;
 
-import java.io.File;
-import java.io.PrintWriter;
-import java.io.Writer;
+import java.io.*;
 import java.util.*;
 
 @SuppressWarnings("unchecked")
@@ -283,6 +281,9 @@ public class NFA {
         });
     }
 
+    public void dot(File path) throws IOException {
+        dot(new FileWriter(path));
+    }
     public void dot(Writer writer) {
         String finalColor = "red";
         String initialColor = "red";
@@ -294,7 +295,7 @@ public class NFA {
         for (int state : it()) {
             if (isDead(state)) continue;
             String name = names[state] == null ? "" : names[state].toString();
-            if (names[state].size() == 1) {
+            if (names[state] != null && names[state].size() == 1) {
                 name = names[state].get(0);
             }
             if (isAccepting(state)) {

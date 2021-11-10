@@ -23,7 +23,6 @@ public class LexerGenerator {
     public int[] idArr;
     public TreeSet<Map.Entry<Name, Integer>> tokens;
     Options options;
-    Template template;
     String target;
 
     public LexerGenerator(Tree tree, String target) {

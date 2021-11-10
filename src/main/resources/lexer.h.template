@@ -7,7 +7,8 @@ $namespace_begin$
 #include <iostream>
 #include "$token_class$.h"
 
-constexpr const char* cMapPacked = $cMap$;
+
+constexpr const wchar_t* cMapPacked = $cMap$;
 //input id -> regex string for error reporting
 const std::string cMapRegex[] = {$cMapRegex$};
 const int skip[] = {$skip_list$};
@@ -17,8 +18,8 @@ const std::string names[] = {$name_list$};
 //state->token id
 const int ids[] = {$id_list$};
 constexpr const char* trans_packed = $trans$;
-const int max_input = $max_input$;
-const int max_trans = $max_trans$;
+const int max_input = $max_input$ + 1;
+const int max_trans = $max_trans$ + 1;
 
 class $lexer_class$ {
 
@@ -43,7 +44,7 @@ class $lexer_class$ {
 
     static int** unpackTrans(const char* str);
 
-    static int* unpackCMap(const char* str);
+    static int* unpackCMap(const wchar_t* str);
 
     void init();
 

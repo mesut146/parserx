@@ -9,11 +9,11 @@ $token_class$::$token_class$(int type) : type(type){}
 $token_class$::$token_class$(int type,std::string value) : type(type), value(value){}
 
 std::string $token_class$::toString(){
-  const char* format = "'%s' [name = %s line = %s]";
-  int size_s = std::snprintf(nullptr, 0, format, value, name, line ) + 1;
+  const char* format = "'%s' [name = %s line = %d]";
+  int size_s = std::snprintf(nullptr, 0, format, value.c_str(), name.c_str(), line ) + 1;
   if(size_s <= 0){ throw std::runtime_error( "Error during formatting." ); }
   auto size = static_cast<size_t>(size_s);
   auto buf = std::make_unique<char[]>(size);
-  std::snprintf(buf.get(), size, format, value, name, line);
+  std::snprintf(buf.get(), size, format, value.c_str(), name.c_str(), line);
   return std::string(buf.get(), buf.get() + size - 1 );
 }

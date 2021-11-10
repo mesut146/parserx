@@ -17,24 +17,31 @@ bool $lexer_class$::getBit(const int* arr, int state) {
 int** $lexer_class$::unpackTrans(const char* str) {
     int len = $trans_str_len$;
     int pos = 0;
-    int res[max_trans][max_input];
-    //std::fill(&res[0][0], &res[0][0] + max_trans * max_input, -1);
+    static int res[max_trans][max_input];
+    std::fill(&res[0][0], &res[0][0] + max_trans * max_input, -1);
     int state = 0;
     while (pos < len) {
         int trCount = str[pos++];
-        for (int input = 0; input < trCount; input++) {
+        for (int i = 0; i < trCount; i++) {
             //state,input -> target state
-            res[state][str[pos++]] = str[pos++];
+            int input = str[pos++];
+            int target = str[pos++];
+            res[state][input] = target;
         }
         state++;
     }
-    return (int**)res;
+    int **ptr = new int *[max_trans];
+    for (int i = 0; i < max_trans; i++)
+    {
+        ptr[i] = res[i];
+    }
+    return ptr;
 }
 
-int* $lexer_class$::unpackCMap(const char* str){
+int* $lexer_class$::unpackCMap(const wchar_t* str){
     int pos = 0;
-    int* arr = new int[0x010FFFF];//covers all code points
-    std::fill(arr, arr + sizeof(arr), -1);//unused chars leads error
+    static int* arr = new int[0x010FFFF];//covers all code points
+    std::fill(arr, arr + 0x010FFFF, -1);//unused chars leads error
     while(pos < max_input * 3){
         int left = str[pos++];
         int right = str[pos++];
@@ -83,7 +90,7 @@ $token_class$ $lexer_class$::getEOF(){
 void Lexer::err(int backupState)
 {
     std::stringstream ss;
-    ss << "invalid input=" << yychar << "(" << (int)yychar << "buf='" << getText() << "'"
+    ss << "invalid input=" << yychar << "(" << (int)yychar << ") " << "buf='" << getText() << "'"
        << "expecting=" << findExpected(backupState);
     throw std::runtime_error(ss.str());
 }

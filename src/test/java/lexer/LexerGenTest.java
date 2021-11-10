@@ -21,9 +21,9 @@ public class LexerGenTest {
 
     @Test
     public void cppTarget() throws IOException {
-        Tree tree = Env.tree("str.g");
+        Tree tree = Env.tree("lexer/skip.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath() + "/cpp";
-        LexerGenerator.gen(tree, "cpp");
+        LexerGenerator.gen(tree, "cpp").dfa.dot(Env.dotFile(tree.file.getName() + ".dot"));
     }
 
     @Test
