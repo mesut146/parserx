@@ -32,7 +32,19 @@ public class CppAstGen {
         sourceWriter.append("#include \"%s.h\"", options.astClass);
         sourceWriter.append("");
         for (RuleDecl decl : tree.rules) {
+            curRule = decl.baseName();
+            sourceWriter.append("%s::%s::%s() = default;", options.astClass, decl.baseName(), decl.baseName());
             writePrinter(decl.baseName(), decl.rhs, sourceWriter, false);
+
+            if (decl.rhs.isOr()) {
+                for (int i = 1; i <= decl.rhs.asOr().size(); i++) {
+                    if (!RecDescent.isSimple(decl.rhs.asOr().get(i - 1))) {
+                        String alt = decl.baseName() + i;
+                        sourceWriter.append("%s::%s::%s::%s() = default;", options.astClass, decl.baseName(), alt, alt);
+                        writePrinter(decl.baseName() + i, decl.rhs.asOr().get(i - 1), sourceWriter, true);
+                    }
+                }
+            }
         }
         File file = new File(options.outDir, options.astClass + ".cpp");
         Utils.write(sourceWriter.get(), file);
@@ -46,16 +58,24 @@ public class CppAstGen {
         astWriter.append("#include <vector>");
         astWriter.append("#include <string>");
         astWriter.append("#include <sstream>");
+        astWriter.append("#include \"%s.h\"", options.tokenClass);
         astWriter.append("");
 
         astWriter.append("class %s{", options.astClass);
         astWriter.append("public:");
+        //fowards
+        for (RuleDecl decl : tree.rules) {
+            astWriter.append("class %s;", decl.baseName());
+        }
+        astWriter.append("");
+
         for (RuleDecl decl : tree.rules) {
             groupCount = 1;
             curRule = decl.baseName();
             model(decl);
         }
         astWriter.append("};");
+        astWriter.down();
 
         File file = new File(options.outDir, options.astClass + ".h");
         Utils.write(astWriter.get(), file);
@@ -67,24 +87,37 @@ public class CppAstGen {
     void model(RuleDecl decl) {
         classes = new CodeWriter(true);
         astWriter.append("class %s{", decl.baseName());
+        astWriter.append("public:");
+        astWriter.append("%s();", decl.baseName());//ctor
+        if (decl.rhs.isOr()) {
+            //forward alts
+            for (int i = 1; i <= decl.rhs.asOr().size(); i++) {
+                if (!RecDescent.isSimple(decl.rhs.asOr().get(i - 1))) {
+                    astWriter.append("class %s;", decl.baseName() + i);
+                }
+            }
+            astWriter.append("");
+        }
         Type type = new Type(options.astClass, decl.baseName());
         model(decl.rhs, type, "res", astWriter);
         astWriter.all(classes.get());
         //todo create parent
         astWriter.append("std::string toString();");
         astWriter.append("};");
+        astWriter.down();
     }
 
     void writePrinter(String rule, Node rhs, CodeWriter c, boolean isAlt) {
-        c.append("std::string %s::%s::toString(){", options.astClass, rule);
         if (isAlt) {
+            c.append("std::string %s::%s::%s::toString(){", options.astClass, curRule, rule);
             c.append("std::stringstream sb;");
             getPrint(rhs, c);
             c.append("return sb.str();");
         }
         else {
+            c.append("std::string %s::%s::toString(){", options.astClass, rule);
             c.append("std::stringstream sb;");
-            c.append("sb << \"%s{\";", curRule);
+            c.append("sb << \"%s{\";", rule);
             getPrint(rhs, c);
             c.append("sb << \"}\";");
             c.append("return sb.str();");
@@ -96,39 +129,45 @@ public class CppAstGen {
         if (node.isName()) {
             Name name = node.asName();
             if (name.isToken) {
-                c.append("sb << %s.value;", node.astInfo.varName);
+                c.append("sb << %s->value;", node.astInfo.varName);
             }
             else {
-                c.append("sb << %s.toString();", node.astInfo.varName);
+                c.append("sb << %s->toString();", node.astInfo.varName);
             }
         }
         else if (node.isSequence()) {
             Sequence s = node.asSequence();
             for (int i = 0; i < s.size(); i++) {
                 getPrint(s.get(i), c);
-                //c.append("sb.append(\" \");");
+                if (i < s.size() - 1)
+                    c.append("sb << \",\";");
             }
         }
         else if (node.isRegex()) {
             Regex regex = node.asRegex();
             String v = regex.node.astInfo.varName;
             if (regex.isStar() || regex.isPlus()) {
-                c.append("if(!%s.etmpty()){", v);
-                c.append("sb << '[';");
-                c.append("for(int i=0;i<%s.size();i++){", v);
+                c.append("if(!%s.empty()){", v);
+                c.append("sb << \"[\";");
+                c.append("for(int i = 0;i < %s.size();i++){", v);
                 if (regex.node.asName().isToken) {
-                    c.append("sb << %s.at(i).value;", v);
+                    c.append("sb << %s.at(i)->value;", v);
                 }
                 else {
-                    c.append("sb << %s.at(i);", v);
+                    c.append("sb << %s.at(i)->toString();", v);
                 }
-                c.append("sb << \",\";");
+                c.append("if(i < %s.size() - 1) sb << \",\";", v);
                 c.append("}");
                 c.append("sb << ']';");
                 c.append("}");
             }
             else {
-                c.append("if(%s != nullptr) sb << %s", v, v);
+                if (regex.node.asName().isToken) {
+                    c.append("if(%s != nullptr) sb << %s->value;", v, v);
+                }
+                else {
+                    c.append("if(%s != nullptr) sb << %s.toString();", v, v);
+                }
             }
         }
         else if (node.isGroup()) {
@@ -148,7 +187,7 @@ public class CppAstGen {
                     getPrint(ch, c);
                 }
                 else {
-                    c.append("sb << %s.toString();", ch.astInfo.varName);
+                    c.append("sb << %s->toString();", ch.astInfo.varName);
                 }
                 c.append("}");//if
             }
@@ -174,7 +213,7 @@ public class CppAstGen {
                 varName = vName(name, outerCls.toString());
                 name.astInfo.varName = varName;
             }
-            parent.append("%s %s;", name.isToken ? options.tokenClass : name.name, varName);
+            parent.append("%s* %s;", name.isToken ? options.tokenClass : name.name, varName);
         }
         else if (node.isRegex()) {
             node.astInfo.outerVar = outerVar;
@@ -195,7 +234,7 @@ public class CppAstGen {
                 ch.astInfo.outerCls = outerCls;
                 ch.astInfo.outerVar = outerVar;
                 String type = name.isToken ? options.tokenClass : name.name;
-                parent.append("std::vector<%s> %s;", type, vname);
+                parent.append("std::vector<%s*> %s;", type, vname);
             }
         }
         else if (node.isOr()) {
@@ -222,12 +261,13 @@ public class CppAstGen {
                     ch.astInfo.outerVar = outerVar;
                     ch.astInfo.outerCls = outerCls;
                     ch.astInfo.assign = true;
-                    parent.append(String.format("%s %s;", clsName.name, v));
+                    parent.append("%s* %s;", clsName.name, v);
                     CodeWriter c = new CodeWriter(false);
                     c.append("class %s{", clsName.name);
                     c.append("public:");
+                    c.append("%s();", clsName.name);//ctor
                     model(ch, clsName, v, c);
-                    writePrinter(clsName.toString(), ch, c, true);
+                    c.append("std::string toString();");
                     c.append("};");
                     classes.all(c.get());
                 }

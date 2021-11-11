@@ -50,8 +50,19 @@ public class AstInfo {
         return String.format("%s %s = new %s();", nodeType, varName, nodeType);
     }
 
+    public String writeNodeCpp() {
+        if (assign) {
+            return String.format("%s* %s = new %s();\n%s->%s = %s;", nodeType.cpp(), varName, nodeType.cpp(), outerVar, varName, varName);
+        }
+        return String.format("%s* %s;", nodeType.cpp(), varName);
+    }
+
     public String writeWhich() {
         return String.format("%s.which = %d;", outerVar, which);
+    }
+
+    public String writeWhichCpp() {
+        return String.format("%s->which = %d;", outerVar, which);
     }
 
     @Override

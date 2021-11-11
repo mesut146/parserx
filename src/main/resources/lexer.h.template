@@ -54,13 +54,13 @@ class $lexer_class$ {
 
     std::string findExpected(int from);
 
-    $token_class$ getEOF();
+    $token_class$* getEOF();
 
     void err(int backupState);
 
-    $token_class$ $next_token$();
+    $token_class$* $next_token$();
 
-    $token_class$ $next_token$_normal();
+    $token_class$* $next_token$_normal();
 
     //input -> input id
     int *cMap = unpackCMap(cMapPacked);

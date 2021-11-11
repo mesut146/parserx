@@ -2,8 +2,8 @@ package mesut.parserx.gen.ll;
 
 //qualified ast type;
 public class Type {
-    Type scope;
     public String name;
+    Type scope;
 
     public Type(String name) {
         this.name = name;
@@ -25,5 +25,12 @@ public class Type {
             return name;
         }
         return scope + "." + name;
+    }
+
+    public String cpp() {
+        if (scope == null) {
+            return name;
+        }
+        return scope.cpp() + "::" + name;
     }
 }

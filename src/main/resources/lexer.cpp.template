@@ -81,9 +81,9 @@ std::string $lexer_class$::findExpected(int from){
     return sb.str();
 }
 
-$token_class$ $lexer_class$::getEOF(){
-    $token_class$ res(EOF_, "");
-    res.name = "EOF";
+$token_class$* $lexer_class$::getEOF(){
+    $token_class$* res = new $token_class$(EOF_, "");
+    res->name = "EOF";
     return res;
 }
 
@@ -95,15 +95,15 @@ void Lexer::err(int backupState)
     throw std::runtime_error(ss.str());
 }
 
-$token_class$ $lexer_class$::$next_token$() {
-    $token_class$ tok = $next_token$_normal();
-    if(getBit(skip, tok.type)){
+$token_class$* $lexer_class$::$next_token$() {
+    $token_class$* tok = $next_token$_normal();
+    if(getBit(skip, tok->type)){
       return $next_token$();
     }
     return tok;
 }
 
-$token_class$ $lexer_class$::$next_token$_normal(){
+$token_class$* $lexer_class$::$next_token$_normal(){
     fill();
     int curState = INITIAL;
     int lastState = -1;
@@ -126,10 +126,10 @@ $token_class$ $lexer_class$::$next_token$_normal(){
         }
         if (curState == -1) {
             if (lastState != -1) {
-                $token_class$ token(ids[lastState], getText());
-                token.offset = startPos;
-                token.name = names[ids[lastState]];
-                token.line = startLine;
+                $token_class$* token = new $token_class$(ids[lastState], getText());
+                token->offset = startPos;
+                token->name = names[ids[lastState]];
+                token->line = startLine;
                 bufStart = bufPos;
                 return token;
             }

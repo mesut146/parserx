@@ -40,21 +40,28 @@ public class CppRecDescent {
     public void gen() throws IOException {
         //ns
         headerWriter.append("#pragma once");
+        headerWriter.append("");
         headerWriter.append("#include <string>");
         headerWriter.append("#include <vector>");
         headerWriter.append("#include \"%s.h\"", options.astClass);
+        headerWriter.append("#include \"%s.h\"", options.lexerClass);
+        headerWriter.append("");
 
         code.append("#include <stdexcept>");
         code.append("#include \"%s.h\"", options.parserClass);
+        code.append("#include \"%s.h\"", tokens);
+        code.append("");
+
         headerWriter.append("class %s{", options.parserClass);
-        headerWriter.append("%s lexer;", options.lexerClass);
-        headerWriter.append("%s la;", options.tokenClass);
+        headerWriter.append("public:");
+        headerWriter.append("%s* lexer;", options.lexerClass);
+        headerWriter.append("%s* la;", options.tokenClass);
         headerWriter.append("");
 
         headerWriter.append("%s(%s& lexer);", options.parserClass, options.lexerClass);
 
         code.append("%s::%s(%s& lexer){", options.parserClass, options.parserClass, options.lexerClass);
-        code.all("this->lexer = lexer;\nla = lexer.next();\n}");
+        code.all("this->lexer = &lexer;\nla = lexer.next();\n}");
         code.append("");
 
         writeConsume();
@@ -77,18 +84,18 @@ public class CppRecDescent {
     }
 
     void writeConsume() {
-        headerWriter.append("%s consume(int type);");
+        headerWriter.append("%s* consume(int type);", options.tokenClass);
 
-        code.append("%s consume(int type){", options.tokenClass);
-        code.append("if(la.type != type){");
-        code.append("throw new RuntimeException(\"unexpected token: \" + la + \" expecting: \" + type);");
+        code.append("%s* %s::consume(int type){", options.tokenClass, options.parserClass);
+        code.append("if(la->type != type){");
+        code.append("throw std::runtime_error(\"unexpected token: \" + la->toString() + \" expecting: \" + std::to_string(type));");
         code.all("}");
         code.append("try{");
-        code.append("%s res = la;", options.tokenClass);
-        code.append("la = lexer.next();");
+        code.append("%s* res = la;", options.tokenClass);
+        code.append("la = lexer->next();");
         code.append("return res;");
-        code.all("}\ncatch(IOException e){");
-        code.append("throw new RuntimeException(e);");
+        code.all("}\ncatch(...){");
+        code.append("throw std::runtime_error(\"consume error\");");
         code.append("}");
         code.append("}");
     }
@@ -97,6 +104,7 @@ public class CppRecDescent {
         CodeWriter c = new CodeWriter(true);
         //ns
         c.append("#pragma once");
+        c.append("");
         c.append("class %s{", tokens);
         c.append("public:");
         c.append("const int EOF_ = 0;");
@@ -104,7 +112,7 @@ public class CppRecDescent {
         for (TokenDecl decl : tree.tokens) {
             if (decl.fragment) continue;
             //if (decl.isSkip) continue;
-            c.append("const int %s = %d;", decl.name, id);
+            c.append("static constexpr int %s = %d;", decl.name, id);
             id++;
         }
         c.append("};");
@@ -113,7 +121,7 @@ public class CppRecDescent {
     }
 
     String peekExpr() {
-        return "la.type";
+        return "la->type";
     }
 
 
@@ -126,26 +134,26 @@ public class CppRecDescent {
             if (arg.isName()) {
                 Name name = arg.asName();
                 if (name.isToken) {
-                    params.append("Token ").append(arg.astInfo.factorName);
+                    params.append(options.tokenClass).append(" ").append(arg.astInfo.factorName);
                 }
                 else {
-                    params.append(String.format("%s& %s", tree.getRule(arg.asName()).retType, arg.astInfo.factorName));
+                    params.append(String.format("%s* %s", tree.getRule(arg.asName()).retType, arg.astInfo.factorName));
                 }
             }
             else {
                 Regex regex = arg.asRegex();
                 Name name = regex.node.asName();
                 if (name.isToken) {
-                    params.append(String.format("std::vector<Token> %s", regex.astInfo.factorName));
+                    params.append(String.format("std::vector<%s*> %s", options.tokenClass, regex.astInfo.factorName));
                 }
                 else {
-                    params.append(String.format("std::vector<%s.%s> %s", options.astClass, name.name, regex.astInfo.factorName));
+                    params.append(String.format("std::vector<%s::%s*> %s", options.astClass, name.name, regex.astInfo.factorName));
                 }
             }
             i++;
         }
-        code.append("%s %s::%s(%s){", type, options.parserClass, decl.baseName(), params);
-        code.append("%s res = new %s();", type, type);
+        code.append("%s* %s::%s(%s){", type.cpp(), options.parserClass, decl.baseName(), params);
+        code.append("%s* res = new %s();", type.cpp(), type.cpp());
         flagCount = 0;
         firstCount = 0;
 
@@ -159,18 +167,18 @@ public class CppRecDescent {
         code.append("return res;");
         code.append("}");
 
-        headerWriter.append("%s %s(%s);", type, decl.baseName(), params);
+        headerWriter.append("%s* %s(%s);", type.cpp(), decl.baseName(), params);
     }
 
     void write(Node node) {
         if (node.astInfo.which != -1) {
-            code.all(node.astInfo.writeWhich());
+            code.all(node.astInfo.writeWhichCpp());
         }
         if (node.astInfo.createNode) {
-            code.all(node.astInfo.writeNode());
+            code.all(node.astInfo.writeNodeCpp());
         }
         if (node.astInfo.substitution) {
-            code.append("%s.%s = %s;", node.astInfo.outerVar, node.astInfo.subVar, node.astInfo.varName);
+            code.append("%s->%s = %s;", node.astInfo.outerVar, node.astInfo.subVar, node.astInfo.varName);
         }
         if (node.isOr()) {
             Or or = node.asOr();
@@ -208,11 +216,11 @@ public class CppRecDescent {
         if (regex.astInfo.isFactored) {
             Name name = regex.node.asName();
             if (regex.astInfo.factor == null) {
-                code.append("%s.%s.insert(%s.%s.end(),%s.begin(),%s.end());", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.outerVar, name.astInfo.varName, regex.astInfo.factorName);
+                code.append("%s->%s.insert(%s->%s.end(),%s.begin(),%s.end());", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.outerVar, name.astInfo.varName, regex.astInfo.factorName);
             }
             else {
                 code.append("for(int i = 0;i < %s.size();i++){", regex.astInfo.factor.factorName);
-                code.append("%s.%s.push_back(%s(%s.at(i)));", regex.astInfo.outerVar, name.astInfo.varName, name.name, regex.astInfo.factor.factorName);
+                code.append("%s->%s.push_back(%s(%s.at(i)));", regex.astInfo.outerVar, name.astInfo.varName, name.name, regex.astInfo.factor.factorName);
                 code.append("}");
             }
             return;
@@ -235,13 +243,13 @@ public class CppRecDescent {
             if (set.size() <= loopLimit) {
                 if (regex.astInfo.isFactor) {
                     Name name = regex.node.asName();
-                    String type = name.isToken ? options.tokenClass : options.astClass + "." + name.name;
-                    code.append("std::vector<%s> %s;", type, regex.astInfo.factorName);
+                    String type = name.isToken ? options.tokenClass : options.astClass + "::" + name.name;
+                    code.append("std::vector<%s*> %s;", type, regex.astInfo.factorName);
                     if (regex.astInfo.loopExtra != null) {
                         code.append("%s.push_back(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra);
                     }
                     code.append("while(%s){", loopExpr(set));
-                    String consumer = name.isToken ? "consume(" + tokens + "." + name.name + ")" : name + "()";
+                    String consumer = name.isToken ? "consume(" + tokenRef(name) + ")" : name + "()";
                     code.append("%s.push_back(%s);", regex.astInfo.factorName, consumer);
                     code.append("}");
                 }
@@ -270,12 +278,12 @@ public class CppRecDescent {
                 if (regex.astInfo.isFactor) {
                     Name name = regex.node.asName();
                     String type = name.isToken ? options.tokenClass : options.astClass + "." + name.name;
-                    code.append("std::vector<%s> %s;", type, regex.astInfo.factorName);
+                    code.append("std::vector<%s*> %s;", type, regex.astInfo.factorName);
                     if (regex.astInfo.loopExtra != null) {
                         code.append("%s.push_back(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra);
                     }
                     code.append("do{");
-                    String consumer = name.isToken ? "consume(" + tokens + "." + name.name + ")" : name + "()";
+                    String consumer = name.isToken ? "consume(" + tokenRef(name) + ")" : name + "()";
                     code.append("%s.push_back(%s);", regex.astInfo.factorName, consumer);
                     code.down();
                     code.append("}while(%s);", loopExpr(set));
@@ -297,7 +305,7 @@ public class CppRecDescent {
                 code.append("bool %s = true;", flagStr);
                 code.append("bool %s = true;", firstStr);
                 code.append("while(%s){", flagStr);
-                String def = String.format("if(!%s)  %s = false;\n" + "else  throw runtime_error(std::string(\"unexpected token: \") + la.toString());", firstStr, flagStr);
+                String def = String.format("if(!%s)  %s = false;\n" + "else  throw runtime_error(std::string(\"unexpected token: \") + la->toString());", firstStr, flagStr);
                 beginSwitch(set);
                 write(regex.node);
                 endSwitch(def);
@@ -311,7 +319,7 @@ public class CppRecDescent {
         StringBuilder sb = new StringBuilder();
         for (Iterator<Name> it = set.iterator(); it.hasNext(); ) {
             Name tok = it.next();
-            sb.append(peekExpr()).append(" == ").append(tokens).append(".").append(tok.name);
+            sb.append(peekExpr()).append(" == ").append(tokenRef(tok));
             if (it.hasNext()) {
                 sb.append(" || ");
             }
@@ -340,10 +348,10 @@ public class CppRecDescent {
         if (name.astInfo.isFactored) {
             //no consume
             if (name.astInfo.isInLoop) {
-                code.append("%s.%s.push_back(%s);", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName);
+                code.append("%s->%s.push_back(%s);", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName);
             }
             else {
-                code.append("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName);
+                code.append("%s->%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName);
             }
         }
         else if (curRule.isRecursive) {
@@ -360,7 +368,7 @@ public class CppRecDescent {
                 rhs = withArgs(name);
             }
             else {
-                rhs = "consume(" + tokens + "." + name.name + ")";
+                rhs = "consume(" + tokenRef(name) + ")";
             }
             if (name.astInfo.isFactor) {
                 String type = name.isToken ? options.tokenClass : (options.astClass + "." + name.name);
@@ -368,13 +376,17 @@ public class CppRecDescent {
             }
             else {
                 if (name.astInfo.isInLoop) {
-                    code.append("%s.%s.push_back(%s);", name.astInfo.outerVar, name.astInfo.varName, rhs);
+                    code.append("%s->%s.push_back(%s);", name.astInfo.outerVar, name.astInfo.varName, rhs);
                 }
                 else {
-                    code.append("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, rhs);
+                    code.append("%s->%s = %s;", name.astInfo.outerVar, name.astInfo.varName, rhs);
                 }
             }
         }
+    }
+
+    String tokenRef(Name tok) {
+        return tokens + "::" + tok.name;
     }
 
     private void writeOr(Or or) {
@@ -385,7 +397,7 @@ public class CppRecDescent {
             Set<Name> set = Helper.first(ch, tree, true, false, true);
             if (!set.isEmpty()) {
                 for (Name la : set) {
-                    code.append(String.format("case %s.%s:", tokens, la.name));
+                    code.append(String.format("case %s:", tokenRef(la)));
                 }
                 code.append("{");
                 write(ch);
@@ -415,7 +427,7 @@ public class CppRecDescent {
                 arr.append(nm);
                 first = false;
             }
-            code.append("throw std::runtime_error(\"expecting one of [%s] got: \"+la);", arr);
+            code.append("throw std::runtime_error(\"expecting one of [%s] got: \"+la->toString());", arr);
             code.append("}");
         }
         code.append("}");
@@ -424,7 +436,7 @@ public class CppRecDescent {
     void beginSwitch(Set<Name> set) {
         code.append("switch(" + peekExpr() + "){");
         for (Name token : set) {
-            code.append("case %s.%s:", tokens, token.name);
+            code.append("case %s:", tokenRef(token));
         }
         code.append("{");
     }
