@@ -44,7 +44,8 @@ public class Main {
             "-lalr [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lalr parser" +
             "-lr1 [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lr(1) parser" +
             "-lr0 [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lr(0) parser" +
-            "\ninput is given by -in <path> or as last argument";
+            "\ninput is given by '-in <path>' or as last argument" +
+            "\noutput language is given by '-lang [java,cpp]'";
 
     static void usage() {
         System.err.println(usageStr);
@@ -64,6 +65,7 @@ public class Main {
         String parserClass = null;
         String astClass = null;
         List<String> cmd = new ArrayList<>();
+        String lang = null;
         boolean hasDot = false;
         for (int i = 0; i < args.length; i++) {
             String s = args[i];
@@ -102,6 +104,10 @@ public class Main {
                 astClass = args[i + 1];
                 i++;
             }
+            else if (s.equals("-lang")) {
+                lang = args[i + 1];
+                i++;
+            }
             else if (cmds.contains(s)) {
                 cmd.add(s);
             }
@@ -120,6 +126,9 @@ public class Main {
         if (input == null) {
             System.err.println("provide an input file \ncmd is " + NodeList.join(Arrays.asList(args), " "));
             return;
+        }
+        if (lang != null && !lang.equals("java") && !lang.equals("cpp")) {
+            throw new RuntimeException("invalid lang: " + lang);
         }
         try {
             if (cmd.contains("-left")) {
@@ -233,7 +242,7 @@ public class Main {
                     tree.options.tokenClass = tokenClass;
                 }
 
-                LexerGenerator generator = LexerGenerator.gen(tree, "java");
+                LexerGenerator generator = LexerGenerator.gen(tree, lang);
                 if (hasDot) {
                     generator.dfa.dot(new FileWriter(new File(tree.options.outDir, Utils.newName(input.getName(), "dot"))));
                 }
@@ -264,7 +273,7 @@ public class Main {
                 if (astClass != null) {
                     tree.options.astClass = astClass;
                 }
-                RecDescent.gen(tree, "java");
+                RecDescent.gen(tree, lang);
             }
             else if (cmd.contains("-lalr") || cmd.contains("-lr1") || cmd.contains("-lr0")) {
                 Tree tree = Tree.makeTree(input);

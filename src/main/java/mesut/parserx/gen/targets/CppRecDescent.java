@@ -115,6 +115,7 @@ public class CppRecDescent {
             c.append("static constexpr int %s = %d;", decl.name, id);
             id++;
         }
+        c.down();
         c.append("};");
         File file = new File(options.outDir, tokens + ".h");
         Utils.write(c.get(), file);

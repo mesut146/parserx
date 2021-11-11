@@ -74,8 +74,8 @@ public class CppAstGen {
             curRule = decl.baseName();
             model(decl);
         }
-        astWriter.append("};");
         astWriter.down();
+        astWriter.append("};");
 
         File file = new File(options.outDir, options.astClass + ".h");
         Utils.write(astWriter.get(), file);
@@ -103,8 +103,8 @@ public class CppAstGen {
         astWriter.all(classes.get());
         //todo create parent
         astWriter.append("std::string toString();");
-        astWriter.append("};");
         astWriter.down();
+        astWriter.append("};");
     }
 
     void writePrinter(String rule, Node rhs, CodeWriter c, boolean isAlt) {
