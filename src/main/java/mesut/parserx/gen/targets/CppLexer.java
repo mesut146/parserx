@@ -73,7 +73,6 @@ public class CppLexer {
         int len = 0;
         for (int state : dfa.it()) {
             List<Transition> list = dfa.trans[state];
-            transWriter.print(indent);
             transWriter.print("\"");
             if (list == null || list.isEmpty()) {
                 transWriter.print(makeOctal(0));
@@ -91,6 +90,7 @@ public class CppLexer {
             transWriter.print("\"");
             if (state <= dfa.lastState - 1) {
                 transWriter.print("\n");
+                transWriter.print(indent);
             }
         }
         header.set("trans", transWriter.getString());
