@@ -8,7 +8,7 @@ import mesut.parserx.utils.CountingMap2;
 
 import java.util.*;
 
-public class Factor extends SimpleTransformer {
+public class Factor extends Transformer {
 
     public static boolean keepFactor = true;
     public static boolean debug = false;
@@ -87,8 +87,8 @@ public class Factor extends SimpleTransformer {
 
     //factor or
     @Override
-    public Node transformOr(Or or, Node parent) {
-        Node node = super.transformOr(or, parent);
+    public Node visitOr(Or or, Void parent) {
+        Node node = super.visitOr(or, parent);
         if (node.isOr()) {
             or = node.asOr();
         }
@@ -125,8 +125,8 @@ public class Factor extends SimpleTransformer {
 
     //factor sequence
     @Override
-    public Node transformSequence(Sequence s, Node parent) {
-        Node node = super.transformSequence(s, parent);
+    public Node visitSequence(Sequence s, Void parent) {
+        Node node = super.visitSequence(s, parent);
         if (!factorSequence) {
             return node;
         }
@@ -145,7 +145,7 @@ public class Factor extends SimpleTransformer {
             Set<Name> s2 = first(B);
             if (common(s1, s2) != null) {
                 Node trimmed = Epsilons.trim(A, tree);
-                return transformOr(new Or(new Sequence(trimmed, B), B), parent);
+                return visitOr(new Or(new Sequence(trimmed, B), B), parent);
             }
         }
         return s;

@@ -315,9 +315,9 @@ public class Helper {
 
     //put back terminals as string nodes for good visuals
     public static void revert(final Tree tree) {
-        SimpleTransformer transformer = new SimpleTransformer(tree) {
+        Transformer transformer = new Transformer() {
             @Override
-            public Node transformName(Name name, Node parent) {
+            public Node visitName(Name name, Void arg) {
                 if (name.isToken) {
                     Node rhs = tree.getToken(name.name).rhs;
                     if (rhs.isString()) {
@@ -328,7 +328,7 @@ public class Helper {
             }
         };
         for (RuleDecl ruleDecl : tree.rules) {
-            transformer.transformRule(ruleDecl);
+            ruleDecl.rhs = ruleDecl.rhs.accept(transformer, null);
         }
     }
 

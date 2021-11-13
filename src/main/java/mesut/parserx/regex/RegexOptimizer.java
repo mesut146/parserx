@@ -4,7 +4,7 @@ import mesut.parserx.nodes.*;
 
 //normalize & optimize regex
 //merges sequences,ors,single length strings
-public class RegexOptimizer extends SimpleTransformer {
+public class RegexOptimizer extends Transformer {
     Node regex;
 
     public RegexOptimizer(Node regex) {
@@ -17,18 +17,18 @@ public class RegexOptimizer extends SimpleTransformer {
     }
 
     @Override
-    public Node transformNode(Node node, Node parent) {
+    public Node transformNode(Node node, Void parent) {
         node = node.normal();//merge
         return super.transformNode(node, parent);
     }
 
     //shrink or into bracket by combining single length strings
     @Override
-    public Node transformOr(Or node, Node parent) {
+    public Node visitOr(Or node, Void parent) {
         Or res = new Or();
         Bracket bracket = new Bracket();
         for (Node ch : node) {
-            ch = transformNode(ch, node);
+            ch = transformNode(ch, parent);
             if (ch.isString() && ch.asString().value.length() == 1) {
                 bracket.add(ch.asString().value.charAt(0));
             }

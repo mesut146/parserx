@@ -34,13 +34,14 @@ public class Utils {
         }
     }
 
+    //make missing tokens
     public static void makeTokens(final Tree tree, final boolean fromRegex) {
-        new SimpleTransformer(tree) {
+        final Map<String, TokenDecl> newTokens = new HashMap<>();
+        new Transformer(tree) {
             int count = 1;
-            Map<String, TokenDecl> newTokens = new HashMap<>();
 
             @Override
-            public Node transformName(Name name, Node parent) {
+            public Node visitName(Name name, Void parent) {
                 //if it is not a rule then must be a token
                 if (tree.getRule(name) == null) {
                     //add fake token
@@ -51,7 +52,7 @@ public class Utils {
             }
 
             @Override
-            public Node transformString(StringNode node, Node parent) {
+            public Node visitString(StringNode node, Void parent) {
                 TokenDecl decl = tree.getTokenByValue(node.value);
                 if (decl == null) {
                     if (fromRegex) {
@@ -64,15 +65,10 @@ public class Utils {
                 }
                 return decl.ref();
             }
-
-            @Override
-            public void transformAll() {
-                super.transformAll();
-                for (TokenDecl decl : newTokens.values()) {
-                    tree.addToken(decl);
-                }
-            }
         }.transformAll();
+        for (TokenDecl decl : newTokens.values()) {
+            tree.addToken(decl);
+        }
     }
 
     public static String camel(String s) {

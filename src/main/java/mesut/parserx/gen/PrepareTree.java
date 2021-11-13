@@ -2,7 +2,7 @@ package mesut.parserx.gen;
 
 import mesut.parserx.nodes.*;
 
-public class PrepareTree extends SimpleTransformer {
+public class PrepareTree extends Transformer {
 
     public PrepareTree(Tree tree) {
         super(tree);
@@ -31,7 +31,7 @@ public class PrepareTree extends SimpleTransformer {
     }
 
     @Override
-    public Node transformName(Name name, Node parent) {
+    public Node visitName(Name name, Void parent) {
         //rule or token
         if (tree.getRule(name) != null) {
             name.isToken = false;
@@ -62,7 +62,7 @@ public class PrepareTree extends SimpleTransformer {
     }
 
     @Override
-    public Node transformString(StringNode node, Node parent) {
+    public Node visitString(StringNode node, Void parent) {
         if (node.value.isEmpty()) {
             System.out.println("empty string replaced by epsilon in " + getDecl());
             return new Epsilon();

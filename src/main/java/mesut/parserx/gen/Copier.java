@@ -5,7 +5,7 @@ import mesut.parserx.nodes.*;
 import java.util.ArrayList;
 
 //Deep Copy
-public class Copier extends SimpleTransformer {
+public class Copier extends Transformer {
 
     public Copier(Tree tree) {
         super(tree);
@@ -17,40 +17,40 @@ public class Copier extends SimpleTransformer {
     }
 
     @Override
-    public Node transformName(Name name, Node parent) {
+    public Node visitName(Name name, Void arg) {
         Name res = new Name(name.name, name.isToken);
         res.args = new ArrayList<>(name.args);
         return withAst(res, name);
     }
 
     @Override
-    public Node transformRegex(Regex regex, Node parent) {
-        Node ch = transformNode(regex.node, regex);
+    public Node visitRegex(Regex regex, Void arg) {
+        Node ch = transformNode(regex.node, arg);
         return withAst(new Regex(ch, regex.type), regex);
     }
 
     @Override
-    public Node transformSequence(Sequence seq, Node parent) {
+    public Node visitSequence(Sequence seq, Void arg) {
         Sequence res = new Sequence();
         for (Node ch : seq) {
-            res.add(transformNode(ch, seq));
+            res.add(transformNode(ch, arg));
         }
         return withAst(res, seq);
     }
 
     @Override
-    public Node transformOr(Or or, Node parent) {
+    public Node visitOr(Or or, Void arg) {
         Or res = new Or();
         res.label = or.label;
         for (Node ch : or) {
-            res.add(transformNode(ch, or));
+            res.add(transformNode(ch, arg));
         }
         return withAst(res, or);
     }
 
     @Override
-    public Node transformGroup(Group node, Node parent) {
-        Node ch = transformNode(node.node, node);
+    public Node visitGroup(Group node, Void arg) {
+        Node ch = transformNode(node.node, arg);
         return withAst(new Group(ch), node);
     }
 

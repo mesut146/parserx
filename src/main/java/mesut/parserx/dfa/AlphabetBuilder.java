@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class AlphabetBuilder extends SimpleTransformer {
+public class AlphabetBuilder extends Transformer {
     Set<Range> ranges;
     List<Bracket> brackets;
 
@@ -50,7 +50,7 @@ public class AlphabetBuilder extends SimpleTransformer {
     }
 
     @Override
-    public Node transformBracket(Bracket node, Node parent) {
+    public Node visitBracket(Bracket node, Void parent) {
         node.normalize();
         ranges.addAll(node.ranges);
         brackets.add(node);
@@ -58,21 +58,21 @@ public class AlphabetBuilder extends SimpleTransformer {
     }
 
     @Override
-    public Node transformUntil(Until node, Node parent) {
+    public Node visitUntil(Until node, Void parent) {
         StringNode ch = node.node.asString();
-        transformNode(ch, node);
+        transformNode(ch, parent);
         for (char c : ch.value.toCharArray()) {
             Bracket bracket = new Bracket();
             bracket.add(new Range(c, c));
             bracket.negate = true;
             node.brackets.add(bracket);
-            transformNode(bracket, node);
+            transformNode(bracket, parent);
         }
         return node;
     }
 
     @Override
-    public Node transformDot(Dot node, Node parent) {
+    public Node visitDot(Dot node, Void parent) {
         Bracket b = Dot.bracket;
         ranges.addAll(b.ranges);
         brackets.add(b);
@@ -80,7 +80,7 @@ public class AlphabetBuilder extends SimpleTransformer {
     }
 
     @Override
-    public Node transformString(StringNode node, Node parent) {
+    public Node visitString(StringNode node, Void parent) {
         //make range for each char in string
         String str = node.value;
         for (char c : str.toCharArray()) {

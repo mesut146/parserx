@@ -6,7 +6,7 @@ import mesut.parserx.nodes.*;
 
 import java.util.*;
 
-public class FactorLoop extends SimpleTransformer {
+public class FactorLoop extends Transformer {
     public static boolean keepFactor = true;
     public static boolean debug = false;
     static boolean debugMethod = true;
@@ -208,8 +208,8 @@ public class FactorLoop extends SimpleTransformer {
     }
 
     @Override
-    public Node transformOr(Or or, Node parent) {
-        Node node = super.transformOr(or, parent);
+    public Node visitOr(Or or, Void parent) {
+        Node node = super.visitOr(or, parent);
         if (!node.isOr()) return node;
         or = node.asOr();
 

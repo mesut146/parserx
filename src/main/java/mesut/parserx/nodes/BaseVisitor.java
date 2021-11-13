@@ -3,28 +3,28 @@ package mesut.parserx.nodes;
 public class BaseVisitor<R, A> implements Visitor<R, A> {
 
     @Override
-    public R visitEpsilon(Epsilon node, A arg) {
+    public R visitEpsilon(Epsilon epsilon, A arg) {
         return null;
     }
 
     @Override
-    public R visitDot(Dot node, A arg) {
+    public R visitDot(Dot dot, A arg) {
         return null;
     }
 
     @Override
-    public R visitUntil(Until node, A arg) {
+    public R visitUntil(Until until, A arg) {
         return null;
     }
 
     @Override
-    public R visitString(StringNode node, A arg) {
+    public R visitString(StringNode string, A arg) {
         return null;
     }
 
     @Override
-    public R visitGroup(Group node, A arg) {
-        return node.node.accept(this, arg);
+    public R visitGroup(Group group, A arg) {
+        return group.node.accept(this, arg);
     }
 
     @Override
@@ -49,22 +49,22 @@ public class BaseVisitor<R, A> implements Visitor<R, A> {
     }
 
     @Override
-    public R visitBracket(Bracket node, A arg) {
+    public R visitBracket(Bracket bracket, A arg) {
         return null;
     }
 
     @Override
-    public R visitName(Name node, A arg) {
+    public R visitName(Name name, A arg) {
         return null;
     }
 
     @Override
-    public R visitRange(Range node, A arg) {
+    public R visitRange(Range range, A arg) {
         return null;
     }
 
     @Override
-    public R visitShortcut(Shortcut node, A arg) {
+    public R visitShortcut(Shortcut shortcut, A arg) {
         return null;
     }
 }

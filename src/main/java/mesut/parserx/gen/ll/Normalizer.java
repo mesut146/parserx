@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 //simplify a little for llrec
-public class Normalizer extends SimpleTransformer {
+public class Normalizer extends Transformer {
 
     int groupCount = 1;
     Set<Name> map = new HashSet<>();//created rules
@@ -31,7 +31,7 @@ public class Normalizer extends SimpleTransformer {
     }
 
     @Override
-    public Node transformGroup(Group node, Node parent) {
+    public Node visitGroup(Group node, Void parent) {
         String cls = curRule.baseName() + "g" + groupCount;
         RuleDecl tmp = new RuleDecl(cls, node.node);
         tmp.retType = new Type(tree.options.astClass, cls);
@@ -51,8 +51,8 @@ public class Normalizer extends SimpleTransformer {
     }
 
     @Override
-    public Node transformOr(Or node, Node parent) {
-        Node tmp = super.transformOr(node, parent);
+    public Node visitOr(Or node, Void parent) {
+        Node tmp = super.visitOr(node, parent);
         if (!tmp.isOr()) {
             return tmp;
         }

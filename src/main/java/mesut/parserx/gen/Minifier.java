@@ -1,12 +1,15 @@
 package mesut.parserx.gen;
 
-import mesut.parserx.nodes.*;
+import mesut.parserx.nodes.Name;
+import mesut.parserx.nodes.RuleDecl;
+import mesut.parserx.nodes.Transformer;
+import mesut.parserx.nodes.Tree;
 
 import java.util.HashMap;
 import java.util.Map;
 
 //shortens rule names
-public class Minifier extends SimpleTransformer {
+public class Minifier extends Transformer {
     Map<Name, Name> map = new HashMap<>();
     int count = 1;
     String prefix = "E";
@@ -21,13 +24,13 @@ public class Minifier extends SimpleTransformer {
 
     @Override
     public RuleDecl transformRule(RuleDecl decl) {
-        decl.ref = transformName(decl.ref, null);
-        decl.rhs = transformNode(decl.rhs, null);
+        decl.ref = visitName(decl.ref, null);
+        decl.rhs = decl.rhs.accept(this, null);
         return decl;
     }
 
     @Override
-    public Name transformName(Name name, Node parent) {
+    public Name visitName(Name name, Void parent) {
         if (name.isRule()) {
             Name res;
             if (map.containsKey(name)) {

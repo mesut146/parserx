@@ -7,7 +7,7 @@ import mesut.parserx.nodes.*;
 
 import java.util.Stack;
 
-public class ShiftReduce extends SimpleTransformer {
+public class ShiftReduce extends Transformer {
     Tree tree;
     Stack<LrItemSet> queue = new Stack<>();
 

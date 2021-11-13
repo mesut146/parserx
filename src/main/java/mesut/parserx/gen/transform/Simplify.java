@@ -4,7 +4,7 @@ import mesut.parserx.gen.AstInfo;
 import mesut.parserx.nodes.*;
 
 //remove unnecessary nodes & merge
-public class Simplify extends SimpleTransformer {
+public class Simplify extends Transformer {
 
     public Simplify(Tree tree) {
         super(tree);
@@ -24,8 +24,8 @@ public class Simplify extends SimpleTransformer {
 
     //unwrap simple child
     @Override
-    public Node transformGroup(Group node, Node parent) {
-        Node ch = transformNode(node.node, node);
+    public Node visitGroup(Group node, Void parent) {
+        Node ch = transformNode(node.node, parent);
         if (isSimple(ch)) {
             if (ch.astInfo.varName == null) {
                 ch.astInfo.varName = node.astInfo.varName;
@@ -38,10 +38,10 @@ public class Simplify extends SimpleTransformer {
     }
 
     @Override
-    public Node transformSequence(Sequence node, Node parent) {
+    public Node visitSequence(Sequence node, Void parent) {
         Sequence res = new Sequence();
         for (Node ch : node) {
-            ch = transformNode(ch, node);
+            ch = transformNode(ch, parent);
             if (ch.isSequence()) {
                 res.addAll(ch.asSequence().list);
             }
@@ -66,10 +66,10 @@ public class Simplify extends SimpleTransformer {
 
     //todo get rid of merger
     @Override
-    public Node transformOr(Or node, Node parent) {
+    public Node visitOr(Or node, Void parent) {
         Or res = new Or();
         for (Node ch : node) {
-            ch = transformNode(ch, node);
+            ch = transformNode(ch, parent);
             if (ch.isOr()) {
                 res.addAll(ch.asOr().list);
             }
@@ -100,11 +100,11 @@ public class Simplify extends SimpleTransformer {
     }
 
     @Override
-    public Node transformRegex(Regex regex, Node parent) {
+    public Node visitRegex(Regex regex, Void arg) {
         if (!regex.node.isGroup() && !regex.node.isName()) {
-            return transformRegex(new Regex(new Group(regex.node), regex.type), parent);
+            return visitRegex(new Regex(new Group(regex.node), regex.type), arg);
         }
-        Node ch = transformNode(regex.node, regex);
+        Node ch = transformNode(regex.node, arg);
         Node res = null;
         if (regex.isOptional()) {
             if (ch.isPlus()) {

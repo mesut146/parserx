@@ -3,7 +3,6 @@ package mesut.parserx.gen.ll;
 import mesut.parserx.dfa.Alphabet;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.nodes.*;
-import mesut.parserx.regex.RegexBuilder;
 
 import java.util.*;
 
@@ -56,16 +55,16 @@ public class LLDfaRegex {
     }
 
     void collect(RuleDecl decl) {
-        new SimpleTransformer(tree) {
+        new Transformer() {
             @Override
-            public Node transformName(Name name, Node parent) {
+            public Node visitName(Name name, Void parent) {
                 if (name.isToken) return name;
                 if (onDemandRules.add(name)) {
                     collect(tree.getRule(name));
                 }
-                return super.transformName(name, parent);
+                return name;
             }
-        }.transformRule(decl);
+        }.transformNode(decl.rhs, null);
     }
 
     public Node makeRegex(RuleDecl decl) {
