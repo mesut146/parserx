@@ -44,4 +44,9 @@ public class Shortcut extends Node {
     public String toString() {
         return "[:" + name + ":]";
     }
+
+    @Override
+    public <R, A> R accept(Visitor<R, A> visitor, A arg) {
+        return visitor.visitShortcut(this, arg);
+    }
 }

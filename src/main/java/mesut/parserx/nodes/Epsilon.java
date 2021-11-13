@@ -16,4 +16,9 @@ public class Epsilon extends Node {
     public boolean equals(Object o) {
         return o instanceof Epsilon;
     }
+
+    @Override
+    public <R, A> R accept(Visitor<R, A> visitor, A arg) {
+        return visitor.visitEpsilon(this, arg);
+    }
 }

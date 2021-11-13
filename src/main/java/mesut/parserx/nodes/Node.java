@@ -1,7 +1,7 @@
 package mesut.parserx.nodes;
 
-import mesut.parserx.gen.Copier;
 import mesut.parserx.gen.AstInfo;
+import mesut.parserx.gen.Copier;
 
 //base class used in grammar file
 public abstract class Node {
@@ -118,4 +118,6 @@ public abstract class Node {
     public Node normal() {
         return this;
     }
+
+    public abstract <R, A> R accept(Visitor<R, A> visitor, A arg);
 }

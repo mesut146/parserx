@@ -47,4 +47,9 @@ public class Sequence extends NodeList {
         res.astInfo = astInfo.copy();
         return res;
     }
+
+    @Override
+    public <R, A> R accept(Visitor<R, A> visitor, A arg) {
+        return visitor.visitSequence(this, arg);
+    }
 }

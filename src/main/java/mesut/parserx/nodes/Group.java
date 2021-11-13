@@ -53,4 +53,9 @@ public class Group extends Node implements Iterable<Node> {
         result = 31 * result + (node != null ? node.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public <R, A> R accept(Visitor<R, A> visitor, A arg) {
+        return visitor.visitGroup(this, arg);
+    }
 }

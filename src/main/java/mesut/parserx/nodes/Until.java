@@ -16,4 +16,9 @@ public class Until extends Node {
         return "~" + node;
     }
 
+    @Override
+    public <R, A> R accept(Visitor<R, A> visitor, A arg) {
+        return visitor.visitUntil(this, arg);
+    }
+
 }

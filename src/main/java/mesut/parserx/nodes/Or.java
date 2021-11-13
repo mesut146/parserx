@@ -93,4 +93,9 @@ public class Or extends NodeList {
         }
         return this;
     }
+
+    @Override
+    public <R, A> R accept(Visitor<R, A> visitor, A arg) {
+        return visitor.visitOr(this, arg);
+    }
 }

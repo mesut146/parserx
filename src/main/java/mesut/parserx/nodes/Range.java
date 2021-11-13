@@ -81,4 +81,9 @@ public class Range extends Node implements Comparable<Range> {
         return Objects.hash(start, end);
     }
 
+    @Override
+    public <R, A> R accept(Visitor<R, A> visitor, A arg) {
+        return visitor.visitRange(this, arg);
+    }
+
 }

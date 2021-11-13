@@ -64,5 +64,11 @@ public class Regex extends Node {
         result = 31 * result + type.hashCode();
         return result;
     }
+
+    @Override
+    public <R, A> R accept(Visitor<R, A> visitor, A arg) {
+        return visitor.visitRegex(this, arg);
+    }
+
 }
 

@@ -12,10 +12,10 @@ import mesut.parserx.nodes.Tree;
 import mesut.parserx.regex.RegexBuilder;
 import mesut.parserx.regex.RegexFromStr;
 import mesut.parserx.regex.RegexOptimizer;
+import mesut.parserx.regex.RegexPrinter;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -51,11 +51,10 @@ public class RegexBuilderTest {
     @Test
     public void fsm() throws IOException {
         NFA nfa = NfaReader.read(Env.getResFile("fsm/a.nfa"));
-        //NFA dfa = nfa.dfa();
-        //nfa.dfa().dot(new FileWriter(Env.dotFile("a.dot")));
         RegexBuilder regexBuilder = new RegexBuilder(nfa);
         Node regex = regexBuilder.buildRegex();
         System.out.println(regex);
+        System.out.println(RegexPrinter.print(regex));
         System.out.println(new RegexOptimizer(regex).optimize());
     }
 

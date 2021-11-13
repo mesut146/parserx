@@ -77,4 +77,9 @@ public class Name extends Node {
     public RuleDecl makeRule() {
         return new RuleDecl(this);
     }
+
+    @Override
+    public <R, A> R accept(Visitor<R, A> visitor, A arg) {
+        return visitor.visitName(this, arg);
+    }
 }

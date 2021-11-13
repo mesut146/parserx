@@ -1,15 +1,15 @@
 package mesut.parserx.nodes;
 
 public interface Visitor<R, A> {
-    R visitEpsilon(Epsilon node, A arg);
+    R visitEpsilon(Epsilon epsilon, A arg);
 
-    R visitDot(Dot node, A arg);
+    R visitDot(Dot dot, A arg);
 
-    R visitUntil(Until node, A arg);
+    R visitUntil(Until until, A arg);
 
-    R visitString(StringNode node, A arg);
+    R visitString(StringNode string, A arg);
 
-    R visitGroup(Group node, A arg);
+    R visitGroup(Group group, A arg);
 
     R visitSequence(Sequence seq, A arg);
 
@@ -17,7 +17,11 @@ public interface Visitor<R, A> {
 
     R visitOr(Or or, A arg);
 
-    R visitBracket(Bracket node, A arg);
+    R visitBracket(Bracket bracket, A arg);
 
-    R visitName(Name node, A arg);
+    R visitName(Name name, A arg);
+
+    R visitRange(Range range, A arg);
+
+    R visitShortcut(Shortcut shortcut, A arg);
 }

@@ -11,7 +11,7 @@ import java.util.*;
 public class Bracket extends NodeList {
 
     public List<Range> ranges;
-    public boolean negate;//[^abc]
+    public boolean negate;
     public boolean debug = false;
     private int pos;
 
@@ -129,8 +129,7 @@ public class Bracket extends NodeList {
         res.clear();
         //negate distinct ranges
         int last = Alphabet.min;
-        for (int i = 0; i < rangeList.size(); i++) {
-            Range range = rangeList.get(i);
+        for (Range range : rangeList) {
             if (range.start < last) {
                 //intersect
                 last = range.end + 1;
@@ -207,17 +206,16 @@ public class Bracket extends NodeList {
         if (negate) {
             sb.append("^");
         }
-        sb.append(join(""));
+        sb.append(join(list, ""));
         sb.append("]");
         return sb.toString();
     }
 
     public List<Range> getRanges() {
-        if (ranges == null) {
-            ranges = new ArrayList<>();
-            for (Node node : this) {
-                ranges.add(node.asRange());
-            }
+        if (ranges != null) return ranges;
+        ranges = new ArrayList<>();
+        for (Node node : this) {
+            ranges.add(node.asRange());
         }
         return ranges;
     }
@@ -232,5 +230,10 @@ public class Bracket extends NodeList {
             getRanges();
         }
         return this;
+    }
+
+    @Override
+    public <R, A> R accept(Visitor<R, A> visitor, A arg) {
+        return visitor.visitBracket(this, arg);
     }
 }

@@ -65,9 +65,6 @@ public class NodeList extends Node implements Iterable<Node> {
         return list.get(index);
     }
 
-    public String join(String del) {
-        return join(list, del);
-    }
 
     public int size() {
         return list.size();
@@ -114,5 +111,10 @@ public class NodeList extends Node implements Iterable<Node> {
             arr.add(ch.normal());
         }
         list = arr;
+    }
+
+    @Override
+    public <R, A> R accept(Visitor<R, A> visitor, A arg) {
+        throw new RuntimeException("cannot visit NodeList");
     }
 }

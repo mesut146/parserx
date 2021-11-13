@@ -25,4 +25,9 @@ public class Dot extends Node {
     public String toString() {
         return ".";
     }
+
+    @Override
+    public <R, A> R accept(Visitor<R, A> visitor, A arg) {
+        return visitor.visitDot(this, arg);
+    }
 }
