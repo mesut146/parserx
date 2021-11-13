@@ -5,7 +5,6 @@ import mesut.parserx.dfa.Transition;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
-import mesut.parserx.gen.Writer;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.NodeList;
@@ -54,8 +53,8 @@ public class JavaLexer {
 
     //write char ranges
     private void cmap() {
-        Writer cmapWriter = new Writer();
-        cmapWriter.print("\"");
+        StringBuilder cmapWriter = new StringBuilder();
+        cmapWriter.append("\"");
         int column = 20;
         int i = 0;
         //sorted ranges for error report
@@ -69,98 +68,95 @@ public class JavaLexer {
             Map.Entry<Node, Integer> entry = it.next();
             Range range = entry.getKey().asRange();
             entries.add(entry);
-            cmapWriter.print(makeOctal(range.start));
-            cmapWriter.print(makeOctal(range.end));
-            cmapWriter.print(makeOctal(entry.getValue()));
+            cmapWriter.append(makeOctal(range.start));
+            cmapWriter.append(makeOctal(range.end));
+            cmapWriter.append(makeOctal(entry.getValue()));
             i++;
             if (i % column == 0) {
-                cmapWriter.print("\"+\n");
+                cmapWriter.append("\"+\n");
                 if (it.hasNext()) {
-                    cmapWriter.print("            ");
-                    cmapWriter.print("\"");//next line start
+                    cmapWriter.append("            ");
+                    cmapWriter.append("\"");//next line start
                 }
             }
         }
-        cmapWriter.print("\"");
-        template.set("cMap", cmapWriter.getString());
+        cmapWriter.append("\"");
+        template.set("cMap", cmapWriter.toString());
 
-        Writer regexWriter = new Writer();
+        StringBuilder regexWriter = new StringBuilder();
         for (Iterator<Map.Entry<Node, Integer>> it = entries.iterator(); it.hasNext(); ) {
             Map.Entry<Node, Integer> entry = it.next();
-            regexWriter.print("\"");
-            regexWriter.print(UnicodeUtils.escapeString(entry.getKey().toString()));
-            regexWriter.print("\"");
+            regexWriter.append("\"");
+            regexWriter.append(UnicodeUtils.escapeString(entry.getKey().toString()));
+            regexWriter.append("\"");
             if (it.hasNext()) {
-                regexWriter.print(", ");
+                regexWriter.append(", ");
             }
         }
-        template.set("cMapRegex", regexWriter.getString());
+        template.set("cMapRegex", regexWriter.toString());
     }
 
     void writeTrans() {
-        Writer transWriter = new Writer();
+        StringBuilder transWriter = new StringBuilder();
         String indent = "        ";
-        transWriter.print("\"");
-        transWriter.print(makeOctal(dfa.getAlphabet().size()));
-        transWriter.print("\" +");
-        transWriter.print("\n");
+        transWriter.append("\"");
+        transWriter.append(makeOctal(dfa.getAlphabet().size()));
+        transWriter.append("\" +\n");
         for (int state : dfa.it()) {
             List<Transition> list = dfa.trans[state];
-            transWriter.print(indent);
-            transWriter.print("\"");
+            transWriter.append(indent);
+            transWriter.append("\"");
             if (list == null || list.isEmpty()) {
-                transWriter.print(makeOctal(0));
+                transWriter.append(makeOctal(0));
             }
             else {
-                transWriter.print(makeOctal(list.size()));
+                transWriter.append(makeOctal(list.size()));
                 for (Transition tr : list) {
-                    transWriter.print(makeOctal(tr.input));
-                    transWriter.print(makeOctal(tr.target));
+                    transWriter.append(makeOctal(tr.input));
+                    transWriter.append(makeOctal(tr.target));
                 }
             }
-            transWriter.print("\"");
+            transWriter.append("\"");
             if (state <= dfa.lastState - 1) {
-                transWriter.print(" +\n");
+                transWriter.append(" +\n");
             }
         }
-        template.set("trans", transWriter.getString());
+        template.set("trans", transWriter.toString());
     }
 
     private void nameAndId() {
         //id list
-        Writer idWriter = new Writer();
+        StringBuilder idWriter = new StringBuilder();
         for (int state : dfa.it()) {
-            idWriter.print(gen.idArr[state]);
+            idWriter.append(gen.idArr[state]);
             if (state <= dfa.lastState - 1) {
-                idWriter.print(",");
+                idWriter.append(",");
                 if (state > 0 && state % 20 == 0) {
-                    idWriter.print("\n            ");
+                    idWriter.append("\n            ");
                 }
             }
         }
-        template.set("id_list", idWriter.getString());
+        template.set("id_list", idWriter.toString());
 
         //write
-        Writer nameWriter = new Writer();
+        StringBuilder nameWriter = new StringBuilder();
         int i = 0;
         int column = 20;
         for (Map.Entry<Name, Integer> entry : gen.tokens) {
             if (i > 0) {
-                nameWriter.print(",");
+                nameWriter.append(",");
                 if (i % column == 0) {
-                    nameWriter.print("\n");
+                    nameWriter.append("\n");
                 }
             }
-            nameWriter.print("\"" + entry.getKey().name + "\"");
+            nameWriter.append("\"").append(entry.getKey().name).append("\"");
             i++;
         }
-        template.set("name_list", nameWriter.getString());
+        template.set("name_list", nameWriter.toString());
     }
 
     private void writeTokenClass() throws IOException {
-        File out = new File(options.outDir, options.tokenClass + ".java");
         Template template = new Template("token.java.template");
-
         if (options.packageName == null) {
             template.set("package", "");
         }
@@ -168,7 +164,7 @@ public class JavaLexer {
             template.set("package", "package " + options.packageName + ";\n");
         }
         template.set("token_class", options.tokenClass);
-
+        File out = new File(options.outDir, options.tokenClass + ".java");
         Utils.write(template.toString(), out);
     }
 }

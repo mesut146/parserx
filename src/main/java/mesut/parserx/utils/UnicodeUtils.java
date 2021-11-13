@@ -70,6 +70,9 @@ public class UnicodeUtils {
         if (str.startsWith("\"") && str.endsWith("\"")) {
             return str.substring(1, str.length() - 1);
         }
+        else if (str.startsWith("'") && str.endsWith("'")) {
+            return str.substring(1, str.length() - 1);
+        }
         return str;
     }
 

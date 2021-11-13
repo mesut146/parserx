@@ -12,25 +12,66 @@ public class Ast{
         public List<treeg2> rules = new ArrayList<>();
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
-            sb.append('{');
-            for(int i=0;i<includeStatement.size();i++){
-                sb.append(includeStatement.get(i));
+            StringBuilder sb=new StringBuilder("tree{");
+            if(!includeStatement.isEmpty()){
+                sb.append('[');
+                for(int i=0;i<includeStatement.size();i++){
+                    sb.append(includeStatement.get(i));
+                    sb.append(",");
+                }
+                sb.append(']');
             }
-            sb.append('}');
             sb.append(optionsBlock==null?"":optionsBlock);
-            sb.append('{');
-            for(int i=0;i<tokens.size();i++){
-                sb.append(tokens.get(i));
+            if(!tokens.isEmpty()){
+                sb.append('[');
+                for(int i=0;i<tokens.size();i++){
+                    sb.append(tokens.get(i));
+                    sb.append(",");
+                }
+                sb.append(']');
             }
-            sb.append('}');
             sb.append(startDecl==null?"":startDecl);
-            sb.append('{');
-            for(int i=0;i<rules.size();i++){
-                sb.append(rules.get(i));
+            if(!rules.isEmpty()){
+                sb.append('[');
+                for(int i=0;i<rules.size();i++){
+                    sb.append(rules.get(i));
+                    sb.append(",");
+                }
+                sb.append(']');
             }
-            sb.append('}');
-            return sb.toString();
+            return sb.append("}").toString();
+        }
+    }
+    public static class treeg2{
+        public int which;
+        public ruleDecl ruleDecl;
+        public assocDecl assocDecl;
+
+        public String toString(){
+            StringBuilder sb=new StringBuilder("treeg2{");
+            if(which==1){
+                sb.append(ruleDecl.toString());
+            }
+            else if(which==2){
+                sb.append(assocDecl.toString());
+            }
+            return sb.append("}").toString();
+        }
+    }
+    public static class treeg1{
+        public int which;
+        public tokenBlock tokenBlock;
+        public skipBlock skipBlock;
+
+        public String toString(){
+            StringBuilder sb=new StringBuilder("treeg1{");
+            if(which==1){
+                sb.append(tokenBlock.toString());
+            }
+            else if(which==2){
+                sb.append(skipBlock.toString());
+            }
+            return sb.append("}").toString();
         }
     }
     public static class includeStatement{
@@ -38,10 +79,10 @@ public class Ast{
         public Token STRING;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("includeStatement{");
             sb.append(INCLUDE.value);
             sb.append(STRING.value);
-            return sb.toString();
+            return sb.append("}").toString();
         }
     }
     public static class optionsBlock{
@@ -51,16 +92,19 @@ public class Ast{
         public Token RBRACE;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("optionsBlock{");
             sb.append(OPTIONS.value);
             sb.append(LBRACE.value);
-            sb.append('{');
-            for(int i=0;i<option.size();i++){
-                sb.append(option.get(i));
+            if(!option.isEmpty()){
+                sb.append('[');
+                for(int i=0;i<option.size();i++){
+                    sb.append(option.get(i));
+                    sb.append(",");
+                }
+                sb.append(']');
             }
-            sb.append('}');
             sb.append(RBRACE.value);
-            return sb.toString();
+            return sb.append("}").toString();
         }
     }
     public static class option{
@@ -70,12 +114,28 @@ public class Ast{
         public Token SEMI;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("option{");
             sb.append(key.value);
             sb.append(SEPARATOR.value);
             sb.append(value.toString());
             sb.append(SEMI==null?"":SEMI);
-            return sb.toString();
+            return sb.append("}").toString();
+        }
+    }
+    public static class optiong1{
+        public int which;
+        public Token NUMBER;
+        public Token BOOLEAN;
+
+        public String toString(){
+            StringBuilder sb=new StringBuilder("optiong1{");
+            if(which==1){
+                sb.append(NUMBER.value);
+            }
+            else if(which==2){
+                sb.append(BOOLEAN.value);
+            }
+            return sb.append("}").toString();
         }
     }
     public static class startDecl{
@@ -85,12 +145,12 @@ public class Ast{
         public Token SEMI;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("startDecl{");
             sb.append(START.value);
             sb.append(SEPARATOR.value);
             sb.append(name.toString());
             sb.append(SEMI.value);
-            return sb.toString();
+            return sb.append("}").toString();
         }
     }
     public static class tokenBlock{
@@ -100,16 +160,19 @@ public class Ast{
         public Token RBRACE;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("tokenBlock{");
             sb.append(TOKEN.value);
             sb.append(LBRACE.value);
-            sb.append('{');
-            for(int i=0;i<tokenDecl.size();i++){
-                sb.append(tokenDecl.get(i));
+            if(!tokenDecl.isEmpty()){
+                sb.append('[');
+                for(int i=0;i<tokenDecl.size();i++){
+                    sb.append(tokenDecl.get(i));
+                    sb.append(",");
+                }
+                sb.append(']');
             }
-            sb.append('}');
             sb.append(RBRACE.value);
-            return sb.toString();
+            return sb.append("}").toString();
         }
     }
     public static class skipBlock{
@@ -119,16 +182,19 @@ public class Ast{
         public Token RBRACE;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("skipBlock{");
             sb.append(SKIP.value);
             sb.append(LBRACE.value);
-            sb.append('{');
-            for(int i=0;i<tokenDecl.size();i++){
-                sb.append(tokenDecl.get(i));
+            if(!tokenDecl.isEmpty()){
+                sb.append('[');
+                for(int i=0;i<tokenDecl.size();i++){
+                    sb.append(tokenDecl.get(i));
+                    sb.append(",");
+                }
+                sb.append(']');
             }
-            sb.append('}');
             sb.append(RBRACE.value);
-            return sb.toString();
+            return sb.append("}").toString();
         }
     }
     public static class tokenDecl{
@@ -139,13 +205,13 @@ public class Ast{
         public Token SEMI;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("tokenDecl{");
             sb.append(HASH==null?"":HASH);
             sb.append(name.toString());
             sb.append(SEPARATOR.value);
             sb.append(rhs.toString());
             sb.append(SEMI.value);
-            return sb.toString();
+            return sb.append("}").toString();
         }
     }
     public static class ruleDecl{
@@ -156,13 +222,13 @@ public class Ast{
         public Token SEMI;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("ruleDecl{");
             sb.append(name.toString());
             sb.append(args==null?"":args);
             sb.append(SEPARATOR.value);
             sb.append(rhs.toString());
             sb.append(SEMI.value);
-            return sb.toString();
+            return sb.append("}").toString();
         }
     }
     public static class args{
@@ -172,16 +238,30 @@ public class Ast{
         public Token RP;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("args{");
             sb.append(LP.value);
             sb.append(name.toString());
-            sb.append('{');
-            for(int i=0;i<rest.size();i++){
-                sb.append(rest.get(i));
+            if(!rest.isEmpty()){
+                sb.append('[');
+                for(int i=0;i<rest.size();i++){
+                    sb.append(rest.get(i));
+                    sb.append(",");
+                }
+                sb.append(']');
             }
-            sb.append('}');
             sb.append(RP.value);
-            return sb.toString();
+            return sb.append("}").toString();
+        }
+    }
+    public static class argsg1{
+        public Token COMMA;
+        public name name;
+
+        public String toString(){
+            StringBuilder sb=new StringBuilder("argsg1{");
+            sb.append(COMMA.value);
+            sb.append(name.toString());
+            return sb.append("}").toString();
         }
     }
     public static class assocDecl{
@@ -190,15 +270,34 @@ public class Ast{
         public Token SEMI;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("assocDecl{");
             sb.append(type.toString());
-            sb.append('{');
-            for(int i=0;i<ref.size();i++){
-                sb.append(ref.get(i));
+            if(!ref.isEmpty()){
+                sb.append('[');
+                for(int i=0;i<ref.size();i++){
+                    sb.append(ref.get(i));
+                    sb.append(",");
+                }
+                sb.append(']');
             }
-            sb.append('}');
             sb.append(SEMI.value);
-            return sb.toString();
+            return sb.append("}").toString();
+        }
+    }
+    public static class assocDeclg1{
+        public int which;
+        public Token LEFT;
+        public Token RIGHT;
+
+        public String toString(){
+            StringBuilder sb=new StringBuilder("assocDeclg1{");
+            if(which==1){
+                sb.append(LEFT.value);
+            }
+            else if(which==2){
+                sb.append(RIGHT.value);
+            }
+            return sb.append("}").toString();
         }
     }
     public static class rhs{
@@ -206,14 +305,28 @@ public class Ast{
         public List<rhsg1> g1 = new ArrayList<>();
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("rhs{");
             sb.append(sequence.toString());
-            sb.append('{');
-            for(int i=0;i<g1.size();i++){
-                sb.append(g1.get(i));
+            if(!g1.isEmpty()){
+                sb.append('[');
+                for(int i=0;i<g1.size();i++){
+                    sb.append(g1.get(i));
+                    sb.append(",");
+                }
+                sb.append(']');
             }
-            sb.append('}');
-            return sb.toString();
+            return sb.append("}").toString();
+        }
+    }
+    public static class rhsg1{
+        public Token OR;
+        public sequence sequence;
+
+        public String toString(){
+            StringBuilder sb=new StringBuilder("rhsg1{");
+            sb.append(OR.value);
+            sb.append(sequence.toString());
+            return sb.append("}").toString();
         }
     }
     public static class sequence{
@@ -221,27 +334,107 @@ public class Ast{
         public sequenceg1 label;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
-            sb.append('{');
-            for(int i=0;i<regex.size();i++){
-                sb.append(regex.get(i));
+            StringBuilder sb=new StringBuilder("sequence{");
+            if(!regex.isEmpty()){
+                sb.append('[');
+                for(int i=0;i<regex.size();i++){
+                    sb.append(regex.get(i));
+                    sb.append(",");
+                }
+                sb.append(']');
             }
-            sb.append('}');
             sb.append(label==null?"":label);
-            return sb.toString();
+            return sb.append("}").toString();
+        }
+    }
+    public static class sequenceg1{
+        public Token HASH;
+        public name name;
+
+        public String toString(){
+            StringBuilder sb=new StringBuilder("sequenceg1{");
+            sb.append(HASH.value);
+            sb.append(name.toString());
+            return sb.append("}").toString();
         }
     }
     public static class regex{
-        public regexg1 name;
-        public simple simple;
-        public regexg2 type;
+        public int which;
+        Regex1 regex1;
+        Regex2 regex2;
+        public static class Regex1{
+                public name name;
+                public Token SEPARATOR;
+                public simple simple;
+                public regexg1 type;
+                public String toString(){
+                        StringBuilder sb=new StringBuilder();
+                        sb.append(name.toString());
+                        sb.append(SEPARATOR.value);
+                        sb.append(simple.toString());
+                        sb.append(type==null?"":type);
+                        return sb.toString();
+                }
+        }
+        public static class Regex2{
+                public simple simple;
+                public regexg2 type;
+                public String toString(){
+                        StringBuilder sb=new StringBuilder();
+                        sb.append(simple.toString());
+                        sb.append(type==null?"":type);
+                        return sb.toString();
+                }
+        }
+        public String toString(){
+            StringBuilder sb=new StringBuilder("regex{");
+            if(which==1){
+                sb.append(regex1);
+            }
+            else if(which==2){
+                sb.append(regex2);
+            }
+            return sb.append("}").toString();
+        }
+    }
+    public static class regexg2{
+        public int which;
+        public Token STAR;
+        public Token PLUS;
+        public Token QUES;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
-            sb.append(name==null?"":name);
-            sb.append(simple.toString());
-            sb.append(type==null?"":type);
-            return sb.toString();
+            StringBuilder sb=new StringBuilder("regexg2{");
+            if(which==1){
+                sb.append(STAR.value);
+            }
+            else if(which==2){
+                sb.append(PLUS.value);
+            }
+            else if(which==3){
+                sb.append(QUES.value);
+            }
+            return sb.append("}").toString();
+        }
+    }
+    public static class regexg1{
+        public int which;
+        public Token STAR;
+        public Token PLUS;
+        public Token QUES;
+
+        public String toString(){
+            StringBuilder sb=new StringBuilder("regexg1{");
+            if(which==1){
+                sb.append(STAR.value);
+            }
+            else if(which==2){
+                sb.append(PLUS.value);
+            }
+            else if(which==3){
+                sb.append(QUES.value);
+            }
+            return sb.append("}").toString();
         }
     }
     public static class simple{
@@ -257,7 +450,7 @@ public class Ast{
         public Token SHORTCUT;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("simple{");
             if(which==1){
                 sb.append(group.toString());
             }
@@ -285,7 +478,7 @@ public class Ast{
             else if(which==9){
                 sb.append(SHORTCUT.value);
             }
-            return sb.toString();
+            return sb.append("}").toString();
         }
     }
     public static class group{
@@ -294,29 +487,36 @@ public class Ast{
         public Token RP;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("group{");
             sb.append(LP.value);
             sb.append(rhs.toString());
             sb.append(RP.value);
-            return sb.toString();
+            return sb.append("}").toString();
         }
     }
     public static class stringNode{
+        public int which;
         public Token STRING;
+        public Token CHAR;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
-            sb.append(STRING.value);
-            return sb.toString();
+            StringBuilder sb=new StringBuilder("stringNode{");
+            if(which==1){
+                sb.append(STRING.value);
+            }
+            else if(which==2){
+                sb.append(CHAR.value);
+            }
+            return sb.append("}").toString();
         }
     }
     public static class bracketNode{
         public Token BRACKET;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("bracketNode{");
             sb.append(BRACKET.value);
-            return sb.toString();
+            return sb.append("}").toString();
         }
     }
     public static class untilNode{
@@ -324,28 +524,28 @@ public class Ast{
         public regex regex;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("untilNode{");
             sb.append(TILDE.value);
             sb.append(regex.toString());
-            return sb.toString();
+            return sb.append("}").toString();
         }
     }
     public static class dotNode{
         public Token DOT;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("dotNode{");
             sb.append(DOT.value);
-            return sb.toString();
+            return sb.append("}").toString();
         }
     }
     public static class ref{
         public name name;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("ref{");
             sb.append(name.toString());
-            return sb.toString();
+            return sb.append("}").toString();
         }
     }
     public static class name{
@@ -354,9 +554,10 @@ public class Ast{
         public Token TOKEN;
         public Token SKIP;
         public Token OPTIONS;
+        public Token INCLUDE;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("name{");
             if(which==1){
                 sb.append(IDENT.value);
             }
@@ -369,7 +570,10 @@ public class Ast{
             else if(which==4){
                 sb.append(OPTIONS.value);
             }
-            return sb.toString();
+            else if(which==5){
+                sb.append(INCLUDE.value);
+            }
+            return sb.append("}").toString();
         }
     }
     public static class repeatNode{
@@ -378,139 +582,11 @@ public class Ast{
         public Token RBRACE;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb=new StringBuilder("repeatNode{");
             sb.append(LBRACE.value);
             sb.append(rhs.toString());
             sb.append(RBRACE.value);
-            return sb.toString();
-        }
-    }
-    public static class treeg1{
-        public int which;
-        public tokenBlock tokenBlock;
-        public skipBlock skipBlock;
-
-        public String toString(){
-            StringBuilder sb=new StringBuilder();
-            if(which==1){
-                sb.append(tokenBlock.toString());
-            }
-            else if(which==2){
-                sb.append(skipBlock.toString());
-            }
-            return sb.toString();
-        }
-    }
-    public static class treeg2{
-        public int which;
-        public ruleDecl ruleDecl;
-        public assocDecl assocDecl;
-
-        public String toString(){
-            StringBuilder sb=new StringBuilder();
-            if(which==1){
-                sb.append(ruleDecl.toString());
-            }
-            else if(which==2){
-                sb.append(assocDecl.toString());
-            }
-            return sb.toString();
-        }
-    }
-    public static class optiong1{
-        public int which;
-        public Token NUMBER;
-        public Token BOOLEAN;
-
-        public String toString(){
-            StringBuilder sb=new StringBuilder();
-            if(which==1){
-                sb.append(NUMBER.value);
-            }
-            else if(which==2){
-                sb.append(BOOLEAN.value);
-            }
-            return sb.toString();
-        }
-    }
-    public static class argsg1{
-        public Token COMMA;
-        public name name;
-
-        public String toString(){
-            StringBuilder sb=new StringBuilder();
-            sb.append(COMMA.value);
-            sb.append(name.toString());
-            return sb.toString();
-        }
-    }
-    public static class assocDeclg1{
-        public int which;
-        public Token LEFT;
-        public Token RIGHT;
-
-        public String toString(){
-            StringBuilder sb=new StringBuilder();
-            if(which==1){
-                sb.append(LEFT.value);
-            }
-            else if(which==2){
-                sb.append(RIGHT.value);
-            }
-            return sb.toString();
-        }
-    }
-    public static class rhsg1{
-        public Token OR;
-        public sequence sequence;
-
-        public String toString(){
-            StringBuilder sb=new StringBuilder();
-            sb.append(OR.value);
-            sb.append(sequence.toString());
-            return sb.toString();
-        }
-    }
-    public static class sequenceg1{
-        public Token HASH;
-        public name name;
-
-        public String toString(){
-            StringBuilder sb=new StringBuilder();
-            sb.append(HASH.value);
-            sb.append(name.toString());
-            return sb.toString();
-        }
-    }
-    public static class regexg1{
-        public name name;
-        public Token SEPARATOR;
-
-        public String toString(){
-            StringBuilder sb=new StringBuilder();
-            sb.append(name.toString());
-            sb.append(SEPARATOR.value);
-            return sb.toString();
-        }
-    }
-    public static class regexg2{
-        public int which;
-        public Token STAR;
-        public Token PLUS;
-        public Token QUES;
-
-        public String toString(){
-            StringBuilder sb=new StringBuilder();
-            if(which==1){
-                sb.append(STAR.value);
-            }
-            else if(which==2){
-                sb.append(PLUS.value);
-            }
-            else if(which==3){
-                sb.append(QUES.value);
-            }
-            return sb.toString();
+            return sb.append("}").toString();
         }
     }
 }

@@ -4,7 +4,6 @@ import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Template;
-import mesut.parserx.gen.Writer;
 import mesut.parserx.gen.lr.IdMap;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.NodeList;
@@ -52,32 +51,32 @@ public class LLDfaParserGen {
     }
 
     void makeTrans() {
-        Writer transWriter = new Writer();
+        StringBuilder transWriter = new StringBuilder();
         String indent = "        ";
-        transWriter.print("\"");
-        transWriter.print(LexerGenerator.makeOctal(idMap.lastTokenId));
-        transWriter.print("\" +");
-        transWriter.print("\n");
+        transWriter.append("\"");
+        transWriter.append(LexerGenerator.makeOctal(idMap.lastTokenId));
+        transWriter.append("\" +");
+        transWriter.append("\n");
         for (int state = 0; state <= dfa.lastState; state++) {
             List<Transition> list = dfa.trans[state];
-            transWriter.print(indent);
-            transWriter.print("\"");
+            transWriter.append(indent);
+            transWriter.append("\"");
             if (list == null || list.isEmpty()) {
-                transWriter.print(LexerGenerator.makeOctal(0));
+                transWriter.append(LexerGenerator.makeOctal(0));
             }
             else {
-                transWriter.print(LexerGenerator.makeOctal(list.size()));
+                transWriter.append(LexerGenerator.makeOctal(list.size()));
                 for (Transition transition : list) {
-                    transWriter.print(LexerGenerator.makeOctal(transition.input));
-                    transWriter.print(LexerGenerator.makeOctal(transition.target));
+                    transWriter.append(LexerGenerator.makeOctal(transition.input));
+                    transWriter.append(LexerGenerator.makeOctal(transition.target));
                 }
             }
-            transWriter.print("\"");
+            transWriter.append("\"");
             if (state <= dfa.lastState - 1) {
-                transWriter.print(" +\n");
+                transWriter.append(" +\n");
             }
         }
-        template.set("trans", transWriter.getString());
+        template.set("trans", transWriter.toString());
     }
 
     private void makeids() {
@@ -93,17 +92,17 @@ public class LLDfaParserGen {
             }
         }
         //id list
-        Writer idWriter = new Writer();
+        StringBuilder idWriter = new StringBuilder();
         for (int state : dfa.it()) {
-            idWriter.print(idArr[state]);
+            idWriter.append(idArr[state]);
             if (state <= dfa.lastState - 1) {
-                idWriter.print(",");
+                idWriter.append(",");
                 if (state > 0 && state % 20 == 0) {
-                    idWriter.print("\n            ");
+                    idWriter.append("\n            ");
                 }
             }
         }
-        template.set("id_list", idWriter.getString());
+        template.set("id_list", idWriter.toString());
 
         //sort rules by id
         TreeSet<Map.Entry<Name, Integer>> tokens = new TreeSet<>(new Comparator<Map.Entry<Name, Integer>>() {
@@ -118,21 +117,20 @@ public class LLDfaParserGen {
             }
         }
         //write
-        Writer nameWriter = new Writer();
+        StringBuilder nameWriter = new StringBuilder();
         int i = 0;
         int column = 20;
         for (Map.Entry<Name, Integer> entry : tokens) {
             if (i > 0) {
-                nameWriter.print(",");
+                nameWriter.append(",");
                 if (i % column == 0) {
-                    nameWriter.print("\n");
+                    nameWriter.append("\n");
                 }
             }
-            nameWriter.print("\"" + entry.getKey().name + "\"");
+            nameWriter.append("\"" + entry.getKey().name + "\"");
             i++;
         }
-        template.set("name_list", nameWriter.getString());
-
+        template.set("name_list", nameWriter.toString());
         template.set("ruleOffset", "" + idMap.lastTokenId);
     }
 }

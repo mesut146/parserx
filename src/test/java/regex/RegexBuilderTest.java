@@ -15,6 +15,7 @@ import mesut.parserx.regex.RegexOptimizer;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 

@@ -9,6 +9,7 @@ import mesut.parserx.gen.transform.Epsilons;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
+import mesut.parserx.utils.Utils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -16,6 +17,14 @@ import java.io.File;
 import java.io.IOException;
 
 public class LLGenTest {
+
+    @Test
+    public void name() throws IOException {
+        String path = "/home/mesut/Desktop/lang/grammar/Parser.g";
+        Tree tree = Tree.makeTree(new File(path));
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        RecDescent.gen(tree, "java");
+    }
 
     @Test
     public void cppTarget() throws IOException {
@@ -108,13 +117,12 @@ public class LLGenTest {
     public void parserx() throws Exception {
         Factor.factorSequence = true;
         Factor.debug = true;
-        Tree tree = Env.tree("parserx.g");
-        Options options = new Options();
-        options.outDir = Env.dotDir().getAbsolutePath();
-        options.packageName = "mesut.parserx.parser2";
-        tree.options = options;
+        String file = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g";
+        String check = "/home/mesut/Desktop/lang/grammar/Parser.g";
+        Tree tree = Tree.makeTree(new File(file));
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
 
-        RecDescent.gen(tree, "java");
+        DescTester.check(tree, "tree", Utils.read(new File(check)));
     }
 
     @Test

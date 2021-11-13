@@ -1,5 +1,6 @@
 package mesut.parserx.dfa;
 
+import mesut.parserx.nodes.Epsilon;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.Range;
 import mesut.parserx.nodes.Tree;
@@ -243,15 +244,15 @@ public class NFA {
 
     public void dump(Writer writer) {
         PrintWriter w = new PrintWriter(writer);
-        w.println("initial=" + initial);
-        w.print("final=");
+        w.println("initial = " + initial);
+        w.print("final = ");
         for (int i : it()) {
             if (isAccepting(i)) {
                 w.print(i + getName(i));
             }
         }
         w.println();
-        for (int state = 0; state <= lastState; state++) {
+        for (int state : it()) {
             if (!hasTransitions(state)) continue;
             List<Transition> arr = trans[state];
             sort(arr);
@@ -259,7 +260,17 @@ public class NFA {
                 w.print(state + " -> " + tr.target);
                 if (!tr.epsilon) {
                     w.print("  , ");
-                    w.print(getAlphabet().getRegex(tr.input));
+                    Node input = getAlphabet().getRegex(tr.input);
+                    if (input.isString()) {
+                        w.print(input.asString().printNormal());
+                    }
+                    else if (input.isRange()) {
+                        Range range = input.asRange();
+                        w.print(range);
+                    }
+                    else {
+                        w.print(input);
+                    }
                 }
                 w.println();
             }
@@ -284,6 +295,7 @@ public class NFA {
     public void dot(File path) throws IOException {
         dot(new FileWriter(path));
     }
+
     public void dot(Writer writer) {
         String finalColor = "red";
         String initialColor = "red";
@@ -310,7 +322,7 @@ public class NFA {
             for (Transition tr : get(state)) {
                 String label;
                 if (tr.epsilon) {
-                    label = "ε";
+                    label = Epsilon.str();
                 }
                 else {
                     label = UnicodeUtils.escapeString(getAlphabet().getRegex(tr.input).toString());

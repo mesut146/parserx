@@ -113,16 +113,43 @@ public class AstBuilder {
         return s.normal();
     }
 
+    String str(Ast.name name) {
+        if (name.IDENT != null) {
+            return name.IDENT.value;
+        }
+        else if (name.OPTIONS != null) {
+            return name.OPTIONS.value;
+        }
+        else if (name.SKIP != null) {
+            return name.SKIP.value;
+        }
+        else if (name.TOKEN != null) {
+            return name.TOKEN.value;
+        }
+        else {
+            return name.INCLUDE.value;
+        }
+    }
 
     public Node visitRegex(Ast.regex node) {
-        Node res = visitSimple(node.simple);
-        if (node.name != null) {
-            res.astInfo.varName = node.name.name.toString();
+        if (node.regex1 != null) {
+            String name = str(node.regex1.name);
+            Node res = visitSimple(node.regex1.simple);
+            res.astInfo.varName = name;
+            if (node.regex1.type != null) {
+                String type = node.regex1.type.PLUS != null ? "+" : (node.regex1.type.STAR != null ? "*" : "?");
+                return new Regex(res, type);
+            }
+            return res;
         }
-        if (node.type != null) {
-            return new Regex(res, node.type.toString());
+        else {
+            Node res = visitSimple(node.regex2.simple);
+            if (node.regex2.type != null) {
+                String type = node.regex2.type.PLUS != null ? "+" : (node.regex2.type.STAR != null ? "*" : "?");
+                return new Regex(res, type);
+            }
+            return res;
         }
-        return res;
     }
 
 
@@ -140,7 +167,10 @@ public class AstBuilder {
             return new Name(node.ref.name.IDENT.value);
         }
         else if (node.stringNode != null) {
-            return StringNode.from(node.stringNode.STRING.value);
+            if (node.stringNode.STRING != null) {
+                return StringNode.from(node.stringNode.STRING.value);
+            }
+            return StringNode.from(node.stringNode.CHAR.value);
         }
         else if (node.EPSILON != null) {
             return new Epsilon();

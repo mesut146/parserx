@@ -134,8 +134,15 @@ public class RegexBuilder {
             }
             path.add(new Regex(node, "*"));
         }
-        if (!out.epsilon)
-            path.add(idToNode(out));
+        if (!out.epsilon) {
+            Node o = idToNode(out);
+            if (o.isOr()) {
+                path.add(new Group(o));
+            }
+            else {
+                path.add(o);
+            }
+        }
         if (path.size() == 0) {
             return new Epsilon();
         }

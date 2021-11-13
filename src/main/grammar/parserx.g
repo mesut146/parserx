@@ -1,5 +1,5 @@
 token{
- BOOLEAN: "true" | "false";
+ BOOLEAN: 'true' | 'false';
  OPTIONS: "options";
  TOKEN: "token" | "tokens";
  SKIP: "skip";
@@ -10,8 +10,9 @@ token{
  RIGHT: "%right";
  IDENT: [a-zA-Z_] [a-zA-Z0-9_]*;
  SHORTCUT: "[:" IDENT ":]";
- BRACKET: "[" ~"]";
+ BRACKET: "[" ([^\r\n\\\u005d] | "\\" .)* "]";
  STRING: "\"" ([^\r\n\\"] | "\\" .)* "\"";
+ CHAR: "'" ([^\r\n\\'] | "\\" .)* "'";
  NUMBER: [0-9]+;
 }
 
@@ -71,16 +72,19 @@ assocDecl: type=("%left" | "%right") ref+ ";";
 
 rhs: sequence ("|" sequence)*;
 sequence: regex+ label=("#" name)?;
-regex: name=(name "=")? simple type=("*" | "+" | "?")?;
+
+regex: name "=" simple type=("*" | "+" | "?")?
+     | simple type=("*" | "+" | "?")?;
+
 simple: group | ref | stringNode | bracketNode | untilNode | dotNode | EPSILON | repeatNode | SHORTCUT;
 
 group: "(" rhs ")";
-stringNode: STRING;
+stringNode: STRING | CHAR;
 bracketNode: BRACKET;//easier to handle as token
 untilNode: "~" regex;
 dotNode: ".";
 ref: name;
-name: IDENT | "token" | "tokens" | "skip" | "options";
+name: IDENT | "token" | "tokens" | "skip" | "options" | "include";
 repeatNode: "{" rhs "}";
 
 //bracketOpt: "[" rhs "]";

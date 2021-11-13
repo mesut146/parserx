@@ -301,17 +301,19 @@ public class Factor extends SimpleTransformer {
         if (Helper.start(A, sym, tree)) {
             PullInfo ai = pull(A, sym);
             if (Helper.canBeEmpty(A, tree) && Helper.start(B, sym, tree)) {
-                PullInfo bi = pull(B, sym);
-                //(a A(a) | A_no_e) (a B(a) | B_no_e)
-                //a A(a) a B(a) | a A(a) B_no_a | A_no_a a B(a) A_no_a B_no_a
-                return pull(new Sequence(new Or(new Sequence(sym.copy(), ai.one), ai.zero),
-                        new Or(new Sequence(sym.copy(), bi.one), bi.zero)), sym);
-                //A B = A_eps B | A_noe B
-                /*Epsilons.Info eps = Epsilons.trimInfo(A, tree);
-                Sequence s1 = new Sequence(eps.eps, B);
-                Sequence s2 = new Sequence(eps.noEps, B);
-                return pull(new Or(s1, s2), sym);*/
-                //throw new RuntimeException("not yet");
+                //(a A(a) | A_no_a) B
+                //a A(a) B | A_no_a B
+                return pull(new Or(new Sequence(ai.zero, B), new Sequence(ai.one, B)), sym);
+                /*if (Helper.canBeEmpty(ai.zero, tree)) {
+                    //a A(a) B | A_no_a_eps B | A_no_a_noe B
+                    //a A(a) B | A_no_a_eps B | A_no_a_noe B
+                    info.zero = new Sequence(ai.zero, B);
+                    info.one = new Sequence(ai.one, B);
+                }
+                else {
+                    info.zero = new Sequence(ai.zero, B);
+                    info.one = new Sequence(ai.one, B);
+                }*/
             }
             //(a A1 | A0) B
             //a A(a) B | A_no_a B

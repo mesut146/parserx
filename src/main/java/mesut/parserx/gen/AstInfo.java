@@ -73,7 +73,7 @@ public class AstInfo {
         }
         sb.append(String.format("%s.%s", outerVar, varName));
         if (which != -1) {
-            sb.append(" code");
+            sb.append(" which");
         }
         sb.append('}');
         return sb.toString();

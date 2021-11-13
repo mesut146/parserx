@@ -103,20 +103,20 @@ public class JavaAstGen {
             if (regex.isStar() || regex.isPlus()) {
                 c.append("if(!%s.isEmpty()){", v);
                 c.append("sb.append('[');");
-                c.append("for(int i=0;i<%s.size();i++){", v);
+                c.append("for(int i = 0;i < %s.size();i++){", v);
                 if (regex.node.asName().isToken) {
                     c.append("sb.append(%s.get(i).value);", v);
                 }
                 else {
                     c.append("sb.append(%s.get(i));", v);
                 }
-                c.append("sb.append(\",\");");
+                c.append("if(i < %s.size() - 1) sb.append(\",\");", v);
                 c.append("}");
                 c.append("sb.append(']');");
                 c.append("}");
             }
             else {
-                c.append("sb.append(%s==null?\"\":%s);", v, v);
+                c.append("sb.append(%s == null?\"\":%s);", v, v);
             }
         }
         else if (node.isGroup()) {
@@ -126,10 +126,10 @@ public class JavaAstGen {
             Or or = node.asOr();
             for (int i = 0; i < or.size(); i++) {
                 if (i == 0) {
-                    c.append("if(which==1){");
+                    c.append("if(which == 1){");
                 }
                 else {
-                    c.append("else if(which==%d){", i + 1);
+                    c.append("else if(which == %d){", i + 1);
                 }
                 Node ch = or.get(i);
                 if (ch.isName()) {

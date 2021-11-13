@@ -7,6 +7,8 @@ import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
 import mesut.parserx.nodes.Shortcut;
 import mesut.parserx.nodes.Tree;
+import mesut.parserx.parser.Lexer;
+import mesut.parserx.parser.Token;
 import mesut.parserx.utils.UnicodeUtils;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -17,7 +19,6 @@ import java.io.IOException;
 
 @Ignore
 public class LexerGenTest {
-
 
     @Test
     public void cppTarget() throws IOException {
@@ -84,10 +85,13 @@ public class LexerGenTest {
 
     @Test
     public void itself() throws Exception {
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/examples/parserx.g"));
-        tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lexer/itself";
-        tree.options.packageName = "lexer.itself";
-        LexerGenerator.gen(tree, "java");
+        String path = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g";
+        Lexer lexer = new Lexer(new File(path));
+        while (true) {
+            Token token = lexer.next();
+            System.out.println(token);
+            if (token.type == 0) break;
+        }
     }
 
     @Test

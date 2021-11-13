@@ -132,7 +132,7 @@ public class $lexer_class$ {
             }else{
                 backupState = curState;
                 if(cMap[yychar] == -1){
-                    throw new IOException(String.format("invalid input=%c(%d) buf='%s' expecting=%s",yychar,yychar,getText(),findExpected(backupState)));
+                    throw new IOException(String.format("unknown input=%c(%d)",yychar, yychar));
                 }
                 curState = trans[curState][cMap[yychar]];
             }

@@ -23,7 +23,11 @@ public class StringNode extends Node {
 
     @Override
     public String toString() {
-        return varString() + "\"" + UnicodeUtils.escapeString(value) + "\"";
+        return varString() + "\"" + printNormal() + "\"";
+    }
+
+    public String printNormal() {
+        return UnicodeUtils.escapeString(value);
     }
 
     @Override

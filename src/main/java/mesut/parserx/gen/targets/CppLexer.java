@@ -5,7 +5,6 @@ import mesut.parserx.dfa.Transition;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
-import mesut.parserx.gen.Writer;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.NodeList;
@@ -68,71 +67,71 @@ public class CppLexer {
     }
 
     void writeTrans() {
-        Writer transWriter = new Writer();
+        StringBuilder transWriter = new StringBuilder();
         String indent = "        ";
         int len = 0;
         for (int state : dfa.it()) {
             List<Transition> list = dfa.trans[state];
-            transWriter.print("\"");
+            transWriter.append("\"");
             if (list == null || list.isEmpty()) {
-                transWriter.print(makeOctal(0));
+                transWriter.append(makeOctal(0));
                 len++;
             }
             else {
-                transWriter.print(makeOctal(list.size()));
+                transWriter.append(makeOctal(list.size()));
                 len++;
                 for (Transition tr : list) {
-                    transWriter.print(makeOctal(tr.input));
-                    transWriter.print(makeOctal(tr.target));
+                    transWriter.append(makeOctal(tr.input));
+                    transWriter.append(makeOctal(tr.target));
                     len += 2;
                 }
             }
-            transWriter.print("\"");
+            transWriter.append("\"");
             if (state <= dfa.lastState - 1) {
-                transWriter.print("\n");
-                transWriter.print(indent);
+                transWriter.append("\n");
+                transWriter.append(indent);
             }
         }
-        header.set("trans", transWriter.getString());
+        header.set("trans", transWriter.toString());
         source.set("trans_str_len", "" + len);
         header.set("max_trans", "" + dfa.lastState);
     }
 
     private void nameAndId() {
         //id list
-        Writer idWriter = new Writer();
+        StringBuilder idWriter = new StringBuilder();
         for (int state : dfa.it()) {
-            idWriter.print(gen.idArr[state]);
+            idWriter.append(gen.idArr[state]);
             if (state <= dfa.lastState - 1) {
-                idWriter.print(",");
+                idWriter.append(",");
                 if (state > 0 && state % 20 == 0) {
-                    idWriter.print("\n            ");
+                    idWriter.append("\n            ");
                 }
             }
         }
-        header.set("id_list", idWriter.getString());
+        header.set("id_list", idWriter.toString());
 
         //write
-        Writer nameWriter = new Writer();
+        StringBuilder nameWriter = new StringBuilder();
         int i = 0;
         int column = 20;
         for (Map.Entry<Name, Integer> entry : gen.tokens) {
             if (i > 0) {
-                nameWriter.print(",");
+                nameWriter.append(",");
                 if (i % column == 0) {
-                    nameWriter.print("\n");
+                    nameWriter.append("\n");
                 }
             }
-            nameWriter.print("\"" + entry.getKey().name + "\"");
+            nameWriter.append("\"").append(entry.getKey().name).append("\"");
             i++;
         }
-        header.set("name_list", nameWriter.getString());
+        header.set("name_list", nameWriter.toString());
     }
 
     //write char ranges
     private void cmap() {
-        Writer cmapWriter = new Writer();
-        cmapWriter.print("L\"");
+        StringBuilder cmapWriter = new StringBuilder();
+        cmapWriter.append("L\"");
         int column = 20;
         int i = 0;
         //sorted ranges for error report
@@ -146,32 +145,31 @@ public class CppLexer {
             Map.Entry<Node, Integer> entry = it.next();
             Range range = entry.getKey().asRange();
             entries.add(entry);
-            cmapWriter.print(makeOctal(range.start));
-            cmapWriter.print(makeOctal(range.end));
-            cmapWriter.print(makeOctal(entry.getValue()));
+            cmapWriter.append(makeOctal(range.start));
+            cmapWriter.append(makeOctal(range.end));
+            cmapWriter.append(makeOctal(entry.getValue()));
             i++;
             if (i % column == 0) {
-                cmapWriter.print("\"\n");//end line
+                cmapWriter.append("\"\n");//end line
                 if (it.hasNext()) {
-                    cmapWriter.print("            L\"");
+                    cmapWriter.append("            L\"");
                 }
             }
         }
-        cmapWriter.print("\"");
-        header.set("cMap", cmapWriter.getString());
+        cmapWriter.append("\"");
+        header.set("cMap", cmapWriter.toString());
 
-        Writer regexWriter = new Writer();
+        StringBuilder regexWriter = new StringBuilder();
         for (Iterator<Map.Entry<Node, Integer>> it = entries.iterator(); it.hasNext(); ) {
             Map.Entry<Node, Integer> entry = it.next();
-            regexWriter.print("\"");
-            regexWriter.print(UnicodeUtils.escapeString(entry.getKey().toString()));
-            regexWriter.print("\"");
+            regexWriter.append("\"");
+            regexWriter.append(UnicodeUtils.escapeString(entry.getKey().toString()));
+            regexWriter.append("\"");
             if (it.hasNext()) {
-                regexWriter.print(", ");
+                regexWriter.append(", ");
             }
         }
-        header.set("cMapRegex", regexWriter.getString());
-
+        header.set("cMapRegex", regexWriter.toString());
         header.set("max_input", "" + dfa.getAlphabet().size());
     }
 

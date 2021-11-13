@@ -328,6 +328,16 @@ public class FactorLoop extends SimpleTransformer {
         return res;
     }
 
+    Sequence makeSeq(Node a, Node b) {
+        if (a.isOr()) {
+            a = new Group(a);
+        }
+        if (b.isOr()) {
+            b = new Group(b);
+        }
+        return new Sequence(a, b);
+    }
+
     Factor.PullInfo pullSeq(Sequence seq, Regex sym) {
         Node a = seq.first();
         Node b = Helper.trim(seq);
@@ -341,9 +351,14 @@ public class FactorLoop extends SimpleTransformer {
                     //A_noe B | A_eps B = A_noe B | a+ A_eps B(a+) | A_eps B_nop_a
                     Epsilons.Info eps = Epsilons.trimInfo(a, tree);
                     Factor.PullInfo res = new Factor.PullInfo();
-                    res.one = new Sequence(eps.eps, info.one);
-                    Sequence s1 = new Sequence(eps.noEps, b);
-                    Sequence s2 = new Sequence(eps.eps, info.zero);
+                    res.one = makeSeq(eps.eps, info.one);
+                    Sequence s2 = makeSeq(eps.eps, info.zero);
+                    if (eps.noEps == null) {
+                        res.zero = s2;
+                        return res;
+                    }
+                    Sequence s1 = makeSeq(eps.noEps, b);
+
                     res.one = new Or(s1, s2);
                     return res;
                 }

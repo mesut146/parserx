@@ -30,6 +30,9 @@ public class Shortcut extends Node {
             case "string":
                 regex = "\"(\\\\.|[^\r\n\\\\\"])*\"";
                 break;
+            case "char":
+                regex = "'(\\\\.|[^\r\n\\\\'])*'";
+                break;
             default:
                 throw new RuntimeException("unknown shortcut: " + name);
         }
