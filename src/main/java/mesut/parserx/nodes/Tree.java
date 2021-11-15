@@ -59,6 +59,15 @@ public class Tree {
         return -1;
     }
 
+    public Assoc getAssoc(Name sym) {
+        for (Assoc assoc : assocList) {
+            if (assoc.list.contains(sym)) {
+                return assoc;
+            }
+        }
+        return null;
+    }
+
     public Tree prepare() {
         PrepareTree.checkReferences(this);
         return this;

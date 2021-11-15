@@ -291,7 +291,7 @@ public class LrDFAGen {
                         LrItem newItem = new LrItem(shift, shift.dotPos + 1);
                         for (LrItem targetItem : target.all) {
                             if (targetItem.isSame(newItem)) {
-                                Assoc assoc = getAssoc(shift.getDotNode());
+                                Assoc assoc = tree.getAssoc(shift.getDotNode());
                                 if (assoc == null) {
                                     //prefer shift
                                 }
@@ -351,14 +351,6 @@ public class LrDFAGen {
         }
     }
 
-    Assoc getAssoc(Name sym) {
-        for (Assoc assoc : tree.assocList) {
-            if (assoc.list.contains(sym)) {
-                return assoc;
-            }
-        }
-        return null;
-    }
 
     void removeItem(LrItemSet set, LrItem item) {
         //remove incoming and outgoing transitions

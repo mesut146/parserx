@@ -2,12 +2,14 @@ import common.Env;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.transform.EpsilonTrimmer;
+import mesut.parserx.gen.transform.Prec;
 import mesut.parserx.gen.transform.PrecedenceHelper;
-import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.Tree;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.IOException;
 
 public class TransformTest {
 
@@ -48,9 +50,13 @@ public class TransformTest {
         PrecedenceHelper helper = new PrecedenceHelper(tree);
         tree = helper.transform();
         Helper.revert(tree);
-        System.out.println(NodeList.join(tree.rules, "\n"));
-        /*tree = LeftRecursive.transform(tree);
-        System.out.println("-------------");
-        System.out.println(NodeList.join(tree.rules, "\n"));*/
+        tree.printRules();
+    }
+
+    @Test
+    public void pred2() throws IOException {
+        Tree tree = Env.tree("pred.g");
+        Prec.handle(tree);
+        tree.printRules();
     }
 }
