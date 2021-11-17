@@ -12,6 +12,7 @@ public class Prec {
     Tree tree;
     HashMap<Integer, List<Name>> levels = new HashMap<>();
     HashMap<Integer, LevelInfo> levelInfos = new HashMap<>();
+    HashMap<Integer, Integer> whichMap = new HashMap<>();
     int lastLevel;
 
     public Prec(Tree tree) {
@@ -36,11 +37,11 @@ public class Prec {
             levelInfos.clear();
 
             Or or = decl.rhs.asOr();
-            List<Node> prim = new ArrayList<>();
+            List<Node> primList = new ArrayList<>();
             for (int i = or.size() - 1; i >= 0; i--) {
                 Node ch = or.get(i);
                 if (!ch.isSequence()) {
-                    prim.add(ch);
+                    primList.add(ch);
                     continue;
                 }
                 Sequence seq = ch.asSequence();
@@ -71,7 +72,7 @@ public class Prec {
                         }
                     }
                     else {
-                        prim.add(ch);
+                        primList.add(ch);
                     }
                 }
                 else if (seq.size() == 2) {
@@ -82,18 +83,21 @@ public class Prec {
                         addLevel(LevelInfo.postfix, seq.get(1).asName());
                     }
                     else {
-                        prim.add(ch);
+                        primList.add(ch);
                     }
                 }
                 else {
-                    prim.add(ch);
+                    primList.add(ch);
                 }
             }//for or
             HashMap<Integer, String> names = new HashMap<>();
             for (Integer level : levels.keySet()) {
                 names.put(level, decl.baseName() + level);
             }
-            RuleDecl primRule = new RuleDecl("PRIM", new Or(prim).normal());
+            RuleDecl primRule = new RuleDecl("PRIM", new Or(primList).normal());
+            //unary is always right assoc
+            //postfix is always left assoc
+            //binary can be both
             for (int i = 1; i <= lastLevel; i++) {
                 List<Name> ops = levels.get(i);
                 Node opNode;
@@ -103,27 +107,36 @@ public class Prec {
                 else {
                     opNode = new Group(new Or(ops.toArray(new Node[0])));
                 }
-                String name = names.get(i);
-                String higher = i == lastLevel ? primRule.baseName() : names.get(i + 1);
+                String name = i == 1 ? decl.baseName() : names.get(i);
+                Name curRef = new Name(name);
+                Name higher = new Name(i == lastLevel ? primRule.baseName() : names.get(i + 1));
 
                 LevelInfo info = levelInfos.get(i);
                 Node rhs;
                 if (info == LevelInfo.binary) {
-                    Node right = new Name(name);
-                    if (i == lastLevel) {
-                        right = decl.ref;
-                    }
+                    //E op E
                     if (isLeft(ops)) {
-                        right = new Name(higher);
+                        //left assoc
+                        //E: E2 (op E2])*
+                        rhs = new Sequence(higher, new Regex(new Group(new Sequence(opNode, higher.copy())), "*"));
                     }
-                    //A: B (op [B,A])*
-                    rhs = new Sequence(new Name(higher), new Regex(new Group(new Sequence(opNode, right)), "*"));
+                    else {
+                        //right assoc
+                        //E: E2 op E | E2
+                        rhs = new Or(new Sequence(higher, opNode, curRef), higher.copy());
+                    }
                 }
                 else if (info == LevelInfo.unary) {
-                    rhs = new Sequence(new Regex(opNode, "*"), new Name(higher));
+                    //right assoc
+                    //op E
+                    //E: op E | E2
+                    rhs = new Or(new Sequence(opNode, new Name(name)), higher);
                 }
                 else {
-                    rhs = new Sequence(new Name(higher), new Regex(opNode, "*"));
+                    //left assoc
+                    //E: E op
+                    //E: E2 op*
+                    rhs = new Sequence(higher, new Regex(opNode, "*"));
                 }
 
                 if (i == 1) {
@@ -135,7 +148,6 @@ public class Prec {
                 }
             }
             tree.addRule(primRule);
-            System.out.println(names);
             break;
         }
     }

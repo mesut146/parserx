@@ -55,6 +55,30 @@ public class Factor extends Transformer {
         }
     }
 
+    public Name common(Node a, Node b) {
+        Set<Name> s1 = first(a);
+        Set<Name> s2 = first(b);
+        Set<Name> common = new HashSet<>(s1);
+        common.retainAll(s2);
+        Name res = null;
+        if (a.isName() && common.contains(a.asName())) {
+            return a.asName();
+        }
+        if (b.isName() && common.contains(b.asName())) {
+            return b.asName();
+        }
+        for (Name name : common) {
+            if (name.isRule()) {
+                //rule has higher priority
+                return name;
+            }
+            else {
+                res = name;
+            }
+        }
+        return res;
+    }
+
     public String factorName(Name sym) {
         return sym.name + "f" + factorCount.get(curRule, sym);
     }
@@ -96,10 +120,8 @@ public class Factor extends Transformer {
             return node;
         }
         for (int i = 0; i < or.size(); i++) {
-            Set<Name> s1 = first(or.get(i));
             for (int j = i + 1; j < or.size(); j++) {
-                Set<Name> s2 = first(or.get(j));
-                Name sym = common(s1, s2);
+                Name sym = common(or.get(i), or.get(j));
                 if (sym == null) continue;
                 sym = sym.copy();
                 sym.astInfo = new AstInfo();
@@ -116,11 +138,31 @@ public class Factor extends Transformer {
                     return one;
                 }
                 else {
-                    return new Or(one, info.zero);
+                    return makeOr(one, info.zero);
                 }
             }
         }
         return or;
+    }
+
+    Or makeOr(Node a, Node b) {
+        if (a.isOr()) {
+            if (a.astInfo.which != -1) {
+                throw new RuntimeException();
+            }
+            Or res = new Or(a.asOr().list);
+            res.add(b);
+            return res;
+        }
+        else if (b.isOr()) {
+            if (b.astInfo.which != -1) {
+                throw new RuntimeException();
+            }
+            Or res = new Or(b.asOr().list);
+            res.add(a);
+            return res;
+        }
+        return new Or(a, b);
     }
 
     //factor sequence

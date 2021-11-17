@@ -9,4 +9,6 @@ public class Options {
     public String outDir;
     public boolean genVisitor = false;
     public String astClass = "Ast";
+
+    public String sequenceDelimiter = ",";
 }

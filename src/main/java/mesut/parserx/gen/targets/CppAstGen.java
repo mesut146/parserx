@@ -129,7 +129,7 @@ public class CppAstGen {
         if (node.isName()) {
             Name name = node.asName();
             if (name.isToken) {
-                c.append("sb << %s->value;", node.astInfo.varName);
+                c.append("sb << \"'\" << %s->value << \"'\";", node.astInfo.varName);
             }
             else {
                 c.append("sb << %s->toString();", node.astInfo.varName);
@@ -139,8 +139,9 @@ public class CppAstGen {
             Sequence s = node.asSequence();
             for (int i = 0; i < s.size(); i++) {
                 getPrint(s.get(i), c);
-                if (i < s.size() - 1)
-                    c.append("sb << \",\";");
+                if (i < s.size() - 1) {
+                    c.append("sb << \"%s\";", options.sequenceDelimiter);
+                }
             }
         }
         else if (node.isRegex()) {
@@ -150,12 +151,13 @@ public class CppAstGen {
                 c.append("if(!%s.empty()){", v);
                 c.append("sb << \"[\";");
                 c.append("for(int i = 0;i < %s.size();i++){", v);
-                if (regex.node.asName().isToken) {
+                getPrint(regex.node, c);
+                /*if (regex.node.asName().isToken) {
                     c.append("sb << %s.at(i)->value;", v);
                 }
                 else {
                     c.append("sb << %s.at(i)->toString();", v);
-                }
+                }*/
                 c.append("if(i < %s.size() - 1) sb << \",\";", v);
                 c.append("}");
                 c.append("sb << ']';");

@@ -84,7 +84,7 @@ public class JavaAstGen {
         if (node.isName()) {
             Name name = node.asName();
             if (name.isToken) {
-                c.append("sb.append(%s.value);", node.astInfo.varName);
+                c.append("sb.append(\"'\" + %s.value + \"'\");", node.astInfo.varName);
             }
             else {
                 c.append("sb.append(%s.toString());", node.astInfo.varName);
@@ -94,7 +94,9 @@ public class JavaAstGen {
             Sequence s = node.asSequence();
             for (int i = 0; i < s.size(); i++) {
                 getPrint(s.get(i), c);
-                //c.append("sb.append(\" \");");
+                if (i < s.size() - 1) {
+                    c.append("sb.append(\"%s\");", options.sequenceDelimiter);
+                }
             }
         }
         else if (node.isRegex()) {
@@ -104,12 +106,7 @@ public class JavaAstGen {
                 c.append("if(!%s.isEmpty()){", v);
                 c.append("sb.append('[');");
                 c.append("for(int i = 0;i < %s.size();i++){", v);
-                if (regex.node.asName().isToken) {
-                    c.append("sb.append(%s.get(i).value);", v);
-                }
-                else {
-                    c.append("sb.append(%s.get(i));", v);
-                }
+                getPrint(regex.node, c);
                 c.append("if(i < %s.size() - 1) sb.append(\",\");", v);
                 c.append("}");
                 c.append("sb.append(']');");
@@ -229,9 +226,6 @@ public class JavaAstGen {
     //make incremental variable name with class scoped
     public String vName(Name name, String cls) {
         int i = varCount.get(cls, name.name);
-        if (i == 1) {
-            return name.name;
-        }
-        return name.name + i;
+        return i == 1 ? name.name : name.name + i;
     }
 }

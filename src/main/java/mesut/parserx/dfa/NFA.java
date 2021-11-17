@@ -302,7 +302,7 @@ public class NFA {
         String skipColor = "blue";
         PrintWriter w = new PrintWriter(writer);
         w.println("digraph G{");
-        w.println("rankdir = LR");
+        w.println("rankdir = LR;");
         w.printf("%d [color=%s]\n", initial, initialColor);
         for (int state : it()) {
             if (isDead(state)) continue;
@@ -311,6 +311,7 @@ public class NFA {
                 name = names[state].get(0);
             }
             if (isAccepting(state)) {
+                //todo write label inside
                 w.printf("%d [shape = doublecircle color=%s xlabel=\"%s\"]\n", state, finalColor, name);
             }
             if (isSkip[state]) {

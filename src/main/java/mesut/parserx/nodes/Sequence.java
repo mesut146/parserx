@@ -13,7 +13,7 @@ public class Sequence extends NodeList {
         super(arr);
         for (Node ch : arr) {
             if (ch.isOr()) {
-                throw new RuntimeException("invalid child");
+                throw new RuntimeException("invalid child, wrap using group");
             }
         }
     }

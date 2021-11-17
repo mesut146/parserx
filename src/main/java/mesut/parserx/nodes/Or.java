@@ -15,6 +15,11 @@ public class Or extends NodeList {
 
     public Or(List<Node> args) {
         super(args);
+        for (Node ch : args) {
+            if (ch.isOr()) {
+                throw new RuntimeException("invalid child, wrap using group");
+            }
+        }
     }
 
     public String withNewline() {
