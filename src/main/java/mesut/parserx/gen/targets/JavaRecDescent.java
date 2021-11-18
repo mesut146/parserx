@@ -1,6 +1,7 @@
 package mesut.parserx.gen.targets;
 
 import mesut.parserx.gen.CodeWriter;
+import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.Type;
@@ -140,12 +141,7 @@ public class JavaRecDescent {
         flagCount = 0;
         firstCount = 0;
 
-        if (decl.isRecursive) {
-            write(decl.rhs);
-        }
-        else {
-            write(decl.rhs);
-        }
+        write(decl.rhs);
 
         code.append("return res;");
         code.append("}");
@@ -206,7 +202,7 @@ public class JavaRecDescent {
             }
             return;
         }
-        Set<Name> set = Helper.first(regex, tree, true, false, true);
+        Set<Name> set = FirstSet.tokens(regex, tree);
         regex.node.astInfo.isInLoop = regex.isStar() || regex.isPlus();
         if (regex.isOptional()) {
             if (set.size() <= loopLimit) {
@@ -335,13 +331,11 @@ public class JavaRecDescent {
                 code.append("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName);
             }
         }
-        else if (curRule.isRecursive) {
-            if (name.astInfo.isPrimary) {
-                code.append("%s = %s;", name.astInfo.outerVar, withArgs(name));
-            }
-            else {
-                code.append("%s = %s(%s);", name.astInfo.outerVar, name.name, name.astInfo.outerVar);
-            }
+        if (name.astInfo.isPrimary) {
+            code.append("%s = %s;", name.astInfo.outerVar, withArgs(name));
+        }
+        else if (name.astInfo.isSecondary) {
+            code.append("%s = %s(%s);", name.astInfo.outerVar, name.name, name.astInfo.outerVar);
         }
         else {
             String rhs;
@@ -370,8 +364,8 @@ public class JavaRecDescent {
         code.append(String.format("switch(%s){", peekExpr()));
         Node empty = null;
         for (int i = 0; i < or.size(); i++) {
-            final Node ch = or.get(i);
-            Set<Name> set = Helper.first(ch, tree, true, false, true);
+            Node ch = or.get(i);
+            Set<Name> set = FirstSet.tokens(ch, tree);
             if (!set.isEmpty()) {
                 for (Name la : set) {
                     code.append(String.format("case %s.%s:", tokens, la.name));
@@ -397,11 +391,11 @@ public class JavaRecDescent {
             code.append("default:{");
             StringBuilder arr = new StringBuilder();
             boolean first = true;
-            for (Name nm : Helper.first(or, tree, true, false, true)) {
+            for (Name tok : FirstSet.tokens(or, tree)) {
                 if (!first) {
                     arr.append(",");
                 }
-                arr.append(nm);
+                arr.append(tok);
                 first = false;
             }
             code.append("throw new RuntimeException(\"expecting one of [%s] got: \"+la);", arr);

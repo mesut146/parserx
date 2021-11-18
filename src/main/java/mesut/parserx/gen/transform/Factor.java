@@ -284,7 +284,6 @@ public class Factor extends Transformer {
         Name zeroName = new Name(base.name + "_no_" + sym.name);
         zeroName.args = new ArrayList<>(name.args);
         zeroName.astInfo = name.astInfo.copy();
-        zeroName.astInfo.isPrimary = true;
 
         Name oneName = new Name(base.name + nameMap.get(base.name));
         //Name oneName = new Name(base.name + "_with_" + sym);
@@ -307,7 +306,6 @@ public class Factor extends Transformer {
         RuleDecl oneDecl = oneName.makeRule();
         oneDecl.rhs = tmp.one;
         oneDecl.retType = decl.retType;
-        oneDecl.isRecursive = decl.isRecursive;
         tree.addRuleBelow(oneDecl, decl);
         declSet.add(oneDecl);
         if (senderMap.containsKey(name)) {
@@ -321,7 +319,6 @@ public class Factor extends Transformer {
             RuleDecl zeroDecl = zeroName.makeRule();
             zeroDecl.rhs = tmp.zero;
             zeroDecl.retType = decl.retType;
-            zeroDecl.isRecursive = decl.isRecursive;
             tree.addRuleBelow(zeroDecl, decl);
             declSet.add(zeroDecl);
             if (senderMap.containsKey(name)) {

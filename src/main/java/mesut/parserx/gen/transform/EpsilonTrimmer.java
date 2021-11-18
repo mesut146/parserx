@@ -1,5 +1,6 @@
 package mesut.parserx.gen.transform;
 
+import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
@@ -66,7 +67,7 @@ public class EpsilonTrimmer extends Transformer {
     }
 
     boolean isEmpty(Node node) {
-        return Helper.first(node, tree, true, false, true).isEmpty();
+        return FirstSet.tokens(node, tree).isEmpty();
     }
 
     boolean hasEpsilon(Node node) {

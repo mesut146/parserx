@@ -14,7 +14,6 @@ public class RuleDecl {
     public int index;
     public boolean hidden = false;//if true rule has no effect
     public Type retType;//ast type in case it is modified
-    public boolean isRecursive;
     public boolean isOriginal;
 
     public RuleDecl() {

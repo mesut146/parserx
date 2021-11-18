@@ -1,6 +1,7 @@
 package mesut.parserx.gen.targets;
 
 import mesut.parserx.gen.CodeWriter;
+import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.Type;
@@ -158,12 +159,7 @@ public class CppRecDescent {
         flagCount = 0;
         firstCount = 0;
 
-        if (decl.isRecursive) {
-            write(decl.rhs);
-        }
-        else {
-            write(decl.rhs);
-        }
+        write(decl.rhs);
 
         code.append("return res;");
         code.append("}");
@@ -226,7 +222,7 @@ public class CppRecDescent {
             }
             return;
         }
-        Set<Name> set = Helper.first(regex, tree, true, false, true);
+        Set<Name> set = FirstSet.tokens(regex, tree);
         regex.node.astInfo.isInLoop = regex.isStar() || regex.isPlus();
         if (regex.isOptional()) {
             if (set.size() <= loopLimit) {
@@ -355,13 +351,11 @@ public class CppRecDescent {
                 code.append("%s->%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName);
             }
         }
-        else if (curRule.isRecursive) {
-            if (name.astInfo.isPrimary) {
-                code.append("%s = %s;", name.astInfo.outerVar, withArgs(name));
-            }
-            else {
-                code.append("%s = %s(%s);", name.astInfo.outerVar, name.name, name.astInfo.outerVar);
-            }
+        else if (name.astInfo.isPrimary) {
+            code.append("%s = %s;", name.astInfo.outerVar, withArgs(name));
+        }
+        else if (name.astInfo.isSecondary) {
+            code.append("%s = %s(%s);", name.astInfo.outerVar, name.name, name.astInfo.outerVar);
         }
         else {
             String rhs;
@@ -395,7 +389,7 @@ public class CppRecDescent {
         Node empty = null;
         for (int i = 0; i < or.size(); i++) {
             final Node ch = or.get(i);
-            Set<Name> set = Helper.first(ch, tree, true, false, true);
+            Set<Name> set = FirstSet.tokens(ch, tree);
             if (!set.isEmpty()) {
                 for (Name la : set) {
                     code.append(String.format("case %s:", tokenRef(la)));
@@ -421,11 +415,11 @@ public class CppRecDescent {
             code.append("default:{");
             StringBuilder arr = new StringBuilder();
             boolean first = true;
-            for (Name nm : Helper.first(or, tree, true, false, true)) {
+            for (Name tok : FirstSet.tokens(or, tree)) {
                 if (!first) {
                     arr.append(",");
                 }
-                arr.append(nm);
+                arr.append(tok);
                 first = false;
             }
             code.append("throw std::runtime_error(\"expecting one of [%s] got: \"+la->toString());", arr);

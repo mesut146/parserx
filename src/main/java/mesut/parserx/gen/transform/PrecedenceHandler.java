@@ -7,34 +7,43 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-public class Prec {
+public class PrecedenceHandler {
     public static boolean isAssocLeft = false;
     Tree tree;
-    HashMap<Integer, List<Name>> levels = new HashMap<>();
-    HashMap<Integer, LevelInfo> levelInfos = new HashMap<>();
-    HashMap<Integer, Integer> whichMap = new HashMap<>();
+    HashMap<Integer, Holder> map = new HashMap<>();
     int lastLevel;
+    RuleDecl decl;
 
-    public Prec(Tree tree) {
+    public PrecedenceHandler(Tree tree) {
         this.tree = tree;
     }
 
     public static void handle(Tree tree) {
-        new Prec(tree).process();
+        new PrecedenceHandler(tree).process();
     }
 
-    void addLevel(LevelInfo info, Name... ops) {
+    void addLevel(LevelInfo info, Sequence node, Name... ops) {
         int level = ++lastLevel;
-        levels.put(level, new ArrayList<>(Arrays.asList(ops)));
-        levelInfos.put(level, info);
+        Holder holder = new Holder();
+        holder.info = info;
+        holder.ops = new ArrayList<>(Arrays.asList(ops));
+        holder.name = decl.baseName() + level;
+        holder.node = node;
+        if (holder.ops.size() == 1) {
+            holder.opNode = holder.ops.get(0);
+        }
+        else {
+            holder.opNode = new Group(new Or(holder.ops.toArray(new Node[0])));
+        }
+        map.put(level, holder);
     }
 
     void process() {
         for (RuleDecl decl : tree.rules) {
             if (!decl.rhs.isOr()) continue;
+            this.decl = decl;
             lastLevel = 0;
-            levels.clear();
-            levelInfos.clear();
+            map.clear();
 
             Or or = decl.rhs.asOr();
             List<Node> primList = new ArrayList<>();
@@ -51,13 +60,13 @@ public class Prec {
                         if (op.isName()) {
                             Name name = op.asName();
                             if (name.isToken) {
-                                addLevel(LevelInfo.binary, op.asName());
+                                addLevel(LevelInfo.binary, seq, op.asName());
                             }
                             else {
                                 Or rhs = tree.getRule(name).rhs.asOr();
                                 //order matters
                                 for (int j = rhs.size() - 1; j >= 0; j--) {
-                                    addLevel(LevelInfo.binary, rhs.get(j).asName());
+                                    addLevel(LevelInfo.binary, seq, rhs.get(j).asName());
                                 }
                             }
                         }
@@ -68,7 +77,7 @@ public class Prec {
                             for (Node o : group.node.asOr()) {
                                 list.add(o.asName());
                             }
-                            addLevel(LevelInfo.binary, list.toArray(new Name[0]));
+                            addLevel(LevelInfo.binary, seq, list.toArray(new Name[0]));
                         }
                     }
                     else {
@@ -77,10 +86,10 @@ public class Prec {
                 }
                 else if (seq.size() == 2) {
                     if (seq.get(1).equals(decl.ref) && !seq.get(0).equals(decl.ref)) {
-                        addLevel(LevelInfo.unary, seq.get(0).asName());
+                        addLevel(LevelInfo.unary, seq, seq.get(0).asName());
                     }
                     else if (seq.get(0).equals(decl.ref) && !seq.get(1).equals(decl.ref)) {
-                        addLevel(LevelInfo.postfix, seq.get(1).asName());
+                        addLevel(LevelInfo.postfix, seq, seq.get(1).asName());
                     }
                     else {
                         primList.add(ch);
@@ -90,28 +99,20 @@ public class Prec {
                     primList.add(ch);
                 }
             }//for or
-            HashMap<Integer, String> names = new HashMap<>();
-            for (Integer level : levels.keySet()) {
-                names.put(level, decl.baseName() + level);
-            }
             RuleDecl primRule = new RuleDecl("PRIM", new Or(primList).normal());
+            primRule.retType = decl.retType;
             //unary is always right assoc
             //postfix is always left assoc
             //binary can be both
             for (int i = 1; i <= lastLevel; i++) {
-                List<Name> ops = levels.get(i);
-                Node opNode;
-                if (ops.size() == 1) {
-                    opNode = ops.get(0);
-                }
-                else {
-                    opNode = new Group(new Or(ops.toArray(new Node[0])));
-                }
-                String name = i == 1 ? decl.baseName() : names.get(i);
+                Holder holder = map.get(i);
+                List<Name> ops = holder.ops;
+                Node opNode = holder.opNode;
+                String name = i == 1 ? decl.baseName() : holder.name;
                 Name curRef = new Name(name);
-                Name higher = new Name(i == lastLevel ? primRule.baseName() : names.get(i + 1));
+                Name higher = new Name(i == lastLevel ? primRule.baseName() : map.get(i + 1).name);
 
-                LevelInfo info = levelInfos.get(i);
+                LevelInfo info = holder.info;
                 Node rhs;
                 if (info == LevelInfo.binary) {
                     //E op E
@@ -123,7 +124,11 @@ public class Prec {
                     else {
                         //right assoc
                         //E: E2 op E | E2
-                        rhs = new Or(new Sequence(higher, opNode, curRef), higher.copy());
+                        Name h2 = higher.copy();
+                        higher.astInfo = holder.node.get(0).astInfo.copy();
+                        opNode.astInfo = holder.node.get(1).astInfo.copy();
+                        curRef.astInfo = holder.node.get(2).astInfo.copy();
+                        rhs = new Or(new Sequence(higher, opNode, curRef), h2);
                     }
                 }
                 else if (info == LevelInfo.unary) {
@@ -136,6 +141,8 @@ public class Prec {
                     //left assoc
                     //E: E op
                     //E: E2 op*
+                    higher.astInfo.isPrimary = true;
+                    opNode.astInfo.isSecondary = true;
                     rhs = new Sequence(higher, new Regex(opNode, "*"));
                 }
 
@@ -175,5 +182,13 @@ public class Prec {
 
     enum LevelInfo {
         unary, binary, postfix;
+    }
+
+    static class Holder {
+        List<Name> ops;
+        Node opNode;
+        LevelInfo info;
+        Sequence node;
+        String name;
     }
 }

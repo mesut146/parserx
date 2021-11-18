@@ -38,11 +38,13 @@ public class Recursion {
         sym.astInfo.outerVar = "res";
         //sym.astInfo.isFactor = true;
         //sym.astInfo.factorName =;
+        factor.curRule = decl;
         Factor.PullInfo info = factor.pullRule(sym, sym);
         //info.zero.astInfo.outerVar = "res";
         //info.one.astInfo.outerVar = "res";
+        info.zero.astInfo.isPrimary = true;
+        info.one.astInfo.isSecondary = true;
         decl.rhs = new Sequence(info.zero, new Regex(info.one, "*"));
-        decl.isRecursive = true;
     }
 
 }

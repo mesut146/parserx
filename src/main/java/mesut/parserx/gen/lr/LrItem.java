@@ -1,5 +1,6 @@
 package mesut.parserx.gen.lr;
 
+import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
@@ -144,7 +145,7 @@ public class LrItem {
         boolean allEmpty = true;
         for (int i = dotPos + 1; i < rhs.size(); ) {
             Node node = rhs.get(i);
-            res.addAll(Helper.first(node, tree, true, false, true));
+            res.addAll(FirstSet.tokens(node,tree));
             if (Helper.canBeEmpty(node, tree)) {
                 i++;
                 //look next node

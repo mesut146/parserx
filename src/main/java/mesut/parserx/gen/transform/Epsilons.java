@@ -1,5 +1,6 @@
 package mesut.parserx.gen.transform;
 
+import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
@@ -216,7 +217,7 @@ public class Epsilons {
     }
 
     private boolean isFactored(Node a) {
-        return Helper.first(a, tree, true, false, true).isEmpty();
+        return FirstSet.tokens(a, tree).isEmpty();
     }
 
     public static class Info {

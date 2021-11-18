@@ -1,15 +1,15 @@
 import common.Env;
-import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.ll.DotBuilder;
+import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.targets.JavaAstGen;
 import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.transform.EpsilonTrimmer;
-import mesut.parserx.gen.transform.Prec;
-import mesut.parserx.gen.transform.PrecedenceHelper;
+import mesut.parserx.gen.transform.PrecedenceHandler;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.Tree;
 import org.junit.Ignore;
 import org.junit.Test;
+import parser.DescTester;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -48,25 +48,25 @@ public class TransformTest {
     }
 
     @Test
-    public void pred() throws Exception {
-        Tree tree = Env.tree("pred.g");
-        //System.out.println(tree);
-        PrecedenceHelper helper = new PrecedenceHelper(tree);
-        tree = helper.transform();
-        Helper.revert(tree);
-        tree.printRules();
-    }
-
-    @Test
     public void pred2() throws Exception {
         Tree tree = Env.tree("pred.g");
-        Prec.handle(tree);
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        new JavaAstGen(tree).genAst();
+        PrecedenceHandler.handle(tree);
+        RecDescent.gen(tree, "java");
         /*tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/parser/pred";
         tree.options.packageName = "parser.pred";
         RecDescent.gen(tree, "java");*/
         tree.printRules();
         //DescTester.check(tree, "E", "(2)", "2^3");
         //DescTester.check(tree, "E", "1+2", "1+2*3", "1+2*3*4^5");
+    }
+
+    @Test
+    public void precReal() throws Exception {
+        Tree tree = Env.tree("pred.g");
+        PrecedenceHandler.handle(tree);
+        DescTester.check(tree, "E", "1+2", "1+2*3", "1+2*3*4^5");
     }
 
     @Test
