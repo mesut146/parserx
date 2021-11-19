@@ -8,5 +8,6 @@ token{
 %start = E;
 
 %right ques;
+//todo
 
-E: N | E "?" E ":" E;
+E: N | E "?" E ":" E %right;

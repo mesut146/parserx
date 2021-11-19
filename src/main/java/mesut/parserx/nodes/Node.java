@@ -112,7 +112,7 @@ public abstract class Node {
 
     String withLabel() {
         if (label == null) return toString();
-        return toString() + " #" + label;
+        return this + " #" + label;
     }
 
     public Node normal() {

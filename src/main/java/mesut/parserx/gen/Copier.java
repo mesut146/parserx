@@ -35,15 +35,19 @@ public class Copier extends Transformer {
         for (Node ch : seq) {
             res.add(transformNode(ch, arg));
         }
+        res.assocLeft = seq.assocLeft;
+        res.assocRight = seq.assocRight;
         return withAst(res, seq);
     }
 
     @Override
     public Node visitOr(Or or, Void arg) {
         Or res = new Or();
-        res.label = or.label;
         for (Node ch : or) {
-            res.add(transformNode(ch, arg));
+            String label = ch.label;
+            ch = transformNode(ch, arg);
+            ch.label = label;
+            res.add(ch);
         }
         return withAst(res, or);
     }

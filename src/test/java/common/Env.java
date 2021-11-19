@@ -1,9 +1,6 @@
 package common;
 
-import mesut.parserx.nodes.Node;
-import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
-import mesut.parserx.regex.RegexFromStr;
 import mesut.parserx.utils.Utils;
 import org.junit.Test;
 
@@ -24,6 +21,14 @@ public class Env {
         File file = new File(dotDir(), name);
         file.createNewFile();
         return file;
+    }
+
+    public static void dot(File name) {
+        try {
+            Runtime.getRuntime().exec("dot -Tpng -O " + name);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 

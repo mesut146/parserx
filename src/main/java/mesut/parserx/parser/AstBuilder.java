@@ -52,18 +52,8 @@ public class AstBuilder {
         if (node.startDecl != null) {
             tree.start = new Name(node.startDecl.name.IDENT.value);
         }
-        for (Ast.treeg2 g2 : node.rules) {
-            if (g2.assocDecl != null) {
-                Assoc assoc = new Assoc();
-                tree.assocList.add(assoc);
-                assoc.isLeft = g2.assocDecl.type.LEFT != null;
-                for (Ast.ref token : g2.assocDecl.ref) {
-                    assoc.list.add(new Name(token.name.IDENT.value, true));
-                }
-            }
-            else {
-                tree.addRule(visitRuledecl(g2.ruleDecl));
-            }
+        for (Ast.ruleDecl g2 : node.rules) {
+            tree.addRule(visitRuledecl(g2));
         }
         return tree;
     }
@@ -106,6 +96,17 @@ public class AstBuilder {
         Sequence s = new Sequence();
         for (Ast.regex r : node.regex) {
             s.add(visitRegex(r));
+        }
+        if (node.assoc != null) {
+            if (s.size() != 3 && s.size() != 5) {
+                throw new RuntimeException("assoc can only be used with 3 or 5 nodes");
+            }
+            if (node.assoc.LEFT != null) {
+                s.assocLeft = true;
+            }
+            else {
+                s.assocRight = true;
+            }
         }
         if (node.label != null) {
             s.label = node.label.name.IDENT.value;

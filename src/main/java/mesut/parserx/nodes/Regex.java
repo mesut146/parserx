@@ -6,8 +6,8 @@ public class Regex extends Node {
     public String type;
 
     public Regex(Node rule, String type) {
-        if (rule.isSequence()) {
-            rule = new Group(rule);
+        if (rule.isSequence() || rule.isOr()) {
+            throw new RuntimeException("invalid child, wrap using group");
         }
         this.node = rule;
         setType(type);

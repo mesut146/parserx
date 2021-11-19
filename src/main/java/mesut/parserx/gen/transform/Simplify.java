@@ -40,6 +40,8 @@ public class Simplify extends Transformer {
     @Override
     public Node visitSequence(Sequence node, Void parent) {
         Sequence res = new Sequence();
+        res.assocLeft = node.assocLeft;
+        res.assocRight = node.assocRight;
         for (Node ch : node) {
             ch = transformNode(ch, parent);
             if (ch.isSequence()) {

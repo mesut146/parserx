@@ -9,7 +9,6 @@ public class AstInfo {
     public Type nodeType;
     public boolean isFactor;//no assign
     public boolean isFactored;//epsilon
-    public String loopExtra;
     public boolean isInLoop;
     public boolean isPrimary;//recursion lhs
     public boolean isSecondary;//recursion rhs
@@ -18,7 +17,8 @@ public class AstInfo {
     public boolean createNode;
     public boolean substitution;
     public String subVar;
-    public boolean assign;
+    public boolean assignOuter;
+    public String loopExtra;
     public AstInfo loopBound;
     public AstInfo factor;
 
@@ -27,15 +27,15 @@ public class AstInfo {
         res.varName = varName;
         res.outerVar = outerVar;
         res.outerCls = outerCls;
+        res.nodeType = nodeType;
         res.isFactor = isFactor;
         res.isFactored = isFactored;
         res.isInLoop = isInLoop;
         res.which = which;
         res.createNode = createNode;
-        res.nodeType = nodeType;
         res.substitution = substitution;
         res.subVar = subVar;
-        res.assign = assign;
+        res.assignOuter = assignOuter;
         res.factorName = factorName;
         res.isPrimary = isPrimary;
         res.isSecondary = isSecondary;
@@ -46,14 +46,14 @@ public class AstInfo {
     }
 
     public String writeNode() {
-        if (assign) {
+        if (assignOuter) {
             return String.format("%s %s = %s.%s = new %s();", nodeType, varName, outerVar, varName, nodeType);
         }
         return String.format("%s %s = new %s();", nodeType, varName, nodeType);
     }
 
     public String writeNodeCpp() {
-        if (assign) {
+        if (assignOuter) {
             return String.format("%s* %s = new %s();\n%s->%s = %s;", nodeType.cpp(), varName, nodeType.cpp(), outerVar, varName, varName);
         }
         return String.format("%s* %s;", nodeType.cpp(), varName);
@@ -79,5 +79,17 @@ public class AstInfo {
         }
         sb.append('}');
         return sb.toString();
+    }
+
+    public void from(AstInfo other) {
+        if (other.which != -1) {
+            which = other.which;
+            varName = other.varName;
+            outerVar = other.outerVar;
+            outerCls = other.outerCls;
+            nodeType = other.nodeType;
+            assignOuter = other.assignOuter;
+            createNode = other.createNode;
+        }
     }
 }

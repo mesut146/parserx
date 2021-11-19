@@ -51,7 +51,7 @@ skip{
 
 %start: tree;
 
-tree: includeStatement* optionsBlock? tokens=(tokenBlock  | skipBlock)* startDecl? rules=(ruleDecl | assocDecl)*;
+tree: includeStatement* optionsBlock? tokens=(tokenBlock  | skipBlock)* startDecl? rules=ruleDecl*;
 
 includeStatement: "include" STRING;
 
@@ -68,10 +68,8 @@ tokenDecl: "#"? name SEPARATOR rhs ";";
 ruleDecl: name args? SEPARATOR rhs ";";
 args: "(" name rest=("," name)* ")";
 
-assocDecl: type=("%left" | "%right") ref+ ";";
-
 rhs: sequence ("|" sequence)*;
-sequence: regex+ label=("#" name)?;
+sequence: regex+ assoc=("%left" | "%right")? label=("#" name)?;
 
 regex: name "=" simple type=("*" | "+" | "?")?
      | simple type=("*" | "+" | "?")?;

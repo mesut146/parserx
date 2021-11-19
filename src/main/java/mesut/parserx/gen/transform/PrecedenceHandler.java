@@ -3,12 +3,11 @@ package mesut.parserx.gen.transform;
 import mesut.parserx.nodes.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 public class PrecedenceHandler {
-    public static boolean isAssocLeft = false;
+    public static boolean isAssocLeft = true;
     Tree tree;
     HashMap<Integer, Holder> map = new HashMap<>();
     int lastLevel;
@@ -22,19 +21,13 @@ public class PrecedenceHandler {
         new PrecedenceHandler(tree).process();
     }
 
-    void addLevel(LevelInfo info, Sequence node, Name... ops) {
+    void addLevel(LevelInfo info, Sequence node, Node opNode) {
         int level = ++lastLevel;
         Holder holder = new Holder();
         holder.info = info;
-        holder.ops = new ArrayList<>(Arrays.asList(ops));
         holder.name = decl.baseName() + level;
         holder.node = node;
-        if (holder.ops.size() == 1) {
-            holder.opNode = holder.ops.get(0);
-        }
-        else {
-            holder.opNode = new Group(new Or(holder.ops.toArray(new Node[0])));
-        }
+        holder.opNode = opNode;
         map.put(level, holder);
     }
 
@@ -54,31 +47,23 @@ public class PrecedenceHandler {
                     continue;
                 }
                 Sequence seq = ch.asSequence();
-                if (seq.size() == 3) {
-                    if (seq.get(0).equals(decl.ref) && seq.get(2).equals(decl.ref) && !seq.get(1).equals(decl.ref)) {
-                        Node op = seq.get(1);
-                        if (op.isName()) {
-                            Name name = op.asName();
-                            if (name.isToken) {
-                                addLevel(LevelInfo.binary, seq, op.asName());
-                            }
-                            else {
-                                Or rhs = tree.getRule(name).rhs.asOr();
-                                //order matters
-                                for (int j = rhs.size() - 1; j >= 0; j--) {
-                                    addLevel(LevelInfo.binary, seq, rhs.get(j).asName());
-                                }
-                            }
-                        }
-                        else {
-                            //same order
-                            Group group = op.asGroup();
-                            List<Name> list = new ArrayList<>();
-                            for (Node o : group.node.asOr()) {
-                                list.add(o.asName());
-                            }
-                            addLevel(LevelInfo.binary, seq, list.toArray(new Name[0]));
-                        }
+                if (seq.size() == 5) {
+                    if (seq.get(0).equals(decl.ref) &&
+                            !seq.get(1).equals(decl.ref) &&
+                            seq.get(2).equals(decl.ref) &&
+                            !seq.get(3).equals(decl.ref) &&
+                            seq.get(4).equals(decl.ref)) {
+                        addLevel(LevelInfo.ternary, seq, null);
+                    }
+                    else {
+                        primList.add(ch);
+                    }
+                }
+                else if (seq.size() == 3) {
+                    if (seq.get(0).equals(decl.ref) &&
+                            seq.get(2).equals(decl.ref) &&
+                            !seq.get(1).equals(decl.ref)) {
+                        addLevel(LevelInfo.binary, seq, seq.get(1));
                     }
                     else {
                         primList.add(ch);
@@ -86,10 +71,10 @@ public class PrecedenceHandler {
                 }
                 else if (seq.size() == 2) {
                     if (seq.get(1).equals(decl.ref) && !seq.get(0).equals(decl.ref)) {
-                        addLevel(LevelInfo.unary, seq, seq.get(0).asName());
+                        addLevel(LevelInfo.unary, seq, seq.get(0));
                     }
                     else if (seq.get(0).equals(decl.ref) && !seq.get(1).equals(decl.ref)) {
-                        addLevel(LevelInfo.postfix, seq, seq.get(1).asName());
+                        addLevel(LevelInfo.postfix, seq, seq.get(1));
                     }
                     else {
                         primList.add(ch);
@@ -106,44 +91,126 @@ public class PrecedenceHandler {
             //binary can be both
             for (int i = 1; i <= lastLevel; i++) {
                 Holder holder = map.get(i);
-                List<Name> ops = holder.ops;
-                Node opNode = holder.opNode;
                 String name = i == 1 ? decl.baseName() : holder.name;
                 Name curRef = new Name(name);
                 Name higher = new Name(i == lastLevel ? primRule.baseName() : map.get(i + 1).name);
+                higher.astInfo.outerVar = "res";
+                higher.astInfo.isPrimary = true;
 
                 LevelInfo info = holder.info;
                 Node rhs;
-                if (info == LevelInfo.binary) {
-                    //E op E
-                    if (isLeft(ops)) {
+                if (info == LevelInfo.ternary) {
+                    //E: E op1 E op2 E | E2
+                    if (holder.node.assocLeft || !holder.node.assocRight && isAssocLeft) {
+                        //E: E2 (E2(E2) op1 E op2 E2)*
+                        Name factored = higher.copy();
+                        Name op1 = holder.node.get(1).asName();
+                        Name op2 = holder.node.get(3).asName();
+                        Name h2 = higher.copy();
+                        Epsilon eps = new Epsilon();
+                        factored.astInfo = holder.node.get(0).astInfo.copy();
+                        factored.astInfo.isFactored = true;
+                        factored.astInfo.factorName = "res";
+                        op1.astInfo = holder.node.get(1).astInfo.copy();
+                        op2.astInfo = holder.node.get(3).astInfo.copy();
+                        h2.astInfo = holder.node.get(4).astInfo.copy();
+                        Sequence seq = new Sequence(factored, op1, holder.node.get(2), op2, h2, eps);
+                        seq.astInfo.from(holder.node.astInfo);
+                        Group group = new Group(seq);
+                        group.astInfo.createNode = true;
+                        group.astInfo.nodeType = decl.retType;
+                        group.astInfo.varName = "tmp";
+                        seq.astInfo.from(holder.node.astInfo);
+                        seq.astInfo.outerVar = "tmp";
+                        eps.astInfo.isFactored = true;
+                        eps.astInfo.factorName = "tmp";
+                        eps.astInfo.varName = "res";
+                        rhs = new Sequence(higher, new Regex(group, "*"));
+                    }
+                    else {
+                        //E: E2 op1 E op2 E | E2
+                        Name h2 = higher.copy();
+                        Name op1 = holder.node.get(1).asName();
+                        Name op2 = holder.node.get(3).asName();
+                        h2.astInfo = holder.node.get(0).astInfo.copy();
+                        op1.astInfo = holder.node.get(1).astInfo.copy();
+                        op2.astInfo = holder.node.get(3).astInfo.copy();
+                        Sequence seq = new Sequence(h2, op1, holder.node.get(2), op2, holder.node.get(4));
+                        seq.astInfo.from(holder.node.astInfo);
+                        rhs = new Or(seq, higher);
+                    }
+                }
+                else if (info == LevelInfo.binary) {
+                    Node opNode = holder.opNode.copy();
+                    //E: E op E | E2
+                    if (holder.node.assocLeft || !holder.node.assocRight && isAssocLeft) {
                         //left assoc
-                        //E: E2 (op E2])*
-                        rhs = new Sequence(higher, new Regex(new Group(new Sequence(opNode, higher.copy())), "*"));
+                        //E: E2 (E2(E2) op E2])*
+                        Name factored = higher.copy();
+                        factored.astInfo = holder.node.get(0).astInfo.copy();
+                        factored.astInfo.isFactored = true;
+                        factored.astInfo.factorName = "res";
+                        opNode.astInfo = holder.node.get(1).astInfo.copy();
+                        Name h2 = higher.copy();
+                        h2.astInfo = holder.node.get(2).astInfo.copy();
+                        Epsilon eps = new Epsilon();
+                        Sequence seq = new Sequence(factored, opNode, h2, eps);
+                        Group group = new Group(seq);
+                        group.astInfo.createNode = true;
+                        group.astInfo.nodeType = decl.retType;
+                        group.astInfo.varName = "tmp";
+                        seq.astInfo.from(holder.node.astInfo);
+                        seq.astInfo.outerVar = "tmp";
+                        eps.astInfo.isFactored = true;
+                        eps.astInfo.factorName = "tmp";
+                        eps.astInfo.varName = "res";
+                        rhs = new Sequence(higher, new Regex(group, "*"));
                     }
                     else {
                         //right assoc
                         //E: E2 op E | E2
                         Name h2 = higher.copy();
-                        higher.astInfo = holder.node.get(0).astInfo.copy();
+                        h2.astInfo = holder.node.get(0).astInfo.copy();
                         opNode.astInfo = holder.node.get(1).astInfo.copy();
                         curRef.astInfo = holder.node.get(2).astInfo.copy();
-                        rhs = new Or(new Sequence(higher, opNode, curRef), h2);
+                        Sequence seq = new Sequence(h2, opNode, curRef);
+                        seq.astInfo.from(holder.node.astInfo);
+                        rhs = new Or(seq, higher);
                     }
                 }
                 else if (info == LevelInfo.unary) {
                     //right assoc
-                    //op E
                     //E: op E | E2
-                    rhs = new Or(new Sequence(opNode, new Name(name)), higher);
+                    Node opNode = holder.opNode.copy();
+                    Sequence seq = new Sequence(opNode, curRef);
+                    seq.astInfo = holder.node.astInfo.copy();
+                    opNode.astInfo = holder.node.get(0).astInfo.copy();
+                    curRef.astInfo = holder.node.get(1).astInfo.copy();
+                    rhs = new Or(seq, higher);
                 }
                 else {
+                    //postfix
                     //left assoc
-                    //E: E op
-                    //E: E2 op*
-                    higher.astInfo.isPrimary = true;
-                    opNode.astInfo.isSecondary = true;
-                    rhs = new Sequence(higher, new Regex(opNode, "*"));
+                    //E: E op | E2
+                    //E: E2 (E2(E2) op)*
+                    Node opNode = holder.opNode.copy();
+                    Name factored = higher.copy();
+                    Epsilon eps = new Epsilon();
+                    factored.astInfo = holder.node.get(0).astInfo.copy();
+                    factored.astInfo.isFactored = true;
+                    factored.astInfo.factorName = "res";
+                    opNode.astInfo = holder.node.get(1).astInfo.copy();
+                    Sequence seq = new Sequence(factored, opNode, eps);
+                    Group group = new Group(seq);
+                    group.astInfo.createNode = true;
+                    group.astInfo.nodeType = decl.retType;
+                    group.astInfo.varName = "tmp";
+                    seq.astInfo.from(holder.node.astInfo);
+                    seq.astInfo.outerVar = "tmp";
+                    eps.astInfo.isFactored = true;
+                    eps.astInfo.factorName = "tmp";
+                    eps.astInfo.varName = "res";
+                    rhs = new Sequence(higher, new Regex(group, "*"));
                 }
 
                 if (i == 1) {
@@ -151,7 +218,9 @@ public class PrecedenceHandler {
                     decl.rhs = rhs;
                 }
                 else {
-                    tree.addRule(new RuleDecl(name, rhs));
+                    RuleDecl newDecl = new RuleDecl(name, rhs);
+                    newDecl.retType = decl.retType;
+                    tree.addRule(newDecl);
                 }
             }
             tree.addRule(primRule);
@@ -159,33 +228,11 @@ public class PrecedenceHandler {
         }
     }
 
-    boolean isLeft(List<Name> list) {
-        if (list.size() == 1) {
-            Assoc assoc = tree.getAssoc(list.get(0));
-            return assoc != null && assoc.isLeft;
-        }
-        else {
-            boolean hasRight = false;
-            for (Name name : list) {
-                Assoc assoc = tree.getAssoc(name);
-                if (assoc != null) {
-                    if (hasRight && assoc.isLeft) {
-                        throw new RuntimeException("conflicting assoc");
-                    }
-                    hasRight = !assoc.isLeft;
-                }
-            }
-            if (hasRight) return false;
-            return isAssocLeft;
-        }
-    }
-
     enum LevelInfo {
-        unary, binary, postfix;
+        unary, binary, postfix, ternary;
     }
 
     static class Holder {
-        List<Name> ops;
         Node opNode;
         LevelInfo info;
         Sequence node;

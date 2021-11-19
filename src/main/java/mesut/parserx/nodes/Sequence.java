@@ -5,6 +5,8 @@ import java.util.List;
 
 public class Sequence extends NodeList {
 
+    public boolean assocLeft, assocRight;
+
     public Sequence(Node... arr) {
         this(Arrays.asList(arr));
     }
@@ -30,7 +32,9 @@ public class Sequence extends NodeList {
             if (astInfo.which != -1) {
                 throw new RuntimeException("norm with code");
             }
-            return first();
+            Node res = first();
+            res.label = label;
+            return res;
         }
         Sequence res = new Sequence();
         for (Node ch : this) {
@@ -45,6 +49,8 @@ public class Sequence extends NodeList {
             }
         }
         res.astInfo = astInfo.copy();
+        res.assocLeft = assocLeft;
+        res.assocRight = assocRight;
         return res;
     }
 

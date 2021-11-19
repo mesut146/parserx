@@ -9,51 +9,35 @@ public class Ast{
         public optionsBlock optionsBlock;
         public List<treeg1> tokens = new ArrayList<>();
         public startDecl startDecl;
-        public List<treeg2> rules = new ArrayList<>();
+        public List<ruleDecl> rules = new ArrayList<>();
 
         public String toString(){
             StringBuilder sb=new StringBuilder("tree{");
             if(!includeStatement.isEmpty()){
                 sb.append('[');
-                for(int i=0;i<includeStatement.size();i++){
+                for(int i = 0;i < includeStatement.size();i++){
                     sb.append(includeStatement.get(i));
-                    sb.append(",");
+                    if(i < includeStatement.size() - 1) sb.append(",");
                 }
                 sb.append(']');
             }
-            sb.append(optionsBlock==null?"":optionsBlock);
+            sb.append(optionsBlock == null?"":optionsBlock);
             if(!tokens.isEmpty()){
                 sb.append('[');
-                for(int i=0;i<tokens.size();i++){
+                for(int i = 0;i < tokens.size();i++){
                     sb.append(tokens.get(i));
-                    sb.append(",");
+                    if(i < tokens.size() - 1) sb.append(",");
                 }
                 sb.append(']');
             }
-            sb.append(startDecl==null?"":startDecl);
+            sb.append(startDecl == null?"":startDecl);
             if(!rules.isEmpty()){
                 sb.append('[');
-                for(int i=0;i<rules.size();i++){
+                for(int i = 0;i < rules.size();i++){
                     sb.append(rules.get(i));
-                    sb.append(",");
+                    if(i < rules.size() - 1) sb.append(",");
                 }
                 sb.append(']');
-            }
-            return sb.append("}").toString();
-        }
-    }
-    public static class treeg2{
-        public int which;
-        public ruleDecl ruleDecl;
-        public assocDecl assocDecl;
-
-        public String toString(){
-            StringBuilder sb=new StringBuilder("treeg2{");
-            if(which==1){
-                sb.append(ruleDecl.toString());
-            }
-            else if(which==2){
-                sb.append(assocDecl.toString());
             }
             return sb.append("}").toString();
         }
@@ -65,10 +49,10 @@ public class Ast{
 
         public String toString(){
             StringBuilder sb=new StringBuilder("treeg1{");
-            if(which==1){
+            if(which == 1){
                 sb.append(tokenBlock.toString());
             }
-            else if(which==2){
+            else if(which == 2){
                 sb.append(skipBlock.toString());
             }
             return sb.append("}").toString();
@@ -97,9 +81,9 @@ public class Ast{
             sb.append(LBRACE.value);
             if(!option.isEmpty()){
                 sb.append('[');
-                for(int i=0;i<option.size();i++){
+                for(int i = 0;i < option.size();i++){
                     sb.append(option.get(i));
-                    sb.append(",");
+                    if(i < option.size() - 1) sb.append(",");
                 }
                 sb.append(']');
             }
@@ -118,7 +102,7 @@ public class Ast{
             sb.append(key.value);
             sb.append(SEPARATOR.value);
             sb.append(value.toString());
-            sb.append(SEMI==null?"":SEMI);
+            sb.append(SEMI == null?"":SEMI);
             return sb.append("}").toString();
         }
     }
@@ -129,10 +113,10 @@ public class Ast{
 
         public String toString(){
             StringBuilder sb=new StringBuilder("optiong1{");
-            if(which==1){
+            if(which == 1){
                 sb.append(NUMBER.value);
             }
-            else if(which==2){
+            else if(which == 2){
                 sb.append(BOOLEAN.value);
             }
             return sb.append("}").toString();
@@ -165,9 +149,9 @@ public class Ast{
             sb.append(LBRACE.value);
             if(!tokenDecl.isEmpty()){
                 sb.append('[');
-                for(int i=0;i<tokenDecl.size();i++){
+                for(int i = 0;i < tokenDecl.size();i++){
                     sb.append(tokenDecl.get(i));
-                    sb.append(",");
+                    if(i < tokenDecl.size() - 1) sb.append(",");
                 }
                 sb.append(']');
             }
@@ -187,9 +171,9 @@ public class Ast{
             sb.append(LBRACE.value);
             if(!tokenDecl.isEmpty()){
                 sb.append('[');
-                for(int i=0;i<tokenDecl.size();i++){
+                for(int i = 0;i < tokenDecl.size();i++){
                     sb.append(tokenDecl.get(i));
-                    sb.append(",");
+                    if(i < tokenDecl.size() - 1) sb.append(",");
                 }
                 sb.append(']');
             }
@@ -206,7 +190,7 @@ public class Ast{
 
         public String toString(){
             StringBuilder sb=new StringBuilder("tokenDecl{");
-            sb.append(HASH==null?"":HASH);
+            sb.append(HASH == null?"":HASH);
             sb.append(name.toString());
             sb.append(SEPARATOR.value);
             sb.append(rhs.toString());
@@ -224,7 +208,7 @@ public class Ast{
         public String toString(){
             StringBuilder sb=new StringBuilder("ruleDecl{");
             sb.append(name.toString());
-            sb.append(args==null?"":args);
+            sb.append(args == null?"":args);
             sb.append(SEPARATOR.value);
             sb.append(rhs.toString());
             sb.append(SEMI.value);
@@ -243,9 +227,9 @@ public class Ast{
             sb.append(name.toString());
             if(!rest.isEmpty()){
                 sb.append('[');
-                for(int i=0;i<rest.size();i++){
+                for(int i = 0;i < rest.size();i++){
                     sb.append(rest.get(i));
-                    sb.append(",");
+                    if(i < rest.size() - 1) sb.append(",");
                 }
                 sb.append(']');
             }
@@ -264,42 +248,6 @@ public class Ast{
             return sb.append("}").toString();
         }
     }
-    public static class assocDecl{
-        public assocDeclg1 type;
-        public List<ref> ref = new ArrayList<>();
-        public Token SEMI;
-
-        public String toString(){
-            StringBuilder sb=new StringBuilder("assocDecl{");
-            sb.append(type.toString());
-            if(!ref.isEmpty()){
-                sb.append('[');
-                for(int i=0;i<ref.size();i++){
-                    sb.append(ref.get(i));
-                    sb.append(",");
-                }
-                sb.append(']');
-            }
-            sb.append(SEMI.value);
-            return sb.append("}").toString();
-        }
-    }
-    public static class assocDeclg1{
-        public int which;
-        public Token LEFT;
-        public Token RIGHT;
-
-        public String toString(){
-            StringBuilder sb=new StringBuilder("assocDeclg1{");
-            if(which==1){
-                sb.append(LEFT.value);
-            }
-            else if(which==2){
-                sb.append(RIGHT.value);
-            }
-            return sb.append("}").toString();
-        }
-    }
     public static class rhs{
         public sequence sequence;
         public List<rhsg1> g1 = new ArrayList<>();
@@ -309,9 +257,9 @@ public class Ast{
             sb.append(sequence.toString());
             if(!g1.isEmpty()){
                 sb.append('[');
-                for(int i=0;i<g1.size();i++){
+                for(int i = 0;i < g1.size();i++){
                     sb.append(g1.get(i));
-                    sb.append(",");
+                    if(i < g1.size() - 1) sb.append(",");
                 }
                 sb.append(']');
             }
@@ -331,30 +279,48 @@ public class Ast{
     }
     public static class sequence{
         public List<regex> regex = new ArrayList<>();
-        public sequenceg1 label;
+        public sequenceg1 assoc;
+        public sequenceg2 label;
 
         public String toString(){
             StringBuilder sb=new StringBuilder("sequence{");
             if(!regex.isEmpty()){
                 sb.append('[');
-                for(int i=0;i<regex.size();i++){
+                for(int i = 0;i < regex.size();i++){
                     sb.append(regex.get(i));
-                    sb.append(",");
+                    if(i < regex.size() - 1) sb.append(",");
                 }
                 sb.append(']');
             }
-            sb.append(label==null?"":label);
+            sb.append(assoc == null?"":assoc);
+            sb.append(label == null?"":label);
             return sb.append("}").toString();
         }
     }
-    public static class sequenceg1{
+    public static class sequenceg2{
         public Token HASH;
         public name name;
 
         public String toString(){
-            StringBuilder sb=new StringBuilder("sequenceg1{");
+            StringBuilder sb=new StringBuilder("sequenceg2{");
             sb.append(HASH.value);
             sb.append(name.toString());
+            return sb.append("}").toString();
+        }
+    }
+    public static class sequenceg1{
+        public int which;
+        public Token LEFT;
+        public Token RIGHT;
+
+        public String toString(){
+            StringBuilder sb=new StringBuilder("sequenceg1{");
+            if(which == 1){
+                sb.append(LEFT.value);
+            }
+            else if(which == 2){
+                sb.append(RIGHT.value);
+            }
             return sb.append("}").toString();
         }
     }
@@ -372,7 +338,7 @@ public class Ast{
                         sb.append(name.toString());
                         sb.append(SEPARATOR.value);
                         sb.append(simple.toString());
-                        sb.append(type==null?"":type);
+                        sb.append(type == null?"":type);
                         return sb.toString();
                 }
         }
@@ -382,16 +348,16 @@ public class Ast{
                 public String toString(){
                         StringBuilder sb=new StringBuilder();
                         sb.append(simple.toString());
-                        sb.append(type==null?"":type);
+                        sb.append(type == null?"":type);
                         return sb.toString();
                 }
         }
         public String toString(){
             StringBuilder sb=new StringBuilder("regex{");
-            if(which==1){
+            if(which == 1){
                 sb.append(regex1);
             }
-            else if(which==2){
+            else if(which == 2){
                 sb.append(regex2);
             }
             return sb.append("}").toString();
@@ -405,13 +371,13 @@ public class Ast{
 
         public String toString(){
             StringBuilder sb=new StringBuilder("regexg2{");
-            if(which==1){
+            if(which == 1){
                 sb.append(STAR.value);
             }
-            else if(which==2){
+            else if(which == 2){
                 sb.append(PLUS.value);
             }
-            else if(which==3){
+            else if(which == 3){
                 sb.append(QUES.value);
             }
             return sb.append("}").toString();
@@ -425,13 +391,13 @@ public class Ast{
 
         public String toString(){
             StringBuilder sb=new StringBuilder("regexg1{");
-            if(which==1){
+            if(which == 1){
                 sb.append(STAR.value);
             }
-            else if(which==2){
+            else if(which == 2){
                 sb.append(PLUS.value);
             }
-            else if(which==3){
+            else if(which == 3){
                 sb.append(QUES.value);
             }
             return sb.append("}").toString();
@@ -451,31 +417,31 @@ public class Ast{
 
         public String toString(){
             StringBuilder sb=new StringBuilder("simple{");
-            if(which==1){
+            if(which == 1){
                 sb.append(group.toString());
             }
-            else if(which==2){
+            else if(which == 2){
                 sb.append(ref.toString());
             }
-            else if(which==3){
+            else if(which == 3){
                 sb.append(stringNode.toString());
             }
-            else if(which==4){
+            else if(which == 4){
                 sb.append(bracketNode.toString());
             }
-            else if(which==5){
+            else if(which == 5){
                 sb.append(untilNode.toString());
             }
-            else if(which==6){
+            else if(which == 6){
                 sb.append(dotNode.toString());
             }
-            else if(which==7){
+            else if(which == 7){
                 sb.append(EPSILON.value);
             }
-            else if(which==8){
+            else if(which == 8){
                 sb.append(repeatNode.toString());
             }
-            else if(which==9){
+            else if(which == 9){
                 sb.append(SHORTCUT.value);
             }
             return sb.append("}").toString();
@@ -501,10 +467,10 @@ public class Ast{
 
         public String toString(){
             StringBuilder sb=new StringBuilder("stringNode{");
-            if(which==1){
+            if(which == 1){
                 sb.append(STRING.value);
             }
-            else if(which==2){
+            else if(which == 2){
                 sb.append(CHAR.value);
             }
             return sb.append("}").toString();
@@ -558,19 +524,19 @@ public class Ast{
 
         public String toString(){
             StringBuilder sb=new StringBuilder("name{");
-            if(which==1){
+            if(which == 1){
                 sb.append(IDENT.value);
             }
-            else if(which==2){
+            else if(which == 2){
                 sb.append(TOKEN.value);
             }
-            else if(which==3){
+            else if(which == 3){
                 sb.append(SKIP.value);
             }
-            else if(which==4){
+            else if(which == 4){
                 sb.append(OPTIONS.value);
             }
-            else if(which==5){
+            else if(which == 5){
                 sb.append(INCLUDE.value);
             }
             return sb.append("}").toString();

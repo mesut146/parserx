@@ -58,6 +58,8 @@ public class RecDescent {
         tree = EbnfToBnf.combineOr(tree);
         AstGen.gen(tree, target);
 
+        PrecedenceHandler.handle(tree);
+
         Recursion recursion = new Recursion(tree);
         recursion.all();
 

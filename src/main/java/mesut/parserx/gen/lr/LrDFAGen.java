@@ -1,7 +1,10 @@
 package mesut.parserx.gen.lr;
 
 import mesut.parserx.gen.transform.EbnfToBnf;
-import mesut.parserx.nodes.*;
+import mesut.parserx.nodes.Name;
+import mesut.parserx.nodes.RuleDecl;
+import mesut.parserx.nodes.Sequence;
+import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 
 import java.io.File;
@@ -291,22 +294,24 @@ public class LrDFAGen {
                         LrItem newItem = new LrItem(shift, shift.dotPos + 1);
                         for (LrItem targetItem : target.all) {
                             if (targetItem.isSame(newItem)) {
-                                Assoc assoc = tree.getAssoc(shift.getDotNode());
-                                if (assoc == null) {
-                                    //prefer shift
-                                }
-                                else if (assoc.isLeft) {
+                                boolean l = shift.rule.rhs.asSequence().assocLeft;
+                                boolean r = shift.rule.rhs.asSequence().assocRight;
+                                if (l) {
                                     //keep reduce,remove shift
                                     removeItem(set, shift);
                                     removed = true;
                                 }
-                                else {
+                                else if (r) {
                                     //keep shift,remove reduce
                                     reduce.lookAhead.remove(shift.getDotNode());
                                     if (reduce.lookAhead.isEmpty()) {
                                         removeItem(set, reduce);
                                     }
                                     removed = true;
+                                }
+                                else {
+                                    //no assoc
+                                    //prefer shift
                                 }
                                 break;
                             }

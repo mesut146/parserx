@@ -13,8 +13,7 @@ token
 
 %start: E;
 
-%left PLUS;
-E: E "+" E | N;
+E: E "+" E %left | N;
 //E2: E "+" E | N;
 //E: E2;
 

@@ -23,7 +23,6 @@ public class Tree {
     public Name start;
     public File file;
     public Alphabet alphabet = new Alphabet();
-    public List<Assoc> assocList = new ArrayList<>();
     List<String> includes = new ArrayList<>();
 
     public Tree() {
@@ -36,7 +35,6 @@ public class Tree {
         file = tree.file;
         tokens = tree.tokens;
         options = tree.options;
-        assocList = tree.assocList;
     }
 
     public static Tree makeTree(File path) {
@@ -57,15 +55,6 @@ public class Tree {
             i++;
         }
         return -1;
-    }
-
-    public Assoc getAssoc(Name sym) {
-        for (Assoc assoc : assocList) {
-            if (assoc.list.contains(sym)) {
-                return assoc;
-            }
-        }
-        return null;
     }
 
     public Tree prepare() {

@@ -262,7 +262,7 @@ public class CppAstGen {
                     ch.astInfo.varName = v;
                     ch.astInfo.outerVar = outerVar;
                     ch.astInfo.outerCls = outerCls;
-                    ch.astInfo.assign = true;
+                    ch.astInfo.assignOuter = true;
                     parent.append("%s* %s;", clsName.name, v);
                     CodeWriter c = new CodeWriter(false);
                     c.append("class %s{", clsName.name);

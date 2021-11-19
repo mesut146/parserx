@@ -18,6 +18,7 @@ import java.io.IOException;
 
 public class LLGenTest {
 
+    //todo
     @Test
     public void name() throws IOException {
         String path = "/home/mesut/Desktop/lang/grammar/Parser.g";
@@ -118,11 +119,10 @@ public class LLGenTest {
         Factor.factorSequence = true;
         Factor.debug = true;
         String file = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g";
-        String check = "/home/mesut/Desktop/lang/grammar/Parser.g";
         Tree tree = Tree.makeTree(new File(file));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
 
-        DescTester.check(tree, "tree", Utils.read(new File(check)));
+        DescTester.check(tree, "tree", Utils.read(Env.getResFile("pred.g")));
     }
 
     @Test

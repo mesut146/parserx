@@ -6,6 +6,7 @@ public class DotBuilder {
 
     static int lastToken = 0;
 
+    //make dot graph from Ast output
     public static void write(String str, PrintWriter w) {
         lastToken = 0;
         w.println("digraph G{");
@@ -90,8 +91,19 @@ public class DotBuilder {
             pos = mark + 1;
         }
         if (pos < str.length()) {
-            pos++;//comma
-            bind(parent, str.substring(pos), w);
+            if (str.charAt(pos) == ',') {
+                pos++;//comma
+            }
+            else {
+                throw new RuntimeException("expecting comma got: " + str.charAt(pos));
+            }
+            if (str.charAt(pos) == '}' || str.charAt(pos) == ']') {
+                //empty node after comma
+                return;
+            }
+            else {
+                bind(parent, str.substring(pos), w);
+            }
         }
     }
 

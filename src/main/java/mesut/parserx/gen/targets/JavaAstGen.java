@@ -53,8 +53,7 @@ public class JavaAstGen {
     void model(RuleDecl decl) {
         classes = new CodeWriter(true);
         astWriter.append("public static class %s{", decl.baseName());
-        Type type = new Type(options.astClass, decl.baseName());
-        model(decl.rhs, type, "res", astWriter);
+        model(decl.rhs, decl.retType, "res", astWriter);
         astWriter.all(classes.get());
         if (decl.isOriginal && options.genVisitor) {
             astWriter.append("public <R,P> R accept(%sVisitor<R,P> visitor, P arg){", options.parserClass);
@@ -206,7 +205,7 @@ public class JavaAstGen {
                     ch.astInfo.varName = v;
                     ch.astInfo.outerVar = outerVar;
                     ch.astInfo.outerCls = outerCls;
-                    ch.astInfo.assign = true;
+                    ch.astInfo.assignOuter = true;
                     parent.append(String.format("%s %s;", clsName.name, v));
                     CodeWriter c = new CodeWriter(false);
                     c.append("public static class %s{", clsName.name);

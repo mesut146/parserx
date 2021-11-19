@@ -41,35 +41,8 @@ public class Parser{
         if(la.type == Tokens.START){
             res.startDecl = startDecl();
         }
-        while(la.type == Tokens.IDENT || la.type == Tokens.OPTIONS || la.type == Tokens.TOKEN || la.type == Tokens.SKIP || la.type == Tokens.LEFT || la.type == Tokens.RIGHT || la.type == Tokens.INCLUDE){
-            res.rules.add(treeg2());
-        }
-        return res;
-    }
-
-    public Ast.treeg2 treeg2(){
-        Ast.treeg2 res = new Ast.treeg2();
-        switch(la.type){
-            case Tokens.IDENT:
-            case Tokens.OPTIONS:
-            case Tokens.TOKEN:
-            case Tokens.SKIP:
-            case Tokens.INCLUDE:
-            {
-                res.which = 1;
-                res.ruleDecl = ruleDecl();
-                break;
-            }
-            case Tokens.LEFT:
-            case Tokens.RIGHT:
-            {
-                res.which = 2;
-                res.assocDecl = assocDecl();
-                break;
-            }
-            default:{
-                throw new RuntimeException("expecting one of [IDENT,OPTIONS,TOKEN,SKIP,LEFT,RIGHT,INCLUDE] got: "+la);
-            }
+        while(la.type == Tokens.IDENT || la.type == Tokens.OPTIONS || la.type == Tokens.TOKEN || la.type == Tokens.SKIP || la.type == Tokens.INCLUDE){
+            res.rules.add(ruleDecl());
         }
         return res;
     }
@@ -220,38 +193,6 @@ public class Parser{
         return res;
     }
 
-    public Ast.assocDecl assocDecl(){
-        Ast.assocDecl res = new Ast.assocDecl();
-        res.type = assocDeclg1();
-        do{
-            res.ref.add(ref());
-        }while(la.type == Tokens.IDENT || la.type == Tokens.OPTIONS || la.type == Tokens.TOKEN || la.type == Tokens.SKIP || la.type == Tokens.INCLUDE);
-        res.SEMI = consume(Tokens.SEMI);
-        return res;
-    }
-
-    public Ast.assocDeclg1 assocDeclg1(){
-        Ast.assocDeclg1 res = new Ast.assocDeclg1();
-        switch(la.type){
-            case Tokens.LEFT:
-            {
-                res.which = 1;
-                res.LEFT = consume(Tokens.LEFT);
-                break;
-            }
-            case Tokens.RIGHT:
-            {
-                res.which = 2;
-                res.RIGHT = consume(Tokens.RIGHT);
-                break;
-            }
-            default:{
-                throw new RuntimeException("expecting one of [LEFT,RIGHT] got: "+la);
-            }
-        }
-        return res;
-    }
-
     public Ast.rhs rhs(){
         Ast.rhs res = new Ast.rhs();
         res.sequence = sequence();
@@ -300,16 +241,41 @@ public class Parser{
             first = false;
 
         }
-        if(la.type == Tokens.HASH){
-            res.label = sequenceg1();
+        if(la.type == Tokens.LEFT || la.type == Tokens.RIGHT){
+            res.assoc = sequenceg1();
         }
+        if(la.type == Tokens.HASH){
+            res.label = sequenceg2();
+        }
+        return res;
+    }
+
+    public Ast.sequenceg2 sequenceg2(){
+        Ast.sequenceg2 res = new Ast.sequenceg2();
+        res.HASH = consume(Tokens.HASH);
+        res.name = name();
         return res;
     }
 
     public Ast.sequenceg1 sequenceg1(){
         Ast.sequenceg1 res = new Ast.sequenceg1();
-        res.HASH = consume(Tokens.HASH);
-        res.name = name();
+        switch(la.type){
+            case Tokens.LEFT:
+            {
+                res.which = 1;
+                res.LEFT = consume(Tokens.LEFT);
+                break;
+            }
+            case Tokens.RIGHT:
+            {
+                res.which = 2;
+                res.RIGHT = consume(Tokens.RIGHT);
+                break;
+            }
+            default:{
+                throw new RuntimeException("expecting one of [LEFT,RIGHT] got: "+la);
+            }
+        }
         return res;
     }
 
