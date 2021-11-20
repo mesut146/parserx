@@ -10,7 +10,7 @@ import java.util.*;
 public class FactorLoop extends Transformer {
     public static boolean keepFactor = true;
     public static boolean debug = false;
-    static boolean debugMethod = true;
+    static boolean debugMethod = false;
     boolean modified;
     RuleDecl curRule;
     boolean any;
@@ -191,7 +191,8 @@ public class FactorLoop extends Transformer {
     public void factorize() {
         for (int i = 0; i < tree.rules.size(); ) {
             RuleDecl decl = tree.rules.get(i);
-            System.out.println("decl=" + decl.ref + " i=" + i);
+            if (debug)
+                System.out.println("decl=" + decl.ref + " i=" + i);
             curRule = decl;
             modified = false;
             factorRule(decl);
