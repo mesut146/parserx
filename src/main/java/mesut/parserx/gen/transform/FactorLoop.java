@@ -1,6 +1,7 @@
 package mesut.parserx.gen.transform;
 
 import mesut.parserx.gen.AstInfo;
+import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
@@ -53,7 +54,8 @@ public class FactorLoop extends Transformer {
 
     boolean hasLoop(Node node, Name sym) {
         if (debugMethod) System.out.println("hasLoop node = " + node + ", sym = " + sym);
-        if (!Helper.start(node, sym, tree)) return false;
+
+        if (!FirstSet.start(node, sym, tree)) return false;
         if (node.isRegex()) {
             if (node.astInfo.isFactored) return false;
             Regex regex = node.asRegex();
@@ -65,7 +67,7 @@ public class FactorLoop extends Transformer {
                     //A* -> a*
                     //follow of a can be empty
                     Node f = follow(regex.node, sym);
-                    return Helper.canBeEmpty(f, tree);
+                    return FirstSet.canBeEmpty(f, tree);
                 }
             }
         }
@@ -73,6 +75,7 @@ public class FactorLoop extends Transformer {
             if (node.astInfo.isFactored) return false;
             Name name = node.asName();
             if (name.isRule()) {
+                //todo recursion
                 return hasLoop(tree.getRule(name).rhs, sym);
             }
             return false;
@@ -89,7 +92,7 @@ public class FactorLoop extends Transformer {
                 return true;
             }
             else {
-                if (Helper.canBeEmpty(a, tree)) {
+                if (FirstSet.canBeEmpty(a, tree)) {
                     return hasLoop(b, sym);
                 }
                 else {
@@ -416,8 +419,7 @@ public class FactorLoop extends Transformer {
         cache.put(key, info);
 
         Name base = factor.baseName(name);
-
-        Name oneName = new Name(base.name + factor.nameMap.get(base.name));
+        Name oneName = new Name(tree.getName(base.name));
         oneName.args = new ArrayList<>(name.args);
         oneName.args.add(sym);
         oneName.astInfo = name.astInfo.copy();
@@ -428,10 +430,10 @@ public class FactorLoop extends Transformer {
 
         Name zeroName;
         if (sym.isStar()) {
-            zeroName = new Name(base.name + "_nos_" + noLoop(sym));
+            zeroName = new Name(name.name + "_nos_" + noLoop(sym));
         }
         else {
-            zeroName = new Name(base.name + "_nop_" + noLoop(sym));
+            zeroName = new Name(name.name + "_nop_" + noLoop(sym));
         }
         zeroName.args = new ArrayList<>(name.args);
         zeroName.astInfo = name.astInfo.copy();

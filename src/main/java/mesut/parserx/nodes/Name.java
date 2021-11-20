@@ -20,26 +20,6 @@ public class Name extends Node {
         this.isToken = isToken;
     }
 
-    public Name encode() {
-        StringBuilder sb = new StringBuilder(name);
-        if (!args.isEmpty()) {
-            for (Node arg : args) {
-                sb.append("_");
-                //todo arg of arg?
-                if (arg.isName()) {
-                    sb.append(arg.asName().encode().name);
-                }
-                else {
-                    Regex regex = arg.asRegex();//todo improve
-                    sb.append(regex.toString());
-                }
-            }
-        }
-        Name res = new Name(sb.toString(), false);
-        res.args = new ArrayList<>(args);
-        return res;
-    }
-
     public boolean isRule() {
         return !isToken;
     }

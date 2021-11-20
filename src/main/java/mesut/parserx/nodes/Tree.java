@@ -7,6 +7,7 @@ import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.PrepareTree;
 import mesut.parserx.parser.AstBuilder;
+import mesut.parserx.utils.CountingMap;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -24,6 +25,7 @@ public class Tree {
     public File file;
     public Alphabet alphabet = new Alphabet();
     List<String> includes = new ArrayList<>();
+    CountingMap<String> newNameCnt = new CountingMap<>();
 
     public Tree() {
     }
@@ -110,11 +112,29 @@ public class Tree {
     }
 
     public void addRule(RuleDecl rule) {
+        for (RuleDecl old : rules) {
+            if (old.ref.equals(rule.ref)) throw new RuntimeException("wtf");
+        }
         rule.index = rules.size();
         rules.add(rule);
     }
 
+    //is it safe to use name
+    public String getName(String name) {
+        String cur = name;
+        while (true) {
+            if (getRule(cur) == null) return name;
+            int cnt = newNameCnt.get(name);
+            cur = name + cnt;
+        }
+    }
+
     public void addRuleBelow(RuleDecl rule, RuleDecl prev) {
+        for (RuleDecl old : rules) {
+            if (old.ref.equals(rule.ref)) {
+                throw new RuntimeException("wtf");
+            }
+        }
         rule.index = rules.size();
         for (int i = 0; i < rules.size(); i++) {
             if (rules.get(i) == prev) {

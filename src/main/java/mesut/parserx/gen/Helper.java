@@ -1,20 +1,26 @@
 package mesut.parserx.gen;
 
-import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.nodes.*;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 public class Helper {
 
     public static Node trim(Sequence s) {
-        return new Sequence(s.list.subList(1, s.size())).normal();
+        List<Node> list = s.list.subList(1, s.size());
+        if (list.size() == 1) {
+            return list.get(0);
+        }
+        return new Sequence(list);
     }
 
     public static Node trim(Or s) {
-        Or res = new Or(s.list.subList(1, s.size()));
-        if (res.size() == 1) return res.get(0);
-        return res;
+        List<Node> list = s.list.subList(1, s.size());
+        if (list.size() == 1) return list.get(0);
+        return new Or(list);
     }
 
     public static boolean start(Node node, Name name, Tree tree) {
@@ -86,185 +92,6 @@ public class Helper {
         }
     }
 
-    /*private static boolean isEpsilon(Node node, Tree tree) {
-        return isEpsilon(node, tree, new HashMap<Name, Boolean>());
-    }*/
-
-    private static boolean isEpsilon(Node node, Tree tree, Map<Name, Boolean> set) {
-        if (node.isEpsilon()) {
-            return true;
-        }
-        else if (node.isName()) {
-            Name name = node.asName();
-            if (name.astInfo.isFactored) {
-                return true;
-            }
-            if (name.isRule()) {
-                Boolean val = set.get(name);
-                if (val == null) {
-
-                }
-                else {
-
-                }
-                /*if (set.add(name)) {
-                    RuleDecl decl = tree.getRule(name);
-                    return isEpsilon(decl.rhs, tree, set);
-                }
-                else {
-                    //todo??
-                }*/
-            }
-            else {
-                return false;
-            }
-        }
-        else if (node.isOr()) {
-            for (Node ch : node.asOr()) {
-                if (!isEpsilon(ch, tree, set)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        else if (node.isSequence()) {
-            for (Node ch : node.asSequence()) {
-                if (!isEpsilon(ch, tree, set)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        else if (node.isGroup()) {
-            return isEpsilon(node.asGroup().node, tree, set);
-        }
-        else if (node.isRegex()) {
-            return isEpsilon(node.asRegex().node, tree, set);
-        }
-        return false;
-    }
-
-    public static void firstLoop(Node node, Tree tree, Set<Item> set) {
-        if (node.isName()) {
-            Name name = node.asName();
-            if (name.astInfo.isFactored) return;
-            if (name.isRule()) {
-                firstLoop(tree.getRule(name).rhs, tree, set);
-            }
-        }
-        else if (node.isOr()) {
-            for (Node ch : node.asOr()) {
-                firstLoop(ch, tree, set);
-            }
-        }
-        else if (node.isSequence()) {
-            Sequence seq = node.asSequence();
-            for (Node ch : seq) {
-                firstLoop(ch, tree, set);
-                if (!canBeEmpty(ch, tree)) {
-                    break;
-                }
-            }
-        }
-        else if (node.isGroup()) {
-            firstLoop(node.asGroup().node, tree, set);
-        }
-        else if (node.isRegex()) {
-            Regex regex = node.asRegex();
-            if (regex.isPlus() || regex.isStar()) {
-                if (regex.node.isName()) {
-                    if (regex.node.asName().isRule()) {
-                        //?? first after
-                    }
-                    Item item = new Item();
-                    item.isStar = regex.isStar();
-                    item.isPlus = regex.isPlus();
-                    item.name = regex.node.asName();
-                }
-                else {
-                    firstLoop(node.asRegex().node, tree, set);
-                }
-            }
-        }
-        else if (node.isEpsilon()) {
-            //set.add(((Epsilon) node));
-        }
-    }
-
-    public static Map<Name, Integer> firstMap(Node node, Tree tree) {
-        Map<Name, Integer> map = new HashMap<>();
-        firstMap(node, tree, map);
-        return map;
-    }
-
-    //freq of first set of regex
-    public static void firstMap(Node node, Tree tree, Map<Name, Integer> map) {
-        if (node.isName()) {
-            Name name = node.asName();
-            if (name.astInfo.isFactored) return;
-            if (map.containsKey(name)) {
-                int i = map.get(name);
-                if (i != Integer.MAX_VALUE) {//limit
-                    map.put(name, i + 1);
-                }
-            }
-            else {
-                map.put(name, 1);
-                if (name.isRule()) {
-                    firstMap(tree.getRule(name).rhs, tree, map);
-                }
-            }
-        }
-        else if (node.isOr()) {
-            for (Node ch : node.asOr()) {
-                firstMap(ch, tree, map);
-            }
-        }
-        else if (node.isSequence()) {
-            Sequence seq = node.asSequence();
-            Node a = seq.first();
-            Node b = trim(seq);
-            //todo overflow
-            Map<Name, Integer> amap = firstMap(a, tree);
-            if (canBeEmpty(a, tree)) {
-                //a b | b
-                Map<Name, Integer> bmap = firstMap(b, tree);
-                map.putAll(amap);
-                map.putAll(bmap);
-            }
-            else {
-                map.putAll(amap);
-            }
-        }
-        else if (node.isGroup()) {
-            firstMap(node.asGroup().node, tree, map);
-        }
-        else if (node.isRegex()) {
-            Regex regex = node.asRegex();
-            if (!regex.isOptional()) {
-                //infinite
-                Map<Name, Integer> tmp = new HashMap<>();
-                firstMap(regex.node, tree, tmp);
-                for (Map.Entry<Name, Integer> entry : tmp.entrySet()) {
-                    Factor factor = new Factor(tree);
-                    Factor.PullInfo info = factor.pull(regex.node, entry.getKey());
-                    if (info.one.isEpsilon() || info.one.astInfo.isFactored) {
-                        entry.setValue(Integer.MAX_VALUE);
-                    }
-                    else {
-                        //once
-                    }
-                    for (RuleDecl decl : factor.declSet) {
-                        tree.rules.remove(decl);
-                    }
-                }
-                map.putAll(tmp);
-            }
-            else {
-                firstMap(regex.node, tree, map);
-            }
-        }
-    }
 
     public static boolean canBeEmpty(Node node, Tree tree) {
         return canBeEmpty(node, tree, new HashSet<Name>());
@@ -330,11 +157,5 @@ public class Helper {
         for (RuleDecl ruleDecl : tree.rules) {
             ruleDecl.rhs = ruleDecl.rhs.accept(transformer, null);
         }
-    }
-
-    static class Item {
-        boolean isStar;
-        boolean isPlus;
-        Name name;
     }
 }

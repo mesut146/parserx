@@ -50,6 +50,9 @@ public class Epsilons {
             Name name = node.asName();
             return trimName(res, name);
         }
+        else if (node.isEpsilon()) {
+            return res;
+        }
         else {
             throw new RuntimeException("invalid node: " + node);
         }
@@ -101,7 +104,7 @@ public class Epsilons {
             if (Helper.canBeEmpty(b, tree)) {
                 //A | B = A1 | € | B1 | € = A1 | B1 | €
                 Info b1 = trim(b);
-                res.noEps = new Or(a1.noEps, b1.noEps);
+                res.noEps = Or.make(a1.noEps, b1.noEps);
                 res.eps = orEps(a1.eps, b1.eps);
             }
             else {
@@ -110,7 +113,7 @@ public class Epsilons {
                     res.noEps = b;
                 }
                 else {
-                    res.noEps = new Or(a1.noEps, b);
+                    res.noEps = Or.make(a1.noEps, b);
                 }
                 res.eps = a1.eps;
             }
@@ -130,10 +133,10 @@ public class Epsilons {
         Info b = trim(Helper.trim(s));
         //both a b are empty
         //A B = (A1 | A0) (B1 | B0) = A1 B1 | A1 A0 | A0 B1 | A0 B0;
-        Node s1 = a.noEps == null ? null : new Sequence(a.noEps, b.noEps);
-        Node s2 = a.noEps == null ? null : new Sequence(a.noEps, b.eps).normal();
-        Node s3 = b.noEps == null ? null : new Sequence(a.eps, b.noEps).normal();
-        Node s4 = new Sequence(a.eps, b.eps).normal();
+        Node s1 = a.noEps == null ? null : Sequence.make(a.noEps, b.noEps);
+        Node s2 = a.noEps == null ? null : Sequence.make(a.noEps, b.eps);
+        Node s3 = b.noEps == null ? null : Sequence.make(a.eps, b.noEps);
+        Node s4 = Sequence.make(a.eps, b.eps);
         s4.astInfo = s.astInfo.copy();
         Or or = new Or();
         if (s1 != null) {
@@ -148,7 +151,7 @@ public class Epsilons {
             s3.astInfo = s.astInfo.copy();
             or.add(s3);
         }
-        res.noEps = or.normal();
+        res.noEps = or;
         res.eps = s4;
         Factor.check(s1);
         Factor.check(s2);

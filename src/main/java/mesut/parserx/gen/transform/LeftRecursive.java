@@ -1,9 +1,12 @@
 package mesut.parserx.gen.transform;
 
 import mesut.parserx.gen.Copier;
+import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.Objects;
 import java.util.Set;
 
@@ -19,6 +22,22 @@ public class LeftRecursive {
         LeftRecursive lr = new LeftRecursive(input);
         lr.process();
         return lr.tree;
+    }
+
+    public static void dot(Tree tree, Writer writer) {
+        PrintWriter w = new PrintWriter(writer);
+        w.println("digraph G{");
+        w.println("rankdir = TB;");
+        for (RuleDecl decl : tree.rules) {
+            Set<Name> set = FirstSet.firstSet(decl.rhs, tree);
+            for (Name sym : set) {
+                if (FirstSet.start(sym, decl.ref, tree)) {
+                    w.printf("%s -> %s\n", decl.baseName(), sym.name);
+                }
+            }
+        }
+        w.println("}");
+        w.flush();
     }
 
     static Node wrap(Node node) {

@@ -177,7 +177,7 @@ public class JavaRecDescent {
     }
 
     Type getType(Name name) {
-        if (name.isToken) return new Type(options.astClass, options.tokenClass);
+        if (name.isToken) return new Type(options.tokenClass);
         return tree.getRule(name).retType;
     }
 

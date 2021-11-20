@@ -22,6 +22,17 @@ public class Or extends NodeList {
         }
     }
 
+    public static Node wrap(Node node) {
+        if (node.isOr()) {
+            return new Group(node);
+        }
+        return node;
+    }
+
+    public static Or make(Node a, Node b) {
+        return new Or(Sequence.wrap(a), Sequence.wrap(b));
+    }
+
     public String withNewline() {
         StringBuilder sb = new StringBuilder();
         boolean first = true;

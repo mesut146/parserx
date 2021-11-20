@@ -18,13 +18,6 @@ import java.io.IOException;
 public class FactorTest {
 
     @Test
-    public void helper() {
-        Tree tree = Utils.makeTokenLessTree("A: (a | b y)* c | (a | d)+ e | c c;", false);
-        RuleDecl decl = tree.rules.get(0);
-        System.out.println(Helper.firstMap(decl.rhs, tree));
-    }
-
-    @Test
     public void eps() throws Exception {
         //Tree tree = Tree.makeTree(Env.getResFile("factor.g"));
         Tree tree = Env.tree("eps.g");

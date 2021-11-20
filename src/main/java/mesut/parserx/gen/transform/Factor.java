@@ -3,7 +3,6 @@ package mesut.parserx.gen.transform;
 import mesut.parserx.gen.AstInfo;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
-import mesut.parserx.utils.CountingMap;
 import mesut.parserx.utils.CountingMap2;
 
 import java.util.*;
@@ -20,7 +19,6 @@ public class Factor extends Transformer {
     HashMap<String, PullInfo> cache = new HashMap<>();
     boolean modified;
     CountingMap2<RuleDecl, Name> factorCount = new CountingMap2<>();
-    CountingMap<String> nameMap = new CountingMap<>();
     HashMap<Name, Name> senderMap = new HashMap<>();
 
     public Factor(Tree tree) {
@@ -281,11 +279,11 @@ public class Factor extends Transformer {
         //check if already pulled before
         Name base = baseName(name);
         //Name zeroName = new Name(base.name + nameMap.get(base.name));
-        Name zeroName = new Name(base.name + "_no_" + sym.name);
+        Name zeroName = new Name(name.name + "_no_" + sym.name);
         zeroName.args = new ArrayList<>(name.args);
         zeroName.astInfo = name.astInfo.copy();
 
-        Name oneName = new Name(base.name + nameMap.get(base.name));
+        Name oneName = new Name(tree.getName(name.name));
         //Name oneName = new Name(base.name + "_with_" + sym);
         oneName.args = new ArrayList<>(name.args);
         oneName.args.add(sym);
@@ -373,11 +371,11 @@ public class Factor extends Transformer {
             //A_noe B | a A_eps B(a) | A_eps B_no_a
             Epsilons.Info a1 = Epsilons.trimInfo(A, tree);
             PullInfo pb = pull(B, sym);
-            Node s1 = a1.noEps == null ? null : new Sequence(a1.noEps, B.copy());
+            Node s1 = a1.noEps == null ? null : Sequence.make(a1.noEps, B.copy());
             //Node s2 = a1.eps.isEpsilon() ? pb.one : new Sequence(a1.eps, pb.one);
             Node s2 = new Sequence(a1.eps, pb.one);
             //Node s3 = pb.zero == null ? null : (a1.eps.isEpsilon() ? pb.zero : new Sequence(a1.eps, pb.zero));
-            Node s3 = pb.zero == null ? null : new Sequence(a1.eps, pb.zero);
+            Node s3 = pb.zero == null ? null : Sequence.make(a1.eps, pb.zero);
 
             if (s2.astInfo.which == -1) s2.astInfo = s.astInfo.copy();
 
@@ -391,7 +389,7 @@ public class Factor extends Transformer {
                 }
                 else {
                     if (s3.astInfo.which == -1) s3.astInfo = s.astInfo.copy();
-                    info.zero = new Or(s1, s3);
+                    info.zero = Or.make(s1, s3);
                 }
             }
             info.one = s2;

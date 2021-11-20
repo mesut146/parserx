@@ -20,6 +20,17 @@ public class Sequence extends NodeList {
         }
     }
 
+    public static Node wrap(Node node) {
+        if (node.isSequence()) {
+            return new Group(node);
+        }
+        return node;
+    }
+
+    public static Sequence make(Node a, Node b) {
+        return new Sequence(Or.wrap(a), Or.wrap(b));
+    }
+
     @Override
     public String toString() {
         return NodeList.join(list, " ");
@@ -32,7 +43,7 @@ public class Sequence extends NodeList {
             if (astInfo.which != -1) {
                 throw new RuntimeException("norm with code");
             }
-            Node res = first();
+            Node res = get(0);
             res.label = label;
             return res;
         }

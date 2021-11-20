@@ -2,6 +2,8 @@ package mesut.parserx.gen;
 
 import mesut.parserx.nodes.*;
 
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -10,13 +12,50 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     Tree tree;
     Set<Name> res = new HashSet<>();
     Set<Name> rules = new HashSet<>();
+    boolean recurse = true;
 
     public FirstSet(Tree tree) {
         this.tree = tree;
     }
 
+    //first set graph
+    public static void dot(Name ref, Tree tree, Writer writer) {
+        PrintWriter w = new PrintWriter(writer);
+        w.println("digraph G{");
+        w.println("rankdir = TB;");
+        HashSet<Name> set = new HashSet<>();
+        set.add(ref);
+        dot(ref, tree, w, set);
+        w.println("}");
+        w.flush();
+    }
+
+    static void dot(Name ref, Tree tree, PrintWriter w, Set<Name> done) {
+        Set<Name> set = firstSetNoRec(ref, tree);
+        for (Name name : set) {
+            if (name.isRule()) {
+                w.printf("%s -> %s;", ref, name);
+                if (done.add(ref)) {
+                    dot(name, tree, w, done);
+                }
+            }
+        }
+    }
+
+    public static boolean start(Node node, Name name, Tree tree) {
+        return firstSet(node, tree).contains(name);
+    }
+
     public static Set<Name> firstSet(Node node, Tree tree) {
         FirstSet firstSet = new FirstSet(tree);
+        firstSet.recurse = true;
+        node.accept(firstSet, null);
+        return firstSet.res;
+    }
+
+    public static Set<Name> firstSetNoRec(Node node, Tree tree) {
+        FirstSet firstSet = new FirstSet(tree);
+        firstSet.recurse = false;
         node.accept(firstSet, null);
         return firstSet.res;
     }
@@ -69,7 +108,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     public Void visitName(Name name, Void arg) {
         if (name.astInfo.isFactored) return null;
         res.add(name);
-        if (rules.add(name) && name.isRule()) {
+        if (rules.add(name) && name.isRule() && recurse) {
             List<RuleDecl> list = tree.getRules(name);
             if (list.isEmpty()) {
                 throw new RuntimeException("rule not found: " + name);

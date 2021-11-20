@@ -1,6 +1,5 @@
 import common.Env;
 import mesut.parserx.gen.ll.DotBuilder;
-import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.transform.EpsilonTrimmer;
 import mesut.parserx.nodes.Or;
@@ -9,10 +8,11 @@ import org.junit.Ignore;
 import org.junit.Test;
 import parser.DescTester;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TransformTest {
 
@@ -49,18 +49,21 @@ public class TransformTest {
     @Test
     public void precReal() throws Exception {
         Tree tree = Env.tree("pred.g");
-        //DescTester.check(tree, "E", "1+2", "1+2*3", "1+2*3*4^5");
-        //String out = DescTester.checkWithUrl(tree, "E", "1+2*3+4*5").toString();
-        //DescTester.dots(tree, "E", "1+2+3+4", "1-2*-3","1?2:3?4:5+6+7");
-        //DescTester.dots(tree, "E", "1+2+++3++++");
-        DescTester.dots(tree, "E", "1.2.3");
+        List<String> list = new ArrayList<>();
+        list.add("1+2+3+4");
+        list.add("1-2*-3");
+        list.add("1?2:3?4:5+6+7");//ternary
+        list.add("1+2+++3++++");//post
+        list.add("1.2.3+1[2][3]");//dot,array
+        list.add("1.2[3]");
+        list.add("(String)1+(1+2)");//cast
+
+        DescTester.dots(tree, "E", list.toArray(new String[0]));
     }
 
     @Test
     public void dot() throws IOException {
-        String str = "E{'T1',A{'T2'}}";
-        str = "E{E2{E3{E4{PRIM{'1'}}}},Eg1{'+'},E{E2{E3{E4{PRIM{'2'}}}}}}";
-        str = "E{E2{E3{E4{PRIM{'1'}}}},Eg1{'+'},E{E2{E3{E4{PRIM{'2'}}},E2g1{'*'},E2{E3{E4{PRIM{'3'}}},E2g1{'*'},E2{E3{E4{PRIM{'4'},'^',E4{PRIM{'5'}}}}}}}}}";
+        String str = "E{E2{E3{E4{PRIM{'1'}}}},Eg1{'+'},E{E2{E3{E4{PRIM{'2'}}},E2g1{'*'},E2{E3{E4{PRIM{'3'}}},E2g1{'*'},E2{E3{E4{PRIM{'4'},'^',E4{PRIM{'5'}}}}}}}}}";
         DotBuilder.write(str, new PrintWriter(new FileWriter(Env.dotFile("b"))));
     }
 }
