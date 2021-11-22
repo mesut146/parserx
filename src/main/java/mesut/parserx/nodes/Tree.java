@@ -113,7 +113,9 @@ public class Tree {
 
     public void addRule(RuleDecl rule) {
         for (RuleDecl old : rules) {
-            if (old.ref.equals(rule.ref)) throw new RuntimeException("wtf");
+            if (old.ref.equals(rule.ref)) {
+                throw new RuntimeException("wtf");
+            }
         }
         rule.index = rules.size();
         rules.add(rule);
@@ -123,7 +125,7 @@ public class Tree {
     public String getName(String name) {
         String cur = name;
         while (true) {
-            if (getRule(cur) == null) return name;
+            if (getRule(cur) == null) return cur;
             int cnt = newNameCnt.get(name);
             cur = name + cnt;
         }

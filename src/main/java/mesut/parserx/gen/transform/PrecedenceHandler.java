@@ -31,8 +31,11 @@ public class PrecedenceHandler {
             Or or = decl.rhs.asOr();
             List<Node> primList = new ArrayList<>();
             collect(decl, or, primList);
+            if (map.isEmpty()) {
+                continue;
+            }
             Node primNode = primList.size() == 1 ? primList.get(0) : new Or(primList);
-            RuleDecl primRule = new RuleDecl(tree.getName("PRIM"), primNode);
+            RuleDecl primRule = new RuleDecl(tree.getName("PRIM_" + decl.baseName()), primNode);
             primRule.retType = decl.retType;
             //unary is always right assoc
             //postfix is always left assoc

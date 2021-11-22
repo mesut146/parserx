@@ -8,8 +8,6 @@ import mesut.parserx.nodes.*;
 import java.util.*;
 
 public class FactorLoop extends Transformer {
-    public static boolean keepFactor = true;
-    public static boolean debug = false;
     static boolean debugMethod = false;
     boolean modified;
     RuleDecl curRule;
@@ -25,7 +23,34 @@ public class FactorLoop extends Transformer {
         this.factor = factor;
     }
 
-    public static List<Name> commons(Set<Name> s1, Set<Name> s2) {
+    public void factorize() {
+        for (int i = 0; i < tree.rules.size(); ) {
+            RuleDecl decl = tree.rules.get(i);
+            /*if (debug)
+                System.out.println("decl=" + decl.ref + " i=" + i);*/
+            curRule = decl;
+            modified = false;
+            factorRule(decl);
+            if (modified) {
+                any = true;
+                //restart if any modification happens
+                i = 0;
+            }
+            else {
+                i++;
+            }
+        }
+    }
+
+    private void factorRule(RuleDecl decl) {
+        decl.rhs = transformNode(decl.rhs, null);
+    }
+
+    public Name noLoop(Regex sym) {
+        return sym.node.asName().copy();
+    }
+
+    public List<Name> commons(Set<Name> s1, Set<Name> s2) {
         Set<Name> common = new HashSet<>(s1);
         common.retainAll(s2);
         //rule has higher priority
@@ -46,10 +71,6 @@ public class FactorLoop extends Transformer {
             return null;
         }
         return res;
-    }
-
-    public static Name noLoop(Regex sym) {
-        return sym.node.asName().copy();
     }
 
     boolean hasLoop(Node node, Name sym) {
@@ -130,7 +151,7 @@ public class FactorLoop extends Transformer {
                     return B;
                 }
                 else {
-                    return new Sequence(wrap(fa), B);
+                    return Sequence.make(fa, B);
                 }
             }
             else {
@@ -188,32 +209,39 @@ public class FactorLoop extends Transformer {
         throw new RuntimeException("invalid node");
     }
 
-    public void factorize() {
-        for (int i = 0; i < tree.rules.size(); ) {
-            RuleDecl decl = tree.rules.get(i);
-            if (debug)
-                System.out.println("decl=" + decl.ref + " i=" + i);
-            curRule = decl;
-            modified = false;
-            factorRule(decl);
-            if (modified) {
-                any = true;
-                //restart if any modification happens
-                i = 0;
+
+    public Name common(Node a, Node b) {
+        Set<Name> s1 = factor.first(a);
+        Set<Name> s2 = factor.first(b);
+        Set<Name> common = new HashSet<>(s1);
+        common.retainAll(s2);
+        Name res = null;
+        if (a.isName() && common.contains(a.asName())) {
+            return a.asName();
+        }
+        if (b.isName() && common.contains(b.asName())) {
+            return b.asName();
+        }
+        for (Name name : common) {
+            if (name.isRule()) {
+                //rule has higher priority
+                return name;
             }
             else {
-                i++;
+                res = name;
             }
         }
-    }
-
-    private void factorRule(RuleDecl decl) {
-        decl.rhs = transformNode(decl.rhs, null);
+        return res;
     }
 
     @Override
-    public Node visitOr(Or or, Void parent) {
-        Node node = super.visitOr(or, parent);
+    public Node visitSequence(Sequence s, Void arg) {
+        return factor.visitSequence(s, arg);
+    }
+
+    @Override
+    public Node visitOr(Or or, Void arg) {
+        Node node = super.visitOr(or, arg);
         if (!node.isOr()) return node;
         or = node.asOr();
 
@@ -227,9 +255,9 @@ public class FactorLoop extends Transformer {
                 for (Name sym : syms) {
                     sym = sym.copy();
                     sym.astInfo = new AstInfo();
-                    Regex factorSym = new Regex(sym, "+");//todo what about star?
+                    Regex factorSym = new Regex(sym, "+");
                     if (hasLoop(or.get(i), sym) && hasLoop(or.get(j), sym)) {
-                        if (debug) System.out.printf("factoring loop %s in %s\n", factorSym, curRule.ref);
+                        if (Factor.debug) System.out.printf("factoring loop %s in %s\n", factorSym, curRule.ref);
                         modified = true;
                         factorSym.astInfo.isFactor = true;
                         factorSym.node.astInfo.isFactor = true;
@@ -239,22 +267,20 @@ public class FactorLoop extends Transformer {
                             return one;
                         }
                         else {
-                            return new Or(one, info.zero);
+                            return Or.make(one, info.zero);
                         }
                     }
                     else {
                         //single factor
                         factor.curRule = curRule;
-                        return factor.transformNode(or, null);
+                        Node res = factor.visitOr(or, arg);
+                        modified = factor.modified;
+                        return res;
                     }
                 }
             }
         }
         return or;
-    }
-
-    boolean isLeftRec(RuleDecl decl) {
-        return Helper.start(decl.rhs, decl.ref, tree);
     }
 
     public Factor.PullInfo pull(Node node, Regex sym) {
@@ -332,22 +358,13 @@ public class FactorLoop extends Transformer {
         return res;
     }
 
-    Sequence makeSeq(Node a, Node b) {
-        if (a.isOr()) {
-            a = new Group(a);
-        }
-        if (b.isOr()) {
-            b = new Group(b);
-        }
-        return new Sequence(a, b);
-    }
-
     Factor.PullInfo pullSeq(Sequence seq, Regex sym) {
         Node a = seq.first();
         Node b = Helper.trim(seq);
 
         Factor.PullInfo info = pull(a, sym);
         if (info == null) {
+            //a can be empty b starts
             if (Helper.canBeEmpty(a, tree)) {
                 //todo a can be empty b starts
                 info = pull(b, sym);
@@ -355,15 +372,14 @@ public class FactorLoop extends Transformer {
                     //A_noe B | A_eps B = A_noe B | a+ A_eps B(a+) | A_eps B_nop_a
                     Epsilons.Info eps = Epsilons.trimInfo(a, tree);
                     Factor.PullInfo res = new Factor.PullInfo();
-                    res.one = makeSeq(eps.eps, info.one);
-                    Sequence s2 = makeSeq(eps.eps, info.zero);
+                    res.one = Sequence.make(eps.eps, info.one);
+                    Sequence s2 = info.zero == null ? null : Sequence.make(eps.eps, info.zero);
                     if (eps.noEps == null) {
                         res.zero = s2;
                         return res;
                     }
-                    Sequence s1 = makeSeq(eps.noEps, b);
-
-                    res.one = new Or(s1, s2);
+                    Sequence s1 = Sequence.make(eps.noEps, b);
+                    res.one = s2 == null ? s1 : new Or(s1, s2);
                     return res;
                 }
             }
@@ -371,10 +387,10 @@ public class FactorLoop extends Transformer {
         }
         else {
             Factor.PullInfo res = new Factor.PullInfo();
-            res.one = new Sequence(wrap(info.one), b);
+            res.one = Sequence.make(info.one, b);
             res.one.astInfo = seq.astInfo.copy();
             if (info.zero != null) {
-                res.zero = new Sequence(wrap(info.zero), b);
+                res.zero = Sequence.make(info.zero, b);
                 res.zero.astInfo = seq.astInfo.copy();
             }
             if (Helper.canBeEmpty(a, tree)) {
@@ -395,15 +411,8 @@ public class FactorLoop extends Transformer {
         }
     }
 
-    Node wrap(Node node) {
-        if (node.isOr()) {
-            return new Group(node);
-        }
-        return node;
-    }
-
     Factor.PullInfo pullRule(Name name, Regex sym) {
-        if (debug) {
+        if (Factor.debugPull) {
             System.out.println("pullRule2 " + name + " " + sym);
         }
         String key = name.name + "-" + sym;
@@ -419,8 +428,7 @@ public class FactorLoop extends Transformer {
         }
         cache.put(key, info);
 
-        Name base = factor.baseName(name);
-        Name oneName = new Name(tree.getName(base.name));
+        Name oneName = new Name(tree.getName(name.name));
         oneName.args = new ArrayList<>(name.args);
         oneName.args.add(sym);
         oneName.astInfo = name.astInfo.copy();
@@ -490,7 +498,7 @@ public class FactorLoop extends Transformer {
             Factor.PullInfo tmp = factor.pull(regex.node, noLoop(sym));
             Regex star = new Regex(regex.node, "*");
             star.astInfo = regex.astInfo.copy();
-            if (isEpsilon(tmp.one)) {
+            if (FirstSet.isEmpty(tmp.one, tree)) {
                 //(a A(a) | A_no_a)+
                 //(a A(a))+ (A_no_a A* | €) | A_no_a A*
                 Factor.PullInfo res = new Factor.PullInfo();
@@ -528,11 +536,6 @@ public class FactorLoop extends Transformer {
             }
         }
         return null;
-    }
-
-    boolean isEpsilon(Node node) {
-        Set<Name> set = Helper.first(node, tree, true);
-        return set.isEmpty() || (set.size() == 1 && set.iterator().next().equals(node));
     }
 
 }

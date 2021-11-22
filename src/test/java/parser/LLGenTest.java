@@ -5,9 +5,8 @@ import mesut.parserx.gen.Options;
 import mesut.parserx.gen.VisitorGenerator;
 import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.lr.LrDFAGen;
-import mesut.parserx.gen.transform.Epsilons;
 import mesut.parserx.gen.transform.Factor;
-import mesut.parserx.nodes.Name;
+import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 import org.junit.Ignore;
@@ -24,6 +23,8 @@ public class LLGenTest {
         String path = "/home/mesut/Desktop/lang/grammar/Parser.g";
         Tree tree = Tree.makeTree(new File(path));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
+        Factor.debug = true;
+        Factor.debugPull = false;
         RecDescent.gen(tree, "java");
     }
 
@@ -54,6 +55,7 @@ public class LLGenTest {
     @Test
     public void factorAll() throws Exception {
         Factor.debug = false;
+        Factor.factorSequence = true;
 
         DescTester.check(Env.tree("factor/single.g"), "A", "ac", "eb", "adb");
         DescTester.check(Env.tree("factor/single2.g"), "A", "aac", "aadbeb");
@@ -67,29 +69,6 @@ public class LLGenTest {
         DescTester.check(Env.tree("factor/double-same-extra.g"), "A", "aab", "c", "aadb", "axb", "eb");
         DescTester.check(Env.tree("factor/double-same-extra2.g"), "B", "aad", "ax", "e");
         DescTester.check(Env.tree("factor/double-same-extra2.g"), "A", "aab", "c", "aadb", "axb", "eb");
-    }
-
-    @Test
-    public void eps() throws Exception {
-        Tree tree = Env.tree("factor/eps.g");
-        System.out.println(Epsilons.trim(tree.getRule("C").rhs, tree));
-    }
-
-    @Test
-    public void factored() throws Exception {
-        //Tree tree = Tree.makeTree(Env.getResFile("factor/double-same.g"));
-        //Tree tree = Tree.makeTree(Env.getResFile("factor/double-same-extra.g"));
-        Tree tree = Env.tree("factor/double-same-extra2.g");
-        //Tree tree = Tree.makeTree(Env.getResFile("factor/eps.g"));
-        //Tree tree = Tree.makeTree(Env.getResFile("factor/list.g"));
-        //Tree tree = Tree.makeTree(Env.getResFile("factor/group-list.g"));
-
-        Options options = new Options();
-        options.outDir = Env.dotDir().getAbsolutePath();
-        tree.options = options;
-        Name.debug = false;
-        Factor.debug = true;
-        RecDescent.gen(tree, "java");
     }
 
     @Test

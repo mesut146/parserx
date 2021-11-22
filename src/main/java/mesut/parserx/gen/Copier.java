@@ -58,4 +58,39 @@ public class Copier extends Transformer {
         return withAst(new Group(ch), node);
     }
 
+    @Override
+    public Node visitEpsilon(Epsilon epsilon, Void arg) {
+        return withAst(new Epsilon(), epsilon);
+    }
+
+    //no ast, lexer only nodes
+    @Override
+    public Node visitRange(Range range, Void arg) {
+        return new Range(range.start, range.end);
+    }
+
+    @Override
+    public Node visitBracket(Bracket bracket, Void arg) {
+        return new Bracket(bracket.list);
+    }
+
+    @Override
+    public Node visitDot(Dot dot, Void arg) {
+        return new Dot();
+    }
+
+    @Override
+    public Node visitString(StringNode string, Void arg) {
+        return new StringNode(string.value);
+    }
+
+    @Override
+    public Node visitUntil(Until until, Void arg) {
+        return new Until(until.node);
+    }
+
+    @Override
+    public Node visitShortcut(Shortcut shortcut, Void arg) {
+        return new Shortcut(shortcut.name);
+    }
 }

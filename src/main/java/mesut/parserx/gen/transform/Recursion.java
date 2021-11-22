@@ -3,7 +3,7 @@ package mesut.parserx.gen.transform;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
-//remove left recursion by factorisation
+//remove left recursion by factorization
 public class Recursion {
     public static boolean debug = false;
     public boolean any;

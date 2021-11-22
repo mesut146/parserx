@@ -105,7 +105,13 @@ public class JavaAstGen {
                 c.append("if(!%s.isEmpty()){", v);
                 c.append("sb.append('[');");
                 c.append("for(int i = 0;i < %s.size();i++){", v);
-                getPrint(regex.node, c);
+                Name name = regex.node.asName();
+                if (name.isToken) {
+                    c.append("sb.append(\"'\" + %s.get(i).value + \"'\");", v);
+                }
+                else {
+                    c.append("sb.append(%s.get(i).toString());", v);
+                }
                 c.append("if(i < %s.size() - 1) sb.append(\",\");", v);
                 c.append("}");
                 c.append("sb.append(']');");
@@ -167,6 +173,7 @@ public class JavaAstGen {
             Node ch = regex.node;
             if (regex.isOptional()) {
                 model(ch, outerCls, outerVar, parent);
+                node.astInfo.varName = ch.astInfo.varName;
             }
             else {
                 Name name = ch.asName();

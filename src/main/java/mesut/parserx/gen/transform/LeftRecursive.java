@@ -40,13 +40,6 @@ public class LeftRecursive {
         w.flush();
     }
 
-    static Node wrap(Node node) {
-        if (node.isOr()) {
-            return new Group(node);
-        }
-        return node;
-    }
-
     public void process() {
         for (RuleDecl rule : tree.rules) {
             handleRule(rule);
@@ -131,7 +124,7 @@ public class LeftRecursive {
             for (int i = 0; i < node.asSequence().size(); i++) {
                 Node ch = res.get(i);
                 if (start(ch, ref)) {
-                    ch = wrap(subFirst(ch, ref));
+                    ch = Or.wrap(subFirst(ch, ref));
                     res.set(i, ch);
                     if (!Helper.canBeEmpty(ch, tree)) {
                         //go on if epsilon
@@ -340,11 +333,11 @@ public class LeftRecursive {
     }
 
     boolean start(Node node, Name name) {
-        return Helper.first(node, tree, false).contains(name);
+        return FirstSet.firstSetNoRec(node, tree).contains(name);
     }
 
     boolean startr(Node node, Name name) {
-        return Helper.first(node, tree, true).contains(name);
+        return FirstSet.start(node, name, tree);
     }
 
     public static class SplitInfo {

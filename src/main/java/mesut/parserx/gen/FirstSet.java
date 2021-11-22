@@ -70,6 +70,10 @@ public class FirstSet extends BaseVisitor<Void, Void> {
         return res;
     }
 
+    public static boolean isEmpty(Node node, Tree tree) {
+        return tokens(node, tree).isEmpty();
+    }
+
     public static boolean canBeEmpty(Node node, Tree tree) {
         return node.accept(new EmptyChecker(tree), null);
     }

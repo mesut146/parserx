@@ -1,14 +1,14 @@
 package regex;
 
 import common.Env;
-import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.transform.Epsilons;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.gen.transform.Recursion;
-import mesut.parserx.nodes.*;
-import mesut.parserx.utils.Utils;
+import mesut.parserx.nodes.Name;
+import mesut.parserx.nodes.Or;
+import mesut.parserx.nodes.Tree;
 import org.junit.Ignore;
 import org.junit.Test;
 import parser.DescTester;
@@ -41,9 +41,8 @@ public class FactorTest {
         Or.newLine = false;
         Tree tree = Env.tree("factor/single.g");
         //Tree tree = Env.tree("rec/leftRec2.g");
-        Factor factor = new Factor(tree);
         Factor.keepFactor = false;
-        factor.factorize();
+        new FactorLoop(tree, null).factorize();
         System.out.println(tree);
     }
 
@@ -64,7 +63,6 @@ public class FactorTest {
         Tree tree = Env.tree("java/parser-jls.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         //Tree tree = Env.tree("java/factor-eps.g");
-        FactorLoop.debug = true;
         Factor.debug = true;
         Recursion.debug = true;
         RecDescent.gen(tree, "java");
@@ -86,7 +84,6 @@ public class FactorTest {
 
     @Test
     public void loopCode() throws IOException {
-        FactorLoop.debug = true;
         Factor.debug = true;
         Tree tree = Env.tree("factor/loop.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();

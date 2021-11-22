@@ -9,6 +9,7 @@ import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.lr.AstBuilderGen;
 import mesut.parserx.gen.lr.CodeGen;
 import mesut.parserx.gen.transform.Factor;
+import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.gen.transform.LeftRecursive;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.NodeList;
@@ -142,7 +143,7 @@ public class Main {
             else if (cmd.contains("-factor")) {
                 Tree tree = Tree.makeTree(input);
                 Factor.keepFactor = false;
-                new Factor(tree).factorize();
+                new FactorLoop(tree, null).factorize();
                 if (output == null) {
                     output = new File(input.getParent(), Utils.newName(input.getName(), "-out.g"));
                 }

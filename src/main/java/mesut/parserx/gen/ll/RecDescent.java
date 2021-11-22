@@ -63,7 +63,6 @@ public class RecDescent {
         Recursion recursion = new Recursion(tree);
         recursion.all();
 
-        Factor.allowRecursion = true;
         Factor.factorSequence = true;
         Factor factor = recursion.factor;
         FactorLoop loop = new FactorLoop(tree, factor);

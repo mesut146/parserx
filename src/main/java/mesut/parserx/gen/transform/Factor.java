@@ -1,6 +1,7 @@
 package mesut.parserx.gen.transform;
 
 import mesut.parserx.gen.AstInfo;
+import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
@@ -11,9 +12,8 @@ public class Factor extends Transformer {
 
     public static boolean keepFactor = true;
     public static boolean debug = false;
+    public static boolean debugPull = false;
     public static boolean factorSequence = true;
-    public static boolean allowRecursion = false;
-    public boolean any;
     public HashSet<RuleDecl> declSet = new HashSet<>();//new rules produced by this class
     public RuleDecl curRule;
     HashMap<String, PullInfo> cache = new HashMap<>();
@@ -79,32 +79,6 @@ public class Factor extends Transformer {
 
     public String factorName(Name sym) {
         return sym.name + "f" + factorCount.get(curRule, sym);
-    }
-
-    public void factorize() {
-        FactorLoop factorLoop = new FactorLoop(tree, this);
-        factorLoop.factorize();
-
-        for (int i = 0; i < tree.rules.size(); ) {
-            RuleDecl decl = tree.rules.get(i);
-            curRule = decl;
-            modified = false;
-            factorRule(decl);
-            if (modified) {
-                any = true;
-                //restart if any modification happens
-                i = 0;
-            }
-            else {
-                i++;
-            }
-        }
-    }
-
-    protected void factorRule(RuleDecl decl) {
-        if (allowRecursion || !first(decl.rhs).contains(decl.ref)) {
-            decl.rhs = transformNode(decl.rhs, null);
-        }
     }
 
     //factor or
@@ -199,7 +173,7 @@ public class Factor extends Transformer {
         if (sym.astInfo.isFactored) {
             throw new RuntimeException("factored sym");
         }
-        if (!first(node).contains(sym)) {
+        if (!FirstSet.firstSet(node, tree).contains(sym)) {
             throw new RuntimeException("can't pull " + sym + " from " + node);
         }
         if (sym.astInfo.factorName == null) {
@@ -249,19 +223,9 @@ public class Factor extends Transformer {
         return info;
     }
 
-    Name baseName(Name name) {
-        if (senderMap.containsKey(name)) {
-            return senderMap.get(name);
-        }
-        else {
-            senderMap.put(name, name);
-            return name;
-        }
-    }
-
     //pull sym from rule
     public PullInfo pullRule(Name name, Name sym) {
-        if (debug)
+        if (debugPull)
             System.out.println("pullRule " + name + " sym=" + sym);
         PullInfo info = new PullInfo();
         String key = name.name + "-" + sym;
@@ -277,7 +241,6 @@ public class Factor extends Transformer {
         }
         cache.put(key, info);
         //check if already pulled before
-        Name base = baseName(name);
         //Name zeroName = new Name(base.name + nameMap.get(base.name));
         Name zeroName = new Name(name.name + "_no_" + sym.name);
         zeroName.args = new ArrayList<>(name.args);
@@ -432,14 +395,18 @@ public class Factor extends Transformer {
     }
 
     PullInfo pullRegex(Regex regex, Name sym) {
-        PullInfo info = new PullInfo();
         if (regex.isOptional()) {
+            PullInfo info = new PullInfo();
             //A?=A | € = sym A1 | A0 | €
             PullInfo pi = pull(regex.node, sym);
             info.one = withAst(pi.one, regex);
             if (pi.zero != null) {
                 info.zero = withAst(new Regex(pi.zero, "?"), regex);
             }
+            else {
+                info.zero = new Epsilon();
+            }
+            return info;
         }
         else if (regex.isPlus()) {
             //A+=A A*
@@ -458,52 +425,52 @@ public class Factor extends Transformer {
             }
             return pull(new Or(plus, new Epsilon()), sym);
         }
-        return info;
     }
 
-    private Node withAst(Node node, Node other) {
+    private Node withAst(Node node, Regex other) {
         node.astInfo = other.astInfo.copy();
         return node;
     }
 
-    Set<Name> first(Node node) {
-        Set<Name> set = new HashSet<>();
-        Helper.first(node, tree, true, set);
-        //remove epsilon rules
+    //return non-empty symbols
+    public Set<Name> first(Node node) {
+        Set<Name> set = FirstSet.firstSet(node, tree);
+        //if only itself
         if (node.isName() && node.asName().isRule() && set.size() == 1) {
             if (set.iterator().next().equals(node)) {
-                set.clear();
+                return new HashSet<>();
+            }
+            else {
+                return set;
             }
         }
-        else {
-            for (Iterator<Name> it = set.iterator(); it.hasNext(); ) {
-                Name sym = it.next();
-                if (sym.isRule() && isEmpty(sym)) {
-                    it.remove();
-                }
+        //remove epsilon rules
+        for (Iterator<Name> it = set.iterator(); it.hasNext(); ) {
+            Name sym = it.next();
+            if (sym.isRule() && FirstSet.isEmpty(sym, tree)) {
+                it.remove();
             }
         }
         return set;
     }
 
-    boolean isEmpty(Name node) {
-        if (node.isRule()) {
-            Set<Name> first = Helper.first(node, tree, true);
-            if (first.isEmpty()) {
+    /*boolean isEmpty(Name node) {
+        if (node.isToken) return false;
+        Set<Name> first = Helper.first(node, tree, true);
+        if (first.isEmpty()) {
+            return true;
+        }
+        if (first.size() == 1) {
+            Name f = first.iterator().next();
+            if (f.equals(node)) {
                 return true;
             }
-            if (first.size() == 1) {
-                Name f = first.iterator().next();
-                if (f.equals(node)) {
-                    return true;
-                }
-                else {
-                    return isEmpty(f);
-                }
+            else {
+                return isEmpty(f);
             }
         }
         return false;
-    }
+    }*/
 
     public static class PullInfo {
         public Node one;//after factor

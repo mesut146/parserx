@@ -17,7 +17,7 @@ public class Or extends NodeList {
         super(args);
         for (Node ch : args) {
             if (ch.isOr()) {
-                throw new RuntimeException("invalid child, wrap using group");
+                //throw new RuntimeException("invalid child, wrap using group");
             }
         }
     }

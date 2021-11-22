@@ -151,13 +151,12 @@ public class CppAstGen {
                 c.append("if(!%s.empty()){", v);
                 c.append("sb << \"[\";");
                 c.append("for(int i = 0;i < %s.size();i++){", v);
-                getPrint(regex.node, c);
-                /*if (regex.node.asName().isToken) {
-                    c.append("sb << %s.at(i)->value;", v);
+                if (regex.node.asName().isToken) {
+                    c.append("sb << \"'\" << %s.at(i)->value << \"'\";", v);
                 }
                 else {
                     c.append("sb << %s.at(i)->toString();", v);
-                }*/
+                }
                 c.append("if(i < %s.size() - 1) sb << \",\";", v);
                 c.append("}");
                 c.append("sb << ']';");
