@@ -24,7 +24,11 @@ public class FactorLoop extends Transformer {
     }
 
     public void factorize() {
+        int c = 0;
         for (int i = 0; i < tree.rules.size(); ) {
+            if (c == 50) {
+                return;
+            }
             RuleDecl decl = tree.rules.get(i);
             /*if (debug)
                 System.out.println("decl=" + decl.ref + " i=" + i);*/
@@ -39,6 +43,7 @@ public class FactorLoop extends Transformer {
             else {
                 i++;
             }
+            c++;
         }
     }
 
@@ -236,7 +241,9 @@ public class FactorLoop extends Transformer {
 
     @Override
     public Node visitSequence(Sequence s, Void arg) {
-        return factor.visitSequence(s, arg);
+        factor.curRule = curRule;
+        Node res = factor.visitSequence(s, arg);
+        return res;
     }
 
     @Override
@@ -428,7 +435,7 @@ public class FactorLoop extends Transformer {
         }
         cache.put(key, info);
 
-        Name oneName = new Name(tree.getName(name.name));
+        Name oneName = new Name(tree.getName(factor.getBase(name).name));
         oneName.args = new ArrayList<>(name.args);
         oneName.args.add(sym);
         oneName.astInfo = name.astInfo.copy();
@@ -436,6 +443,7 @@ public class FactorLoop extends Transformer {
         oneDecl.rhs = info.one;
         oneDecl.retType = decl.retType;
         tree.addRule(oneDecl);
+        factor.senderMap.put(oneName, factor.senderMap.get(name));
 
         Name zeroName;
         if (sym.isStar()) {
@@ -450,6 +458,7 @@ public class FactorLoop extends Transformer {
         zeroDecl.rhs = info.zero;
         zeroDecl.retType = decl.retType;
         tree.addRule(zeroDecl);
+        factor.senderMap.put(zeroName, factor.senderMap.get(name));
 
         info.one = oneName;
         info.zero = zeroName;

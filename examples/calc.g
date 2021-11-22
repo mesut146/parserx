@@ -1,4 +1,3 @@
-//lexer rules
 token{
  PLUS: "+";
  MINUS: "-";
@@ -11,9 +10,10 @@ token{
 }
 
 %start = E;
-//precedence goes from lower to higher
-E: E ("+" | "-") E
+//precedence goes from higher to lower
+E: E "^" E
+ | "-" E
  | E ("*" | "/") E
- | E "^" E
+ | E ("+" | "-") E
  | "(" E ")"
  | NUM;

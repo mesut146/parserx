@@ -46,7 +46,7 @@ public class Name extends Node {
         if (o == null || getClass() != o.getClass()) return false;
         Name name = (Name) o;
         return isToken == name.isToken &&
-                Objects.equals(this.name, name.name) && args.equals(name.args);
+                Objects.equals(this.name, name.name);
     }
 
     @Override

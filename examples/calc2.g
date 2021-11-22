@@ -1,13 +1,16 @@
 token{
-  NUMBER: [0-9]+;
-  LP: "(";
-  RP: ")";
-  PLUS: "+";
-  MINUS: "-";
-  MUL: "*";
-  DIV: "/";
+ PLUS: "+";
+ MINUS: "-";
+ MUL: "*";
+ DIV: "/";
+ POW: "^";
+ LP: "(";
+ RP: ")";
+ NUM: [0-9]+;
 }
 
 expr: mul (("+" | "-") mul)*;
-mul: atom (("*" | "/") atom)*;
-atom: "(" expr ")" | "-" atom | NUMBER;
+mul: unary (("*" | "/") unary)*;
+unary: "-" unary | pow;
+pow: atom ("^" atom)*;
+atom: "(" expr ")" | NUM;

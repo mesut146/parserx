@@ -223,6 +223,16 @@ public class Factor extends Transformer {
         return info;
     }
 
+    Name getBase(Name name) {
+        if (senderMap.containsKey(name)) {
+            return senderMap.get(name);
+        }
+        else {
+            senderMap.put(name, name);
+            return name;
+        }
+    }
+
     //pull sym from rule
     public PullInfo pullRule(Name name, Name sym) {
         if (debugPull)
@@ -246,7 +256,7 @@ public class Factor extends Transformer {
         zeroName.args = new ArrayList<>(name.args);
         zeroName.astInfo = name.astInfo.copy();
 
-        Name oneName = new Name(tree.getName(name.name));
+        Name oneName = new Name(tree.getName(getBase(name).name));
         //Name oneName = new Name(base.name + "_with_" + sym);
         oneName.args = new ArrayList<>(name.args);
         oneName.args.add(sym);
@@ -269,12 +279,7 @@ public class Factor extends Transformer {
         oneDecl.retType = decl.retType;
         tree.addRuleBelow(oneDecl, decl);
         declSet.add(oneDecl);
-        if (senderMap.containsKey(name)) {
-            senderMap.put(oneName, senderMap.get(name));
-        }
-        else {
-            senderMap.put(oneName, name);
-        }
+        senderMap.put(oneName, senderMap.get(name));
 
         if (tmp.zero != null) {
             RuleDecl zeroDecl = zeroName.makeRule();
@@ -282,12 +287,7 @@ public class Factor extends Transformer {
             zeroDecl.retType = decl.retType;
             tree.addRuleBelow(zeroDecl, decl);
             declSet.add(zeroDecl);
-            if (senderMap.containsKey(name)) {
-                senderMap.put(zeroName, senderMap.get(name));
-            }
-            else {
-                senderMap.put(zeroName, name);
-            }
+            senderMap.put(zeroName, senderMap.get(name));
             info.zero = zeroName;
         }
         return info;

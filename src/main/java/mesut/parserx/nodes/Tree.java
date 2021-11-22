@@ -114,7 +114,7 @@ public class Tree {
     public void addRule(RuleDecl rule) {
         for (RuleDecl old : rules) {
             if (old.ref.equals(rule.ref)) {
-                throw new RuntimeException("wtf");
+                throw new RuntimeException("duplicate rule");
             }
         }
         rule.index = rules.size();
