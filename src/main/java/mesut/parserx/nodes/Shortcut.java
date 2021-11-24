@@ -1,6 +1,8 @@
 package mesut.parserx.nodes;
 
-import mesut.parserx.regex.RegexFromStr;
+import mesut.parserx.regex.parser.RegexVisitor;
+
+import java.io.IOException;
 
 public class Shortcut extends Node {
     public String name;
@@ -36,7 +38,11 @@ public class Shortcut extends Node {
             default:
                 throw new RuntimeException("unknown shortcut: " + name);
         }
-        return RegexFromStr.build(regex);
+        try {
+            return RegexVisitor.make(regex);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 

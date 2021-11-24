@@ -2,7 +2,7 @@ package mesut.parserx.utils;
 
 import mesut.parserx.nodes.*;
 import mesut.parserx.parser.AstBuilder;
-import mesut.parserx.regex.RegexFromStr;
+import mesut.parserx.regex.parser.RegexVisitor;
 
 import java.io.*;
 import java.util.HashMap;
@@ -10,8 +10,8 @@ import java.util.Map;
 
 public class Utils {
 
-    public static Tree fromRegex(String regex) {
-        Node rhs = RegexFromStr.build(regex);
+    public static Tree fromRegex(String regex) throws IOException {
+        Node rhs = RegexVisitor.make(regex);
         Tree tree = new Tree();
         tree.addToken(new TokenDecl("START", rhs));
         makeTokens(tree, true);

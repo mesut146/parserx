@@ -18,12 +18,8 @@ public class UnicodeUtils {
         escapeMap.put('\\', '\\');
         escapeMap.put('s', ' ');
         //meta chars
-        //escapeMap.put('*', '*');
-        //escapeMap.put('+', '+');
-        //escapeMap.put('?', '?');
         escapeMapSimple.putAll(escapeMap);
         escapeMapSimple.remove('s');
-        //escapeMapSimple.remove('\\');
         escapeMapSimple.remove('\'');
     }
 
@@ -32,7 +28,7 @@ public class UnicodeUtils {
         if (escapeMap.containsKey(c)) {
             return escapeMap.get(c);
         }
-        throw new RuntimeException("invalid escape character = " + c);
+        return c;
     }
 
     //make escaped(slash) form

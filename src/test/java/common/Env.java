@@ -53,7 +53,7 @@ public class Env {
     }
 
     @Test
-    public void tokenLessTest2() {
+    public void tokenLessTest2() throws IOException {
         System.out.println(Utils.fromRegex("a*b"));
     }
 }

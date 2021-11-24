@@ -2,7 +2,6 @@ package mesut.parserx;
 
 import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
-import mesut.parserx.dfa.NfaReader;
 import mesut.parserx.dfa.Validator;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.ll.RecDescent;

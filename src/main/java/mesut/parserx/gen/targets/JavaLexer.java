@@ -73,8 +73,8 @@ public class JavaLexer {
             cmapWriter.append(makeOctal(entry.getValue()));
             i++;
             if (i % column == 0) {
-                cmapWriter.append("\"+\n");
                 if (it.hasNext()) {
+                    cmapWriter.append("\"+\n");
                     cmapWriter.append("            ");
                     cmapWriter.append("\"");//next line start
                 }

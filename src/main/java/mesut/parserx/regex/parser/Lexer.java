@@ -1,20 +1,21 @@
-$package$
+package mesut.parserx.regex.parser;
+
 import java.io.*;
 import java.util.*;
 
-public class $lexer_class$ {
+public class Lexer {
 
-    static String cMapPacked = $cMap$;
+    static String cMapPacked = "\56\56\0\50\50\1\174\174\2\52\52\4\136\136\5\134\134\11\54\54\12\12\12\23\0\11\17\100\132\15\51\51\3\53\53\7\135\135\10\55\55\13\133\133\14\77\77\16\175\uffff\6\57\76\21\137\173\20\13\47\22";
     //input -> input id
     static int[] cMap = unpackCMap(cMapPacked);
     //input id -> regex string for error reporting
-    static String[] cMapRegex = {$cMapRegex$};
-    int[] skip = {$skip_list$};
-    int[] accepting = {$final_list$};
+    static String[] cMapRegex = {".", "(", "|", ")", "*", "^", "\\u007d-\\uffff", "+", "]", "\\\\", ",", "-", "[", "@-Z", "?", "\\u0000-\\t", "_-{", "/->", "\\u000b-\\u0027", "\\n"};
+    int[] skip = {0};
+    int[] accepting = {31742};
     //id -> token name
-    String[] names = {$name_list$};
+    String[] names = {"EOF","DOT","BAR","BOPEN","BCLOSE","LPAREN","RPAREN","QUES","STAR","PLUS","XOR","MINUS","ESCAPED","CHAR"};
     //state->token id
-    int[] ids = {$id_list$};
+    int[] ids = {0,1,5,2,6,8,10,13,9,4,0,11,3,7,12};
     static final int INITIAL = 0;
     static final int EOF = 0;
     Reader reader;
@@ -26,15 +27,30 @@ public class $lexer_class$ {
     int bufStart = bufPos;
     int bufEnd;
     char[] yybuf = new char[bufSize];
-    static String trans_packed = $trans$;
+    static String trans_packed = "\24" +
+        "\24\0\1\1\2\2\3\3\4\4\5\5\6\6\7\7\10\10\11\11\12\12\7\13\13\14\14\15\7\16\15\17\7\20\7\21\7\22\7\23\7" +
+        "\0" +
+        "\0" +
+        "\0" +
+        "\0" +
+        "\0" +
+        "\0" +
+        "\0" +
+        "\0" +
+        "\0" +
+        "\23\0\16\1\16\2\16\3\16\4\16\5\16\6\16\7\16\10\16\11\16\12\16\13\16\14\16\15\16\16\16\17\16\20\16\21\16\22\16" +
+        "\0" +
+        "\0" +
+        "\0" +
+        "\0";
     static int[][] trans = unpackTrans(trans_packed);
 
-    public $lexer_class$(Reader reader) throws IOException{
+    public Lexer(Reader reader) throws IOException{
         this.reader = reader;
         init();
     }
 
-    public $lexer_class$(File file) throws IOException {
+    public Lexer(File file) throws IOException {
         this.reader = new BufferedReader(new FileReader(file));
         init();
     }
@@ -101,21 +117,21 @@ public class $lexer_class$ {
         return sb.toString();
     }
 
-    $token_class$ getEOF(){
-        $token_class$ res =  new $token_class$(EOF, "");
+    Token getEOF(){
+        Token res =  new Token(EOF, "");
         res.name = "EOF";
         return res;
     }
 
-    public $token_class$ $next_token$() throws IOException {
-        $token_class$ tok = $next_token$_normal();
+    public Token next() throws IOException {
+        Token tok = next_normal();
         if(getBit(skip, tok.type)){
-          return $next_token$();
+          return next();
         }
         return tok;
     }
 
-    public $token_class$ $next_token$_normal() throws IOException {
+    public Token next_normal() throws IOException {
         fill();
         int curState = INITIAL;
         int lastState = -1;
@@ -138,7 +154,7 @@ public class $lexer_class$ {
             }
             if (curState == -1) {
                 if (lastState != -1) {
-                    $token_class$ token = new $token_class$(ids[lastState], getText());
+                    Token token = new Token(ids[lastState], getText());
                     token.offset = startPos;
                     token.name = names[ids[lastState]];
                     token.line = startLine;

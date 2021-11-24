@@ -40,13 +40,6 @@ public class Regex extends Node {
         return node + type;
     }
 
-    public Node normal() {
-        if (isOptional() && node.isRegex() && node.asRegex().isPlus()) {
-            return new Regex(node.asRegex().node, "*");
-        }
-        return this;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

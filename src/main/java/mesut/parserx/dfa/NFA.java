@@ -1,5 +1,6 @@
 package mesut.parserx.dfa;
 
+import mesut.parserx.dfa.parser.NfaVisitor;
 import mesut.parserx.nodes.Epsilon;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.Range;
@@ -30,6 +31,15 @@ public class NFA {
 
     public NFA(int maxStates) {
         this(maxStates, new Tree());
+    }
+
+    public static NFA read(File file) throws IOException {
+        return NfaVisitor.make(file);
+        //return read(Utils.read(new FileInputStream(file)));
+    }
+
+    public static NFA read(String str) throws IOException {
+        return NfaVisitor.make(str);
     }
 
     public static NFA makeDFA(File path) {
@@ -246,9 +256,14 @@ public class NFA {
         PrintWriter w = new PrintWriter(writer);
         w.println("initial = " + initial);
         w.print("final = ");
+        boolean first = true;
         for (int i : it()) {
             if (isAccepting(i)) {
+                if (!first) {
+                    w.print(", ");
+                }
                 w.print(i + getName(i));
+                first = false;
             }
         }
         w.println();

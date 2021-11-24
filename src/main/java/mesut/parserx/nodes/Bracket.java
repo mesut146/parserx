@@ -6,13 +6,12 @@ import mesut.parserx.utils.UnicodeUtils;
 import java.util.*;
 
 //character set
-//e.g [a-zA-Z0-9_]
+//e.g [^a-zA-Z0-9_]
 //consist of char or char range
 public class Bracket extends NodeList {
 
     public List<Range> ranges;
     public boolean negate;
-    public boolean debug = false;
     private int pos;
 
     public Bracket(String str) {
@@ -118,12 +117,9 @@ public class Bracket extends NodeList {
     }
 
     public List<Range> negateAll() {
-        if (debug) System.out.println("negating " + this);
         List<Range> rangeList = getRanges();
         sort(rangeList);
-        if (debug) System.out.println("sorted=" + rangeList);
         List<Range> res = mergeRanges(rangeList);
-        if (debug) System.out.println("merged=" + res);
         rangeList.clear();
         rangeList.addAll(res);
         res.clear();
@@ -138,7 +134,6 @@ public class Bracket extends NodeList {
             last = range.end + 1;
         }
         res.add(new Range(last, Alphabet.max));
-        if (debug) System.out.println("negated=" + res);
         return res;
     }
 
@@ -206,7 +201,9 @@ public class Bracket extends NodeList {
         if (negate) {
             sb.append("^");
         }
-        sb.append(join(list, ""));
+        for (Node node : list) {
+            sb.append(node.toString().replace("]", "\\]"));
+        }
         sb.append("]");
         return sb.toString();
     }

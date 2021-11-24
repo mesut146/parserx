@@ -132,6 +132,9 @@ public class RegexBuilder {
             if (node.isSequence()) {
                 node = new Group(node);
             }
+            if (node.isSequence() || node.isOr()) {
+                node = new Group(node);
+            }
             path.add(new Regex(node, "*"));
         }
         if (!out.epsilon) {

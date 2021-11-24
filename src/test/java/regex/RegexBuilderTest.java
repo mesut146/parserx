@@ -4,17 +4,17 @@ import common.Env;
 import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.NFABuilder;
-import mesut.parserx.dfa.NfaReader;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.Shortcut;
 import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.regex.RegexBuilder;
-import mesut.parserx.regex.RegexFromStr;
 import mesut.parserx.regex.RegexOptimizer;
 import mesut.parserx.regex.RegexPrinter;
+import mesut.parserx.regex.parser.RegexVisitor;
 import org.junit.Ignore;
 import org.junit.Test;
+import parser.DescTester;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -23,7 +23,7 @@ public class RegexBuilderTest {
 
     @Test
     public void lineComment() throws IOException {
-        NFA nfa = NfaReader.read("final=2\nstart=0\n0->1,/\n1->2,/\n2->2,[^\\n]");
+        NFA nfa = NFA.read("start=0\nfinal=2\n0->1,/\n1->2,/\n2->2,[^\\n]");
         Node node = new RegexBuilder(nfa).buildRegex();
         System.out.println(node);
     }
@@ -41,7 +41,7 @@ public class RegexBuilderTest {
     @Test
     @Ignore
     public void build() throws Exception {
-        NFA nfa = NfaReader.read(Env.getResFile("fsm/comment.nfa"));
+        NFA nfa = NFA.read(Env.getResFile("fsm/comment.nfa"));
         RegexBuilder regexBuilder = new RegexBuilder(nfa);
         //regexBuilder.setOrder(5, 4, 3, 2, 1);
         regexBuilder.setOrder(2, 3, 4, 1, 5);
@@ -50,7 +50,7 @@ public class RegexBuilderTest {
 
     @Test
     public void fsm() throws IOException {
-        NFA nfa = NfaReader.read(Env.getResFile("fsm/a.nfa"));
+        NFA nfa = NFA.read(Env.getResFile("fsm/a.nfa"));
         RegexBuilder regexBuilder = new RegexBuilder(nfa);
         Node regex = regexBuilder.buildRegex();
         System.out.println(regex);
@@ -59,8 +59,12 @@ public class RegexBuilderTest {
     }
 
     @Test
-    public void fromStr() {
-        System.out.println(RegexFromStr.build("(asd?(ab)+)\\["));
-        System.out.println(RegexFromStr.build("[a-z*+?()][^\r\n][[abc][a\\]]"));
+    public void fromStr() throws IOException {
+        System.out.println(RegexVisitor.make("(asd?(ab)+)\\["));
+        System.out.println(RegexVisitor.make("[a-z*+?()]"));
+        System.out.println(RegexVisitor.make("[^\r\n]"));
+        System.out.println(RegexVisitor.make("[[abc]"));
+        System.out.println(RegexVisitor.make("[a\\]]"));
     }
+
 }

@@ -2,7 +2,6 @@ package mesut.parserx;
 
 import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
-import mesut.parserx.dfa.NfaReader;
 import mesut.parserx.dfa.Validator;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.ll.RecDescent;
@@ -187,7 +186,7 @@ public class Main {
             }
             else if (cmd.contains("-regex")) {
                 //nfa2regex
-                NFA nfa = NfaReader.read(input);
+                NFA nfa = NFA.read(input);
                 if (!Validator.isDFA(nfa)) {
                     System.out.println("input is nfa converting to dfa first");
                     nfa = nfa.dfa();
@@ -201,7 +200,7 @@ public class Main {
                 }
             }
             else if (cmd.contains("-nfa2dfa")) {
-                NFA nfa = NfaReader.read(input);
+                NFA nfa = NFA.read(input);
                 NFA dfa = nfa.dfa();
                 if (cmd.contains("-optimize")) {
                     dfa = Minimization.Hopcroft(dfa);

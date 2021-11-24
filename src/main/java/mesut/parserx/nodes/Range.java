@@ -14,6 +14,10 @@ public class Range extends Node implements Comparable<Range> {
         this.end = end;
     }
 
+    public Range(int start) {
+        this(start, start);
+    }
+
     public static Range of(int start, int end) {
         return new Range(start, end);
     }

@@ -6,7 +6,6 @@ import mesut.parserx.gen.VisitorGenerator;
 import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.gen.transform.Factor;
-import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 import org.junit.Ignore;
@@ -69,15 +68,6 @@ public class LLGenTest {
         DescTester.check(Env.tree("factor/double-same-extra.g"), "A", "aab", "c", "aadb", "axb", "eb");
         DescTester.check(Env.tree("factor/double-same-extra2.g"), "B", "aad", "ax", "e");
         DescTester.check(Env.tree("factor/double-same-extra2.g"), "A", "aab", "c", "aadb", "axb", "eb");
-    }
-
-    @Test
-    public void all() throws Exception {
-        Options options = new Options();
-        options.outDir = Env.dotDir().getAbsolutePath();
-        Tree tree = Env.tree("calc-1.g");
-        tree.options = options;
-        RecDescent.gen(tree, "java");
     }
 
     @Test

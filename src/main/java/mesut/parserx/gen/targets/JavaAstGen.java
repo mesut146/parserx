@@ -67,45 +67,58 @@ public class JavaAstGen {
     void writePrinter(Node rhs, CodeWriter c, boolean isAlt) {
         c.append("public String toString(){");
         if (isAlt) {
-            c.append("StringBuilder sb=new StringBuilder();");
+            c.append("StringBuilder sb = new StringBuilder();");
             getPrint(rhs, c);
             c.append("return sb.toString();");
         }
         else {
-            c.append("StringBuilder sb=new StringBuilder(\"%s{\");", curRule);
+            c.append("StringBuilder sb = new StringBuilder(\"%s{\");", curRule);
             getPrint(rhs, c);
             c.append("return sb.append(\"}\").toString();");
         }
         c.append("}");//toString
     }
 
+    String printer(Name name) {
+        if (name.isToken) {
+            return String.format("\"'\" + %s.value + \"'\"", name.astInfo.varName);
+        }
+        else {
+            return String.format("%s.toString()", name.astInfo.varName);
+        }
+    }
+
     void getPrint(Node node, CodeWriter c) {
         if (node.isName()) {
-            Name name = node.asName();
-            if (name.isToken) {
-                c.append("sb.append(\"'\" + %s.value + \"'\");", node.astInfo.varName);
-            }
-            else {
-                c.append("sb.append(%s.toString());", node.astInfo.varName);
-            }
+            c.append("sb.append(%s);", printer(node.asName()));
         }
         else if (node.isSequence()) {
             Sequence s = node.asSequence();
             for (int i = 0; i < s.size(); i++) {
                 getPrint(s.get(i), c);
                 if (i < s.size() - 1) {
-                    c.append("sb.append(\"%s\");", options.sequenceDelimiter);
+                    Node next = s.get(i + 1);
+                    if (next.isOptional()) {
+                        c.append("if(%s != null) sb.append(\"%s\");", next.astInfo.varName, options.sequenceDelimiter);
+                    }
+                    else if (next.isStar()) {
+                        c.append("if(!%s.isEmpty()) sb.append(\"%s\");", next.asRegex().node.astInfo.varName, options.sequenceDelimiter);
+                    }
+                    else {
+                        c.append("sb.append(\"%s\");", options.sequenceDelimiter);
+                    }
                 }
             }
         }
         else if (node.isRegex()) {
             Regex regex = node.asRegex();
             String v = regex.node.astInfo.varName;
+            Name name = regex.node.asName();
             if (regex.isStar() || regex.isPlus()) {
                 c.append("if(!%s.isEmpty()){", v);
                 c.append("sb.append('[');");
                 c.append("for(int i = 0;i < %s.size();i++){", v);
-                Name name = regex.node.asName();
+
                 if (name.isToken) {
                     c.append("sb.append(\"'\" + %s.get(i).value + \"'\");", v);
                 }
@@ -118,7 +131,7 @@ public class JavaAstGen {
                 c.append("}");
             }
             else {
-                c.append("sb.append(%s == null?\"\":%s);", v, v);
+                c.append("sb.append(%s == null?\"\":%s);", v, printer(name));
             }
         }
         else if (node.isGroup()) {
@@ -148,6 +161,14 @@ public class JavaAstGen {
         }
     }
 
+    void setVarName(Name name, Type outerCls) {
+        String varName = name.astInfo.varName;
+        if (varName == null) {
+            varName = vName(name, outerCls.toString());
+            name.astInfo.varName = varName;
+        }
+    }
+
     private void model(Node node, Type outerCls, String outerVar, CodeWriter parent) {
         if (node.isSequence()) {
             for (Node ch : node.asSequence()) {
@@ -159,12 +180,8 @@ public class JavaAstGen {
             node.astInfo.outerCls = outerCls;
             Name name = node.asName();
             //check if user supplied var name
-            String varName = name.astInfo.varName;
-            if (varName == null) {
-                varName = vName(name, outerCls.toString());
-                name.astInfo.varName = varName;
-            }
-            parent.append("public %s %s;", name.isToken ? options.tokenClass : name.name, varName);
+            setVarName(name, outerCls);
+            parent.append("public %s %s;", name.isToken ? options.tokenClass : name.name, name.astInfo.varName);
         }
         else if (node.isRegex()) {
             node.astInfo.outerVar = outerVar;
@@ -173,21 +190,17 @@ public class JavaAstGen {
             Node ch = regex.node;
             if (regex.isOptional()) {
                 model(ch, outerCls, outerVar, parent);
-                node.astInfo.varName = ch.astInfo.varName;
             }
             else {
                 Name name = ch.asName();
-                String vname = ch.astInfo.varName;
-                if (vname == null) {
-                    vname = vName(name, outerCls.toString());
-                    ch.astInfo.varName = vname;
-                }
+                setVarName(name, outerCls);
                 ch.astInfo.isInLoop = true;
                 ch.astInfo.outerCls = outerCls;
                 ch.astInfo.outerVar = outerVar;
                 String type = name.isToken ? options.tokenClass : name.name;
-                parent.append("public List<%s> %s = new ArrayList<>();", type, vname);
+                parent.append("public List<%s> %s = new ArrayList<>();", type, name.astInfo.varName);
             }
+            node.astInfo.varName = ch.astInfo.varName;
         }
         else if (node.isOr()) {
             parent.append("public int which;");
