@@ -19,7 +19,6 @@ public class Tree {
 
     public List<TokenDecl> tokens = new ArrayList<>();
     public List<RuleDecl> rules = new ArrayList<>();
-    public List<RuleDecl> hiddenRules = new ArrayList<>();
     public Options options = new Options();
     public Name start;
     public File file;
@@ -218,26 +217,16 @@ public class Tree {
             }
             sb.append(NodeList.join(rules, "\n"));
         }
-        if (!hiddenRules.isEmpty()) {
-            sb.append("/* hidden rules */\n");
-            sb.append(NodeList.join(hiddenRules, "\n"));
-        }
-
         return sb.toString();
     }
 
     public RuleDecl getRule(String name) {
-        for (RuleDecl decl : rules) {
-            if (decl.getName().equals(name)) return decl;
-        }
-        return null;
+        return getRule(new Name(name));
     }
 
-    public RuleDecl getRule(Name res) {
+    public RuleDecl getRule(Name name) {
         for (RuleDecl decl : rules) {
-            if (decl.ref.equals(res)) {
-                return decl;
-            }
+            if (decl.ref.equals(name)) return decl;
         }
         return null;
     }

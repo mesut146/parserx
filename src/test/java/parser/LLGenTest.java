@@ -6,6 +6,7 @@ import mesut.parserx.gen.VisitorGenerator;
 import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.gen.transform.Factor;
+import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 import org.junit.Ignore;
@@ -56,7 +57,7 @@ public class LLGenTest {
         Factor.debug = false;
         Factor.factorSequence = true;
 
-        DescTester.check(Env.tree("factor/single.g"), "A", "ac", "eb", "adb");
+        /*DescTester.check(Env.tree("factor/single.g"), "A", "ac", "eb", "adb");
         DescTester.check(Env.tree("factor/single2.g"), "A", "aac", "aadbeb");
         DescTester.check(Env.tree("factor/group.g"), "A", "ab", "ace", "de");
         DescTester.check(Env.tree("factor/list.g"), "A", "ab", "c", "ac", "aaaaaac");
@@ -68,6 +69,23 @@ public class LLGenTest {
         DescTester.check(Env.tree("factor/double-same-extra.g"), "A", "aab", "c", "aadb", "axb", "eb");
         DescTester.check(Env.tree("factor/double-same-extra2.g"), "B", "aad", "ax", "e");
         DescTester.check(Env.tree("factor/double-same-extra2.g"), "A", "aab", "c", "aadb", "axb", "eb");
+
+        DescTester.check(Env.tree("factor/loop.g"), "A", "aaab", "aaac");
+        DescTester.check(Env.tree("factor/loop.g"), "B", "b", "aaab", "aaac");
+        DescTester.check(Env.tree("factor/loop.g"), "C", "b", "c", "aaab", "aaac");
+        DescTester.check(Env.tree("factor/loop.g"), "D", "b", "c", "ad", "aaab", "aaac");
+        DescTester.check(Env.tree("factor/loop.g"), "E", "b", "dc", "ec", "af", "aaab", "aaadc", "aaaec");*/
+
+        //DescTester.check(Env.tree("factor/loop2.g"), "A", "aaac", "aaad", "aaabd", "babaad");
+
+        DescTester.check(Env.tree("factor/loop3.g"), "E", "cdcdae", "cdcdf", "cdcdbf", "bcdcdbf");
+    }
+
+    @Test
+    public void aa() throws IOException {
+        Tree tree = Env.tree("factor/loop3.g");
+        FactorLoop factorLoop = new FactorLoop(tree, null);
+        System.out.println(factorLoop.loops(tree.getRule("E").rhs));
     }
 
     @Test
@@ -99,23 +117,8 @@ public class LLGenTest {
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         Factor.debug = true;
-        /*Name.autoEncode = false;
-        Factor.factorSequence = false;
-        new Factor(tree).factorize();
-        tree.printRules();*/
         RecDescent.gen(tree, "java");
     }
-
-    @Test
-    public void math2() throws IOException {
-        //Name.autoEncode = true;
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
-        //Tree tree = Env.tree("factor/math.g");
-        tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/ll1";
-        tree.options.packageName = "ll1";
-        RecDescent.gen(tree, "java");
-    }
-
 
     @Test
     public void mathReal() throws Exception {

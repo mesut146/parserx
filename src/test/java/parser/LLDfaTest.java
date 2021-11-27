@@ -31,17 +31,18 @@ public class LLDfaTest {
         builder.build();
         NFA nfa = builder.dfa;
         NFA dfa = nfa.dfa();
-        dfa = Minimization.optimize(dfa);
-        dots(Minimization.combineAlphabet(dfa), tree.file);
+        dfa = Minimization.combineAlphabet(dfa);
+        dots(dfa, tree.file);
     }
 
     @Test
     public void llregex() throws IOException {
-        Tree tree = Env.tree("lldfa/a.g");
+        //Tree tree = Env.tree("lldfa/a.g");
+        Tree tree = Env.tree("lldfa/factor.g");
         LLDfaRegex regex = new LLDfaRegex(tree);
-        System.out.println(regex.makeRegex(tree.getRule("A")));
+        regex.makeRegex(tree.getRule("E"));
         //c | a a* c | c b b* | a a* c b b*
-        dots(regex.dfa, tree.file);
+        dots(regex.nfa, tree.file);
     }
 
     @Test

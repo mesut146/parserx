@@ -35,7 +35,6 @@ public class NFA {
 
     public static NFA read(File file) throws IOException {
         return NfaVisitor.make(file);
-        //return read(Utils.read(new FileInputStream(file)));
     }
 
     public static NFA read(String str) throws IOException {
@@ -329,8 +328,11 @@ public class NFA {
                 //todo write label inside
                 w.printf("%d [shape = doublecircle color=%s xlabel=\"%s\"]\n", state, finalColor, name);
             }
-            if (isSkip[state]) {
+            else if (isSkip[state]) {
                 w.printf("%d [color=%s xlabel=\"%s\"]\n", state, skipColor, name);
+            }
+            else {
+                w.printf("%d [xlabel=\"%s\"]\n", state, name);
             }
         }
 

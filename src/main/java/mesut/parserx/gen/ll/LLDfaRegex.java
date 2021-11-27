@@ -7,6 +7,7 @@ import mesut.parserx.nodes.*;
 import java.util.*;
 
 public class LLDfaRegex {
+    public NFA nfa = new NFA(100);
     public NFA dfa = new NFA(100);
     Tree tree;
     Map<Name, List<Integer>> finalMap = new HashMap<>();
@@ -18,6 +19,7 @@ public class LLDfaRegex {
     public LLDfaRegex(Tree tree) {
         this.tree = tree;
         dfa.tree = tree;
+        nfa.tree = tree;
     }
 
 
@@ -34,7 +36,7 @@ public class LLDfaRegex {
     void makeFinals(RuleDecl decl) {
         getStart(decl.ref);
         int end = getFinal(decl.ref);
-        dfa.addName(decl.baseName(), end);
+        nfa.addName(decl.baseName(), end);
         List<Integer> finals = finalMap.get(decl.ref);
         if (finals == null) {
             finals = new ArrayList<>();
@@ -43,10 +45,10 @@ public class LLDfaRegex {
         if (decl.rhs.isOr()) {
             Or or = decl.rhs.asOr();
             for (int i = 0; i < or.size(); i++) {
-                int endCurCh = dfa.newState();
-                dfa.addEpsilon(endCurCh, end);
+                int endCurCh = nfa.newState();
+                nfa.addEpsilon(endCurCh, end);
                 finals.add(endCurCh);
-                dfa.addName(decl.baseName() + (i + 1), endCurCh);
+                nfa.addName(decl.baseName() + (i + 1), endCurCh);
             }
         }
         else {
@@ -55,7 +57,7 @@ public class LLDfaRegex {
     }
 
     void collect(RuleDecl decl) {
-        new Transformer() {
+        new Transformer(tree) {
             @Override
             public Node visitName(Name name, Void parent) {
                 if (name.isToken) return name;
@@ -79,29 +81,29 @@ public class LLDfaRegex {
         int start = getStart(decl.ref);
         int end = getFinal(decl.ref);
 
-        dfa.addEpsilon(dfa.initial, start);
+        nfa.addEpsilon(nfa.initial, start);
 
         if (decl.rhs.isOr()) {
             Or or = decl.rhs.asOr();
             for (int i = 0; i < or.size(); i++) {
                 int end0 = add(or.get(i), start);
                 int end1 = finalMap.get(decl.ref).get(i);
-                dfa.addEpsilon(end0, end1);
-                dfa.setAccepting(end1, true);
+                nfa.addEpsilon(end0, end1);
+                nfa.setAccepting(end1, true);
             }
         }
         else {
             int end0 = add(decl.rhs, start);
-            dfa.addEpsilon(end0, end);
+            nfa.addEpsilon(end0, end);
         }
         for (Name nextRule : onDemandRules) {
             if (nextRule.equals(decl.ref)) continue;
             RuleDecl rule = tree.getRule(nextRule);
             int start0 = getStart(nextRule);
             int endTmp = add(rule.rhs, start0);
-            dfa.addEpsilon(endTmp, getFinal(nextRule));
+            nfa.addEpsilon(endTmp, getFinal(nextRule));
         }
-        dfa = dfa.dfa();
+        dfa = nfa.dfa();
         //return RegexBuilder.from(dfa);
         return null;
     }
@@ -114,7 +116,7 @@ public class LLDfaRegex {
         if (startMap.containsKey(rule)) {
             return startMap.get(rule);
         }
-        int state = dfa.newState();
+        int state = nfa.newState();
         startMap.put(rule, state);
         return state;
     }
@@ -123,7 +125,7 @@ public class LLDfaRegex {
         if (finalMapReal.containsKey(rule)) {
             return finalMapReal.get(rule);
         }
-        int state = dfa.newState();
+        int state = nfa.newState();
         finalMapReal.put(rule, state);
         return state;
     }
@@ -135,13 +137,13 @@ public class LLDfaRegex {
         else if (node.isName()) {
             Name name = node.asName();
             if (name.isToken) {
-                int end = dfa.newState();
-                dfa.addTransition(start, end, getId(name));
+                int end = nfa.newState();
+                nfa.addTransition(start, end, getId(name));
                 return end;
             }
             else {
                 onDemandRules.add(name);
-                dfa.addEpsilon(start, getStart(name));
+                nfa.addEpsilon(start, getStart(name));
                 return finalMapReal.get(name);
             }
         }
@@ -153,10 +155,10 @@ public class LLDfaRegex {
             return curEnd;
         }
         else if (node.isOr()) {
-            int end = dfa.newState();
+            int end = nfa.newState();
             for (Node ch : node.asOr()) {
                 int chEnd = add(ch, start);
-                dfa.addEpsilon(chEnd, end);
+                nfa.addEpsilon(chEnd, end);
             }
             return end;
         }
@@ -164,17 +166,17 @@ public class LLDfaRegex {
             Regex regex = node.asRegex();
             int end = add(regex.node, start);
             if (regex.isOptional()) {
-                dfa.addEpsilon(start, end);
+                nfa.addEpsilon(start, end);
                 return end;
             }
             else if (regex.isStar()) {
-                dfa.addEpsilon(start, end);//zero
-                dfa.addEpsilon(end, start);//more
+                nfa.addEpsilon(start, end);//zero
+                nfa.addEpsilon(end, start);//more
                 return end;
             }
             else {
                 int end2 = add(regex.node, end);
-                dfa.addEpsilon(end2, end);
+                nfa.addEpsilon(end2, end);
                 return end;
             }
         }

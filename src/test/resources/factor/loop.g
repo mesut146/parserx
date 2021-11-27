@@ -1,28 +1,16 @@
 include "../common.g"
 
-/*
-A1: a* b | a* c;
-A2: a* b | a+ c;
-A3: a+ b | a+ c;
-*/
-
-/*
-B: a* b | C c;
-C: a* d | e;
-*/
+A: a+ b | a+ c;
+B: a* b | a+ c;
+C: a* b | a* c;
 
 
-//double factor
-//A: a* b | a* c | a d;
+//loop + normal
+D: a* b | a* c | a d;
 
 //double loop
-/*
-A: a* b | B c | a f;
-B: a* d | a* e;
-*/
+E: a* b | F c | a f;
+F: a* d | a* e;
 
-//rule
-E: a* b | EE* c;
-EE: a;
 
 

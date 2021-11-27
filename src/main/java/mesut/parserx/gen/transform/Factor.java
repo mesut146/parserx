@@ -65,6 +65,12 @@ public class Factor extends Transformer {
         if (b.isName() && common.contains(b.asName())) {
             return b.asName();
         }
+        if (a.isRegex() && a.asRegex().node.asName().equals(b)) {
+            return b.asName();
+        }
+        if (b.isRegex() && b.asRegex().node.asName().equals(a)) {
+            return a.asName();
+        }
         for (Name name : common) {
             if (name.isRule()) {
                 //rule has higher priority
