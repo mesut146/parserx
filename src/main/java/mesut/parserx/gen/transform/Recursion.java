@@ -1,7 +1,9 @@
 package mesut.parserx.gen.transform;
 
-import mesut.parserx.gen.Helper;
+import mesut.parserx.gen.FirstSet;
 import mesut.parserx.nodes.*;
+
+import java.util.Set;
 
 //remove left recursion by factorization
 public class Recursion {
@@ -21,7 +23,7 @@ public class Recursion {
 
         for (int i = 0; i < tree.rules.size(); ) {
             RuleDecl decl = tree.rules.get(i++);
-            if (Helper.first(decl.rhs, tree, true).contains(decl.ref)) {
+            if (FirstSet.start(decl.rhs, decl.ref, tree)) {
                 any = true;
                 if (debug) {
                     System.out.println("removing recursion on " + decl.ref);
@@ -45,6 +47,10 @@ public class Recursion {
         info.zero.astInfo.isPrimary = true;
         info.one.astInfo.isSecondary = true;
         decl.rhs = new Sequence(info.zero, new Regex(info.one, "*"));
+    }
+
+    void bySeparateFactor(RuleDecl decl) {
+        Set<Name> set = FirstSet.firstSet(decl.rhs, tree);
     }
 
 }

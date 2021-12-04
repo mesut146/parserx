@@ -30,6 +30,14 @@ public class PrecedenceHandler {
 
             Or or = decl.rhs.asOr();
             List<Node> primList = new ArrayList<>();
+            //prevent regular ors being transformed
+            boolean hasAny = false;
+            for (Node ch : or) {
+                if (ch.isSequence() && ch.asSequence().assocLeft || ch.asSequence().assocRight) {
+                    hasAny = true;
+                }
+            }
+            if (!hasAny) continue;
             collect(decl, or, primList);
             if (map.isEmpty()) {
                 continue;

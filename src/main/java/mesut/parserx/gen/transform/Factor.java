@@ -179,7 +179,7 @@ public class Factor extends Transformer {
         if (sym.astInfo.isFactored) {
             throw new RuntimeException("factored sym");
         }
-        if (!FirstSet.firstSet(node, tree).contains(sym)) {
+        if (!FirstSet.start(node, sym, tree)) {
             throw new RuntimeException("can't pull " + sym + " from " + node);
         }
         if (sym.astInfo.factorName == null) {
@@ -373,8 +373,8 @@ public class Factor extends Transformer {
         PullInfo info = new PullInfo();
         //A | B | C
         //a A1 | A0 | a B1 | B0 | C
-        Or one = new Or();
-        Or zero = new Or();
+        List<Node> one = new ArrayList<>();
+        List<Node> zero = new ArrayList<>();
         for (Node ch : or) {
             if (Helper.start(ch, sym, tree)) {
                 PullInfo pi = pull(ch, sym);
@@ -388,14 +388,18 @@ public class Factor extends Transformer {
             }
         }
         if (zero.size() > 0) {
-            info.zero = zero;
             if (zero.size() == 1) {
                 info.zero = zero.get(0);
             }
+            else {
+                info.zero = new Or(zero);
+            }
         }
-        info.one = one;
         if (one.size() == 1) {
             info.one = one.get(0);
+        }
+        else {
+            info.one = new Or(one);
         }
         return info;
     }
@@ -434,6 +438,7 @@ public class Factor extends Transformer {
     }
 
     private Node withAst(Node node, Regex other) {
+        if (node.astInfo.isFactored) return node;
         node.astInfo = other.astInfo.copy();
         return node;
     }

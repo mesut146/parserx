@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 
 //cst to ast
 public class AstBuilder {
@@ -83,20 +85,25 @@ public class AstBuilder {
 
 
     public Node visitRhs(Ast.rhs node) {
-        Or or = new Or();
-        or.add(visitSequence(node.sequence));
+        List<Node> list = new ArrayList<>();
+        list.add(visitSequence(node.sequence));
         for (Ast.rhsg1 g1 : node.g1) {
-            or.add(visitSequence(g1.sequence));
+            list.add(visitSequence(g1.sequence));
         }
-        return or.normal();
+        if (list.size() == 1) {
+            return list.get(0);
+        }
+        return new Or(list);
     }
 
 
     public Node visitSequence(Ast.sequence node) {
-        Sequence s = new Sequence();
+        List<Node> list = new ArrayList<>();
         for (Ast.regex r : node.regex) {
-            s.add(visitRegex(r));
+            list.add(visitRegex(r));
         }
+        if (list.size() == 1) return list.get(0);
+        Sequence s = new Sequence(list);
         if (node.assoc != null) {
             if (s.size() != 3 && s.size() != 5) {
                 throw new RuntimeException("assoc can only be used with 3 or 5 nodes");
@@ -111,7 +118,7 @@ public class AstBuilder {
         if (node.label != null) {
             s.label = node.label.name.IDENT.value;
         }
-        return s.normal();
+        return s;
     }
 
     String str(Ast.name name) {

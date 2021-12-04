@@ -3,6 +3,7 @@ package mesut.parserx.gen;
 import mesut.parserx.nodes.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 //Deep Copy
 public class Copier extends Transformer {
@@ -31,10 +32,11 @@ public class Copier extends Transformer {
 
     @Override
     public Node visitSequence(Sequence seq, Void arg) {
-        Sequence res = new Sequence();
+        List<Node> list = new ArrayList<>();
         for (Node ch : seq) {
-            res.add(transformNode(ch, arg));
+            list.add(transformNode(ch, arg));
         }
+        Sequence res = new Sequence(list);
         res.assocLeft = seq.assocLeft;
         res.assocRight = seq.assocRight;
         return withAst(res, seq);
@@ -42,13 +44,14 @@ public class Copier extends Transformer {
 
     @Override
     public Node visitOr(Or or, Void arg) {
-        Or res = new Or();
+        List<Node> list = new ArrayList<>();
         for (Node ch : or) {
             String label = ch.label;
             ch = transformNode(ch, arg);
             ch.label = label;
-            res.add(ch);
+            list.add(ch);
         }
+        Or res = new Or(list);
         return withAst(res, or);
     }
 

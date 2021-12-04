@@ -2,6 +2,8 @@ import common.Env;
 import mesut.parserx.gen.ll.DotBuilder;
 import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.transform.EpsilonTrimmer;
+import mesut.parserx.gen.transform.GreedyNormalizer;
+import mesut.parserx.gen.transform.RegexForm;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.Tree;
 import org.junit.Ignore;
@@ -65,5 +67,15 @@ public class TransformTest {
     public void dot() throws IOException {
         String str = "E{E2{E3{E4{PRIM{'1'}}}},Eg1{'+'},E{E2{E3{E4{PRIM{'2'}}},E2g1{'*'},E2{E3{E4{PRIM{'3'}}},E2g1{'*'},E2{E3{E4{PRIM{'4'},'^',E4{PRIM{'5'}}}}}}}}}";
         DotBuilder.write(str, new PrintWriter(new FileWriter(Env.dotFile("b"))));
+    }
+
+    @Test
+    public void greedyTail() throws IOException {
+        Tree tree = Env.tree("greedy/a.g");
+        GreedyNormalizer normalizer = new GreedyNormalizer(tree);
+        normalizer.normalize();
+        tree.printRules();
+        System.out.println(RegexForm.normalizeRule(tree.getRule("E"), tree));
+
     }
 }
