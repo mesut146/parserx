@@ -26,6 +26,7 @@ public class Optimizer extends Transformer {
             curRule = decl;
             if (decl.isOriginal) {
                 decl.rhs.accept(this, null);
+                all.add(decl.ref);
                 all.addAll(usages);
             }
         }

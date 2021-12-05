@@ -241,7 +241,7 @@ public class Main {
                 if (tokenClass != null) {
                     tree.options.tokenClass = tokenClass;
                 }
-
+                checkLang(lang);
                 LexerGenerator generator = LexerGenerator.gen(tree, lang);
                 if (hasDot) {
                     generator.dfa.dot(new FileWriter(new File(tree.options.outDir, Utils.newName(input.getName(), "dot"))));
@@ -273,6 +273,7 @@ public class Main {
                 if (astClass != null) {
                     tree.options.astClass = astClass;
                 }
+                checkLang(lang);
                 RecDescent.gen(tree, lang);
             }
             else if (cmd.contains("-lalr") || cmd.contains("-lr1") || cmd.contains("-lr0")) {
@@ -332,6 +333,10 @@ public class Main {
 
     private static void logwrite(File file) {
         System.out.println("writing " + file);
+    }
+
+    static void checkLang(String lang) {
+        if (lang == null) throw new RuntimeException("specify a -lang, supported are java,cpp");
     }
 
 
