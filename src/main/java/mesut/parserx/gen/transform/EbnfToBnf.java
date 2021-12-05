@@ -3,7 +3,9 @@ package mesut.parserx.gen.transform;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 //transform ebnf to bnf
@@ -29,26 +31,30 @@ public class EbnfToBnf {
     public static Tree combineOr(Tree input) {
         Tree res = new Tree(input);
         res.rules.clear();
-        for (Map.Entry<Name, Or> entry : combineOrMap(input).entrySet()) {
+        for (Map.Entry<Name, Node> entry : combineOrMap(input).entrySet()) {
             RuleDecl decl = entry.getKey().makeRule();
-            decl.rhs = entry.getValue().normal();
+            decl.rhs = entry.getValue();
             res.addRule(decl);
         }
         return res;
     }
 
-    public static LinkedHashMap<Name, Or> combineOrMap(Tree input) {
+    public static LinkedHashMap<Name, Node> combineOrMap(Tree input) {
         //LinkedHashMap preserves rule order
-        LinkedHashMap<Name, Or> map = new LinkedHashMap<>();
+        LinkedHashMap<Name, List<Node>> map = new LinkedHashMap<>();
         for (RuleDecl decl : input.rules) {
-            Or or = map.get(decl.ref);
+            List<Node> or = map.get(decl.ref);
             if (or == null) {
-                or = new Or();
+                or = new ArrayList<>();
                 map.put(decl.ref, or);
             }
             or.add(decl.rhs);
         }
-        return map;
+        LinkedHashMap<Name, Node> res = new LinkedHashMap<>();
+        for (Map.Entry<Name, List<Node>> entry : map.entrySet()) {
+            res.put(entry.getKey(), Or.make(entry.getValue()));
+        }
+        return res;
     }
 
     private void addRule(RuleDecl decl) {
@@ -118,21 +124,21 @@ public class EbnfToBnf {
             }
         }
         else {
-            Or res = new Or();
+            List<Node> list = new ArrayList<>();
             for (Node node : or) {
-                res.add(transform(node));
+                list.add(transform(node));
             }
-            return res;
+            return Or.make(list);
         }
         return null;
     }
 
     Node transform(Sequence seq) {
-        Sequence res = new Sequence();
+        List<Node> list = new ArrayList<>();
         for (Node ch : seq) {
-            res.add(transform(ch));
+            list.add(transform(ch));
         }
-        return res;
+        return Sequence.make(list);
     }
 
     Node transform(Regex regex) {
@@ -143,7 +149,7 @@ public class EbnfToBnf {
             //b* = € | b b*; right
             //b+ = b | b b+; right
             //b+ = b | b+ b; left
-            Or or = new Or();
+            List<Node> or = new ArrayList<>();
 
             if (regex.node.isGroup()) {
                 Group group = regex.node.asGroup();
@@ -175,8 +181,8 @@ public class EbnfToBnf {
                 }
                 addCh(or, ref, regex.node);
             }
-            RuleDecl r = new RuleDecl(ref, or);
-            r.rhs = transform(or);
+            RuleDecl r = new RuleDecl(ref, Or.make(or));
+            r.rhs = transform(r.rhs);
             addRule(r);
             return ref;
         }
@@ -189,7 +195,7 @@ public class EbnfToBnf {
         }
     }
 
-    void addCh(Or or, Node ref, Node other) {
+    void addCh(List<Node> or, Node ref, Node other) {
         if (leftRecursive) {
             or.add(new Sequence(ref, other));
         }

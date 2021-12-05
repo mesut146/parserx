@@ -4,6 +4,9 @@ import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Epsilons {
     Tree tree;
 
@@ -138,7 +141,7 @@ public class Epsilons {
         Node s3 = b.noEps == null ? null : Sequence.make(a.eps, b.noEps);
         Node s4 = Sequence.make(a.eps, b.eps);
         s4.astInfo = s.astInfo.copy();
-        Or or = new Or();
+        List<Node> or = new ArrayList<>();
         if (s1 != null) {
             s1.astInfo = s.astInfo.copy();
             or.add(s1);
@@ -151,7 +154,7 @@ public class Epsilons {
             s3.astInfo = s.astInfo.copy();
             or.add(s3);
         }
-        res.noEps = or;
+        res.noEps = Or.make(or);
         res.eps = s4;
         Factor.check(s1);
         Factor.check(s2);

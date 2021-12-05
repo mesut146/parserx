@@ -33,7 +33,7 @@ public class PrecedenceHandler {
             //prevent regular ors being transformed
             boolean hasAny = false;
             for (Node ch : or) {
-                if (ch.isSequence() && ch.asSequence().assocLeft || ch.asSequence().assocRight) {
+                if (ch.isSequence() && (ch.asSequence().assocLeft || ch.asSequence().assocRight)) {
                     hasAny = true;
                 }
             }
@@ -87,7 +87,7 @@ public class PrecedenceHandler {
         int level = ++lastLevel;
         Holder holder = new Holder();
         holder.info = info;
-        holder.name = decl.baseName() + level;
+        holder.name = tree.getName(decl.baseName() + level);
         holder.node = node;
         map.put(level, holder);
     }

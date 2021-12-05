@@ -509,7 +509,14 @@ public class FactorLoop extends Transformer {
         }
         String key = name.name + "-" + sym;
         if (cache.containsKey(key)) {
-            return cache.get(key);
+            Factor.PullInfo info = cache.get(key);
+            info.one = info.one.copy();
+            info.one.astInfo = name.astInfo.copy();
+            if (info.zero != null) {
+                info.zero = info.zero.copy();
+                info.zero.astInfo = name.astInfo.copy();
+            }
+            return info;
         }
 
         RuleDecl decl = tree.getRule(name);

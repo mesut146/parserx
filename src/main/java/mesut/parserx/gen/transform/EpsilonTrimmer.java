@@ -117,9 +117,7 @@ public class EpsilonTrimmer extends Transformer {
                 }
                 List<Node> l2 = new ArrayList<>(l1);
                 l2.add(i, transformNode(ch, arg));
-                Or res = new Or();
-                res.add(new Sequence(l1));
-                res.add(new Sequence(l2));
+                Or res = new Or(new Sequence(l1), new Sequence(l2));
                 //modified = true;
                 if (hasEpsilon(res)) {
                     return transformNode(res, arg);
@@ -160,19 +158,18 @@ public class EpsilonTrimmer extends Transformer {
 
     @Override
     public Node visitOr(Or or, Void arg) {
-        Or res = new Or();
+        List<Node> list = new ArrayList<>();
         for (Node ch : or) {
             if (ch.isEpsilon()) continue;
             if (hasEpsilon(ch)) {
                 ch = transformNode(ch, arg);
             }
             if (!ch.isEpsilon()) {
-                res.add(ch);
+                list.add(ch);
             }
         }
-        if (res.size() == 0) return new Epsilon();
-        if (res.size() == 1) return res.first();
-        return res;
+        if (list.size() == 0) return new Epsilon();
+        return Or.make(list);
     }
 
     @Override

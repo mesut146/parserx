@@ -31,6 +31,11 @@ public class Sequence extends NodeList {
         return new Sequence(Or.wrap(a), Or.wrap(b));
     }
 
+    public static Node make(List<Node> list) {
+        if (list.size() == 1) return list.get(0);
+        return new Sequence(list);
+    }
+
     @Override
     public String toString() {
         return NodeList.join(list, " ");

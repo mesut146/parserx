@@ -4,13 +4,11 @@ import mesut.parserx.nodes.*;
 
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class FirstSet extends BaseVisitor<Void, Void> {
     Tree tree;
-    Set<Name> res = new HashSet<>();
+    LinkedHashSet<Name> res = new LinkedHashSet<>();
     Set<Name> rules = new HashSet<>();
     boolean recurse = true;
 

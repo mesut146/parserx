@@ -123,7 +123,7 @@ public class RegexBuilder {
 
     //actual regex builder
     Node path(Transition in, Transition out) {
-        Sequence path = new Sequence();
+        List<Node> path = new ArrayList<>();
         if (!in.epsilon)
             path.add(idToNode(in));
         Transition loop = getLooping(in.target);
@@ -149,41 +149,42 @@ public class RegexBuilder {
         if (path.size() == 0) {
             return new Epsilon();
         }
-        return path.normal();
+        return Sequence.make(path);
     }
 
 
     //merge same targeted outgoing transitions with OrNode
     void mergeAll(int state) {
         if (!nfa.hasTransitions(state)) return;
-        List<Transition> list = nfa.trans[state];
-        Map<Integer, Or> map = new HashMap<>();//target -> regex
-        for (Transition tr : list) {
-            Or arr = map.get(tr.target);
+        List<Transition> trList = nfa.trans[state];
+        Map<Integer, List<Node>> map = new HashMap<>();//target -> regex
+        for (Transition tr : trList) {
+            List<Node> arr = map.get(tr.target);
             if (arr == null) {
-                arr = new Or();
+                arr = new ArrayList<>();
                 map.put(tr.target, arr);
             }
             arr.add(idToNode(tr));
         }
-        list.clear();
+        trList.clear();
         for (int target : map.keySet()) {
-            Node node = map.get(target).normal();
+            Node node = Or.make(map.get(target));
             if (node.isOr()) {
+                //trim epsilon
                 for (Node ch : node.asOr()) {
                     if (ch.isEpsilon()) {
-                        Or res = new Or(node.asOr().list);
-                        res.list.remove(ch);
-                        node = new Regex(res.normal(), "?");
+                        List<Node> list = node.asOr().list;
+                        list.remove(ch);
+                        node = new Regex(Or.make(list), "?");
                         break;
                     }
                 }
             }
             if (node.isEpsilon()) {
-                list.add(new Transition(state, target));
+                trList.add(new Transition(state, target));
             }
             else {
-                list.add(new Transition(state, target, alphabet.addRegex(node)));
+                trList.add(new Transition(state, target, alphabet.addRegex(node)));
             }
         }
     }

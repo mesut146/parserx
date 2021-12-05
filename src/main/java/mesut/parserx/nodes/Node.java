@@ -120,4 +120,9 @@ public abstract class Node {
     }
 
     public abstract <R, A> R accept(Visitor<R, A> visitor, A arg);
+
+    public Node withAst(Node node) {
+        this.astInfo= node.astInfo.copy();
+        return this;
+    }
 }

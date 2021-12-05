@@ -68,8 +68,9 @@ public class RecDescent {
         FactorLoop loop = new FactorLoop(tree, factor);
         loop.factorize();
 
+        Optimizer.optimize(tree);
+
         File out = new File(options.outDir, Utils.newName(tree.file.getName(), "-final.g"));
-        //Name.autoEncode = true;
         Node.printVarName = false;
         Utils.write(tree.toString(), out);
 

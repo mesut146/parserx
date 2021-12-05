@@ -3,6 +3,9 @@ package mesut.parserx.gen.transform;
 import mesut.parserx.gen.AstInfo;
 import mesut.parserx.nodes.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 //remove unnecessary nodes & merge
 public class Simplify extends Transformer {
 
@@ -39,58 +42,60 @@ public class Simplify extends Transformer {
 
     @Override
     public Node visitSequence(Sequence node, Void parent) {
-        Sequence res = new Sequence();
-        res.assocLeft = node.assocLeft;
-        res.assocRight = node.assocRight;
+        List<Node> list = new ArrayList<>();
         for (Node ch : node) {
             ch = transformNode(ch, parent);
             if (ch.isSequence()) {
-                res.addAll(ch.asSequence().list);
+                list.addAll(ch.asSequence().list);
             }
             else if (ch.isGroup() && ch.asGroup().node.isSequence()) {
                 if (ch.astInfo.varName != null) {
                     //don't over simplify
-                    res.add(ch);
+                    list.add(ch);
                 }
                 else {
-                    res.addAll(ch.asGroup().node.asSequence().list);
+                    list.addAll(ch.asGroup().node.asSequence().list);
                 }
             }
             else if (!ch.isEpsilon()) {
-                res.add(ch);
+                list.add(ch);
             }
         }
-        if (res.size() == 1) {
-            return res.get(0);
+        if (list.size() == 1) {
+            return list.get(0);
         }
+        Sequence res = new Sequence(list);
+        res.assocLeft = node.assocLeft;
+        res.assocRight = node.assocRight;
         return res;
     }
 
     //todo get rid of merger
     @Override
     public Node visitOr(Or node, Void parent) {
-        Or res = new Or();
+        List<Node> list = new ArrayList<>();
         for (Node ch : node) {
             ch = transformNode(ch, parent);
             if (ch.isOr()) {
-                res.addAll(ch.asOr().list);
+                list.addAll(ch.asOr().list);
             }
             else if (ch.isGroup() && ch.asGroup().node.isOr()) {
                 if (ch.astInfo.varName != null) {
                     //don't over simplify
-                    res.add(ch);
+                    list.add(ch);
                 }
                 else {
-                    res.addAll(ch.asGroup().node.asOr().list);
+                    list.addAll(ch.asGroup().node.asOr().list);
                 }
             }
             else {
-                res.add(ch);
+                list.add(ch);
             }
         }
-        if (res.size() == 1) {
-            return res.get(0);
+        if (list.size() == 1) {
+            return list.get(0);
         }
+        Or res = new Or(list);
         return res.dups();
     }
 

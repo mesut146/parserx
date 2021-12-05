@@ -33,6 +33,11 @@ public class Or extends NodeList {
         return new Or(Sequence.wrap(a), Sequence.wrap(b));
     }
 
+    public static Node make(List<Node> list) {
+        if (list.size() == 1) return list.get(0);
+        return new Or(list);
+    }
+
     public String withNewline() {
         StringBuilder sb = new StringBuilder();
         boolean first = true;

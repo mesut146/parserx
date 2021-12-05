@@ -2,6 +2,9 @@ package mesut.parserx.gen.transform;
 
 import mesut.parserx.nodes.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Substitute {
     Tree tree;
     boolean mergeLeft;
@@ -21,7 +24,7 @@ public class Substitute {
                 RuleDecl decl = tree.getRule(ref);
                 if (decl.rhs.isOr()) {
                     Or or = decl.rhs.asOr();
-                    Or or2 = new Or();
+                    List<Node> or2 = new ArrayList<>();
                     Node right = i == seq.size() - 1 ? null : new Sequence(seq.list.subList(i + 1, seq.size())).normal();
                     Node left = i == 0 ? null : new Sequence(seq.list.subList(0, i)).normal();
 
@@ -31,14 +34,14 @@ public class Substitute {
                             for (Node ch : or) {
                                 or2.add(new Sequence(left, ch, right));
                             }
-                            return or2;
+                            return Or.make(or2);
                         }
                         else {
                             //(A B1 | A B2) C
                             for (Node ch : or) {
                                 or2.add(new Sequence(left, ch));
                             }
-                            return new Sequence(new Group(or2), right);
+                            return new Sequence(new Group(Or.make(or2)), right);
                         }
                     }
                     else {
@@ -47,7 +50,7 @@ public class Substitute {
                             for (Node ch : or) {
                                 or2.add(new Sequence(ch, right));
                             }
-                            return new Sequence(left, new Group(or2));
+                            return new Sequence(left, new Group(Or.make(or2)));
                         }
                         else {
                             return new Sequence(left, new Group(or), right);

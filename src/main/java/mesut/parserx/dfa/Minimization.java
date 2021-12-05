@@ -36,7 +36,7 @@ public class Minimization {
                 for (int target : map.keySet()) {
                     List<Node> nodes = map.get(target);//optimize()
                     Bracket bracket = new Bracket();
-                    Or or = new Or();
+                    List<Node> or = new ArrayList<>();
                     for (Node node : nodes) {
                         if (node.isRange()) {
                             bracket.add(node);
@@ -48,7 +48,7 @@ public class Minimization {
                     if (bracket.size() > 0) {
                         or.add(bracket);
                     }
-                    Node node = or.normal();
+                    Node node = Or.make(or);
                     int id;
                     if (alp.map.containsKey(node)) {
                         id = alp.getId(node);

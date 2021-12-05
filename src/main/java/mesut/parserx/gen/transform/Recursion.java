@@ -46,7 +46,7 @@ public class Recursion {
         //info.one.astInfo.outerVar = "res";
         info.zero.astInfo.isPrimary = true;
         info.one.astInfo.isSecondary = true;
-        decl.rhs = new Sequence(info.zero, new Regex(info.one, "*"));
+        decl.rhs = Sequence.make(info.zero, new Regex(info.one, "*"));
     }
 
     void bySeparateFactor(RuleDecl decl) {

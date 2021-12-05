@@ -7,6 +7,8 @@ import mesut.parserx.nodes.*;
 
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -108,15 +110,14 @@ public class LeftRecursive {
     //make sure node doesn't start with ref
     public Node subFirst(Node node, Name ref) {
         if (node.isOr()) {
-            Or res = new Or();
-            res.astInfo = node.astInfo.copy();
+            List<Node> res = new ArrayList<>();
             for (Node ch : node.asOr()) {
                 if (start(ch, ref)) {
                     ch = subFirst(ch, ref);
                 }
                 res.add(ch);
             }
-            return res;
+            return Or.make(res).withAst(node);
         }
         else if (node.isSequence()) {
             Sequence res = new Sequence(node.asSequence().list);
@@ -194,11 +195,11 @@ public class LeftRecursive {
         else if (one.isOr()) {
             //multiple ones, extract all
             Or or = one.asOr();
-            Or tmp = new Or();
+            List<Node> tmp = new ArrayList<>();
             for (Node ch : or) {
                 tmp.add(Helper.trim(ch.asSequence()));
             }
-            tail = tmp.normal();
+            tail = Or.make(tmp);
         }
         else {
             throw new RuntimeException("invalid tail: " + one);
@@ -211,7 +212,7 @@ public class LeftRecursive {
     //R = R0 | R1 where R0 doesn't start with R and R1 start with R, R1 = R T
     public SplitInfo split(Node r, Name name) {
         Node zero = null;
-        Or one = null;
+        Node one = null;
         if (r.isGroup()) {
             SplitInfo info = split(r.asGroup().node, name);
             zero = info.zero;
@@ -253,21 +254,22 @@ public class LeftRecursive {
         }
         else if (r.isOr()) {
             Or or = r.asOr();
-            Or zero0 = new Or();
-            one = new Or();
+            List<Node> zeros = new ArrayList<>();
+            List<Node> ones = new ArrayList<>();
             for (Node ch : or) {
                 if (start(ch, name)) {
                     SplitInfo s = split(ch, name);
-                    one.add(s.one);
+                    ones.add(s.one);
                     if (s.zero != null) {
-                        zero0.add(s.zero);
+                        zeros.add(s.zero);
                     }
                 }
                 else {
-                    zero0.add(ch);
+                    zeros.add(ch);
                 }
             }
-            zero = zero0.normal();
+            one = Or.make(ones);
+            zero = Or.make(zeros);
         }
         else if (r.isSequence()) {
             Sequence seq = r.asSequence();
@@ -313,23 +315,23 @@ public class LeftRecursive {
     }
 
     Node makeSeq(Node... all) {
-        Sequence s = new Sequence();
+        List<Node> list = new ArrayList<>();
         for (Node ch : all) {
             if (ch != null) {
-                s.add(ch.normal());
+                list.add(ch);
             }
         }
-        return s.normal();
+        return Sequence.make(list);
     }
 
     Node makeOr(Node... all) {
-        Or s = new Or();
+        List<Node> list = new ArrayList<>();
         for (Node ch : all) {
             if (ch != null) {
-                s.add(ch.normal());
+                list.add(ch);
             }
         }
-        return s.normal();
+        return Or.make(list);
     }
 
     boolean start(Node node, Name name) {
@@ -342,9 +344,9 @@ public class LeftRecursive {
 
     public static class SplitInfo {
         public Node zero;
-        public Or one;
+        public Node one;
 
-        public SplitInfo(Node zero, Or one) {
+        public SplitInfo(Node zero, Node one) {
             this.zero = zero;
             this.one = one;
         }

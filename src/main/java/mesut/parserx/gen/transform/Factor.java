@@ -156,7 +156,7 @@ public class Factor extends Transformer {
         else {
             return node;
         }
-        //A B needs factoring if A can be empty
+        //A B needs factoring if A can be empty and A , B have common factor which makes A greedy
         //A B -> A_no_eps B | B
         Node A = s.first();
         if (Helper.canBeEmpty(A, tree)) {
@@ -250,7 +250,7 @@ public class Factor extends Transformer {
             info.one = info.one.copy();
             info.one.astInfo = name.astInfo.copy();
             if (info.zero != null) {
-                info.one = info.zero.copy();
+                info.zero = info.zero.copy();
                 info.zero.astInfo = name.astInfo.copy();
             }
             return info;
@@ -388,19 +388,9 @@ public class Factor extends Transformer {
             }
         }
         if (zero.size() > 0) {
-            if (zero.size() == 1) {
-                info.zero = zero.get(0);
-            }
-            else {
-                info.zero = new Or(zero);
-            }
+            info.zero = Or.make(zero);
         }
-        if (one.size() == 1) {
-            info.one = one.get(0);
-        }
-        else {
-            info.one = new Or(one);
-        }
+        info.one = Or.make(one);
         return info;
     }
 
@@ -464,24 +454,6 @@ public class Factor extends Transformer {
         }
         return set;
     }
-
-    /*boolean isEmpty(Name node) {
-        if (node.isToken) return false;
-        Set<Name> first = Helper.first(node, tree, true);
-        if (first.isEmpty()) {
-            return true;
-        }
-        if (first.size() == 1) {
-            Name f = first.iterator().next();
-            if (f.equals(node)) {
-                return true;
-            }
-            else {
-                return isEmpty(f);
-            }
-        }
-        return false;
-    }*/
 
     public static class PullInfo {
         public Node one;//after factor
