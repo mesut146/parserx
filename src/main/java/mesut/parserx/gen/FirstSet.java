@@ -4,13 +4,17 @@ import mesut.parserx.nodes.*;
 
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 public class FirstSet extends BaseVisitor<Void, Void> {
     Tree tree;
     LinkedHashSet<Name> res = new LinkedHashSet<>();
     Set<Name> rules = new HashSet<>();
     boolean recurse = true;
+    boolean allowEpsilon = true;
 
     public FirstSet(Tree tree) {
         this.tree = tree;
@@ -109,6 +113,9 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     @Override
     public Void visitName(Name name, Void arg) {
         if (name.astInfo.isFactored) return null;
+        if (!allowEpsilon && name.isRule() && isEmpty(name, tree)) {
+            return null;
+        }
         res.add(name);
         if (rules.add(name) && name.isRule() && recurse) {
             List<RuleDecl> list = tree.getRules(name);

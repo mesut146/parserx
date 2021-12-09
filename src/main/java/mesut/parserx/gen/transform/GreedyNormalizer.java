@@ -15,16 +15,10 @@ public class GreedyNormalizer extends Transformer {
     boolean modified;
     FactorLoop factor;
 
-    public GreedyNormalizer(Tree tree) {
+    public GreedyNormalizer(Tree tree, FactorLoop factorLoop) {
         super(tree);
         this.tree = tree;
-        factor = new FactorLoop(tree, null);
-    }
-
-    public static Set<Name> commons(Set<Name> s1, Set<Name> s2) {
-        Set<Name> copy = new HashSet<>(s1);
-        copy.retainAll(s2);
-        return copy;
+        this.factor = factorLoop;
     }
 
     public void normalize() {
@@ -35,7 +29,7 @@ public class GreedyNormalizer extends Transformer {
             factor.curRule = decl;
             decl.rhs = decl.rhs.accept(this, null);
             if (modified) {
-                factor.factorize();
+                factor.factorRule(decl);
                 i = -1;
             }
         }
@@ -58,19 +52,18 @@ public class GreedyNormalizer extends Transformer {
             List<Factor.PullInfo> infos = new ArrayList<>();
             List<Node> factors = new ArrayList<>();
             for (Node node : sym.list) {
-                //if (node.isOptional() || node.isStar()) continue;
+                if (node.isOptional() || node.isStar()) {
+                    continue;
+                }
                 Factor.PullInfo info;
                 Node f;
-                if (node.isPlus() || node.isStar()) {
+                if (node.isPlus()) {
                     info = factor.pull(cur, node.asRegex());
                     f = node.copy();
                     f.astInfo.isFactor = true;
                     f.astInfo.factorName = factor.factor.factorName(f.asRegex().node.asName());
                 }
                 else {
-                    if (node.isOptional()) {
-                        node = node.asRegex().node;
-                    }
                     info = factor.factor.pull(cur, node.asName());
                     f = node.copy();
                     f.astInfo.isFactor = true;
@@ -80,6 +73,8 @@ public class GreedyNormalizer extends Transformer {
                 infos.add(info);
                 cur = info.one;
             }
+            System.out.println("sym=" + sym.sym);
+            System.out.println("factors=" + factors);
             List<Node> ors = new ArrayList<>();
             List<Node> fs = new ArrayList<>();
             for (int k = 0; k < factors.size(); k++) {
@@ -112,6 +107,7 @@ public class GreedyNormalizer extends Transformer {
             Or or = new Or(ors);
             seq.list.remove(i + 1);
             seq.list.set(i, or);
+            System.out.println("s=" + seq);
             return seq;
             //throw new RuntimeException("todo greedy tail: " + sym.sym + " list: " + sym.list);
         }
@@ -124,7 +120,7 @@ public class GreedyNormalizer extends Transformer {
             public TailInfo visitName(Name name, Void arg) {
                 if (first.contains(name)) {
                     TailInfo info = new TailInfo();
-                    info.sym = name;
+                    info.sym = name.copy();
                     return info;
                 }
                 if (name.isRule()) {
@@ -139,7 +135,7 @@ public class GreedyNormalizer extends Transformer {
                 Node b = Helper.trim(seq);
                 TailInfo info = b.accept(this, arg);
                 if (info != null) {
-                    info.list.add(0, a);
+                    info.list.add(0, a.copy());
                     return info;
                 }
                 if (FirstSet.canBeEmpty(b, tree)) {
@@ -159,10 +155,10 @@ public class GreedyNormalizer extends Transformer {
             @Override
             public TailInfo visitRegex(Regex regex, Void arg) {
                 if (regex.isOptional() || regex.isStar()) {
-                    Name sym = Factor.common(first, FirstSet.firstSet(regex.node, tree));
+                    Name sym = factor.helper.common(first, FirstSet.firstSet(regex.node, tree));
                     if (sym == null) return null;
                     TailInfo info = new TailInfo();
-                    info.sym = sym;
+                    info.sym = sym.copy();
                     return info;
                 }
                 return regex.node.accept(this, arg);

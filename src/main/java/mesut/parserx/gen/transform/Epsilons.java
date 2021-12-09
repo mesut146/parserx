@@ -44,8 +44,10 @@ public class Epsilons {
         }
         else if (node.isGroup()) {
             Info tmp = trim(node.asGroup().node);
-            res.noEps = new Group(tmp.noEps);
-            res.noEps.astInfo = node.astInfo;
+            if (tmp.noEps != null) {
+                res.noEps = new Group(tmp.noEps);
+                res.noEps.astInfo = node.astInfo;
+            }
             res.eps = tmp.eps;
             return res;
         }
@@ -136,7 +138,7 @@ public class Epsilons {
         Info b = trim(Helper.trim(s));
         //both a b are empty
         //A B = (A1 | A0) (B1 | B0) = A1 B1 | A1 A0 | A0 B1 | A0 B0;
-        Node s1 = a.noEps == null ? null : Sequence.make(a.noEps, b.noEps);
+        Node s1 = (a.noEps == null || b.noEps == null) ? null : Sequence.make(a.noEps, b.noEps);
         Node s2 = a.noEps == null ? null : Sequence.make(a.noEps, b.eps);
         Node s3 = b.noEps == null ? null : Sequence.make(a.eps, b.noEps);
         Node s4 = Sequence.make(a.eps, b.eps);
@@ -154,7 +156,9 @@ public class Epsilons {
             s3.astInfo = s.astInfo.copy();
             or.add(s3);
         }
-        res.noEps = Or.make(or);
+        if (!or.isEmpty()) {
+            res.noEps = Or.make(or);
+        }
         res.eps = s4;
         Factor.check(s1);
         Factor.check(s2);
@@ -191,7 +195,7 @@ public class Epsilons {
             tmp = trim(decl.rhs);
             noDecl = new RuleDecl(noName, tmp.noEps);
             noDecl.retType = decl.retType;
-            tree.addRule(noDecl);
+            tree.addRuleBelow(noDecl, decl);
             res.noEps = noName;
         }
         else {
@@ -205,7 +209,7 @@ public class Epsilons {
                 //factored eps still needs ast builder
                 epsDecl = new RuleDecl(epsName, tmp.eps);
                 epsDecl.retType = decl.retType;
-                tree.addRule(epsDecl);
+                tree.addRuleBelow(epsDecl, decl);
                 res.eps = epsName;
             }
         }

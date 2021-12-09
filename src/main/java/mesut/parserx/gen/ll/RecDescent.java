@@ -64,9 +64,12 @@ public class RecDescent {
         recursion.all();
 
         Factor.factorSequence = true;
-        Factor factor = recursion.factor;
-        FactorLoop loop = new FactorLoop(tree, factor);
-        loop.factorize();
+        FactorLoop factorLoop = new FactorLoop(tree, recursion.factor);
+
+        GreedyNormalizer greedyNormalizer = new GreedyNormalizer(tree, factorLoop);
+        greedyNormalizer.normalize();
+
+        factorLoop.factorize();
 
         Optimizer.optimize(tree);
 

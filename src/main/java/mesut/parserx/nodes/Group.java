@@ -11,6 +11,9 @@ public class Group extends Node implements Iterable<Node> {
     public Node node;
 
     public Group(Node rhs) {
+        if (rhs == null) {
+            throw new RuntimeException("null child");
+        }
         this.node = rhs;
     }
 

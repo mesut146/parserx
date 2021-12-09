@@ -71,9 +71,9 @@ public class JavaRecDescent {
     }
 
     void writeConsume() {
-        code.append("%s consume(int type){", options.tokenClass);
+        code.append("%s consume(int type, String name){", options.tokenClass);
         code.append("if(la.type != type){");
-        code.append("throw new RuntimeException(\"unexpected token: \" + la + \" expecting: \" + type);");
+        code.append("throw new RuntimeException(\"unexpected token: \" + la + \" expecting: \" + name);");
         code.all("}");
         code.append("try{");
         code.append("%s res = la;", options.tokenClass);
@@ -181,6 +181,10 @@ public class JavaRecDescent {
         return tree.getRule(name).retType;
     }
 
+     String tokenConsumer(Name token) {
+        return String.format("consume(%s.%s, \"%s\")", tokens, token.name, token.name);
+    }
+
     private void writeRegex(Regex regex) {
         if (regex.astInfo.isFactored) {
             Name name = regex.node.asName();
@@ -217,7 +221,7 @@ public class JavaRecDescent {
                         code.append("%s.add(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra);
                     }
                     code.append("while(%s){", loopExpr(set));
-                    String consumer = name.isToken ? "consume(" + tokens + "." + name.name + ")" : name + "()";
+                    String consumer = name.isToken ? tokenConsumer(name): name + "()";
                     code.append("%s.add(%s);", regex.astInfo.factorName, consumer);
                     code.append("}");
                 }
@@ -250,7 +254,7 @@ public class JavaRecDescent {
                         code.append("%s.add(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra);
                     }
                     code.append("do{");
-                    String consumer = name.isToken ? "consume(" + tokens + "." + name.name + ")" : name + "()";
+                    String consumer = name.isToken ? tokenConsumer(name) : name + "()";
                     code.append("%s.add(%s);", regex.astInfo.factorName, consumer);
                     code.down();
                     code.append("}while(%s);", loopExpr(set));
@@ -339,7 +343,7 @@ public class JavaRecDescent {
                 rhs = withArgs(name);
             }
             else {
-                rhs = "consume(" + tokens + "." + name.name + ")";
+                rhs=tokenConsumer(name);
             }
             if (name.astInfo.isFactor) {
                 code.append("%s %s = %s;", getType(name), name.astInfo.factorName, rhs);

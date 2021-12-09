@@ -25,24 +25,6 @@ public class Factor extends Transformer {
         super(tree);
     }
 
-    public static Name common(Set<Name> s1, Set<Name> s2) {
-        Set<Name> copy = new HashSet<>(s1);
-        copy.retainAll(s2);
-        Name res = null;
-        for (Name name : copy) {
-            if (!name.isEpsilon()) {
-                if (name.isRule()) {
-                    //rule has higher priority
-                    return name;
-                }
-                else {
-                    res = name;
-                }
-            }
-        }
-        return res;
-    }
-
     public static void check(Node s) {
         if (s == null || !s.isSequence()) return;
         if (s.astInfo.which == -1) return;
@@ -53,43 +35,17 @@ public class Factor extends Transformer {
         }
     }
 
-    public Name common(Node a, Node b) {
-        Set<Name> s1 = first(a);
-        Set<Name> s2 = first(b);
-        Set<Name> common = new HashSet<>(s1);
-        common.retainAll(s2);
-        Name res = null;
-        if (a.isName() && common.contains(a.asName())) {
-            return a.asName();
-        }
-        if (b.isName() && common.contains(b.asName())) {
-            return b.asName();
-        }
-        if (a.isRegex() && a.asRegex().node.asName().equals(b)) {
-            return b.asName();
-        }
-        if (b.isRegex() && b.asRegex().node.asName().equals(a)) {
-            return a.asName();
-        }
-        for (Name name : common) {
-            if (name.isRule()) {
-                //rule has higher priority
-                return name;
-            }
-            else {
-                res = name;
-            }
-        }
-        return res;
-    }
 
     public String factorName(Name sym) {
         return sym.name + "f" + factorCount.get(curRule, sym);
     }
 
     //factor or
-    @Override
+    /*@Override
     public Node visitOr(Or or, Void parent) {
+        if (true){
+            throw new RuntimeException();
+        }
         Node node = super.visitOr(or, parent);
         if (node.isOr()) {
             or = node.asOr();
@@ -101,26 +57,30 @@ public class Factor extends Transformer {
             for (int j = i + 1; j < or.size(); j++) {
                 Name sym = common(or.get(i), or.get(j));
                 if (sym == null) continue;
-                sym = sym.copy();
-                sym.astInfo = new AstInfo();
-                sym.astInfo.isFactor = true;
-                sym.astInfo.factorName = factorName(sym);
-                if (debug) {
-                    System.out.printf("factoring %s in %s\n", sym, curRule.ref);
-                }
-                modified = true;
-                PullInfo info = pull(or, sym);
-                Group g = new Group(info.one);
-                Node one = new Sequence(sym, g);
-                if (info.zero == null) {
-                    return one;
-                }
-                else {
-                    return makeOr(one, info.zero);
-                }
+                return factorOr(or, sym);
             }
         }
         return or;
+    }*/
+
+    Node factorOr(Or or, Name sym) {
+        sym = sym.copy();
+        sym.astInfo = new AstInfo();
+        sym.astInfo.isFactor = true;
+        sym.astInfo.factorName = factorName(sym);
+        if (debug) {
+            System.out.printf("factoring %s in %s\n", sym, curRule.ref);
+        }
+        modified = true;
+        PullInfo info = pull(or, sym);
+        Group g = new Group(info.one);
+        Node one = new Sequence(sym, g);
+        if (info.zero == null) {
+            return one;
+        }
+        else {
+            return makeOr(one, info.zero);
+        }
     }
 
     Or makeOr(Node a, Node b) {
@@ -144,7 +104,7 @@ public class Factor extends Transformer {
     }
 
     //factor sequence
-    @Override
+    /*@Override
     public Node visitSequence(Sequence s, Void parent) {
         Node node = super.visitSequence(s, parent);
         if (!factorSequence) {
@@ -161,15 +121,15 @@ public class Factor extends Transformer {
         Node A = s.first();
         if (Helper.canBeEmpty(A, tree)) {
             Node B = Helper.trim(s);
-            Set<Name> s1 = first(A);
-            Set<Name> s2 = first(B);
-            if (common(s1, s2) != null) {
+            if (common(A, B) != null) {
+                if (debug)
+                    System.out.println("factoring greedy seq");
                 Node trimmed = Epsilons.trim(A, tree);
                 return visitOr(new Or(new Sequence(trimmed, B), B), parent);
             }
         }
         return s;
-    }
+    }*/
 
     //pull a single token 'sym' and store result in info
     //A: sym A1 | A0

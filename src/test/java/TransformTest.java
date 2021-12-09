@@ -1,9 +1,6 @@
 import common.Env;
 import mesut.parserx.gen.ll.DotBuilder;
-import mesut.parserx.gen.transform.EbnfToBnf;
-import mesut.parserx.gen.transform.EpsilonTrimmer;
-import mesut.parserx.gen.transform.GreedyNormalizer;
-import mesut.parserx.gen.transform.RegexForm;
+import mesut.parserx.gen.transform.*;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.Tree;
 import org.junit.Ignore;
@@ -71,11 +68,18 @@ public class TransformTest {
 
     @Test
     public void greedyTail() throws IOException {
+        Factor.debug = true;
         Tree tree = Env.tree("greedy/a.g");
-        GreedyNormalizer normalizer = new GreedyNormalizer(tree);
+        GreedyNormalizer normalizer = new GreedyNormalizer(tree, new FactorLoop(tree, null));
         normalizer.normalize();
         tree.printRules();
         System.out.println(RegexForm.normalizeRule(tree.getRule("E"), tree));
 
+    }
+
+    @Test
+    public void greedy() throws Exception {
+        DescTester.check(Env.tree("greedy/b.g"), "E", "ca", "caba");
+        DescTester.check(Env.tree("greedy/a.g"), "E", "cya", "cydda","cyfa","cyfdda","cyaeba");
     }
 }

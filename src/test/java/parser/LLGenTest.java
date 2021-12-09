@@ -1,6 +1,7 @@
 package parser;
 
 import common.Env;
+import mesut.parserx.gen.FirstSetNode;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.VisitorGenerator;
 import mesut.parserx.gen.ll.RecDescent;
@@ -85,7 +86,7 @@ public class LLGenTest {
     public void aa() throws IOException {
         Tree tree = Env.tree("factor/loop3.g");
         FactorLoop factorLoop = new FactorLoop(tree, null);
-        System.out.println(factorLoop.loops(tree.getRule("E").rhs));
+        System.out.println(factorLoop.helper.loops(tree.getRule("E").rhs));
     }
 
     @Test
@@ -114,17 +115,17 @@ public class LLGenTest {
 
     @Test
     public void math() throws IOException {
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math2.g"));
+        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         Factor.debug = true;
+
+        FirstSetNode firstSetNode = new FirstSetNode(tree);
+        FirstSetNode.SymbolNode s = tree.getRule("line").rhs.accept(firstSetNode, null);
+        System.out.println(s);
+
         RecDescent.gen(tree, "java");
     }
 
-    @Test
-    public void mathReal() throws Exception {
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
-        DescTester.check(tree, "var", "abc");
-    }
 
     @Test
     public void recursion() throws Exception {

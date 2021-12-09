@@ -167,6 +167,10 @@ public class CppRecDescent {
         headerWriter.append("%s* %s(%s);", type.cpp(), decl.baseName(), params);
     }
 
+    String tokenConsumer(Name token) {
+        return String.format("consume(%s, \"%s\")",tokenRef(token), token.name);
+    }
+
     void write(Node node) {
         if (node.astInfo.which != -1) {
             code.all(node.astInfo.writeWhichCpp());
@@ -246,7 +250,7 @@ public class CppRecDescent {
                         code.append("%s.push_back(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra);
                     }
                     code.append("while(%s){", loopExpr(set));
-                    String consumer = name.isToken ? "consume(" + tokenRef(name) + ")" : name + "()";
+                    String consumer = name.isToken ? tokenConsumer(name) : name + "()";
                     code.append("%s.push_back(%s);", regex.astInfo.factorName, consumer);
                     code.append("}");
                 }
@@ -280,7 +284,7 @@ public class CppRecDescent {
                         code.append("%s.push_back(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra);
                     }
                     code.append("do{");
-                    String consumer = name.isToken ? "consume(" + tokenRef(name) + ")" : name + "()";
+                    String consumer = name.isToken ? tokenConsumer(name) : name + "()";
                     code.append("%s.push_back(%s);", regex.astInfo.factorName, consumer);
                     code.down();
                     code.append("}while(%s);", loopExpr(set));
@@ -363,7 +367,7 @@ public class CppRecDescent {
                 rhs = withArgs(name);
             }
             else {
-                rhs = "consume(" + tokenRef(name) + ")";
+                rhs = tokenConsumer(name);
             }
             if (name.astInfo.isFactor) {
                 String type = name.isToken ? options.tokenClass : (options.astClass + "." + name.name);
