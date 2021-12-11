@@ -2,9 +2,7 @@ package mesut.parserx.gen;
 
 import mesut.parserx.nodes.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class FirstSetNode extends BaseVisitor<FirstSetNode.SymbolNode, Void> {
     public HashMap<Name, SymbolNode> map = new HashMap<>();
@@ -14,6 +12,10 @@ public class FirstSetNode extends BaseVisitor<FirstSetNode.SymbolNode, Void> {
         this.tree = tree;
     }
 
+    public static SymbolNode first(Node node, Tree tree) {
+        FirstSetNode firstSetNode = new FirstSetNode(tree);
+        return node.accept(firstSetNode, null);
+    }
 
     @Override
     public SymbolNode visitGroup(Group group, Void arg) {
@@ -80,6 +82,7 @@ public class FirstSetNode extends BaseVisitor<FirstSetNode.SymbolNode, Void> {
     }
 
     public static class SymbolNode {
+        static Set<String> printCache = new HashSet<>();
         public Name name;
         public List<SymbolNode> list = new ArrayList<>();
 
@@ -92,8 +95,13 @@ public class FirstSetNode extends BaseVisitor<FirstSetNode.SymbolNode, Void> {
             StringBuilder sb = new StringBuilder();
             if (name != null) {
                 sb.append(name.name);
+                printCache.add(name.name);
             }
             if (list.isEmpty()) {
+                return sb.toString();
+            }
+            if (name != null && printCache.contains(name.name)) {
+                sb.append("{$}");
                 return sb.toString();
             }
             sb.append("{");

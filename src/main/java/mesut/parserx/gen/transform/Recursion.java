@@ -21,6 +21,8 @@ public class Recursion {
         /*LeftRecursive ll = new LeftRecursive(tree);
         ll.normalizeIndirects();*/
 
+        //directOnes();
+
         for (int i = 0; i < tree.rules.size(); ) {
             RuleDecl decl = tree.rules.get(i++);
             if (FirstSet.start(decl.rhs, decl.ref, tree)) {
@@ -33,18 +35,34 @@ public class Recursion {
         }
     }
 
+    void directOnes() {
+        for (int i = 0; i < tree.rules.size(); ) {
+            RuleDecl decl = tree.rules.get(i++);
+            if (FirstSet.firstSetNoRec(decl.rhs, tree).contains(decl.ref)) {
+                any = true;
+                if (debug) {
+                    System.out.println("removing direct recursion on " + decl.ref);
+                }
+                handle(decl);
+            }
+        }
+    }
+
     public void handle(RuleDecl decl) {
         //A= A A(A) | A_no_A
         //A= A_no_A A(A)*
         Name sym = decl.ref.copy();
-        sym.astInfo.outerVar = "res";
-        //sym.astInfo.isFactor = true;
-        //sym.astInfo.factorName =;
+        //sym.astInfo.varName = "res";
+        sym.astInfo.isFactor = true;
+        sym.astInfo.factorName = "res";
+
+        Name ref = decl.ref.copy();
+
         factor.curRule = decl;
-        Factor.PullInfo info = factor.pullRule(sym, sym);
-        //info.zero.astInfo.outerVar = "res";
-        //info.one.astInfo.outerVar = "res";
+        Factor.PullInfo info = factor.pullRule(ref, sym);
+        info.zero.astInfo.varName = "res";
         info.zero.astInfo.isPrimary = true;
+        info.one.astInfo.varName = "res";
         info.one.astInfo.isSecondary = true;
         decl.rhs = Sequence.make(info.zero, new Regex(info.one, "*"));
     }

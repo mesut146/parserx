@@ -13,13 +13,11 @@ public class Factor extends Transformer {
     public static boolean keepFactor = true;
     public static boolean debug = false;
     public static boolean debugPull = false;
-    public static boolean factorSequence = true;
     public HashSet<RuleDecl> declSet = new HashSet<>();//new rules produced by this class
     public RuleDecl curRule;
     HashMap<String, PullInfo> cache = new HashMap<>();
     boolean modified;
     CountingMap2<RuleDecl, Name> factorCount = new CountingMap2<>();
-    HashMap<Name, Name> senderMap = new HashMap<>();
 
     public Factor(Tree tree) {
         super(tree);
@@ -79,28 +77,8 @@ public class Factor extends Transformer {
             return one;
         }
         else {
-            return makeOr(one, info.zero);
+            return Or.make(one, info.zero);
         }
-    }
-
-    Or makeOr(Node a, Node b) {
-        if (a.isOr()) {
-            if (a.astInfo.which != -1) {
-                throw new RuntimeException();
-            }
-            Or res = new Or(a.asOr().list);
-            res.add(b);
-            return res;
-        }
-        else if (b.isOr()) {
-            if (b.astInfo.which != -1) {
-                throw new RuntimeException();
-            }
-            Or res = new Or(b.asOr().list);
-            res.add(a);
-            return res;
-        }
-        return new Or(a, b);
     }
 
     //factor sequence
@@ -152,6 +130,7 @@ public class Factor extends Transformer {
             if (name.equals(sym)) {
                 if (keepFactor) {
                     name = name.copy();
+
                     name.astInfo.isFactored = true;
                     name.astInfo.factorName = sym.astInfo.factorName;
                     info.one = name;
@@ -189,20 +168,12 @@ public class Factor extends Transformer {
         return info;
     }
 
-    Name getBase(Name name) {
-        if (senderMap.containsKey(name)) {
-            return senderMap.get(name);
-        }
-        else {
-            senderMap.put(name, name);
-            return name;
-        }
-    }
-
     //pull sym from rule
     public PullInfo pullRule(Name name, Name sym) {
-        if (debugPull)
+        if (debugPull) {
             System.out.println("pullRule " + name + " sym=" + sym);
+        }
+
         PullInfo info = new PullInfo();
         String key = name.name + "-" + sym;
         if (cache.containsKey(key)) {
@@ -215,20 +186,30 @@ public class Factor extends Transformer {
             }
             return info;
         }
-        cache.put(key, info);
-        //check if already pulled before
-        //Name zeroName = new Name(base.name + nameMap.get(base.name));
-        Name zeroName = new Name(name.name + "_no_" + sym.name);
-        zeroName.args = new ArrayList<>(name.args);
-        zeroName.astInfo = name.astInfo.copy();
 
-        Name oneName = new Name(tree.getName(getBase(name).name));
-        //Name oneName = new Name(base.name + "_with_" + sym);
-        oneName.args = new ArrayList<>(name.args);
-        oneName.args.add(sym);
-        oneName.astInfo = name.astInfo.copy();
+        cache.put(key, info);
+
+        //check if already pulled before
+        Name zeroName = tree.getFactorZero(name, sym);
+        Name oneName = tree.getFactorOne(name, sym);
         info.one = oneName;
-        //can fill zero by checking first set
+
+        Name symArg = sym.copy();
+        if (sym.astInfo.factorName.equals("res")) {
+            symArg.astInfo.factorName = "res2";
+        }
+
+        Name oneRef = oneName.copy();
+        oneRef.args.clear();
+        Name orig = tree.getRule(name).ref;
+        for (Node node : orig.args) {
+            oneRef.args.add(node.copy());
+        }
+        oneRef.args.add(symArg);
+
+        if (name.astInfo.isPrimary) {
+            oneRef.astInfo.isPrimary = false;
+        }
 
         if (tree.getRule(oneName) != null) {
             if (tree.getRule(zeroName) != null) {
@@ -238,14 +219,18 @@ public class Factor extends Transformer {
         }
 
         RuleDecl decl = tree.getRule(name);
-        PullInfo tmp = pull(decl.rhs, sym);
+        Set<Name> first = FirstSet.firstSetNoRec(decl.rhs, tree);
+        if (first.size() > 1) {
+            //zero exist
+            info.zero = zeroName;
+        }
+        PullInfo tmp = pull(decl.rhs, symArg);
 
-        RuleDecl oneDecl = oneName.makeRule();
+        RuleDecl oneDecl = oneRef.makeRule();
         oneDecl.rhs = tmp.one;
         oneDecl.retType = decl.retType;
         tree.addRuleBelow(oneDecl, decl);
         declSet.add(oneDecl);
-        senderMap.put(oneName, senderMap.get(name));
 
         if (tmp.zero != null) {
             RuleDecl zeroDecl = zeroName.makeRule();
@@ -253,7 +238,6 @@ public class Factor extends Transformer {
             zeroDecl.retType = decl.retType;
             tree.addRuleBelow(zeroDecl, decl);
             declSet.add(zeroDecl);
-            senderMap.put(zeroName, senderMap.get(name));
             info.zero = zeroName;
         }
         return info;
@@ -289,8 +273,6 @@ public class Factor extends Transformer {
             }
             info.one = new Sequence(ai.one, B.copy());
             info.one.astInfo = s.astInfo.copy();
-            //check(info.one);
-            //check(info.zero);
             return info;
 
         }
@@ -374,7 +356,8 @@ public class Factor extends Transformer {
             if (regex.astInfo.isFactor) {
                 star.astInfo.loopExtra = sym.astInfo.factorName;
             }
-            Sequence s = new Sequence(regex.node, star);
+            Node pre = regex.node.copy();
+            Sequence s = new Sequence(pre, star);
             return pull(s, sym);
         }
         else {

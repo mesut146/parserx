@@ -186,7 +186,7 @@ public class LeftRecursive {
             return node;
         }
         SplitInfo info = split(node, ref);
-        Node one = info.one.normal();
+        Node one = info.one;
         Node tail;
         //extract tail
         if (one.isSequence()) {
@@ -277,7 +277,7 @@ public class LeftRecursive {
             Node right = Helper.trim(seq);
             SplitInfo s1 = split(left, name);
             if (start(left, name)) {
-                one = new Or(makeSeq(s1.one.normal(), right));
+                one = new Or(makeSeq(s1.one, right));
                 if (start(right, name) && Helper.canBeEmpty(left, tree)) {
                     //right is also lr, so merge
                     one = new Or(makeOr(one, split(right, name).one));
@@ -299,7 +299,7 @@ public class LeftRecursive {
                 }
                 zero = new Sequence(s1.zero, right);
                 if (s2.zero != null) {
-                    zero = new Or(zero, new Sequence(left, s2.zero).normal()).normal();
+                    zero = new Or(zero, new Sequence(left, s2.zero));
                 }
             }
         }
@@ -309,8 +309,8 @@ public class LeftRecursive {
         else {
             throw new RuntimeException("invalid node: " + r.getClass() + " = " + r);
         }
-        if (zero != null) zero = zero.normal();
-        if (one != null) one = new Or(one.normal());
+        //if (zero != null) zero = zero;
+        //if (one != null) one = new Or(one);
         return new SplitInfo(zero, one);
     }
 

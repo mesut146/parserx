@@ -99,7 +99,7 @@ public class FactorLoop extends Transformer {
         if (sym.isStar()) {
             throw new RuntimeException("deprecated");
         }
-        if (!sym.isStar() && !sym.isPlus()) {
+        if (!sym.isPlus()) {
             throw new RuntimeException("loop sym expected");
         }
         Name normal = noLoop(sym);
@@ -247,30 +247,20 @@ public class FactorLoop extends Transformer {
         }
         cache.put(key, info);
 
-        Name oneName = new Name(tree.getName(factor.getBase(name).name));
-        oneName.args = new ArrayList<>(name.args);
-        oneName.args.add(sym);
-        oneName.astInfo = name.astInfo.copy();
+        Name oneName = tree.getFactorPlusOne(name, noLoop(sym));
         RuleDecl oneDecl = oneName.makeRule();
         oneDecl.rhs = info.one;
         oneDecl.retType = decl.retType;
         tree.addRuleBelow(oneDecl, decl);
-        factor.senderMap.put(oneName, factor.senderMap.get(name));
+
+        //todo oneref
+
         if (info.zero != null) {
-            Name zeroName;
-            if (sym.isStar()) {
-                zeroName = new Name(name.name + "_nos_" + noLoop(sym));
-            }
-            else {
-                zeroName = new Name(name.name + "_nop_" + noLoop(sym));
-            }
-            zeroName.args = new ArrayList<>(name.args);
-            zeroName.astInfo = name.astInfo.copy();
+            Name zeroName = tree.getFactorPlusZero(name, noLoop(sym));
             RuleDecl zeroDecl = zeroName.makeRule();
             zeroDecl.rhs = info.zero;
             zeroDecl.retType = decl.retType;
             tree.addRuleBelow(zeroDecl, decl);
-            factor.senderMap.put(zeroName, factor.senderMap.get(name));
             info.zero = zeroName;
         }
 

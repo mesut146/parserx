@@ -11,6 +11,9 @@ public class Regex extends Node {
         }
         this.node = rule;
         setType(type);
+        if (isStar() || isPlus()) {
+            this.node.astInfo.isInLoop = true;
+        }
     }
 
     public boolean isStar() {

@@ -25,8 +25,8 @@ public class Substitute {
                 if (decl.rhs.isOr()) {
                     Or or = decl.rhs.asOr();
                     List<Node> or2 = new ArrayList<>();
-                    Node right = i == seq.size() - 1 ? null : new Sequence(seq.list.subList(i + 1, seq.size())).normal();
-                    Node left = i == 0 ? null : new Sequence(seq.list.subList(0, i)).normal();
+                    Node right = i == seq.size() - 1 ? null : new Sequence(seq.list.subList(i + 1, seq.size()));
+                    Node left = i == 0 ? null : new Sequence(seq.list.subList(0, i));
 
                     if (mergeLeft) {
                         if (mergeRight) {

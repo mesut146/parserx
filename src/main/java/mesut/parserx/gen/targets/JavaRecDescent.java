@@ -181,7 +181,7 @@ public class JavaRecDescent {
         return tree.getRule(name).retType;
     }
 
-     String tokenConsumer(Name token) {
+    String tokenConsumer(Name token) {
         return String.format("consume(%s.%s, \"%s\")", tokens, token.name, token.name);
     }
 
@@ -199,7 +199,7 @@ public class JavaRecDescent {
             return;
         }
         Set<Name> set = FirstSet.tokens(regex, tree);
-        regex.node.astInfo.isInLoop = regex.isStar() || regex.isPlus();
+        //regex.node.astInfo.isInLoop = regex.isStar() || regex.isPlus();
         if (regex.isOptional()) {
             if (set.size() <= loopLimit) {
                 code.append("if(%s){", loopExpr(set));
@@ -221,7 +221,7 @@ public class JavaRecDescent {
                         code.append("%s.add(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra);
                     }
                     code.append("while(%s){", loopExpr(set));
-                    String consumer = name.isToken ? tokenConsumer(name): name + "()";
+                    String consumer = name.isToken ? tokenConsumer(name) : name + "()";
                     code.append("%s.add(%s);", regex.astInfo.factorName, consumer);
                     code.append("}");
                 }
@@ -290,7 +290,7 @@ public class JavaRecDescent {
         StringBuilder sb = new StringBuilder();
         for (Iterator<Name> it = set.iterator(); it.hasNext(); ) {
             Name tok = it.next();
-            sb.append(peekExpr()).append(" == ").append(tokens).append(".").append(tok.name);
+            sb.append(String.format("%s == %s.%s", peekExpr(), tokens, tok.name));
             if (it.hasNext()) {
                 sb.append(" || ");
             }
@@ -324,7 +324,7 @@ public class JavaRecDescent {
             }
             else {
                 if (name.astInfo.isPrimary) {
-                    code.append("%s = %s;", name.astInfo.outerVar, name.astInfo.factorName);
+                    code.append("%s = %s;", name.astInfo.varName, name.astInfo.factorName);
                 }
                 else {
                     code.append("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName);
@@ -332,10 +332,11 @@ public class JavaRecDescent {
             }
         }
         else if (name.astInfo.isPrimary) {
-            code.append("%s = %s;", name.astInfo.outerVar, withArgs(name));
+            code.append("%s = %s;", name.astInfo.varName, withArgs(name));
         }
         else if (name.astInfo.isSecondary) {
-            code.append("%s = %s(%s);", name.astInfo.outerVar, name.name, name.astInfo.outerVar);
+            code.append("%s = %s;", name.astInfo.varName, withArgs(name));
+            //code.append("%s = %s(%s);", name.astInfo.outerVar, name.name, name.astInfo.outerVar);
         }
         else {
             String rhs;
@@ -343,7 +344,7 @@ public class JavaRecDescent {
                 rhs = withArgs(name);
             }
             else {
-                rhs=tokenConsumer(name);
+                rhs = tokenConsumer(name);
             }
             if (name.astInfo.isFactor) {
                 code.append("%s %s = %s;", getType(name), name.astInfo.factorName, rhs);

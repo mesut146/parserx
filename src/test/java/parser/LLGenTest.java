@@ -8,6 +8,7 @@ import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorLoop;
+import mesut.parserx.gen.transform.GreedyNormalizer;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 import org.junit.Ignore;
@@ -56,7 +57,6 @@ public class LLGenTest {
     @Test
     public void factorAll() throws Exception {
         Factor.debug = false;
-        Factor.factorSequence = true;
 
         /*DescTester.check(Env.tree("factor/single.g"), "A", "ac", "eb", "adb");
         DescTester.check(Env.tree("factor/single2.g"), "A", "aac", "aadbeb");
@@ -104,7 +104,6 @@ public class LLGenTest {
     @Test
     @Ignore
     public void parserx() throws Exception {
-        Factor.factorSequence = true;
         Factor.debug = true;
         String file = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g";
         Tree tree = Tree.makeTree(new File(file));
@@ -129,17 +128,15 @@ public class LLGenTest {
 
     @Test
     public void recursion() throws Exception {
-        Factor.factorSequence = false;
         Factor.debug = true;
+        GreedyNormalizer.debug = true;
         //Tree tree = Env.tree("rec/direct.g");
         //Tree tree = Env.tree("rec/direct2.g");
         //Tree tree = Env.tree("rec/indirect.g");
         //Tree tree = Env.tree("rec/expr.g");
         Tree tree = Env.tree("rec/cyc1.g");
         //new Recursion(tree).all();
-        Options options = new Options();
-        options.outDir = Env.dotDir().getAbsolutePath();
-        tree.options = options;
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
         RecDescent.gen(tree, "java");
     }
 

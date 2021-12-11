@@ -12,7 +12,9 @@ import mesut.parserx.utils.CountingMap;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 //the grammar file for both lexer and parser
 public class Tree {
@@ -25,6 +27,7 @@ public class Tree {
     public Alphabet alphabet = new Alphabet();
     List<String> includes = new ArrayList<>();
     CountingMap<String> newNameCnt = new CountingMap<>();
+    Map<String, String> senderMap = new HashMap<>();
 
     public Tree() {
     }
@@ -121,13 +124,60 @@ public class Tree {
     }
 
     //is it safe to use name
-    public String getName(String name) {
+    public String getFreeName(String name) {
         String cur = name;
         while (true) {
-            if (getRule(cur) == null) return cur;
+            if (getRule(cur) == null) {
+                senderMap.put(cur, name);
+                return cur;
+            }
             int cnt = newNameCnt.get(name);
             cur = name + cnt;
         }
+    }
+
+    //find root of rule
+    public String getSender(String name) {
+        if (senderMap.containsKey(name)) {
+            return senderMap.get(name);
+        }
+        else {
+            return name;
+        }
+    }
+
+    public Name getFactorOne(Name old, Name factor) {
+        Name res = new Name(old.name + "_" + factor.name);
+        res.astInfo = old.astInfo.copy();
+        res.args = new ArrayList<>(old.args);
+        res.args.add(factor.copy());
+        senderMap.put(res.name, getSender(old.name));
+        return res;
+    }
+
+    public Name getFactorZero(Name old, Name factor) {
+        Name res = new Name(old.name + "_no_" + factor.name);
+        res.astInfo = old.astInfo.copy();
+        res.args = new ArrayList<>(old.args);
+        senderMap.put(res.name, getSender(old.name));
+        return res;
+    }
+
+    public Name getFactorPlusZero(Name old, Name factor) {
+        Name res = new Name(old.name + "_nop_" + factor.name);
+        res.astInfo = old.astInfo.copy();
+        res.args = new ArrayList<>(old.args);
+        senderMap.put(res.name, getSender(old.name));
+        return res;
+    }
+
+    public Name getFactorPlusOne(Name old, Name factor) {
+        Name res = new Name(getFreeName(getSender(old.name)));
+        res.astInfo = old.astInfo.copy();
+        res.args = new ArrayList<>(old.args);
+        res.args.add(factor.copy());
+        senderMap.put(res.name, getSender(old.name));
+        return res;
     }
 
     public void addRuleBelow(RuleDecl rule, RuleDecl prev) {

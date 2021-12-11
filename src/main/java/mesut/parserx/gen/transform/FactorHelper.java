@@ -150,12 +150,12 @@ public class FactorHelper {
     }
 
     public FactorLoop.commonResult commons(Node a, Node b) {
+        FactorLoop.commonResult res = new FactorLoop.commonResult();
         Set<Name> s1 = factor.first(a);
         Set<Name> s2 = factor.first(b);
         Set<Name> common = new HashSet<>(s1);
         common.retainAll(s2);
         if (common.isEmpty()) return null;
-        FactorLoop.commonResult res = new FactorLoop.commonResult();
         if (a.isName() && common.contains(a.asName())) {
             res.name = a.asName();
             return res;
@@ -190,35 +190,22 @@ public class FactorHelper {
             }
         });
 
-        //try rule loops
+        //try loops
         for (Name name : list) {
-            if (name.isToken) break;
             if (hasLoop(a, name) && hasLoop(b, name)) {
                 if (name.isRule()) {
                     res.isLoop = true;
                     res.name = name;
                     return res;
                 }
-            }
-        }
-        //try token loops and regular rules
-        for (Name name : list) {
-            if (name.isToken) {
-                if (hasLoop(a, name) && hasLoop(b, name)) {
-                    res.isLoop = true;
+                else if (res.name == null) {
                     res.name = name;
                     return res;
                 }
-                else {
-                    res.name = name;
-                }
             }
         }
-        if (res.name != null) {
-            //regular token
-            return res;
-        }
-        return null;
+        res.name = list.get(0);
+        return res;
     }
 
     public Name common(Node a, Node b) {

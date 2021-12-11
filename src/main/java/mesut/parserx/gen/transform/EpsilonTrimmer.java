@@ -66,9 +66,6 @@ public class EpsilonTrimmer extends Transformer {
         return Helper.canBeEmpty(node, tree);
     }
 
-    boolean isEmpty(Node node) {
-        return FirstSet.tokens(node, tree).isEmpty();
-    }
 
     boolean hasEpsilon(Node node) {
         final boolean[] has = {false};
@@ -112,12 +109,12 @@ public class EpsilonTrimmer extends Transformer {
             if (canBeEmpty(ch)) {//!ch.isName()
                 List<Node> l1 = new ArrayList<>(seq.list);
                 l1.remove(i);
-                if (isEmpty(ch)) {
-                    return new Sequence(l1);
+                if (FirstSet.isEmpty(ch, tree)) {
+                    return Sequence.make(l1);
                 }
                 List<Node> l2 = new ArrayList<>(l1);
                 l2.add(i, transformNode(ch, arg));
-                Or res = new Or(new Sequence(l1), new Sequence(l2));
+                Or res = new Or(Sequence.make(l1), Sequence.make(l2));
                 //modified = true;
                 if (hasEpsilon(res)) {
                     return transformNode(res, arg);

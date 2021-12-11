@@ -1,5 +1,6 @@
 import common.Env;
 import mesut.parserx.gen.ll.DotBuilder;
+import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.transform.*;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.Tree;
@@ -78,8 +79,17 @@ public class TransformTest {
     }
 
     @Test
+    public void greedyRec() throws IOException {
+        Factor.debug = true;
+        Tree tree = Env.tree("greedy/rec.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        RecDescent.gen(tree, "java");
+    }
+
+    @Test
     public void greedy() throws Exception {
         DescTester.check(Env.tree("greedy/b.g"), "E", "ca", "caba");
-        DescTester.check(Env.tree("greedy/a.g"), "E", "cya", "cydda","cyfa","cyfdda","cyaeba");
+        DescTester.check(Env.tree("greedy/a.g"), "E", "cya", "cydda", "cyfa", "cyfdda", "cyaeba");
+        //DescTester.check(Env.tree("greedy/rec.g"), "E", "ba", "baa");
     }
 }

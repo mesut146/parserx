@@ -43,7 +43,7 @@ public class PrecedenceHandler {
                 continue;
             }
             Node primNode = primList.size() == 1 ? primList.get(0) : new Or(primList);
-            RuleDecl primRule = new RuleDecl(tree.getName("PRIM_" + decl.baseName()), primNode);
+            RuleDecl primRule = new RuleDecl(tree.getFreeName("PRIM_" + decl.baseName()), primNode);
             primRule.retType = decl.retType;
             //unary is always right assoc
             //postfix is always left assoc
@@ -87,7 +87,7 @@ public class PrecedenceHandler {
         int level = ++lastLevel;
         Holder holder = new Holder();
         holder.info = info;
-        holder.name = tree.getName(decl.baseName() + level);
+        holder.name = tree.getFreeName(decl.baseName() + level);
         holder.node = node;
         map.put(level, holder);
     }

@@ -1,6 +1,7 @@
 package mesut.parserx.gen.targets;
 
 import mesut.parserx.gen.CodeWriter;
+import mesut.parserx.gen.Insn;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.Normalizer;
 import mesut.parserx.gen.ll.RecDescent;
@@ -181,6 +182,10 @@ public class JavaAstGen {
             Name name = node.asName();
             //check if user supplied var name
             setVarName(name, outerCls);
+            /*Insn.AssignOuter assignOuter = new Insn.AssignOuter();
+            assignOuter.outerVar = outerVar;
+            assignOuter.varName = name.astInfo.varName;
+            name.insnList.add(assignOuter);*/
             parent.append("public %s %s;", name.isToken ? options.tokenClass : name.name, name.astInfo.varName);
         }
         else if (node.isRegex()) {

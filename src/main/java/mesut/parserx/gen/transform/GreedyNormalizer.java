@@ -5,12 +5,12 @@ import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 
 public class GreedyNormalizer extends Transformer {
+    public static boolean debug = false;
     Tree tree;
     boolean modified;
     FactorLoop factor;
@@ -45,6 +45,9 @@ public class GreedyNormalizer extends Transformer {
             if (a.astInfo.isFactored) continue;
             TailInfo sym = hasGreedyTail(a, FirstSet.firstSet(b, tree));
             if (sym == null) continue;
+            if (debug) {
+                System.out.println("greediness in " + seq);
+            }
             modified = true;
 
             sym.list.add(sym.sym);
@@ -105,11 +108,12 @@ public class GreedyNormalizer extends Transformer {
                 fs.add(f);
             }
             Or or = new Or(ors);
-            seq.list.remove(i + 1);
-            seq.list.set(i, or);
-            System.out.println("s=" + seq);
-            return seq;
-            //throw new RuntimeException("todo greedy tail: " + sym.sym + " list: " + sym.list);
+            List<Node> res = new ArrayList<>(seq.list);
+            res.remove(i + 1);
+            res.set(i, or);
+            if (debug)
+                System.out.println("res=" + res);
+            return Sequence.make(res);
         }
         return seq;
     }
@@ -157,6 +161,9 @@ public class GreedyNormalizer extends Transformer {
                 if (regex.isOptional() || regex.isStar()) {
                     Name sym = factor.helper.common(first, FirstSet.firstSet(regex.node, tree));
                     if (sym == null) return null;
+                    if (regex.isStar()) {
+                        throw new RuntimeException("greedy loop in " + curRule + " la=" + sym);
+                    }
                     TailInfo info = new TailInfo();
                     info.sym = sym.copy();
                     return info;

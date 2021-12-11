@@ -63,15 +63,14 @@ public class RecDescent {
         Recursion recursion = new Recursion(tree);
         recursion.all();
 
-        Factor.factorSequence = true;
         FactorLoop factorLoop = new FactorLoop(tree, recursion.factor);
+
+        factorLoop.factorize();
 
         GreedyNormalizer greedyNormalizer = new GreedyNormalizer(tree, factorLoop);
         greedyNormalizer.normalize();
 
-        factorLoop.factorize();
-
-        Optimizer.optimize(tree);
+        //Optimizer.optimize(tree);
 
         File out = new File(options.outDir, Utils.newName(tree.file.getName(), "-final.g"));
         Node.printVarName = false;

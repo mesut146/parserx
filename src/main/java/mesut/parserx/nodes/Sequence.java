@@ -60,7 +60,7 @@ public class Sequence extends NodeList {
             else if (ch.isOr()) {
                 throw new RuntimeException("invalid child");
             }
-            else if (!ch.isEpsilon()) {
+            else {
                 res.add(ch);
             }
         }

@@ -4,6 +4,7 @@ import common.Env;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.transform.EbnfToBnf;
+import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.LeftRecursive;
 import mesut.parserx.gen.transform.Recursion;
 import mesut.parserx.nodes.Or;
@@ -100,7 +101,9 @@ public class LeftRecursionTest {
     }
 
     @Test
-    public void name() throws IOException {
+    public void simp() throws IOException {
+        Factor.debug = true;
+        Recursion.debug = true;
         Tree tree = Env.tree("rec/a.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         RecDescent.gen(tree, "java");
