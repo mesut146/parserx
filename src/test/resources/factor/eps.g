@@ -1,8 +1,7 @@
 include "../common.g"
 
-A: a? a;
 B: A | a b;
-//C: a? b?;
+A: a? a;
 
 /*
 B: a a | a | a b

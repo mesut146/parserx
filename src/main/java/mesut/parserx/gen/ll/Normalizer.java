@@ -11,7 +11,6 @@ import java.util.Set;
 public class Normalizer extends Transformer {
 
     int groupCount = 1;
-    Set<Name> map = new HashSet<>();//created rules
 
     public Normalizer(Tree tree) {
         super(tree);
@@ -23,9 +22,6 @@ public class Normalizer extends Transformer {
             //todo restart
             RuleDecl decl = tree.rules.get(i);
             decl.retType = new Type(tree.options.astClass, decl.baseName());
-            if (!map.contains(decl.ref)) {
-                decl.isOriginal = true;
-            }
             transformRule(decl);
         }
     }
@@ -36,7 +32,6 @@ public class Normalizer extends Transformer {
         RuleDecl tmp = new RuleDecl(cls, node.node);
         tmp.retType = new Type(tree.options.astClass, cls);
         tree.addRuleBelow(tmp, curRule);
-        map.add(tmp.ref);
 
         Name ref = tmp.ref.copy();
         if (node.astInfo.varName != null) {

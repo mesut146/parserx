@@ -11,6 +11,7 @@ public class $lexer_class$ {
     static String[] cMapRegex = {$cMapRegex$};
     int[] skip = {$skip_list$};
     int[] accepting = {$final_list$};
+    //boolean[] after = {$after_list$};
     //id -> token name
     String[] names = {$name_list$};
     //state->token id
@@ -143,6 +144,9 @@ public class $lexer_class$ {
                     token.name = names[ids[lastState]];
                     token.line = startLine;
                     bufStart = bufPos;
+                    /*if(!after[ids[lastState]]){
+                      curState = INITIAL;
+                    }*/
                     return token;
                 }
                 else {

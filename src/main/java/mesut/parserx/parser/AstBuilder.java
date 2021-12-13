@@ -63,6 +63,9 @@ public class AstBuilder {
 
     public TokenDecl visitTokendecl(Ast.tokenDecl node) {
         TokenDecl decl = new TokenDecl(node.name.IDENT.value);
+        if (node.g1 != null) {
+            decl.after = new Name(str(node.g1.name), true);
+        }
         if (node.HASH != null) {
             decl.fragment = true;
         }
@@ -171,8 +174,8 @@ public class AstBuilder {
         else if (node.bracketNode != null) {
             return new Bracket(node.bracketNode.BRACKET.value);
         }
-        else if (node.ref != null) {
-            return new Name(node.ref.name.IDENT.value);
+        else if (node.name != null) {
+            return new Name(node.name.IDENT.value);
         }
         else if (node.stringNode != null) {
             if (node.stringNode.STRING != null) {

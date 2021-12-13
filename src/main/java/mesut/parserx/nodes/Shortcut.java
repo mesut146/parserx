@@ -18,7 +18,7 @@ public class Shortcut extends Node {
                 regex = "//[^\\n]*";
                 break;
             case "block_comment":
-                regex = "/\\*(*[^/]|[^*])*\\*/";
+                regex = "/\\*(\\*[^/]|[^*])*\\*/";
                 break;
             case "ident":
                 regex = "[a-zA-Z_][a-zA-Z0-9_]*";

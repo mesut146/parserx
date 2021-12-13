@@ -68,7 +68,6 @@ public class CppRecDescent {
         writeConsume();
 
         for (RuleDecl decl : tree.rules) {
-            if (decl.hidden) continue;
             curRule = decl;
             gen(decl);
             code.append("");
@@ -247,7 +246,7 @@ public class CppRecDescent {
                     String type = name.isToken ? options.tokenClass : options.astClass + "::" + name.name;
                     code.append("std::vector<%s*> %s;", type, regex.astInfo.factorName);
                     if (regex.astInfo.loopExtra != null) {
-                        code.append("%s.push_back(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra);
+                        code.append("%s.push_back(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra.factorName);
                     }
                     code.append("while(%s){", loopExpr(set));
                     String consumer = name.isToken ? tokenConsumer(name) : name + "()";
@@ -281,7 +280,7 @@ public class CppRecDescent {
                     String type = name.isToken ? options.tokenClass : options.astClass + "." + name.name;
                     code.append("std::vector<%s*> %s;", type, regex.astInfo.factorName);
                     if (regex.astInfo.loopExtra != null) {
-                        code.append("%s.push_back(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra);
+                        code.append("%s.push_back(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra.factorName);
                     }
                     code.append("do{");
                     String consumer = name.isToken ? tokenConsumer(name) : name + "()";

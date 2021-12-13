@@ -53,7 +53,14 @@ public class RegexVisitor {
                 node = new Dot();
             }
             else if (regex.simple.normalChar.ESCAPED != null) {
-                node = new StringNode("" + UnicodeUtils.get(regex.simple.normalChar.ESCAPED.value.charAt(1)));
+                char ch = regex.simple.normalChar.ESCAPED.value.charAt(1);
+                if (UnicodeUtils.escapeMap.containsKey(ch)) {
+                    ch = UnicodeUtils.get(ch);
+                }
+                else {
+                    //escaped meta char
+                }
+                node = new StringNode("" + ch);
             }
             else {
                 node = new StringNode("-");

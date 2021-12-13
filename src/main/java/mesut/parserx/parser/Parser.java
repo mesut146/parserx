@@ -14,9 +14,9 @@ public class Parser{
         la = lexer.next();
     }
 
-    Token consume(int type){
+    Token consume(int type, String name){
         if(la.type != type){
-            throw new RuntimeException("unexpected token: " + la + " expecting: " + type);
+            throw new RuntimeException("unexpected token: " + la + " expecting: " + name);
         }
         try{
             Token res = la;
@@ -71,29 +71,29 @@ public class Parser{
 
     public Ast.includeStatement includeStatement(){
         Ast.includeStatement res = new Ast.includeStatement();
-        res.INCLUDE = consume(Tokens.INCLUDE);
-        res.STRING = consume(Tokens.STRING);
+        res.INCLUDE = consume(Tokens.INCLUDE, "INCLUDE");
+        res.STRING = consume(Tokens.STRING, "STRING");
         return res;
     }
 
     public Ast.optionsBlock optionsBlock(){
         Ast.optionsBlock res = new Ast.optionsBlock();
-        res.OPTIONS = consume(Tokens.OPTIONS);
-        res.LBRACE = consume(Tokens.LBRACE);
+        res.OPTIONS = consume(Tokens.OPTIONS, "OPTIONS");
+        res.LBRACE = consume(Tokens.LBRACE, "LBRACE");
         while(la.type == Tokens.IDENT){
             res.option.add(option());
         }
-        res.RBRACE = consume(Tokens.RBRACE);
+        res.RBRACE = consume(Tokens.RBRACE, "RBRACE");
         return res;
     }
 
     public Ast.option option(){
         Ast.option res = new Ast.option();
-        res.key = consume(Tokens.IDENT);
-        res.SEPARATOR = consume(Tokens.SEPARATOR);
+        res.key = consume(Tokens.IDENT, "IDENT");
+        res.SEPARATOR = consume(Tokens.SEPARATOR, "SEPARATOR");
         res.value = optiong1();
         if(la.type == Tokens.SEMI){
-            res.SEMI = consume(Tokens.SEMI);
+            res.SEMI = consume(Tokens.SEMI, "SEMI");
         }
         return res;
     }
@@ -104,13 +104,13 @@ public class Parser{
             case Tokens.NUMBER:
             {
                 res.which = 1;
-                res.NUMBER = consume(Tokens.NUMBER);
+                res.NUMBER = consume(Tokens.NUMBER, "NUMBER");
                 break;
             }
             case Tokens.BOOLEAN:
             {
                 res.which = 2;
-                res.BOOLEAN = consume(Tokens.BOOLEAN);
+                res.BOOLEAN = consume(Tokens.BOOLEAN, "BOOLEAN");
                 break;
             }
             default:{
@@ -122,44 +122,54 @@ public class Parser{
 
     public Ast.startDecl startDecl(){
         Ast.startDecl res = new Ast.startDecl();
-        res.START = consume(Tokens.START);
-        res.SEPARATOR = consume(Tokens.SEPARATOR);
+        res.START = consume(Tokens.START, "START");
+        res.SEPARATOR = consume(Tokens.SEPARATOR, "SEPARATOR");
         res.name = name();
-        res.SEMI = consume(Tokens.SEMI);
+        res.SEMI = consume(Tokens.SEMI, "SEMI");
         return res;
     }
 
     public Ast.tokenBlock tokenBlock(){
         Ast.tokenBlock res = new Ast.tokenBlock();
-        res.TOKEN = consume(Tokens.TOKEN);
-        res.LBRACE = consume(Tokens.LBRACE);
+        res.TOKEN = consume(Tokens.TOKEN, "TOKEN");
+        res.LBRACE = consume(Tokens.LBRACE, "LBRACE");
         while(la.type == Tokens.IDENT || la.type == Tokens.OPTIONS || la.type == Tokens.TOKEN || la.type == Tokens.SKIP || la.type == Tokens.HASH || la.type == Tokens.INCLUDE){
             res.tokenDecl.add(tokenDecl());
         }
-        res.RBRACE = consume(Tokens.RBRACE);
+        res.RBRACE = consume(Tokens.RBRACE, "RBRACE");
         return res;
     }
 
     public Ast.skipBlock skipBlock(){
         Ast.skipBlock res = new Ast.skipBlock();
-        res.SKIP = consume(Tokens.SKIP);
-        res.LBRACE = consume(Tokens.LBRACE);
+        res.SKIP = consume(Tokens.SKIP, "SKIP");
+        res.LBRACE = consume(Tokens.LBRACE, "LBRACE");
         while(la.type == Tokens.IDENT || la.type == Tokens.OPTIONS || la.type == Tokens.TOKEN || la.type == Tokens.SKIP || la.type == Tokens.HASH || la.type == Tokens.INCLUDE){
             res.tokenDecl.add(tokenDecl());
         }
-        res.RBRACE = consume(Tokens.RBRACE);
+        res.RBRACE = consume(Tokens.RBRACE, "RBRACE");
         return res;
     }
 
     public Ast.tokenDecl tokenDecl(){
         Ast.tokenDecl res = new Ast.tokenDecl();
         if(la.type == Tokens.HASH){
-            res.HASH = consume(Tokens.HASH);
+            res.HASH = consume(Tokens.HASH, "HASH");
         }
         res.name = name();
-        res.SEPARATOR = consume(Tokens.SEPARATOR);
+        if(la.type == Tokens.MINUS){
+            res.g1 = tokenDeclg1();
+        }
+        res.SEPARATOR = consume(Tokens.SEPARATOR, "SEPARATOR");
         res.rhs = rhs();
-        res.SEMI = consume(Tokens.SEMI);
+        res.SEMI = consume(Tokens.SEMI, "SEMI");
+        return res;
+    }
+
+    public Ast.tokenDeclg1 tokenDeclg1(){
+        Ast.tokenDeclg1 res = new Ast.tokenDeclg1();
+        res.MINUS = consume(Tokens.MINUS, "MINUS");
+        res.name = name();
         return res;
     }
 
@@ -169,26 +179,26 @@ public class Parser{
         if(la.type == Tokens.LP){
             res.args = args();
         }
-        res.SEPARATOR = consume(Tokens.SEPARATOR);
+        res.SEPARATOR = consume(Tokens.SEPARATOR, "SEPARATOR");
         res.rhs = rhs();
-        res.SEMI = consume(Tokens.SEMI);
+        res.SEMI = consume(Tokens.SEMI, "SEMI");
         return res;
     }
 
     public Ast.args args(){
         Ast.args res = new Ast.args();
-        res.LP = consume(Tokens.LP);
+        res.LP = consume(Tokens.LP, "LP");
         res.name = name();
         while(la.type == Tokens.COMMA){
             res.rest.add(argsg1());
         }
-        res.RP = consume(Tokens.RP);
+        res.RP = consume(Tokens.RP, "RP");
         return res;
     }
 
     public Ast.argsg1 argsg1(){
         Ast.argsg1 res = new Ast.argsg1();
-        res.COMMA = consume(Tokens.COMMA);
+        res.COMMA = consume(Tokens.COMMA, "COMMA");
         res.name = name();
         return res;
     }
@@ -204,7 +214,7 @@ public class Parser{
 
     public Ast.rhsg1 rhsg1(){
         Ast.rhsg1 res = new Ast.rhsg1();
-        res.OR = consume(Tokens.OR);
+        res.OR = consume(Tokens.OR, "OR");
         res.sequence = sequence();
         return res;
     }
@@ -252,7 +262,7 @@ public class Parser{
 
     public Ast.sequenceg2 sequenceg2(){
         Ast.sequenceg2 res = new Ast.sequenceg2();
-        res.HASH = consume(Tokens.HASH);
+        res.HASH = consume(Tokens.HASH, "HASH");
         res.name = name();
         return res;
     }
@@ -263,13 +273,13 @@ public class Parser{
             case Tokens.LEFT:
             {
                 res.which = 1;
-                res.LEFT = consume(Tokens.LEFT);
+                res.LEFT = consume(Tokens.LEFT, "LEFT");
                 break;
             }
             case Tokens.RIGHT:
             {
                 res.which = 2;
-                res.RIGHT = consume(Tokens.RIGHT);
+                res.RIGHT = consume(Tokens.RIGHT, "RIGHT");
                 break;
             }
             default:{
@@ -295,7 +305,7 @@ public class Parser{
                         res.which = 1;
                         Ast.regex.Regex1 regex1 = res.regex1 = new Ast.regex.Regex1();
                         regex1.name = namef1;
-                        regex1.SEPARATOR = consume(Tokens.SEPARATOR);
+                        regex1.SEPARATOR = consume(Tokens.SEPARATOR, "SEPARATOR");
                         regex1.simple = simple();
                         if(la.type == Tokens.QUES || la.type == Tokens.STAR || la.type == Tokens.PLUS){
                             regex1.type = regexg1();
@@ -308,7 +318,7 @@ public class Parser{
                     {
                         res.which = 2;
                         Ast.regex.Regex2 regex2 = res.regex2 = new Ast.regex.Regex2();
-                        regex2.simple = simple1(namef1);
+                        regex2.simple = simple_name(namef1);
                         if(la.type == Tokens.QUES || la.type == Tokens.STAR || la.type == Tokens.PLUS){
                             regex2.type = regexg2();
                         }
@@ -317,7 +327,7 @@ public class Parser{
                     default:{
                         res.which = 2;
                         Ast.regex.Regex2 regex2 = res.regex2 = new Ast.regex.Regex2();
-                        regex2.simple = simple1(namef1);
+                        regex2.simple = simple_name(namef1);
                         if(la.type == Tokens.QUES || la.type == Tokens.STAR || la.type == Tokens.PLUS){
                             regex2.type = regexg2();
                         }
@@ -326,13 +336,13 @@ public class Parser{
                 break;
             }
             case Tokens.BRACKET:
+            case Tokens.LBRACE:
             case Tokens.TILDE:
             case Tokens.DOT:
+            case Tokens.SHORTCUT:
             case Tokens.EPSILON:
             case Tokens.CHAR:
             case Tokens.LP:
-            case Tokens.LBRACE:
-            case Tokens.SHORTCUT:
             case Tokens.STRING:
             {
                 res.which = 2;
@@ -356,19 +366,19 @@ public class Parser{
             case Tokens.STAR:
             {
                 res.which = 1;
-                res.STAR = consume(Tokens.STAR);
+                res.STAR = consume(Tokens.STAR, "STAR");
                 break;
             }
             case Tokens.PLUS:
             {
                 res.which = 2;
-                res.PLUS = consume(Tokens.PLUS);
+                res.PLUS = consume(Tokens.PLUS, "PLUS");
                 break;
             }
             case Tokens.QUES:
             {
                 res.which = 3;
-                res.QUES = consume(Tokens.QUES);
+                res.QUES = consume(Tokens.QUES, "QUES");
                 break;
             }
             default:{
@@ -384,19 +394,19 @@ public class Parser{
             case Tokens.STAR:
             {
                 res.which = 1;
-                res.STAR = consume(Tokens.STAR);
+                res.STAR = consume(Tokens.STAR, "STAR");
                 break;
             }
             case Tokens.PLUS:
             {
                 res.which = 2;
-                res.PLUS = consume(Tokens.PLUS);
+                res.PLUS = consume(Tokens.PLUS, "PLUS");
                 break;
             }
             case Tokens.QUES:
             {
                 res.which = 3;
-                res.QUES = consume(Tokens.QUES);
+                res.QUES = consume(Tokens.QUES, "QUES");
                 break;
             }
             default:{
@@ -422,7 +432,7 @@ public class Parser{
             case Tokens.INCLUDE:
             {
                 res.which = 2;
-                res.ref = ref();
+                res.name = name();
                 break;
             }
             case Tokens.CHAR:
@@ -453,7 +463,7 @@ public class Parser{
             case Tokens.EPSILON:
             {
                 res.which = 7;
-                res.EPSILON = consume(Tokens.EPSILON);
+                res.EPSILON = consume(Tokens.EPSILON, "EPSILON");
                 break;
             }
             case Tokens.LBRACE:
@@ -465,7 +475,7 @@ public class Parser{
             case Tokens.SHORTCUT:
             {
                 res.which = 9;
-                res.SHORTCUT = consume(Tokens.SHORTCUT);
+                res.SHORTCUT = consume(Tokens.SHORTCUT, "SHORTCUT");
                 break;
             }
             default:{
@@ -512,7 +522,7 @@ public class Parser{
             case Tokens.EPSILON:
             {
                 res.which = 7;
-                res.EPSILON = consume(Tokens.EPSILON);
+                res.EPSILON = consume(Tokens.EPSILON, "EPSILON");
                 break;
             }
             case Tokens.LBRACE:
@@ -524,28 +534,28 @@ public class Parser{
             case Tokens.SHORTCUT:
             {
                 res.which = 9;
-                res.SHORTCUT = consume(Tokens.SHORTCUT);
+                res.SHORTCUT = consume(Tokens.SHORTCUT, "SHORTCUT");
                 break;
             }
             default:{
-                throw new RuntimeException("expecting one of [BRACKET,TILDE,DOT,EPSILON,CHAR,LP,LBRACE,SHORTCUT,STRING] got: "+la);
+                throw new RuntimeException("expecting one of [BRACKET,LBRACE,TILDE,DOT,SHORTCUT,EPSILON,CHAR,LP,STRING] got: "+la);
             }
         }
         return res;
     }
 
-    public Ast.simple simple1(Ast.name namef1){
+    public Ast.simple simple_name(Ast.name namef12){
         Ast.simple res = new Ast.simple();
         res.which = 2;
-        res.ref = ref1(namef1);
+        res.name = namef12;
         return res;
     }
 
     public Ast.group group(){
         Ast.group res = new Ast.group();
-        res.LP = consume(Tokens.LP);
+        res.LP = consume(Tokens.LP, "LP");
         res.rhs = rhs();
-        res.RP = consume(Tokens.RP);
+        res.RP = consume(Tokens.RP, "RP");
         return res;
     }
 
@@ -555,13 +565,13 @@ public class Parser{
             case Tokens.STRING:
             {
                 res.which = 1;
-                res.STRING = consume(Tokens.STRING);
+                res.STRING = consume(Tokens.STRING, "STRING");
                 break;
             }
             case Tokens.CHAR:
             {
                 res.which = 2;
-                res.CHAR = consume(Tokens.CHAR);
+                res.CHAR = consume(Tokens.CHAR, "CHAR");
                 break;
             }
             default:{
@@ -573,32 +583,20 @@ public class Parser{
 
     public Ast.bracketNode bracketNode(){
         Ast.bracketNode res = new Ast.bracketNode();
-        res.BRACKET = consume(Tokens.BRACKET);
+        res.BRACKET = consume(Tokens.BRACKET, "BRACKET");
         return res;
     }
 
     public Ast.untilNode untilNode(){
         Ast.untilNode res = new Ast.untilNode();
-        res.TILDE = consume(Tokens.TILDE);
+        res.TILDE = consume(Tokens.TILDE, "TILDE");
         res.regex = regex();
         return res;
     }
 
     public Ast.dotNode dotNode(){
         Ast.dotNode res = new Ast.dotNode();
-        res.DOT = consume(Tokens.DOT);
-        return res;
-    }
-
-    public Ast.ref ref(){
-        Ast.ref res = new Ast.ref();
-        res.name = name();
-        return res;
-    }
-
-    public Ast.ref ref1(Ast.name namef1){
-        Ast.ref res = new Ast.ref();
-        res.name = namef1;
+        res.DOT = consume(Tokens.DOT, "DOT");
         return res;
     }
 
@@ -608,31 +606,31 @@ public class Parser{
             case Tokens.IDENT:
             {
                 res.which = 1;
-                res.IDENT = consume(Tokens.IDENT);
+                res.IDENT = consume(Tokens.IDENT, "IDENT");
                 break;
             }
             case Tokens.TOKEN:
             {
                 res.which = 2;
-                res.TOKEN = consume(Tokens.TOKEN);
+                res.TOKEN = consume(Tokens.TOKEN, "TOKEN");
                 break;
             }
             case Tokens.SKIP:
             {
                 res.which = 3;
-                res.SKIP = consume(Tokens.SKIP);
+                res.SKIP = consume(Tokens.SKIP, "SKIP");
                 break;
             }
             case Tokens.OPTIONS:
             {
                 res.which = 4;
-                res.OPTIONS = consume(Tokens.OPTIONS);
+                res.OPTIONS = consume(Tokens.OPTIONS, "OPTIONS");
                 break;
             }
             case Tokens.INCLUDE:
             {
                 res.which = 5;
-                res.INCLUDE = consume(Tokens.INCLUDE);
+                res.INCLUDE = consume(Tokens.INCLUDE, "INCLUDE");
                 break;
             }
             default:{
@@ -644,9 +642,9 @@ public class Parser{
 
     public Ast.repeatNode repeatNode(){
         Ast.repeatNode res = new Ast.repeatNode();
-        res.LBRACE = consume(Tokens.LBRACE);
+        res.LBRACE = consume(Tokens.LBRACE, "LBRACE");
         res.rhs = rhs();
-        res.RBRACE = consume(Tokens.RBRACE);
+        res.RBRACE = consume(Tokens.RBRACE, "RBRACE");
         return res;
     }
 

@@ -32,7 +32,8 @@ public class Tokens{
     public static final int OR = 28;
     public static final int DOT = 29;
     public static final int SEMI = 30;
-    public static final int LINE_COMMENT = 31;
-    public static final int BLOCK_COMMENT = 32;
-    public static final int WS = 33;
+    public static final int MINUS = 31;
+    public static final int LINE_COMMENT = 32;
+    public static final int BLOCK_COMMENT = 33;
+    public static final int WS = 34;
 }

@@ -13,17 +13,17 @@ public class Lexer {
     static int[] cMap = unpackCMap(cMapPacked);
     //input id -> regex string for error reporting
     static String[] cMapRegex = {"_", "n", "f", "r", "k", "o", "s", "c", "g", "q", "p", "t", "b", "a", "e", "d", "h", "m", "l", "u", "j", "i", "z", "y", "A-Z", "v-x", "0-9", "]-\\", "\\t", ":", "*", ">", "^", "\"", ".", ";", "[", "'", "+", "/", "<", "=", "?", "~", "!", "\\u0020", "#", ")", "(", "-", ",", "@", "`", "{", "ε", "$", "&", "%", "}", "|", "\\u0000-\\b", "\\u000e-\\u001f", "\\u000b-\\f", "\\u03b6-\\uffff", "\\u007f-\\u03b4", "\\r", "]", "\\\\", "\\n"};
-    int[] skip = {-2147483648,3};
-    int[] accepting = {-570789890,-64338689,-263725023,94147,0,0,0,0};
+    int[] skip = {0,7};
+    int[] accepting = {-537235458,-64338689,-263725023,94147,0,0,0,0};
     //id -> token name
     String[] names = {"EOF","BOOLEAN","OPTIONS","TOKEN","SKIP","INCLUDE","START","EPSILON","LEFT","RIGHT","IDENT","SHORTCUT","BRACKET","STRING","CHAR","NUMBER","LP","RP","LBRACE","RBRACE",
-"STAR","PLUS","QUES","POW","SEPARATOR","TILDE","HASH","COMMA","OR","DOT","SEMI","LINE_COMMENT","BLOCK_COMMENT","WS"};
+"STAR","PLUS","QUES","POW","SEPARATOR","TILDE","HASH","COMMA","OR","DOT","SEMI","MINUS","LINE_COMMENT","BLOCK_COMMENT","WS"};
     //state->token id
-    int[] ids = {0,10,10,10,10,10,10,15,33,0,20,23,0,29,30,0,0,21,0,0,22,
-            25,26,17,16,0,27,18,0,0,19,28,0,10,10,10,10,10,10,0,0,
-            0,13,0,0,0,12,0,0,14,0,31,0,0,0,0,0,0,10,10,10,
+    int[] ids = {0,10,10,10,10,10,10,15,34,0,20,23,0,29,30,0,0,21,0,0,22,
+            25,26,17,16,31,27,18,0,0,19,28,0,10,10,10,10,10,10,0,0,
+            0,13,0,0,0,12,0,0,14,0,32,0,0,0,0,0,0,10,10,10,
             10,10,10,24,0,0,0,0,0,0,0,0,0,0,0,0,10,10,4,1,
-            10,10,0,0,0,32,0,0,0,0,0,0,10,3,10,11,8,0,0,0,
+            10,10,0,0,0,33,0,0,0,0,0,0,10,3,10,11,8,0,0,0,
             0,10,3,10,9,6,0,0,2,5,0,7};
     static final int INITIAL = 0;
     static final int EOF = 0;
@@ -37,7 +37,7 @@ public class Lexer {
     int bufEnd;
     char[] yybuf = new char[bufSize];
     static String trans_packed = "\105" +
-        "\67\0\1\1\1\2\2\3\1\4\1\5\3\6\4\7\1\10\1\11\1\12\1\13\5\14\1\15\1\16\1\17\1\20\1\21\1\22\1\23\1\24\1\25\6\26\1\27\1\30\1\31\1\32\7\34\10\35\100\36\12\40\13\41\14\42\15\43\16\44\17\45\20\46\21\47\22\51\100\52\24\53\25\55\10\56\26\57\27\60\30\61\0\62\32\65\33\66\160\71\35\72\36\73\37\101\10\104\10\37\100" +
+        "\66\0\1\1\1\2\2\3\1\4\1\5\3\6\4\7\1\10\1\11\1\12\1\13\5\14\1\15\1\16\1\17\1\20\1\21\1\22\1\23\1\24\1\25\6\26\1\27\1\30\1\31\1\32\7\34\10\35\100\36\12\40\13\41\14\42\15\43\16\44\17\45\20\46\21\47\22\51\100\52\24\53\25\55\10\56\26\57\27\60\30\61\31\62\32\65\33\66\160\71\35\72\36\73\37\101\10\104\10" +
         "\33\0\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10\1\11\1\12\1\13\1\14\1\15\1\16\1\17\1\20\1\21\1\22\1\23\1\24\1\25\1\26\1\27\1\30\1\31\1\32\1" +
         "\33\0\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10\1\11\1\12\1\13\1\14\1\15\41\16\1\17\1\20\1\21\1\22\1\23\1\24\1\25\1\26\1\27\1\30\1\31\1\32\1" +
         "\33\0\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10\1\11\1\12\42\13\1\14\1\15\1\16\1\17\1\20\1\21\1\22\1\23\1\24\1\25\1\26\1\27\1\30\1\31\1\32\1" +
@@ -62,7 +62,7 @@ public class Lexer {
         "\0" +
         "\0" +
         "\0" +
-        "\0" +
+        "\1\37\100" +
         "\0" +
         "\0" +
         "\0" +
@@ -255,7 +255,7 @@ public class Lexer {
             }else{
                 backupState = curState;
                 if(cMap[yychar] == -1){
-                    throw new IOException(String.format("unknown input=%c(%d)",yychar, yychar));
+                    throw new IOException(String.format("unknown input=%c(%d) pos=%s line=%d",yychar, yychar, yypos, yyline));
                 }
                 curState = trans[curState][cMap[yychar]];
             }
@@ -269,8 +269,7 @@ public class Lexer {
                     return token;
                 }
                 else {
-                    throw new IOException(String.format("invalid input=%c(%d) buf='%s' expecting=%s",yychar,yychar,getText(),findExpected(backupState)));
-                    //throw new IOException("invalid input=" + (char)yychar + "(" + yychar + ") " + " yybuf= " + getText());
+                    throw new IOException(String.format("invalid input=%c(%d) pos=%s line=%d buf='%s' expecting=%s",yychar,yychar,yypos,yyline,getText(),findExpected(backupState)));
                 }
             }
             else {

@@ -18,7 +18,7 @@ public class AstInfo {
     public boolean substitution;
     public String subVar;
     public boolean assignOuter;
-    public String loopExtra;
+    public AstInfo loopExtra;
     public AstInfo loopBound;
     public AstInfo factor;
 
@@ -71,9 +71,14 @@ public class AstInfo {
     public String toString() {
         StringBuilder sb = new StringBuilder("{");
         if (isFactor) {
-            sb.append("factor ");
+            sb.append("factor ").append(factorName);
         }
-        sb.append(String.format("%s.%s", outerVar, varName));
+        else {
+            sb.append(String.format("%s.%s", outerVar, varName));
+            if (isFactored) {
+                sb.append("=").append(factorName);
+            }
+        }
         if (which != -1) {
             sb.append(" which");
         }

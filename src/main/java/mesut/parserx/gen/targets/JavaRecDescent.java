@@ -56,11 +56,9 @@ public class JavaRecDescent {
         writeConsume();
 
         for (RuleDecl decl : tree.rules) {
-            if (!decl.hidden) {
-                curRule = decl;
-                gen(decl);
-                code.append("");
-            }
+            curRule = decl;
+            gen(decl);
+            code.append("");
         }
         code.append("}");
 
@@ -218,7 +216,7 @@ public class JavaRecDescent {
                     Name name = regex.node.asName();
                     code.append("List<%s> %s = new ArrayList<>();", getType(name), regex.astInfo.factorName);
                     if (regex.astInfo.loopExtra != null) {
-                        code.append("%s.add(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra);
+                        code.append("%s.add(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra.factorName);
                     }
                     code.append("while(%s){", loopExpr(set));
                     String consumer = name.isToken ? tokenConsumer(name) : name + "()";
@@ -251,7 +249,7 @@ public class JavaRecDescent {
                     Name name = regex.node.asName();
                     code.append("List<%s> %s = new ArrayList<>();", getType(name), regex.astInfo.factorName);
                     if (regex.astInfo.loopExtra != null) {
-                        code.append("%s.add(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra);
+                        code.append("%s.add(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra.factorName);
                     }
                     code.append("do{");
                     String consumer = name.isToken ? tokenConsumer(name) : name + "()";

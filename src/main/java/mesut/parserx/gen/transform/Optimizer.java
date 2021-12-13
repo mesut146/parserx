@@ -4,30 +4,25 @@ import mesut.parserx.nodes.*;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
-public class Optimizer extends Transformer {
-
-    //usages for current rule
-    HashSet<Name> usages = new HashSet<>();
-    //usages for all original rules
-    HashSet<Name> all = new HashSet<>();
+public class Optimizer {
+    Tree tree;
 
     public Optimizer(Tree tree) {
-        super(tree);
+        this.tree = tree;
     }
 
     public static void optimize(Tree tree) {
         new Optimizer(tree).optimize();
     }
 
-
     public void optimize() {
+        HashSet<Name> all = new HashSet<>();
         for (RuleDecl decl : tree.rules) {
-            curRule = decl;
-            if (decl.isOriginal) {
-                decl.rhs.accept(this, null);
+            if (tree.isOriginal(decl.ref)) {
                 all.add(decl.ref);
-                all.addAll(usages);
+                all.addAll(UsageCollector.collect(decl.rhs, tree));
             }
         }
         int count = tree.rules.size();
@@ -43,14 +38,29 @@ public class Optimizer extends Transformer {
         }
     }
 
-    @Override
-    public Node visitName(Name name, Void arg) {
-        if (name.isRule()) {
-            if (usages.add(name)) {
-                //recurse
-                tree.getRule(name).rhs.accept(this, arg);
-            }
+    public static class UsageCollector extends Transformer {
+        Set<Name> usages = new HashSet<>();
+
+        public UsageCollector(Tree tree) {
+            super(tree);
         }
-        return name;
+
+        public static Set<Name> collect(Node node, Tree tree) {
+            UsageCollector collector = new UsageCollector(tree);
+            node.accept(collector, null);
+            return collector.usages;
+        }
+
+        @Override
+        public Node visitName(Name name, Void arg) {
+            if (name.isRule()) {
+                if (usages.add(name)) {
+                    //recurse
+                    tree.getRule(name).rhs.accept(this, arg);
+                }
+            }
+            return name;
+        }
     }
+
 }

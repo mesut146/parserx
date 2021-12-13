@@ -2,10 +2,14 @@ package mesut.parserx.dfa;
 
 import mesut.parserx.nodes.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 //nfa from grammar
-public class NFABuilder {
+public class NFABuilder extends BaseVisitor<Integer, Integer> {
     NFA nfa;
     Tree tree;
+    Map<Name, Integer> finalMap = new HashMap<>();
 
     public NFABuilder(Tree tree) {
         this.tree = tree;
@@ -20,7 +24,8 @@ public class NFABuilder {
         nfa = new NFA(100);
         nfa.tree = tree;
         for (TokenDecl decl : tree.tokens) {
-            if (!decl.fragment) {
+            if (decl.fragment) continue;
+            if (!finalMap.containsKey(decl.ref())) {
                 addRegex(decl);
             }
         }
@@ -28,10 +33,21 @@ public class NFABuilder {
     }
 
     public void addRegex(TokenDecl decl) {
-        int end = insert(decl.rhs, nfa.initial);
+        int start;
+        if (decl.after != null) {
+            if (!finalMap.containsKey(decl.after)) {
+                addRegex(tree.getToken(decl.after.name));
+            }
+            start = finalMap.get(decl.after);
+        }
+        else {
+            start = nfa.initial;
+        }
+        int end = decl.rhs.accept(this, start);
         nfa.setAccepting(end, true);
         nfa.addName(decl.name, end);
         nfa.isSkip[end] = decl.isSkip;
+        finalMap.put(decl.ref(), end);
     }
 
     public int insert(Node node, int start) {
@@ -103,7 +119,7 @@ public class NFABuilder {
         else if (node.isGroup()) {
             return insert(node.asGroup().node, start);
         }
-        else if (node.isName()) {//?
+        else if (node.isName()) {
             //we have lexer ref just replace with target's regex
             Name name = node.asName();
             return insert(tree.getToken(name.name).rhs, start);
@@ -132,5 +148,107 @@ public class NFABuilder {
         else {
             throw new RuntimeException("invalid node: " + node.getClass() + " , " + node);
         }
+    }
+
+    @Override
+    public Integer visitGroup(Group group, Integer start) {
+        return group.node.accept(this, start);
+    }
+
+    @Override
+    public Integer visitName(Name name, Integer start) {
+        return tree.getToken(name.name).rhs.accept(this, start);
+    }
+
+    @Override
+    public Integer visitSequence(Sequence seq, Integer start) {
+        int end = start;
+        for (Node ch : seq) {
+            end = ch.accept(this, end);
+        }
+        return end;
+    }
+
+    @Override
+    public Integer visitRegex(Regex regex, Integer start) {
+        if (regex.isStar()) {
+            int newStart = nfa.newState();
+            int end = regex.node.accept(this, newStart);
+            nfa.addEpsilon(start, newStart);//bind
+            nfa.addEpsilon(newStart, end);//zero times
+            nfa.addEpsilon(end, newStart);//repeat
+            return end;
+        }
+        else if (regex.isPlus()) {
+            int newStart = nfa.newState();
+            int end = regex.node.accept(this, newStart);
+            nfa.addEpsilon(start, newStart);//bind
+            nfa.addEpsilon(end, newStart);//repeat
+            return end;
+        }
+        else {
+            int end = regex.node.accept(this, start);
+            nfa.addEpsilon(start, end);//zero times
+            return end;
+        }
+    }
+
+    @Override
+    public Integer visitString(StringNode string, Integer start) {
+        int end = start;
+        for (char ch : string.value.toCharArray()) {
+            int newEnd = nfa.newState();
+            nfa.addTransitionRange(end, newEnd, ch, ch);
+            end = newEnd;
+        }
+        return end;
+    }
+
+    @Override
+    public Integer visitDot(Dot dot, Integer start) {
+        return Dot.bracket.accept(this, start);
+    }
+
+    @Override
+    public Integer visitBracket(Bracket bracket, Integer start) {
+        int end = nfa.newState();
+        //in order to have only one end state we add epsilons?
+        for (int i = 0; i < bracket.size(); i++) {
+            Range rn = bracket.ranges.get(i);
+            nfa.addTransitionRange(start, end, rn.start, rn.end);
+        }
+        return end;
+    }
+
+    @Override
+    public Integer visitOr(Or or, Integer start) {
+        int end = nfa.newState();
+        for (Node ch : or) {
+            int chEnd = ch.accept(this, start);
+            nfa.addEpsilon(chEnd, end);
+        }
+        return end;
+    }
+
+    @Override
+    public Integer visitUntil(Until until, Integer start) {
+        Node reg = until.node;
+        if (!reg.isString()) {
+            throw new RuntimeException("until node only supports strings");
+        }
+        int end = start;
+        int newEnd = -1;
+        int i = 0;
+        for (char ch : reg.asString().value.toCharArray()) {
+            newEnd = nfa.newState();
+            nfa.addTransitionRange(end, newEnd, ch, ch);
+            //add negated transitions
+            for (Range r : until.brackets.get(i).getRanges()) {
+                nfa.addTransitionRange(newEnd, start, r.start, r.end);
+            }
+            end = newEnd;
+            i++;
+        }
+        return newEnd;
     }
 }

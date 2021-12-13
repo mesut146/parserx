@@ -24,28 +24,22 @@ public class BaseVisitor<R, A> implements Visitor<R, A> {
 
     @Override
     public R visitGroup(Group group, A arg) {
-        return group.node.accept(this, arg);
+        return null;
     }
 
     @Override
     public R visitSequence(Sequence seq, A arg) {
-        for (Node ch : seq) {
-            ch.accept(this, arg);
-        }
         return null;
     }
 
     @Override
     public R visitOr(Or or, A arg) {
-        for (Node ch : or) {
-            ch.accept(this, arg);
-        }
         return null;
     }
 
     @Override
     public R visitRegex(Regex regex, A arg) {
-        return regex.node.accept(this, arg);
+        return null;
     }
 
     @Override

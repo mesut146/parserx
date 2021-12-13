@@ -41,6 +41,7 @@ token{
  OR: "|";
  DOT: ".";
  SEMI: ";";
+ MINUS: "-";
 }
 
 skip{
@@ -64,7 +65,7 @@ tokenBlock: TOKEN "{" tokenDecl* "}";
 skipBlock: "skip" "{" tokenDecl* "}";
 
 
-tokenDecl: "#"? name SEPARATOR rhs ";";
+tokenDecl: "#"? name ("-" name)? SEPARATOR rhs ";";
 ruleDecl: name args? SEPARATOR rhs ";";
 args: "(" name rest=("," name)* ")";
 
@@ -74,14 +75,13 @@ sequence: regex+ assoc=("%left" | "%right")? label=("#" name)?;
 regex: name "=" simple type=("*" | "+" | "?")?
      | simple type=("*" | "+" | "?")?;
 
-simple: group | ref | stringNode | bracketNode | untilNode | dotNode | EPSILON | repeatNode | SHORTCUT;
+simple: group | name | stringNode | bracketNode | untilNode | dotNode | EPSILON | repeatNode | SHORTCUT;
 
 group: "(" rhs ")";
 stringNode: STRING | CHAR;
 bracketNode: BRACKET;//easier to handle as token
 untilNode: "~" regex;
 dotNode: ".";
-ref: name;
 name: IDENT | "token" | "tokens" | "skip" | "options" | "include";
 repeatNode: "{" rhs "}";
 

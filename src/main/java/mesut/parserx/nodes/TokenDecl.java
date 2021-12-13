@@ -1,11 +1,12 @@
 package mesut.parserx.nodes;
 
-public class TokenDecl{
+public class TokenDecl {
 
     public String name;
     public boolean fragment = false;
     public boolean isSkip = false;
     public Node rhs;
+    public Name after;
 
     public TokenDecl(String name) {
         this(name, null);
@@ -30,7 +31,10 @@ public class TokenDecl{
             sb.append("#");
         }
         sb.append(name);
-        sb.append(" = ");
+        if (after != null) {
+            sb.append("-").append(after);
+        }
+        sb.append(": ");
         sb.append(rhs);
         return sb.toString();
     }

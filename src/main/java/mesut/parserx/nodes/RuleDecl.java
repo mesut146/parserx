@@ -12,9 +12,7 @@ public class RuleDecl {
     public Node rhs;
     public Name ref;
     public int index;
-    public boolean hidden = false;//if true rule has no effect
     public Type retType;//ast type in case it is modified
-    public boolean isOriginal;
 
     public RuleDecl() {
     }
@@ -61,9 +59,6 @@ public class RuleDecl {
             s += ": " + rhs + ";";
         }
 
-        if (hidden) {
-            return "/*" + s + "*/";
-        }
         if (printIndex) {
             return "/*" + index + "*/ " + s;
         }

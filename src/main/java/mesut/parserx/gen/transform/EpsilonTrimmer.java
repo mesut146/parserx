@@ -38,12 +38,12 @@ public class EpsilonTrimmer extends Transformer {
             Node rhs = transformNode(rule.rhs, null);
             RuleDecl res = new RuleDecl(rule.ref.name + "_noe", rhs);
             if (rhs.isEpsilon()) {
-                res.hidden = true;
+                //res.hidden = true;
             }
             else {
                 res.rhs = Simplify.simplifyNode(rhs);
+                out.addRule(res);
             }
-            out.addRule(res);
         }
         if (preserveNames) {
             for (RuleDecl decl : out.rules) {

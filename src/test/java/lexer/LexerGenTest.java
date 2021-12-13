@@ -10,6 +10,7 @@ import mesut.parserx.nodes.Tree;
 import mesut.parserx.parser.Lexer;
 import mesut.parserx.parser.Token;
 import mesut.parserx.utils.UnicodeUtils;
+import mesut.parserx.utils.Utils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -19,6 +20,16 @@ import java.io.IOException;
 
 @Ignore
 public class LexerGenTest {
+
+    @Test
+    public void orTest() throws Exception {
+        RealTest.check(Env.tree("lexer/or.g"), "abac");
+    }
+
+    @Test
+    public void regexTest() throws Exception {
+        RealTest.check(Env.tree("lexer/regex.g"), "a ab c cdd e eee");
+    }
 
     @Test
     public void cppTarget() throws IOException {
@@ -58,19 +69,17 @@ public class LexerGenTest {
     @Test
     public void large() throws Exception {
         Tree tree = Env.tree("java/lexer-jls.g");
-        /*tree.options.lexerClass = "Lexer2";
-        tree.options.tokenClass = "Token2";
-        tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lexer/itself";
-        tree.options.packageName = "lexer.itself";
-        LexerGenerator generator = new LexerGenerator(tree);
-        generator.generate();*/
-        RealTest.check(tree, Env.getResFile("java/large.java").getAbsolutePath());
+        RealTest.check(tree, Env.getResFile("java/a.java.res").getAbsolutePath());
     }
 
     @Test
     public void dot() throws Exception {
-        Tree tree = Env.tree("str.g");
-        tree.makeNFA().dfa().dot(new FileWriter(Env.dotFile("a.dot")));
+        //Tree tree = Env.tree("str.g");
+        //Tree tree = Env.tree("lexer/after.g");
+        Tree tree = Env.tree("lexer/regex.g");
+        File dot = Env.dotFile(Utils.newName(tree.file.getName(), ".dot"));
+        tree.makeNFA().dfa().dot(new FileWriter(dot));
+        Env.dot(dot);
     }
 
     @Test
@@ -114,18 +123,6 @@ public class LexerGenTest {
 
     @Test
     @Ignore
-    public void all() throws Exception {
-        Tree tree = Env.tree("javaLexer.g");
-        LexerGenerator generator = LexerGenerator.gen(tree, "java");
-
-        NFA dfa = generator.dfa;
-        dfa.dump(new FileWriter(new File(Env.dotDir(), "javaLexer.txt")));
-        dfa.getAlphabet().dump(new File(Env.dotDir(), "alphabet.txt"));
-
-    }
-
-    @Test
-    @Ignore
     public void escapeTest() {
         char[] chars = {'\n', '\r', '\t', ' ', '\0'};
         String[] strArr = {"\\n", "\\r", "\\t", "\\u0020", "\\u0000"};
@@ -138,4 +135,9 @@ public class LexerGenTest {
         }
     }
 
+    @Test
+    public void after() throws Exception {
+        Tree tree = Env.tree("lexer/after.g");
+        RealTest.check(tree, "<e>");
+    }
 }

@@ -12,6 +12,21 @@ public class Copier extends Transformer {
         super(tree);
     }
 
+    public static Tree copyTree(Tree tree) {
+        Tree res = new Tree(tree);
+        res.rules.clear();
+        for (RuleDecl decl : tree.rules) {
+            res.addRule(copyRule(decl));
+        }
+        return res;
+    }
+
+    public static RuleDecl copyRule(RuleDecl decl) {
+        RuleDecl res = new RuleDecl(decl.ref.<Name>copy(), decl.rhs.copy());
+        res.retType = decl.retType;
+        return res;
+    }
+
     Node withAst(Node res, Node info) {
         res.astInfo = info.astInfo.copy();
         return res;

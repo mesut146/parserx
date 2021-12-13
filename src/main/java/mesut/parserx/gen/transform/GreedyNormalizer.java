@@ -1,5 +1,6 @@
 package mesut.parserx.gen.transform;
 
+import mesut.parserx.gen.AstInfo;
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
@@ -40,8 +41,8 @@ public class GreedyNormalizer extends Transformer {
         for (int i = 0; i < seq.size(); i++) {
             if (i == seq.size() - 1) break;
 
-            Node a = seq.get(i);
-            Node b = seq.get(i + 1);
+            Node a = seq.get(i).copy();
+            Node b = seq.get(i + 1).copy();
             if (a.astInfo.isFactored) continue;
             TailInfo sym = hasGreedyTail(a, FirstSet.firstSet(b, tree));
             if (sym == null) continue;
@@ -59,18 +60,16 @@ public class GreedyNormalizer extends Transformer {
                     continue;
                 }
                 Factor.PullInfo info;
-                Node f;
+                Node f = node.copy();
+                f.astInfo = new AstInfo();
+                f.astInfo.isFactor = true;
                 if (node.isPlus()) {
-                    info = factor.pull(cur, node.asRegex());
-                    f = node.copy();
-                    f.astInfo.isFactor = true;
                     f.astInfo.factorName = factor.factor.factorName(f.asRegex().node.asName());
+                    info = factor.pull(cur.copy(), f.asRegex());
                 }
                 else {
-                    info = factor.factor.pull(cur, node.asName());
-                    f = node.copy();
-                    f.astInfo.isFactor = true;
                     f.astInfo.factorName = factor.factor.factorName(f.asName());
+                    info = factor.factor.pull(cur.copy(), f.asName());
                 }
                 factors.add(f);
                 infos.add(info);
@@ -83,34 +82,30 @@ public class GreedyNormalizer extends Transformer {
             for (int k = 0; k < factors.size(); k++) {
                 Factor.PullInfo info = infos.get(k);
                 Node f = factors.get(k);
-                if (info.zero == null) {
-
-                }
-                else {
+                if (info.zero != null) {
                     List<Node> s = new ArrayList<>(fs);
                     if (k == factors.size() - 1) {
                         s.add(f);
                         s.add(info.one);
-                        s.add(b);
+                        s.add(b.copy());
                         ors.add(new Sequence(s));
                         List<Node> s2 = new ArrayList<>(fs);
                         s2.add(info.zero);
-                        s2.add(b);
+                        s2.add(b.copy());
                         ors.add(new Sequence(s2));
                         break;
                     }
                     else {
                         s.add(info.zero);
-                        s.add(b);
+                        s.add(b.copy());
                         ors.add(new Sequence(s));
                     }
                 }
                 fs.add(f);
             }
-            Or or = new Or(ors);
             List<Node> res = new ArrayList<>(seq.list);
             res.remove(i + 1);
-            res.set(i, or);
+            res.set(i, Or.make(ors));
             if (debug)
                 System.out.println("res=" + res);
             return Sequence.make(res);
@@ -119,7 +114,13 @@ public class GreedyNormalizer extends Transformer {
     }
 
     public TailInfo hasGreedyTail(Node node, final Set<Name> first) {
+        if (node.isName() && node.asName().isToken) {
+            return null;
+        }
+        final List<Node> loopTail = new ArrayList<>();
         BaseVisitor<TailInfo, Void> visitor = new BaseVisitor<TailInfo, Void>() {
+            boolean foundLoop = false;
+
             @Override
             public TailInfo visitName(Name name, Void arg) {
                 if (first.contains(name)) {
@@ -135,6 +136,10 @@ public class GreedyNormalizer extends Transformer {
 
             @Override
             public TailInfo visitSequence(Sequence seq, Void arg) {
+                /*if (foundLoop) {
+                    loopTail.addAll(seq.list);
+                    return null;//?
+                }*/
                 Node a = seq.first();
                 Node b = Helper.trim(seq);
                 TailInfo info = b.accept(this, arg);
@@ -162,6 +167,7 @@ public class GreedyNormalizer extends Transformer {
                     Name sym = factor.helper.common(first, FirstSet.firstSet(regex.node, tree));
                     if (sym == null) return null;
                     if (regex.isStar()) {
+                        foundLoop = true;
                         throw new RuntimeException("greedy loop in " + curRule + " la=" + sym);
                     }
                     TailInfo info = new TailInfo();
@@ -192,5 +198,6 @@ public class GreedyNormalizer extends Transformer {
     static class TailInfo {
         Name sym;
         List<Node> list = new ArrayList<>();
+        List<Node> loopTail = new ArrayList<>();
     }
 }

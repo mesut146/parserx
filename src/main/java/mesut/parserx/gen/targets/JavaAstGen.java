@@ -56,7 +56,7 @@ public class JavaAstGen {
         astWriter.append("public static class %s{", decl.baseName());
         model(decl.rhs, decl.retType, "res", astWriter);
         astWriter.all(classes.get());
-        if (decl.isOriginal && options.genVisitor) {
+        if (tree.isOriginal(decl.ref) && options.genVisitor) {
             astWriter.append("public <R,P> R accept(%sVisitor<R,P> visitor, P arg){", options.parserClass);
             astWriter.all("return visitor.visit%s(this, arg);\n}", Utils.camel(decl.baseName()));
         }
@@ -218,8 +218,6 @@ public class JavaAstGen {
                 //in case of factorization pre-write some code
                 ch.astInfo.which = num;
                 if (RecDescent.isSimple(ch)) {
-                    //todo vname
-                    //ch.astInfo.varName = parentClass.toLowerCase() + num;
                     model(ch, outerCls, outerVar, parent);
                 }
                 else {

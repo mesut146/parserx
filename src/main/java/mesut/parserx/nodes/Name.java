@@ -33,7 +33,8 @@ public class Name extends Node {
             sb.append("(").append(NodeList.join(args, ", ")).append(")");
         }
         if (astInfo.isFactored) {
-            sb.append("(").append(name).append(")");
+            sb.append("()");
+            //sb.append("(").append(name).append(")");
         }
         if (debug)
             sb.append(astInfo);
@@ -55,7 +56,7 @@ public class Name extends Node {
     }
 
     public RuleDecl makeRule() {
-        return new RuleDecl(this);
+        return new RuleDecl(this.<Name>copy());
     }
 
     @Override

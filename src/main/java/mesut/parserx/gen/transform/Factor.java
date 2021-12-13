@@ -130,9 +130,13 @@ public class Factor extends Transformer {
             if (name.equals(sym)) {
                 if (keepFactor) {
                     name = name.copy();
-
                     name.astInfo.isFactored = true;
-                    name.astInfo.factorName = sym.astInfo.factorName;
+                    if (name.astInfo.isFactor) {
+                        sym.astInfo.factorName = name.astInfo.factorName;
+                    }
+                    else {
+                        name.astInfo.factorName = sym.astInfo.factorName;
+                    }
                     info.one = name;
                 }
                 else {
@@ -189,28 +193,18 @@ public class Factor extends Transformer {
 
         cache.put(key, info);
 
-        //check if already pulled before
         Name zeroName = tree.getFactorZero(name, sym);
         Name oneName = tree.getFactorOne(name, sym);
         info.one = oneName;
 
-        Name symArg = sym.copy();
-        if (sym.astInfo.factorName.equals("res")) {
+
+        /*if (sym.astInfo.factorName.equals("res")) {
             symArg.astInfo.factorName = "res2";
-        }
+        }*/
 
-        Name oneRef = oneName.copy();
-        oneRef.args.clear();
-        Name orig = tree.getRule(name).ref;
-        for (Node node : orig.args) {
-            oneRef.args.add(node.copy());
-        }
-        oneRef.args.add(symArg);
+        RuleDecl decl = tree.getRule(name);
 
-        if (name.astInfo.isPrimary) {
-            oneRef.astInfo.isPrimary = false;
-        }
-
+        //check if already pulled before
         if (tree.getRule(oneName) != null) {
             if (tree.getRule(zeroName) != null) {
                 info.zero = zeroName;
@@ -218,13 +212,26 @@ public class Factor extends Transformer {
             return info;
         }
 
-        RuleDecl decl = tree.getRule(name);
-        Set<Name> first = FirstSet.firstSetNoRec(decl.rhs, tree);
-        if (first.size() > 1) {
-            //zero exist
+        if (FactorHelper.hasZero(decl.rhs, sym, tree)) {
             info.zero = zeroName;
         }
-        PullInfo tmp = pull(decl.rhs, symArg);
+
+        Name symArg = sym.copy();
+
+        Name oneRef = oneName.copy();
+        oneRef.args.clear();
+        for (Node arg : decl.ref.args) {
+            oneRef.args.add(arg.copy());
+        }
+        oneRef.args.add(symArg);
+
+        update(oneRef, symArg);
+
+        if (name.astInfo.isPrimary) {
+            oneRef.astInfo.isPrimary = false;
+        }
+
+        PullInfo tmp = pull(decl.rhs.copy(), symArg);
 
         RuleDecl oneDecl = oneRef.makeRule();
         oneDecl.rhs = tmp.one;
@@ -243,6 +250,22 @@ public class Factor extends Transformer {
         return info;
     }
 
+
+    //update sym if it conflicts another arg in ref
+    private void update(Name ref, Name sym) {
+        int count = 1;
+        String name = sym.astInfo.factorName;
+        if (name.equals("res")) {
+            name = sym.astInfo.factorName + ++count;
+        }
+        for (Node arg : ref.args) {
+            if (arg.astInfo.factorName.equals(name)) {
+                name = sym.astInfo.factorName + ++count;
+            }
+        }
+        sym.astInfo.factorName = name;
+    }
+
     PullInfo pullSeq(Sequence s, Name sym) {
         PullInfo info = new PullInfo();
         //A B
@@ -253,25 +276,17 @@ public class Factor extends Transformer {
             if (Helper.canBeEmpty(A, tree) && Helper.start(B, sym, tree)) {
                 //(a A(a) | A_no_a) B
                 //a A(a) B | A_no_a B
-                return pull(new Or(new Sequence(ai.zero, B), new Sequence(ai.one, B)), sym);
-                /*if (Helper.canBeEmpty(ai.zero, tree)) {
-                    //a A(a) B | A_no_a_eps B | A_no_a_noe B
-                    //a A(a) B | A_no_a_eps B | A_no_a_noe B
-                    info.zero = new Sequence(ai.zero, B);
-                    info.one = new Sequence(ai.one, B);
-                }
-                else {
-                    info.zero = new Sequence(ai.zero, B);
-                    info.one = new Sequence(ai.one, B);
-                }*/
+                Sequence s1 = new Sequence(ai.zero.copy(), B.copy());
+                Sequence s2 = new Sequence(ai.one.copy(), B.copy());
+                return pull(new Or(s1, s2), sym);
             }
             //(a A1 | A0) B
             //a A(a) B | A_no_a B
             if (ai.zero != null) {
-                info.zero = new Sequence(ai.zero, B.copy());
+                info.zero = new Sequence(ai.zero.copy(), B.copy());
                 info.zero.astInfo = s.astInfo.copy();
             }
-            info.one = new Sequence(ai.one, B.copy());
+            info.one = new Sequence(ai.one.copy(), B.copy());
             info.one.astInfo = s.astInfo.copy();
             return info;
 
@@ -284,7 +299,7 @@ public class Factor extends Transformer {
             PullInfo pb = pull(B, sym);
             Node s1 = a1.noEps == null ? null : Sequence.make(a1.noEps, B.copy());
             //Node s2 = a1.eps.isEpsilon() ? pb.one : new Sequence(a1.eps, pb.one);
-            Node s2 = new Sequence(a1.eps, pb.one);
+            Node s2 = new Sequence(a1.eps.copy(), pb.one);
             //Node s3 = pb.zero == null ? null : (a1.eps.isEpsilon() ? pb.zero : new Sequence(a1.eps, pb.zero));
             Node s3 = pb.zero == null ? null : Sequence.make(a1.eps, pb.zero);
 
@@ -343,7 +358,7 @@ public class Factor extends Transformer {
             PullInfo pi = pull(regex.node, sym);
             info.one = withAst(pi.one, regex);
             if (pi.zero != null) {
-                info.zero = withAst(new Regex(pi.zero, "?"), regex);
+                info.zero = withAst(new Regex(pi.zero.copy(), "?"), regex);
             }
             else {
                 info.zero = new Epsilon();
@@ -352,9 +367,9 @@ public class Factor extends Transformer {
         }
         else if (regex.isPlus()) {
             //A+=A A*
-            Node star = withAst(new Regex(regex.node, "*"), regex);
+            Node star = withAst(new Regex(regex.node.copy(), "*"), regex);
             if (regex.astInfo.isFactor) {
-                star.astInfo.loopExtra = sym.astInfo.factorName;
+                star.astInfo.loopExtra = sym.astInfo;
             }
             Node pre = regex.node.copy();
             Sequence s = new Sequence(pre, star);
@@ -362,9 +377,9 @@ public class Factor extends Transformer {
         }
         else {
             //A* = A+ | €
-            Node plus = withAst(new Regex(regex.node, "+"), regex);
+            Node plus = withAst(new Regex(regex.node.copy(), "+"), regex);
             if (regex.astInfo.isFactor) {
-                plus.astInfo.loopExtra = sym.astInfo.factorName;
+                plus.astInfo.loopExtra = sym.astInfo;
             }
             return pull(new Or(plus, new Epsilon()), sym);
         }

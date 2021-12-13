@@ -108,4 +108,13 @@ public class LeftRecursionTest {
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         RecDescent.gen(tree, "java");
     }
+
+    @Test
+    public void s() throws Exception {
+        Factor.debug = true;
+        Factor.debugPull = true;
+        Recursion.debug = true;
+        DescTester.check(Env.tree("rec/a.g"), "B", "d", "de", "bc", "dac");
+        //DescTester.check(Env.tree("rec/a.g"), "A");
+    }
 }
