@@ -1,7 +1,6 @@
 package lexer;
 
 import common.Env;
-import mesut.parserx.dfa.NFA;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
@@ -36,6 +35,7 @@ public class LexerGenTest {
         Tree tree = Env.tree("lexer/skip.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath() + "/cpp";
         LexerGenerator.gen(tree, "cpp").dfa.dot(Env.dotFile(tree.file.getName() + ".dot"));
+        Runtime.getRuntime().exec("g++ -shared -fPIC -o l.so Lexer.cpp Token.cpp",null, new File(tree.options.outDir));
     }
 
     @Test

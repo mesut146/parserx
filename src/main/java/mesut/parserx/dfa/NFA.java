@@ -1,7 +1,10 @@
 package mesut.parserx.dfa;
 
 import mesut.parserx.dfa.parser.NfaVisitor;
-import mesut.parserx.nodes.*;
+import mesut.parserx.nodes.Epsilon;
+import mesut.parserx.nodes.Node;
+import mesut.parserx.nodes.Range;
+import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.UnicodeUtils;
 
 import java.io.*;
@@ -179,19 +182,17 @@ public class NFA {
         }
     }
 
-    //get token name for state set as defined order
+    //get token name for state set by defined order
     String getName(StateSet set) {
         int minIndex = Integer.MAX_VALUE;
         String name = null;
         for (int state : set) {
-            if (names[state] != null) {
-                List<String> list = names[state];
-                for (String nm : list) {
-                    int i = tree.indexOf(nm);
-                    if (i < minIndex) {
-                        name = nm;
-                        minIndex = i;
-                    }
+            if (names[state] == null) continue;
+            for (String nm : names[state]) {
+                int i = tree.indexOf(nm);
+                if (i < minIndex) {
+                    name = nm;
+                    minIndex = i;
                 }
             }
         }

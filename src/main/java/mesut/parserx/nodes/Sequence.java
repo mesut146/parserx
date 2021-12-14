@@ -57,9 +57,6 @@ public class Sequence extends NodeList {
             if (ch.isSequence()) {
                 res.addAll(ch.asSequence().list);
             }
-            else if (ch.isOr()) {
-                throw new RuntimeException("invalid child");
-            }
             else {
                 res.add(ch);
             }

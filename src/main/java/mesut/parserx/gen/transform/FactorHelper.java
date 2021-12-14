@@ -17,6 +17,64 @@ public class FactorHelper {
         this.factor = factor;
     }
 
+    //can start with other than sym
+    public static boolean hasZero(Node rhs, final Name sym, final Tree tree) {
+        BaseVisitor<Boolean, Void> checker = new BaseVisitor<Boolean, Void>() {
+            @Override
+            public Boolean visitName(Name name, Void arg) {
+                if (name.isToken) {
+                    return !name.equals(sym);
+                }
+                else {
+                    if (name.equals(sym)) {
+                        return false;
+                    }
+                    else {
+                        return tree.getRule(name).rhs.accept(this, arg);
+                    }
+                }
+            }
+
+            @Override
+            public Boolean visitRegex(Regex regex, Void arg) {
+                return regex.node.accept(this, arg);
+            }
+
+            @Override
+            public Boolean visitSequence(Sequence seq, Void arg) {
+                Node a = seq.first();
+                Node b = Helper.trim(seq);
+                if (FirstSet.start(a, sym, tree)) {
+                    if (a.accept(this, arg)) return true;
+                    return FirstSet.canBeEmpty(a, tree) && b.accept(this, arg);
+                }
+                else {
+                    if (FirstSet.canBeEmpty(a, tree)) {
+                        return b.accept(this, arg);
+                    }
+                    else {
+                        return true;
+                    }
+                }
+            }
+
+            @Override
+            public Boolean visitOr(Or or, Void arg) {
+                for (Node ch : or) {
+                    if (ch.accept(this, arg)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            public Boolean visitGroup(Group group, Void arg) {
+                return group.node.accept(this, arg);
+            }
+        };
+        return rhs.accept(checker, null);
+    }
 
     public Set<Name> loops(Node node) {
         Set<Name> res = new HashSet<>();
@@ -194,11 +252,14 @@ public class FactorHelper {
         for (Name name : list) {
             if (hasLoop(a, name) && hasLoop(b, name)) {
                 if (name.isRule()) {
+                    //rule loop
                     res.isLoop = true;
                     res.name = name;
                     return res;
                 }
-                else if (res.name == null) {
+                else {
+                    //token loop
+                    res.isLoop = true;
                     res.name = name;
                     return res;
                 }
@@ -322,59 +383,5 @@ public class FactorHelper {
             return hasLoop(a, sym) || hasLoop(b, sym);
         }
         return false;
-    }
-
-    //can start with other than sym
-    public static boolean hasZero(Node rhs, final Name sym, final Tree tree) {
-        BaseVisitor<Boolean, Void> checker = new BaseVisitor<Boolean, Void>() {
-            @Override
-            public Boolean visitName(Name name, Void arg) {
-                if (name.isToken) {
-                    return !name.equals(sym);
-                }
-                else {
-                    if (name.equals(sym)) {
-                        return false;
-                    }
-                    else {
-                        return tree.getRule(name).rhs.accept(this, arg);
-                    }
-                }
-            }
-
-            @Override
-            public Boolean visitRegex(Regex regex, Void arg) {
-                return regex.node.accept(this, arg);
-            }
-
-            @Override
-            public Boolean visitSequence(Sequence seq, Void arg) {
-                Node a = seq.first();
-                Node b = Helper.trim(seq);
-                if (FirstSet.start(a, sym, tree)) {
-                    if (a.accept(this, arg)) return true;
-                    return FirstSet.canBeEmpty(a, tree) && b.accept(this, arg);
-                }
-                else {
-                    return true;
-                }
-            }
-
-            @Override
-            public Boolean visitOr(Or or, Void arg) {
-                for (Node ch : or) {
-                    if (ch.accept(this, arg)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            @Override
-            public Boolean visitGroup(Group group, Void arg) {
-                return group.node.accept(this, arg);
-            }
-        };
-        return rhs.accept(checker, null);
     }
 }

@@ -169,15 +169,15 @@ public class Tree {
         return res;
     }
 
-    public Name getFactorPlusZero(Name old, Name factor) {
-        Name res = new Name(old.name + "_nop_" + factor.name);
+    public Name getFactorPlusZero(Name old, Regex factor) {
+        Name res = new Name(old.name + "_nop_" + factor.node.asName().name);
         res.astInfo = old.astInfo.copy();
         res.args = new ArrayList<>(old.args);
         senderMap.put(res.name, getSender(old.name));
         return res;
     }
 
-    public Name getFactorPlusOne(Name old, Name factor) {
+    public Name getFactorPlusOne(Name old, Regex factor) {
         Name res = new Name(getFreeName(getSender(old.name)));
         res.astInfo = old.astInfo.copy();
         res.args = new ArrayList<>(old.args);

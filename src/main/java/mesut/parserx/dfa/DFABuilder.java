@@ -6,6 +6,8 @@ public class DFABuilder {
     public static boolean debugDFA = false;
     NFA nfa;
     NFA dfa;
+    //nfa state set -> dfa state
+    Map<StateSet, Integer> dfaStateMap = new HashMap<>();
 
     public DFABuilder(NFA nfa) {
         this.nfa = nfa;
@@ -21,8 +23,7 @@ public class DFABuilder {
         dfa = new NFA(nfa.trans.length * 2);
         dfa.tree = nfa.tree;
 
-        //nfa state set -> dfa state
-        Map<StateSet, Integer> dfaStateMap = new HashMap<>();
+
         Queue<StateSet> openStates = new LinkedList<>();
         Set<StateSet> processed = new HashSet<>();
         openStates.add(closure(nfa.initial));
@@ -34,7 +35,7 @@ public class DFABuilder {
             processed.add(curSet);
 
             //get corresponding dfa state
-            int dfaState = getDfaState(dfaStateMap, closure, dfa);
+            int dfaState = getDfaState(closure);
             if (debugDFA) {
                 System.out.printf("Closure(%s)=%s dfa=%d\n", curSet, closure, dfaState);
             }
@@ -42,14 +43,14 @@ public class DFABuilder {
             Map<Integer, StateSet> map = new HashMap<>();
             //find transitions from closure
             for (int epState : closure) {
-                for (Transition t : nfa.get(epState)) {
-                    if (t.epsilon) continue;
-                    StateSet targets = map.get(t.input);//we can cache these
+                for (Transition tr : nfa.get(epState)) {
+                    if (tr.epsilon) continue;
+                    StateSet targets = map.get(tr.input);//we can cache these
                     if (targets == null) {
                         targets = new StateSet();
-                        map.put(t.input, targets);
+                        map.put(tr.input, targets);
                     }
-                    targets.addAll(closure(t.target));
+                    targets.addAll(closure(tr.target));
                 }
             }
             if (debugDFA)
@@ -60,7 +61,7 @@ public class DFABuilder {
                 if (!openStates.contains(targets) && !processed.contains(targets)) {
                     openStates.add(targets);
                 }
-                int target_state = getDfaState(dfaStateMap, targets, dfa);
+                int target_state = getDfaState(targets);
                 if (debugDFA)
                     System.out.printf("targets=%s dfa=%d\n", targets, target_state);
                 dfa.setAccepting(target_state, nfa.isAccepting(targets));
@@ -73,11 +74,11 @@ public class DFABuilder {
     }
 
     //get or make dfa state for nfa state set
-    int getDfaState(Map<StateSet, Integer> map, StateSet set, NFA dfa) {
-        Integer state = map.get(set);
+    int getDfaState(StateSet set) {
+        Integer state = dfaStateMap.get(set);
         if (state == null) {
             state = dfa.newState();
-            map.put(set, state);
+            dfaStateMap.put(set, state);
         }
         return state;
     }
@@ -96,9 +97,6 @@ public class DFABuilder {
         }
         for (int st : eps.states) {
             closure(st, set);
-            /*if (!res.contains(st)) {//prevent stack overflow
-                res.addAll(closure(st));
-            }*/
         }
         return set;
     }

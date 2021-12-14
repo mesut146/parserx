@@ -29,6 +29,16 @@ public class NFABuilder extends BaseVisitor<Integer, Integer> {
                 addRegex(decl);
             }
         }
+        for (TokenDecl decl : tree.tokens) {
+            if (decl.fragment) continue;
+            if (decl.after != null) {
+                //clone initial transitions to 'after'
+                for (Transition tr : nfa.get(nfa.initial)) {
+                    //todo
+                    //nfa.addTransition();
+                }
+            }
+        }
         return nfa;
     }
 

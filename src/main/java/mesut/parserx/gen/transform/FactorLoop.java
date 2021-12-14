@@ -103,13 +103,18 @@ public class FactorLoop extends Transformer {
             throw new RuntimeException("loop sym expected");
         }
         Name normal = noLoop(sym);
+        /*if (!helper.hasLoop(node, normal)) {
+            throw new RuntimeException("can't pull " + sym + " from " + node);
+        }*/
+
         if (!Helper.first(node, tree, true).contains(normal)) {
             return null;
         }
-        if (sym.astInfo.factorName == null) {
-            sym.astInfo.isFactor = true;
+        if (sym.node.astInfo.factorName == null) {
             factor.curRule = curRule;
+            sym.astInfo.isFactor = true;
             sym.astInfo.factorName = factor.factorName(normal);
+            sym.node.astInfo.factorName = sym.astInfo.factorName;
         }
         if (node.isName()) {
             Name name = node.asName();
@@ -247,7 +252,7 @@ public class FactorLoop extends Transformer {
         }
         cache.put(key, info);
 
-        Name oneName = tree.getFactorPlusOne(name, noLoop(sym));
+        Name oneName = tree.getFactorPlusOne(name, sym);
         RuleDecl oneDecl = oneName.makeRule();
         oneDecl.rhs = info.one;
         oneDecl.retType = decl.retType;
@@ -256,7 +261,7 @@ public class FactorLoop extends Transformer {
         //todo oneref
 
         if (info.zero != null) {
-            Name zeroName = tree.getFactorPlusZero(name, noLoop(sym));
+            Name zeroName = tree.getFactorPlusZero(name, sym);
             RuleDecl zeroDecl = zeroName.makeRule();
             zeroDecl.rhs = info.zero;
             zeroDecl.retType = decl.retType;
@@ -282,7 +287,7 @@ public class FactorLoop extends Transformer {
                 return res;
             }
             //A*: A+ | €
-            Regex plus = new Regex(regex.node, "+");
+            Regex plus = new Regex(regex.node.copy(), "+");
             plus.astInfo = regex.astInfo.copy();
             Factor.PullInfo info = pull(plus, sym);
             if (info == null) return null;
@@ -324,7 +329,7 @@ public class FactorLoop extends Transformer {
                     //(a A(a) | A_no_a)+
                     //(a A(a))+ (A_no_a A* | €) | A_no_a A*
                     //a+ (A(a)()+ A_no_a A* | A(a)()+) | A_no_a A*
-                    Regex r = new Regex(tmp.one, "+");
+                    Regex r = new Regex(tmp.one.copy(), "+");
                     r.astInfo = regex.astInfo.copy();
                     r.astInfo.isFactored = true;
                     r.astInfo.factor = sym.astInfo;

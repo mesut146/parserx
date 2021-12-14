@@ -131,7 +131,7 @@ public class Factor extends Transformer {
                 if (keepFactor) {
                     name = name.copy();
                     name.astInfo.isFactored = true;
-                    if (name.astInfo.isFactor) {
+                    if (name.astInfo.isFactor && !name.astInfo.isInLoop) {
                         sym.astInfo.factorName = name.astInfo.factorName;
                     }
                     else {
@@ -179,6 +179,24 @@ public class Factor extends Transformer {
         }
 
         PullInfo info = new PullInfo();
+
+        Name zeroName = tree.getFactorZero(name, sym);
+        Name oneName = tree.getFactorOne(name, sym);
+        info.one = oneName;
+
+        //check if already pulled before
+        if (tree.getRule(oneName) != null) {
+            if (tree.getRule(zeroName) != null) {
+                info.zero = zeroName;
+            }
+            return info;
+        }
+
+        RuleDecl decl = tree.getRule(name);
+        if (FactorHelper.hasZero(decl.rhs, sym, tree)) {
+            info.zero = zeroName;
+        }
+
         String key = name.name + "-" + sym;
         if (cache.containsKey(key)) {
             info = cache.get(key);
@@ -190,30 +208,8 @@ public class Factor extends Transformer {
             }
             return info;
         }
-
-        cache.put(key, info);
-
-        Name zeroName = tree.getFactorZero(name, sym);
-        Name oneName = tree.getFactorOne(name, sym);
-        info.one = oneName;
-
-
-        /*if (sym.astInfo.factorName.equals("res")) {
-            symArg.astInfo.factorName = "res2";
-        }*/
-
-        RuleDecl decl = tree.getRule(name);
-
-        //check if already pulled before
-        if (tree.getRule(oneName) != null) {
-            if (tree.getRule(zeroName) != null) {
-                info.zero = zeroName;
-            }
-            return info;
-        }
-
-        if (FactorHelper.hasZero(decl.rhs, sym, tree)) {
-            info.zero = zeroName;
+        else {
+            cache.put(key, info);
         }
 
         Name symArg = sym.copy();
@@ -224,11 +220,15 @@ public class Factor extends Transformer {
             oneRef.args.add(arg.copy());
         }
         oneRef.args.add(symArg);
-
-        update(oneRef, symArg);
-
+        update(oneRef, symArg);//depends on name not oneRef
         if (name.astInfo.isPrimary) {
             oneRef.astInfo.isPrimary = false;
+        }
+
+        Name zeroRef = zeroName.copy();
+        zeroRef.args.clear();
+        for (Node arg : decl.ref.args) {
+            zeroRef.args.add(arg.copy());
         }
 
         PullInfo tmp = pull(decl.rhs.copy(), symArg);
@@ -240,12 +240,12 @@ public class Factor extends Transformer {
         declSet.add(oneDecl);
 
         if (tmp.zero != null) {
-            RuleDecl zeroDecl = zeroName.makeRule();
+            RuleDecl zeroDecl = zeroRef.makeRule();
             zeroDecl.rhs = tmp.zero;
             zeroDecl.retType = decl.retType;
             tree.addRuleBelow(zeroDecl, decl);
             declSet.add(zeroDecl);
-            info.zero = zeroName;
+            //info.zero = zeroName;
         }
         return info;
     }
