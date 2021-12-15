@@ -135,20 +135,20 @@ public class CppRecDescent {
             if (arg.isName()) {
                 Name name = arg.asName();
                 if (name.isToken) {
-                    params.append(options.tokenClass).append(" ").append(arg.astInfo.factorName);
+                    params.append(options.tokenClass).append(" ").append(arg.astInfo.varName);
                 }
                 else {
-                    params.append(String.format("%s* %s", tree.getRule(arg.asName()).retType, arg.astInfo.factorName));
+                    params.append(String.format("%s* %s", tree.getRule(arg.asName()).retType, arg.astInfo.varName));
                 }
             }
             else {
                 Regex regex = arg.asRegex();
                 Name name = regex.node.asName();
                 if (name.isToken) {
-                    params.append(String.format("std::vector<%s*> %s", options.tokenClass, regex.astInfo.factorName));
+                    params.append(String.format("std::vector<%s*> %s", options.tokenClass, regex.astInfo.varName));
                 }
                 else {
-                    params.append(String.format("std::vector<%s::%s*> %s", options.astClass, name.name, regex.astInfo.factorName));
+                    params.append(String.format("std::vector<%s::%s*> %s", options.astClass, name.name, regex.astInfo.varName));
                 }
             }
             i++;
@@ -216,11 +216,11 @@ public class CppRecDescent {
         if (regex.astInfo.isFactored) {
             Name name = regex.node.asName();
             if (regex.astInfo.factor == null) {
-                code.append("%s->%s.insert(%s->%s.end(),%s.begin(),%s.end());", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.outerVar, name.astInfo.varName, regex.astInfo.factorName);
+                code.append("%s->%s.insert(%s->%s.end(),%s.begin(),%s.end());", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.outerVar, name.astInfo.varName, regex.astInfo.varName);
             }
             else {
-                code.append("for(int i = 0;i < %s.size();i++){", regex.astInfo.factor.factorName);
-                code.append("%s->%s.push_back(%s(%s.at(i)));", regex.astInfo.outerVar, name.astInfo.varName, name.name, regex.astInfo.factor.factorName);
+                code.append("for(int i = 0;i < %s.size();i++){", regex.astInfo.factor.varName);
+                code.append("%s->%s.push_back(%s(%s.at(i)));", regex.astInfo.outerVar, name.astInfo.varName, name.name, regex.astInfo.factor.varName);
                 code.append("}");
             }
             return;
@@ -244,13 +244,13 @@ public class CppRecDescent {
                 if (regex.astInfo.isFactor) {
                     Name name = regex.node.asName();
                     String type = name.isToken ? options.tokenClass : options.astClass + "::" + name.name;
-                    code.append("std::vector<%s*> %s;", type, regex.astInfo.factorName);
+                    code.append("std::vector<%s*> %s;", type, regex.astInfo.varName);
                     if (regex.astInfo.loopExtra != null) {
-                        code.append("%s.push_back(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra.factorName);
+                        code.append("%s.push_back(%s);", regex.astInfo.varName, regex.astInfo.loopExtra.varName);
                     }
                     code.append("while(%s){", loopExpr(set));
                     String consumer = name.isToken ? tokenConsumer(name) : name + "()";
-                    code.append("%s.push_back(%s);", regex.astInfo.factorName, consumer);
+                    code.append("%s.push_back(%s);", regex.astInfo.varName, consumer);
                     code.append("}");
                 }
                 else {
@@ -278,13 +278,13 @@ public class CppRecDescent {
                 if (regex.astInfo.isFactor) {
                     Name name = regex.node.asName();
                     String type = name.isToken ? options.tokenClass : options.astClass + "." + name.name;
-                    code.append("std::vector<%s*> %s;", type, regex.astInfo.factorName);
+                    code.append("std::vector<%s*> %s;", type, regex.astInfo.varName);
                     if (regex.astInfo.loopExtra != null) {
-                        code.append("%s.push_back(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra.factorName);
+                        code.append("%s.push_back(%s);", regex.astInfo.varName, regex.astInfo.loopExtra.varName);
                     }
                     code.append("do{");
                     String consumer = name.isToken ? tokenConsumer(name) : name + "()";
-                    code.append("%s.push_back(%s);", regex.astInfo.factorName, consumer);
+                    code.append("%s.push_back(%s);", regex.astInfo.varName, consumer);
                     code.down();
                     code.append("}while(%s);", loopExpr(set));
                 }
@@ -331,7 +331,7 @@ public class CppRecDescent {
         StringBuilder args = new StringBuilder();
         if (!name.args.isEmpty()) {
             for (int i = 0; i < name.args.size(); i++) {
-                args.append(name.args.get(i).astInfo.factorName);
+                args.append(name.args.get(i).astInfo.varName);
                 if (i < name.args.size() - 1) {
                     args.append(",");
                 }
@@ -348,10 +348,10 @@ public class CppRecDescent {
         if (name.astInfo.isFactored) {
             //no consume
             if (name.astInfo.isInLoop) {
-                code.append("%s->%s.push_back(%s);", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName);
+                code.append("%s->%s.push_back(%s);", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factor.varName);
             }
             else {
-                code.append("%s->%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName);
+                code.append("%s->%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factor.varName);
             }
         }
         else if (name.astInfo.isPrimary) {
@@ -370,7 +370,7 @@ public class CppRecDescent {
             }
             if (name.astInfo.isFactor) {
                 String type = name.isToken ? options.tokenClass : (options.astClass + "." + name.name);
-                code.append("%s %s = %s;", type, name.astInfo.factorName, rhs);
+                code.append("%s %s = %s;", type, name.astInfo.varName, rhs);
             }
             else {
                 if (name.astInfo.isInLoop) {

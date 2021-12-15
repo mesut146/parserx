@@ -207,8 +207,8 @@ public class FactorHelper {
         throw new RuntimeException("invalid node");
     }
 
-    public FactorLoop.commonResult commons(Node a, Node b) {
-        FactorLoop.commonResult res = new FactorLoop.commonResult();
+    public commonResult commons(Node a, Node b) {
+        commonResult res = new commonResult();
         Set<Name> s1 = factor.first(a);
         Set<Name> s2 = factor.first(b);
         Set<Name> common = new HashSet<>(s1);
@@ -335,15 +335,19 @@ public class FactorHelper {
         if (node.isRegex()) {
             if (node.astInfo.isFactored) return false;
             Regex regex = node.asRegex();
-            if (!regex.isOptional()) {
-                if (regex.node.equals(sym)) {
+            if (regex.isOptional()) return false;
+            if (regex.node.equals(sym)) {
+                return true;
+            }
+            else {
+                //A* -> a*
+                //follow of a can be empty
+                Node f = follow(regex.node, sym);
+                if (FirstSet.canBeEmpty(f, tree)) {
                     return true;
                 }
                 else {
-                    //A* -> a*
-                    //follow of a can be empty
-                    Node f = follow(regex.node, sym);
-                    return FirstSet.canBeEmpty(f, tree);
+                    return hasLoop(regex.node, sym);
                 }
             }
         }
@@ -383,5 +387,10 @@ public class FactorHelper {
             return hasLoop(a, sym) || hasLoop(b, sym);
         }
         return false;
+    }
+
+    static class commonResult {
+        boolean isLoop;
+        Name name;
     }
 }

@@ -65,7 +65,7 @@ public class FactorLoop extends Transformer {
 
         for (int i = 0; i < or.size(); i++) {
             for (int j = i + 1; j < or.size(); j++) {
-                commonResult result = helper.commons(or.get(i), or.get(j));
+                FactorHelper.commonResult result = helper.commons(or.get(i), or.get(j));
                 if (result == null) continue;
                 modified = true;
 
@@ -103,18 +103,18 @@ public class FactorLoop extends Transformer {
             throw new RuntimeException("loop sym expected");
         }
         Name normal = noLoop(sym);
-        /*if (!helper.hasLoop(node, normal)) {
+        if (!helper.hasLoop(node, normal)) {
             throw new RuntimeException("can't pull " + sym + " from " + node);
-        }*/
+        }
 
         if (!Helper.first(node, tree, true).contains(normal)) {
             return null;
         }
-        if (sym.node.astInfo.factorName == null) {
+        if (sym.node.astInfo.varName == null) {
             factor.curRule = curRule;
             sym.astInfo.isFactor = true;
-            sym.astInfo.factorName = factor.factorName(normal);
-            sym.node.astInfo.factorName = sym.astInfo.factorName;
+            sym.astInfo.varName = factor.factorName(normal);
+            sym.node.astInfo.varName = sym.astInfo.varName;
         }
         if (node.isName()) {
             Name name = node.asName();
@@ -146,11 +146,11 @@ public class FactorLoop extends Transformer {
         List<Node> one = new ArrayList<>();
         List<Node> zero = new ArrayList<>();
         for (Node ch : or) {
-            Factor.PullInfo info = pull(ch, sym);
-            if (info != null) {
-                one.add(info.one);
-                if (info.zero != null) {
-                    zero.add(info.zero);
+            if (helper.hasLoop(ch, noLoop(sym))) {
+                Factor.PullInfo tmp = pull(ch, sym);
+                one.add(tmp.one);
+                if (tmp.zero != null) {
+                    zero.add(tmp.zero);
                 }
             }
             else {
@@ -176,54 +176,53 @@ public class FactorLoop extends Transformer {
     }
 
     Factor.PullInfo pullSeq(Sequence seq, Regex sym) {
-        Node a = seq.first();
-        Node b = Helper.trim(seq);
+        Node A = seq.first();
+        Node B = Helper.trim(seq);
+        Factor.PullInfo res = new Factor.PullInfo();
 
-        Factor.PullInfo info = pull(a, sym);
-        if (info == null) {
-            //a can be empty b starts
-            if (Helper.canBeEmpty(a, tree)) {
-                //todo a can be empty b starts
-                info = pull(b, sym);
-                if (info != null) {
-                    //A_noe B | A_eps B = A_noe B | a+ A_eps B(a+) | A_eps B_nop_a
-                    Epsilons.Info eps = Epsilons.trimInfo(a, tree);
-                    Factor.PullInfo res = new Factor.PullInfo();
-                    res.one = Sequence.make(eps.eps, info.one);
-                    Sequence s2 = info.zero == null ? null : Sequence.make(eps.eps, info.zero);
-                    if (eps.noEps == null) {
-                        res.zero = s2;
-                        return res;
-                    }
-                    Sequence s1 = Sequence.make(eps.noEps, b);
-                    res.one = s2 == null ? s1 : new Or(s1, s2);
-                    return res;
-                }
+        if (helper.hasLoop(A, noLoop(sym))) {
+            if (FirstSet.isEmpty(A, tree) && helper.hasLoop(B, noLoop(sym))) {
+                //A (a+ B(a+) | B_nop_a) = A a+ B(a+) | A B_nop_a
+                Factor.PullInfo bi = pull(B, sym);
+                Sequence one = new Sequence(A, bi.one);
+                Sequence zero = new Sequence(A, bi.zero);
+                res.one = one;
+                res.zero = zero;
+                return res;
             }
-            return null;
+            else if (FirstSet.canBeEmpty(A, tree) && helper.hasLoop(B, noLoop(sym))) {
+                //A_eps B | A_noe B
+                Epsilons.Info eps = Epsilons.trimInfo(A, tree);
+                Sequence s1 = new Sequence(eps.eps, B);
+                Sequence s2 = new Sequence(eps.noEps, B);
+                return pull(new Or(s1, s2), sym);
+            }
+            else {
+                //a+ A(a+) B | A_nop_a B
+                Factor.PullInfo ai = pull(A, sym);
+                res.one = Sequence.make(ai.one, B.copy());
+                res.one.astInfo = seq.astInfo.copy();
+                if (ai.zero != null) {
+                    res.zero = Sequence.make(ai.zero, B.copy());
+                    res.zero.astInfo = seq.astInfo.copy();
+                }
+                return res;
+            }
         }
         else {
-            Factor.PullInfo res = new Factor.PullInfo();
-            res.one = Sequence.make(info.one, b);
-            res.one.astInfo = seq.astInfo.copy();
-            if (info.zero != null) {
-                res.zero = Sequence.make(info.zero, b);
-                res.zero.astInfo = seq.astInfo.copy();
+            //A can be empty B starts
+            //A_noe B | A_eps B
+            //A_noe B | a+ A_eps B(a+) | A_eps B_nop_a
+            Factor.PullInfo bi = pull(B, sym);
+            Epsilons.Info eps = Epsilons.trimInfo(A, tree);
+            res.one = Sequence.make(eps.eps, bi.one);
+            Sequence s2 = bi.zero == null ? null : Sequence.make(eps.eps, bi.zero);
+            if (eps.noEps == null) {
+                res.zero = s2;
+                return res;
             }
-            if (Helper.canBeEmpty(a, tree)) {
-                //A_eps B | A_noe B
-                Factor.PullInfo bi = pull(b, sym);
-                if (bi != null) {
-                    throw new RuntimeException("not yet");
-                    /*Epsilons.Info eps = Epsilons.trimInfo(a, tree);
-                    Sequence s1 = new Sequence(eps.noEps, b);
-                    Sequence s2 = new Sequence(eps.eps, b);
-                    return pullOr(new Or(s1, s2), sym);*/
-                }
-                else {
-                    return res;
-                }
-            }
+            Sequence s1 = Sequence.make(eps.noEps, B);
+            res.one = s2 == null ? s1 : new Or(s1, s2);
             return res;
         }
     }
@@ -246,10 +245,6 @@ public class FactorLoop extends Transformer {
 
         RuleDecl decl = tree.getRule(name);
         Factor.PullInfo info = pull(decl.rhs, sym);
-        if (info == null) {
-            cache.put(key, null);
-            return null;
-        }
         cache.put(key, info);
 
         Name oneName = tree.getFactorPlusOne(name, sym);
@@ -273,96 +268,129 @@ public class FactorLoop extends Transformer {
         return info;
     }
 
-    Factor.PullInfo pullRegex(Regex regex, Regex sym) {
-        if (regex.isStar()) {
-            if (regex.node.equals(noLoop(sym))) {
-                //base case
-                //A*: A+ | €
-                Factor.PullInfo res = new Factor.PullInfo();
-                Regex copy = regex.copy();
-                copy.astInfo.isFactored = true;
-                copy.astInfo.factorName = sym.astInfo.factorName;
-                res.one = copy;
-                res.zero = new Epsilon();
-                return res;
-            }
+    Factor.PullInfo pullStar(Regex regex, Regex sym) {
+        Factor.PullInfo res = new Factor.PullInfo();
+        if (regex.node.equals(noLoop(sym))) {
+            //base case
             //A*: A+ | €
-            Regex plus = new Regex(regex.node.copy(), "+");
-            plus.astInfo = regex.astInfo.copy();
-            Factor.PullInfo info = pull(plus, sym);
-            if (info == null) return null;
-            if (info.zero == null) {
-                info.zero = new Epsilon();
-            }
-            else {
-                info.zero = new Or(info.zero, new Epsilon());
-            }
-            return info;
+            Regex copy = regex.copy();
+            copy.astInfo.isFactored = true;
+            copy.astInfo.factor = sym.astInfo;
+            res.one = copy;
+            res.zero = new Epsilon();
+            return res;
         }
-        else if (regex.isPlus()) {
-            if (sym.isStar()) {
-                throw new RuntimeException("can't pull star from plus");
-            }
-            if (regex.node.equals(noLoop(sym))) {
-                //base case
-                Factor.PullInfo res = new Factor.PullInfo();
-                Regex copy = regex.copy();
-                copy.astInfo.isFactored = true;
-                copy.astInfo.factorName = sym.astInfo.factorName;
-                res.one = copy;
-                return res;
-            }
-            Factor.PullInfo tmp = factor.pull(regex.node, noLoop(sym));
-            Regex star = new Regex(regex.node, "*");
+        //A*: A+ | €
+        Regex plus = new Regex(regex.node.copy(), "+");
+        plus.astInfo = regex.astInfo.copy();
+        Factor.PullInfo tmp = pull(plus, sym);
+        if (tmp.zero == null) {
+            res.zero = new Epsilon();
+        }
+        else {
+            res.zero = new Or(tmp.zero, new Epsilon());
+        }
+        return res;
+    }
+
+    Factor.PullInfo pullPlus(Regex regex, Regex sym) {
+        Factor.PullInfo res = new Factor.PullInfo();
+        if (regex.node.equals(noLoop(sym))) {
+            //base case
+            Regex copy = regex.copy();
+            copy.astInfo.isFactored = true;
+            copy.astInfo.factor = sym.astInfo;
+            res.one = copy;
+            return res;
+        }
+        if (helper.hasLoop(regex.node, noLoop(sym))) {
+            //A+ = A A*
+            Regex star = new Regex(regex.node.copy(), "*");
             star.astInfo = regex.astInfo.copy();
+            return pull(new Sequence(regex.node.copy(), star), sym);
+        }
+        else {
+            Name factorSingle = noLoop(sym);
+            factor.curRule = curRule;
+            factorSingle.astInfo.isFactor = true;
+            factorSingle.astInfo.varName = factor.factorName(factorSingle);
+            Factor.PullInfo tmp = factor.pull(regex.node, factorSingle);
             if (FirstSet.isEmpty(tmp.one, tree)) {
-                Factor.PullInfo res = new Factor.PullInfo();
+                Regex factored = new Regex(tmp.one.copy(), "+");
+                factored.astInfo = regex.astInfo.copy();
+                factored.astInfo.isFactored = true;
+                factored.astInfo.factor = sym.astInfo;
                 if (tmp.zero == null) {
                     //(a A(a))+
                     //a+ A(a)+
-                    res.one = new Regex(tmp.one, "+");
-                    res.one.astInfo = regex.astInfo.copy();
-                    res.one.astInfo.isFactored = true;
-                    res.one.astInfo.factor = sym.astInfo;
+                    res.one = factored;
+                    return res;
                 }
                 else {
                     //(a A(a) | A_no_a)+
                     //(a A(a))+ (A_no_a A* | €) | A_no_a A*
                     //a+ (A(a)()+ A_no_a A* | A(a)()+) | A_no_a A*
-                    Regex r = new Regex(tmp.one.copy(), "+");
-                    r.astInfo = regex.astInfo.copy();
-                    r.astInfo.isFactored = true;
-                    r.astInfo.factor = sym.astInfo;
-                    Sequence s = new Sequence(r, tmp.zero, star);
-                    res.one = new Or(s, r);
+                    Regex star = new Regex(regex.node, "*");
+                    star.astInfo = regex.astInfo.copy();
+                    Sequence s = new Sequence(factored, tmp.zero, star);
+                    res.one = new Or(s, factored);
                     res.zero = new Sequence(tmp.zero, star);
+                    return res;
                 }
-                return res;
             }
-            if (Helper.canBeEmpty(tmp.one, tree)) {
-                throw new RuntimeException("not yet");
-                //A+: a+ (a+(a+) | a+(a+) A_a_noe(a) A* | a+(a+) A_no_a A*) | A_no_a A*
-                /*Factor.PullInfo res = new Factor.PullInfo();
-                res.zero = new Sequence(tmp.zero, star);
-                res.one = new Or();
-                return res;*/
+            else if (FirstSet.canBeEmpty(tmp.one, tree)) {
+                if (tmp.zero == null) {
+                    //A+ = (a A(a))+ = (a A_a_eps(a) | a A_a_noe(a))+
+                    //(a A_a_eps(a))+ (a A_a_noe(a) A*)? | a A_a_noe(a) A*
+                    //a+ A_a_eps(a)+ (a A_a_noe(a) A*)? | a A_a_noe(a) A*
+                    Epsilons.Info eps = Epsilons.trimInfo(tmp.one, tree);
+
+                    Regex factored = new Regex(eps.eps.copy(), "+");
+                    factored.astInfo = regex.astInfo.copy();
+                    factored.astInfo.isFactored = true;
+                    factored.astInfo.factor = sym.astInfo;
+
+                    Regex star = new Regex(regex.node, "*");
+                    star.astInfo = regex.astInfo.copy();
+
+                    Name factor = noLoop(sym);
+                    factor.astInfo.isFactor = true;
+                    Sequence tail = new Sequence(factorSingle.copy(), eps.noEps.copy(), star.copy());
+                    Sequence one = new Sequence(factored, new Regex(new Group(tail), "?"));
+                    Sequence zero = new Sequence(factorSingle.copy(), eps.noEps.copy(), star.copy());
+                    res.one = one;
+                    res.zero = zero;
+                    return res;
+                }
+                else {
+                    //A+ = (a A(a) | A_no_a)+ = (a A_a_eps(a) | a A_a_noe(a) | A_no_a)+
+                    //(a A_a_eps(a))+ (a A_a_noe(a) A* | A_no_a A*)? | a A_a_noe(a) A* | A_no_a A*
+                    //a+ A_a_eps(a)+ (a A_a_noe(a) A* | A_no_a A*)? | a A_a_noe(a) A* | A_no_a A*
+                    throw new RuntimeException("not yet");
+                }
+            }
+            else {
+                throw new RuntimeException("not possible");
             }
         }
-        else {
-            //A?
-            Factor.PullInfo info = pull(regex.node, sym);
-            if (info != null) {
-                //A?: A | € = a* A1 | €
-                info.zero = new Regex(info.zero, "?");
-                return info;
-            }
-        }
-        return null;
     }
 
-    static class commonResult {
-        boolean isLoop;
-        Name name;
+    Factor.PullInfo pullRegex(Regex regex, Regex sym) {
+        if (regex.isStar()) {
+            return pullStar(regex, sym);
+        }
+        else if (regex.isPlus()) {
+            return pullPlus(regex, sym);
+        }
+        else {
+            //A? = A | € = a+ A(a+) | A_nop_a | €
+            Factor.PullInfo res = new Factor.PullInfo();
+            Factor.PullInfo tmp = pull(regex.node, sym);
+            res.one = tmp.one;
+            res.zero = new Regex(tmp.zero, "?");
+            return res;
+        }
     }
+
 
 }

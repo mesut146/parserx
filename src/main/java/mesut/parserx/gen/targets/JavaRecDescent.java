@@ -114,12 +114,12 @@ public class JavaRecDescent {
             if (i > 0) params.append(", ");
             if (arg.isName()) {
                 Name name = arg.asName();
-                params.append(String.format("%s %s", getType(name), name.astInfo.factorName));
+                params.append(String.format("%s %s", getType(name), name.astInfo.varName));
             }
             else {
                 Regex regex = arg.asRegex();
                 Name name = regex.node.asName();
-                params.append(String.format("List<%s> %s", getType(name), regex.astInfo.factorName));
+                params.append(String.format("List<%s> %s", getType(name), regex.astInfo.varName));
             }
             i++;
         }
@@ -169,7 +169,7 @@ public class JavaRecDescent {
         }
         else if (node.isEpsilon()) {
             if (node.astInfo.isFactored) {
-                code.append("%s = %s;", node.astInfo.varName, node.astInfo.factorName);
+                code.append("%s = %s;", node.astInfo.varName, node.astInfo.factor.varName);
             }
         }
     }
@@ -187,12 +187,17 @@ public class JavaRecDescent {
         if (regex.astInfo.isFactored) {
             Name name = regex.node.asName();
             if (regex.astInfo.factor == null) {
-                code.append("%s.%s.addAll(%s);", name.astInfo.outerVar, name.astInfo.varName, regex.astInfo.factorName);
+                code.append("%s.%s.addAll(%s);", name.astInfo.outerVar, name.astInfo.varName, regex.astInfo.varName);
             }
             else {
-                code.append("for(int i = 0;i < %s.size();i++){", regex.astInfo.factor.factorName);
-                code.append("%s.%s.add(%s(%s.get(i)));", regex.astInfo.outerVar, name.astInfo.varName, name.name, regex.astInfo.factor.factorName);
-                code.append("}");
+                if (name.isToken) {
+                    code.append("%s.%s.addAll(%s);", regex.astInfo.outerVar, name.astInfo.varName, regex.astInfo.factor.varName);
+                }
+                else {
+                    code.append("for(int i = 0;i < %s.size();i++){", regex.astInfo.factor.varName);
+                    code.append("%s.%s.add(%s(%s.get(i)));", regex.astInfo.outerVar, name.astInfo.varName, name.name, regex.astInfo.factor.varName);
+                    code.append("}");
+                }
             }
             return;
         }
@@ -214,13 +219,13 @@ public class JavaRecDescent {
             if (set.size() <= loopLimit) {
                 if (regex.astInfo.isFactor) {
                     Name name = regex.node.asName();
-                    code.append("List<%s> %s = new ArrayList<>();", getType(name), regex.astInfo.factorName);
+                    code.append("List<%s> %s = new ArrayList<>();", getType(name), regex.astInfo.varName);
                     if (regex.astInfo.loopExtra != null) {
-                        code.append("%s.add(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra.factorName);
+                        code.append("%s.add(%s);", regex.astInfo.varName, regex.astInfo.loopExtra.varName);
                     }
                     code.append("while(%s){", loopExpr(set));
                     String consumer = name.isToken ? tokenConsumer(name) : name + "()";
-                    code.append("%s.add(%s);", regex.astInfo.factorName, consumer);
+                    code.append("%s.add(%s);", regex.astInfo.varName, consumer);
                     code.append("}");
                 }
                 else {
@@ -247,13 +252,13 @@ public class JavaRecDescent {
             if (set.size() <= loopLimit) {
                 if (regex.astInfo.isFactor) {
                     Name name = regex.node.asName();
-                    code.append("List<%s> %s = new ArrayList<>();", getType(name), regex.astInfo.factorName);
+                    code.append("List<%s> %s = new ArrayList<>();", getType(name), regex.astInfo.varName);
                     if (regex.astInfo.loopExtra != null) {
-                        code.append("%s.add(%s);", regex.astInfo.factorName, regex.astInfo.loopExtra.factorName);
+                        code.append("%s.add(%s);", regex.astInfo.varName, regex.astInfo.loopExtra.varName);
                     }
                     code.append("do{");
                     String consumer = name.isToken ? tokenConsumer(name) : name + "()";
-                    code.append("%s.add(%s);", regex.astInfo.factorName, consumer);
+                    code.append("%s.add(%s);", regex.astInfo.varName, consumer);
                     code.down();
                     code.append("}while(%s);", loopExpr(set));
                 }
@@ -300,7 +305,7 @@ public class JavaRecDescent {
         StringBuilder args = new StringBuilder();
         if (!name.args.isEmpty()) {
             for (int i = 0; i < name.args.size(); i++) {
-                args.append(name.args.get(i).astInfo.factorName);
+                args.append(name.args.get(i).astInfo.varName);
                 if (i < name.args.size() - 1) {
                     args.append(",");
                 }
@@ -312,20 +317,24 @@ public class JavaRecDescent {
     private void writeName(Name name) {
         if (name.astInfo.isFactored && name.astInfo.isFactor) {
             //factor names may be different?
+            if (!name.astInfo.varName.equals(name.astInfo.factor.varName) && !name.astInfo.isInLoop) {
+                //redeclare so its available
+                code.append("%s %s = %s;", getType(name), name.astInfo.varName, name.astInfo.factor.varName);
+            }
             return;
         }
         if (name.astInfo.isFactored) {
             //no consume
             if (name.astInfo.isInLoop) {
                 if (name.astInfo.isPrimary) throw new RuntimeException("todo");
-                code.append("%s.%s.add(%s);", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName);
+                code.append("%s.%s.add(%s);", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factor.varName);
             }
             else {
                 if (name.astInfo.isPrimary) {
-                    code.append("%s = %s;", name.astInfo.varName, name.astInfo.factorName);
+                    code.append("%s = %s;", name.astInfo.varName, name.astInfo.factor.varName);
                 }
                 else {
-                    code.append("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factorName);
+                    code.append("%s.%s = %s;", name.astInfo.outerVar, name.astInfo.varName, name.astInfo.factor.varName);
                 }
             }
         }
@@ -345,7 +354,7 @@ public class JavaRecDescent {
                 rhs = tokenConsumer(name);
             }
             if (name.astInfo.isFactor) {
-                code.append("%s %s = %s;", getType(name), name.astInfo.factorName, rhs);
+                code.append("%s %s = %s;", getType(name), name.astInfo.varName, rhs);
             }
             else {
                 if (name.astInfo.isInLoop) {

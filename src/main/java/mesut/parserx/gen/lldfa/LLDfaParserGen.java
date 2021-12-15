@@ -1,4 +1,4 @@
-package mesut.parserx.gen.ll;
+package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;

@@ -45,7 +45,7 @@ public class Recursion {
         Name sym = decl.ref.copy();
         //sym.astInfo.varName = "res";
         sym.astInfo.isFactor = true;
-        sym.astInfo.factorName = "res";
+        sym.astInfo.varName = "res";
 
         Name ref = decl.ref.copy();
 

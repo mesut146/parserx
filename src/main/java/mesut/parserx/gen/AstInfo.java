@@ -12,7 +12,6 @@ public class AstInfo {
     public boolean isInLoop;
     public boolean isPrimary;//recursion lhs
     public boolean isSecondary;//recursion rhs
-    public String factorName;
     public int which = -1;
     public boolean createNode;
     public boolean substitution;
@@ -36,7 +35,6 @@ public class AstInfo {
         res.substitution = substitution;
         res.subVar = subVar;
         res.assignOuter = assignOuter;
-        res.factorName = factorName;
         res.isPrimary = isPrimary;
         res.isSecondary = isSecondary;
         res.loopExtra = loopExtra;
@@ -71,12 +69,12 @@ public class AstInfo {
     public String toString() {
         StringBuilder sb = new StringBuilder("{");
         if (isFactor) {
-            sb.append("factor ").append(factorName);
+            sb.append("factor ").append(varName);
         }
         else {
             sb.append(String.format("%s.%s", outerVar, varName));
             if (isFactored) {
-                sb.append("=").append(factorName);
+                sb.append("=").append(factor.varName);
             }
         }
         if (which != -1) {

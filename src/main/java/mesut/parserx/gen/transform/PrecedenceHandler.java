@@ -1,5 +1,6 @@
 package mesut.parserx.gen.transform;
 
+import mesut.parserx.gen.AstInfo;
 import mesut.parserx.nodes.*;
 
 import java.util.ArrayList;
@@ -101,6 +102,13 @@ public class PrecedenceHandler {
         return new Or(seq, higher);
     }
 
+    AstInfo makeFactor(String name) {
+        AstInfo info = new AstInfo();
+        info.isFactor = true;
+        info.varName = name;
+        return info;
+    }
+
     private Node makeBinary(RuleDecl decl, Holder holder, Name curRef, Name higher) {
         //E: E op E | E2
         if (holder.node.assocLeft || !holder.node.assocRight && isAssocLeft) {
@@ -110,10 +118,10 @@ public class PrecedenceHandler {
             Name factored = higher.copy();
             factored.astInfo = seq.first().astInfo.copy();
             factored.astInfo.isFactored = true;
-            factored.astInfo.factorName = "res";
+            factored.astInfo.factor = makeFactor("res");
             Epsilon eps = new Epsilon();
             eps.astInfo.isFactored = true;
-            eps.astInfo.factorName = "tmp";
+            eps.astInfo.factor = makeFactor("tmp");
             eps.astInfo.varName = "res";
             Name h2 = higher.copy();
             h2.astInfo = seq.last().astInfo.copy();
@@ -151,11 +159,11 @@ public class PrecedenceHandler {
         Name factored = higher.copy();
         factored.astInfo = holder.node.get(0).astInfo.copy();
         factored.astInfo.isFactored = true;
-        factored.astInfo.factorName = "res";
+        factored.astInfo.factor = makeFactor("res");
 
         Epsilon eps = new Epsilon();
         eps.astInfo.isFactored = true;
-        eps.astInfo.factorName = "tmp";
+        eps.astInfo.factor = makeFactor("tmp");
         eps.astInfo.varName = "res";
 
         seq.set(0, factored);

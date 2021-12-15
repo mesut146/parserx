@@ -7,7 +7,7 @@ import mesut.parserx.nodes.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Epsilons {
+public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
     Tree tree;
 
     public Epsilons(Tree tree) {
@@ -26,82 +26,83 @@ public class Epsilons {
     //E: ... -> E1: ...,     E: E1 | €
     public Info trim(Node node) {
         if (!Helper.canBeEmpty(node, tree)) {
-            return null;
+            throw new RuntimeException("invalid call");
         }
-        Info res = new Info();
-        res.eps = new Epsilon();
-        if (node.isRegex()) {
-            Regex regex = node.asRegex();
-            return trimRegex(res, regex);
-        }
-        else if (node.isOr()) {
-            Or or = node.asOr();
-            return trimOr(res, or);
-        }
-        else if (node.isSequence()) {
-            Sequence s = node.asSequence();
-            return trimSeq(res, s);
-        }
-        else if (node.isGroup()) {
-            Info tmp = trim(node.asGroup().node);
-            if (tmp.noEps != null) {
-                res.noEps = new Group(tmp.noEps);
-                res.noEps.astInfo = node.astInfo;
-            }
-            res.eps = tmp.eps;
-            return res;
-        }
-        else if (node.isName()) {
-            Name name = node.asName();
-            return trimName(res, name);
-        }
-        else if (node.isEpsilon()) {
-            return res;
-        }
-        else {
-            throw new RuntimeException("invalid node: " + node);
-        }
+        return node.accept(this, null);
     }
 
-    private Info trimRegex(Info res, Regex regex) {
+    @Override
+    public Info visitGroup(Group group, Void arg) {
+        Info res = new Info();
+        Info tmp = trim(group.node);
+        res.eps = new Group(tmp.eps);
+        res.eps.astInfo = group.astInfo.copy();
+        if (tmp.noEps != null) {
+            res.noEps = new Group(tmp.noEps);
+            res.noEps.astInfo = group.astInfo;
+        }
+        return res;
+    }
+
+    @Override
+    public Info visitEpsilon(Epsilon epsilon, Void arg) {
+        Info res = new Info();
+        res.eps = new Epsilon();
+        return res;
+    }
+
+    public Info visitRegex(Regex regex, Void arg) {
+        Info res = new Info();
         boolean empty = Helper.canBeEmpty(regex.node, tree);
         if (regex.isOptional()) {
             if (empty) {
-                //A? = A | € = A_no_eps | €
-                res = trim(regex.node);
+                //A? = A | € = A_no_eps | A_eps | €
+                Info tmp = trim(regex.node);
+                res.eps = tmp.eps;
+                res.noEps = tmp.noEps;
             }
             else {
+                res.eps = new Epsilon();
                 res.noEps = regex.node;
             }
             return res;
         }
         else if (regex.isStar()) {
             if (empty) {
-                //A* = A+ | € = A A* | € = (A1 | €) A1* | € = A1 A1* | A1* | €
-                //A1 A1* | A1+ | € = A1+ | €
+                //A* = A+ | € = A A* | €
+                //(A_eps | A_noe) A* | €
+                //A_eps A* | A_noe A*
                 Info tmp = trim(regex.node);
-                res.noEps = new Regex(tmp.noEps, "+");
+                Node no = tmp.noEps;
+                no.astInfo.isInLoop = true;
+                res.noEps = new Sequence(no, regex.copy());
                 res.eps = tmp.eps;
             }
             else {
                 //A+ | €
                 res.noEps = new Regex(regex.node, "+");
+                res.noEps.astInfo = regex.astInfo.copy();
+                res.eps = new Epsilon();
             }
             return res;
         }
         else {
-            //plus
             //node must be empty
-            //A+ = A A* = (A_no_eps | €) (A_no_eps | €)* =  A_no_eps A_no_eps* | A_no_eps*
-            //A_no_eps (A_no_eps)* | A_no_eps+ | € = A_no_eps+ | €
+            //A+ = A A* = (A_noe | A_eps) A*
+            //A_noe A* | A_eps A*
             Info tmp = trim(regex.node);
-            res.noEps = new Regex(tmp.noEps, "+");
-            res.eps = tmp.eps;
+            Regex star = new Regex(regex.node, "*");
+            star.astInfo = regex.astInfo.copy();
+            Node no = tmp.noEps.copy();
+            no.astInfo.isInLoop = true;
+            res.noEps = new Sequence(no, star);
+            res.eps = tmp.eps.copy();
             return res;
         }
     }
 
-    private Info trimOr(Info res, Or or) {
+    public Info visitOr(Or or, Void arg) {
+        Info res = new Info();
         Node a = or.first();
         Node b = Helper.trim(or);
         if (Helper.canBeEmpty(a, tree)) {
@@ -133,7 +134,9 @@ public class Epsilons {
         return res;
     }
 
-    private Info trimSeq(Info res, Sequence s) {
+    @Override
+    public Info visitSequence(Sequence s, Void arg) {
+        Info res = new Info();
         Info a = trim(s.first());
         Info b = trim(Helper.trim(s));
         //both a b are empty
@@ -167,7 +170,8 @@ public class Epsilons {
         return res;
     }
 
-    private Info trimName(Info res, Name name) {
+    public Info visitName(Name name, Void arg) {
+        Info res = new Info();
         if (name.astInfo.isFactored) {
             res.eps = name;
             return res;
@@ -178,22 +182,18 @@ public class Epsilons {
             return res;
         }
 
+
+        Name noName = tree.getNoEps(name);
+        Name epsName = tree.getEps(name);
+
         RuleDecl decl = tree.getRule(name);
-
-        Name noName = new Name(name.name + "_noe");
-        noName.args = name.args;
-        noName.astInfo = name.astInfo.copy();
-        RuleDecl noDecl = tree.getRule(noName);
-
-        Name epsName = new Name(name.name + "_eps");
-        epsName.args = name.args;
-        epsName.astInfo = name.astInfo.copy();
-        RuleDecl epsDecl = tree.getRule(epsName);
+        Name epsRef = Factor.inherit(epsName, decl);
+        Name noRef = Factor.inherit(noName, decl);
 
         Info tmp = null;
-        if (noDecl == null) {
+        if (tree.getRule(noName) == null) {
             tmp = trim(decl.rhs);
-            noDecl = new RuleDecl(noName, tmp.noEps);
+            RuleDecl noDecl = new RuleDecl(noRef, tmp.noEps);
             noDecl.retType = decl.retType;
             tree.addRuleBelow(noDecl, decl);
             res.noEps = noName;
@@ -201,13 +201,13 @@ public class Epsilons {
         else {
             res.noEps = noName;
         }
-        if (epsDecl == null) {
+        if (tree.getRule(epsName) == null) {
             if (tmp == null) {
                 tmp = trim(decl.rhs);
             }
             if (!tmp.eps.isEpsilon()) {
                 //factored eps still needs ast builder
-                epsDecl = new RuleDecl(epsName, tmp.eps);
+                RuleDecl epsDecl = new RuleDecl(epsRef, tmp.eps);
                 epsDecl.retType = decl.retType;
                 tree.addRuleBelow(epsDecl, decl);
                 res.eps = epsName;

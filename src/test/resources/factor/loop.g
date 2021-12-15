@@ -6,7 +6,7 @@ C: a* b | a* c;
 
 
 //loop + normal
-D: a* b | a* c | a d;
+D: a+ b | a+ c | a d;
 
 //double loop
 E: a* b | F c | a f;

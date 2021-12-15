@@ -186,6 +186,22 @@ public class Tree {
         return res;
     }
 
+    public Name getEps(Name old) {
+        Name res = new Name(old.name + "_eps");
+        res.astInfo = old.astInfo.copy();
+        res.args = new ArrayList<>(old.args);
+        senderMap.put(res.name, getSender(old.name));
+        return res;
+    }
+
+    public Name getNoEps(Name old) {
+        Name res = new Name(old.name + "_noe");
+        res.astInfo = old.astInfo.copy();
+        res.args = new ArrayList<>(old.args);
+        senderMap.put(res.name, getSender(old.name));
+        return res;
+    }
+
     public void addRuleBelow(RuleDecl rule, RuleDecl prev) {
         for (RuleDecl old : rules) {
             if (old.ref.equals(rule.ref)) {

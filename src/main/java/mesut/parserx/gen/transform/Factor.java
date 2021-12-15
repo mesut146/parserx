@@ -33,9 +33,14 @@ public class Factor extends Transformer {
         }
     }
 
-
-    public String factorName(Name sym) {
-        return sym.name + "f" + factorCount.get(curRule, sym);
+    //copy decl args with names
+    public static Name inherit(Name name, RuleDecl decl) {
+        Name ref = name.copy();
+        ref.args.clear();
+        for (Node arg : decl.ref.args) {
+            ref.args.add(arg.copy());
+        }
+        return ref;
     }
 
     //factor or
@@ -61,24 +66,8 @@ public class Factor extends Transformer {
         return or;
     }*/
 
-    Node factorOr(Or or, Name sym) {
-        sym = sym.copy();
-        sym.astInfo = new AstInfo();
-        sym.astInfo.isFactor = true;
-        sym.astInfo.factorName = factorName(sym);
-        if (debug) {
-            System.out.printf("factoring %s in %s\n", sym, curRule.ref);
-        }
-        modified = true;
-        PullInfo info = pull(or, sym);
-        Group g = new Group(info.one);
-        Node one = new Sequence(sym, g);
-        if (info.zero == null) {
-            return one;
-        }
-        else {
-            return Or.make(one, info.zero);
-        }
+    public String factorName(Name sym) {
+        return sym.name + "f" + factorCount.get(curRule, sym);
     }
 
     //factor sequence
@@ -109,6 +98,28 @@ public class Factor extends Transformer {
         return s;
     }*/
 
+    Node factorOr(Or or, Name sym) {
+        sym = sym.copy();
+        sym.astInfo = new AstInfo();
+        sym.astInfo.isFactor = true;
+        sym.astInfo.varName = factorName(sym);
+        if (debug) {
+            System.out.printf("factoring %s in %s\n", sym, curRule.ref);
+        }
+        modified = true;
+        PullInfo info = pull(or, sym);
+        if (info.one.isOr()) {
+            info.one = new Group(info.one);
+        }
+        Node one = new Sequence(sym, info.one);
+        if (info.zero == null) {
+            return one;
+        }
+        else {
+            return Or.make(one, info.zero);
+        }
+    }
+
     //pull a single token 'sym' and store result in info
     //A: sym A1 | A0
     //A0=part doesn't start with sym
@@ -120,9 +131,9 @@ public class Factor extends Transformer {
         if (!FirstSet.start(node, sym, tree)) {
             throw new RuntimeException("can't pull " + sym + " from " + node);
         }
-        if (sym.astInfo.factorName == null) {
+        if (sym.astInfo.varName == null) {
             sym.astInfo.isFactor = true;
-            sym.astInfo.factorName = factorName(sym);
+            sym.astInfo.varName = factorName(sym);
         }
         PullInfo info = new PullInfo();
         if (node.isName()) {
@@ -131,13 +142,22 @@ public class Factor extends Transformer {
                 if (keepFactor) {
                     name = name.copy();
                     name.astInfo.isFactored = true;
-                    if (name.astInfo.isFactor && !name.astInfo.isInLoop) {
-                        sym.astInfo.factorName = name.astInfo.factorName;
+                    info.one = name;
+                    if (name.astInfo.isFactor) {
+                        if (name.astInfo.varName.equals(sym.astInfo.varName)) {
+                            //nothing to do
+                            //info.one = new Epsilon();
+                        }
+                        else {
+                            name.astInfo.factor = sym.astInfo;
+                        }
+                        /*if (!name.astInfo.isInLoop) {
+                            sym.astInfo.factorName = name.astInfo.factorName;
+                        }*/
                     }
                     else {
-                        name.astInfo.factorName = sym.astInfo.factorName;
+                        name.astInfo.factor = sym.astInfo;
                     }
-                    info.one = name;
                 }
                 else {
                     info.one = new Epsilon();
@@ -254,16 +274,16 @@ public class Factor extends Transformer {
     //update sym if it conflicts another arg in ref
     private void update(Name ref, Name sym) {
         int count = 1;
-        String name = sym.astInfo.factorName;
+        String name = sym.astInfo.varName;
         if (name.equals("res")) {
-            name = sym.astInfo.factorName + ++count;
+            name = sym.astInfo.varName + ++count;
         }
         for (Node arg : ref.args) {
-            if (arg.astInfo.factorName.equals(name)) {
-                name = sym.astInfo.factorName + ++count;
+            if (arg.astInfo.varName.equals(name)) {
+                name = sym.astInfo.varName + ++count;
             }
         }
-        sym.astInfo.factorName = name;
+        sym.astInfo.varName = name;
     }
 
     PullInfo pullSeq(Sequence s, Name sym) {

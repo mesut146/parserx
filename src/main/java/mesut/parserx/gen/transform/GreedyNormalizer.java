@@ -64,11 +64,11 @@ public class GreedyNormalizer extends Transformer {
                 f.astInfo = new AstInfo();
                 f.astInfo.isFactor = true;
                 if (node.isPlus()) {
-                    f.astInfo.factorName = factor.factor.factorName(f.asRegex().node.asName());
+                    f.astInfo.varName = factor.factor.factorName(f.asRegex().node.asName());
                     info = factor.pull(cur.copy(), f.asRegex());
                 }
                 else {
-                    f.astInfo.factorName = factor.factor.factorName(f.asName());
+                    f.astInfo.varName = factor.factor.factorName(f.asName());
                     info = factor.factor.pull(cur.copy(), f.asName());
                 }
                 factors.add(f);
