@@ -52,7 +52,7 @@ public class Ast{
         public skipBlock skipBlock;
 
         public String toString(){
-            StringBuilder sb = new StringBuilder("treeg1{");
+            StringBuilder sb = new StringBuilder("treeg1#" + which + "{");
             if(which == 1){
                 sb.append(tokenBlock.toString());
             }
@@ -123,7 +123,7 @@ public class Ast{
         public Token BOOLEAN;
 
         public String toString(){
-            StringBuilder sb = new StringBuilder("optiong1{");
+            StringBuilder sb = new StringBuilder("optiong1#" + which + "{");
             if(which == 1){
                 sb.append("'" + NUMBER.value + "'");
             }
@@ -366,7 +366,7 @@ public class Ast{
         public Token RIGHT;
 
         public String toString(){
-            StringBuilder sb = new StringBuilder("sequenceg1{");
+            StringBuilder sb = new StringBuilder("sequenceg1#" + which + "{");
             if(which == 1){
                 sb.append("'" + LEFT.value + "'");
             }
@@ -409,7 +409,7 @@ public class Ast{
                 }
         }
         public String toString(){
-            StringBuilder sb = new StringBuilder("regex{");
+            StringBuilder sb = new StringBuilder("regex#" + which + "{");
             if(which == 1){
                 sb.append(regex1);
             }
@@ -426,7 +426,7 @@ public class Ast{
         public Token QUES;
 
         public String toString(){
-            StringBuilder sb = new StringBuilder("regexg2{");
+            StringBuilder sb = new StringBuilder("regexg2#" + which + "{");
             if(which == 1){
                 sb.append("'" + STAR.value + "'");
             }
@@ -446,7 +446,7 @@ public class Ast{
         public Token QUES;
 
         public String toString(){
-            StringBuilder sb = new StringBuilder("regexg1{");
+            StringBuilder sb = new StringBuilder("regexg1#" + which + "{");
             if(which == 1){
                 sb.append("'" + STAR.value + "'");
             }
@@ -472,7 +472,7 @@ public class Ast{
         public Token SHORTCUT;
 
         public String toString(){
-            StringBuilder sb = new StringBuilder("simple{");
+            StringBuilder sb = new StringBuilder("simple#" + which + "{");
             if(which == 1){
                 sb.append(group.toString());
             }
@@ -524,7 +524,7 @@ public class Ast{
         public Token CHAR;
 
         public String toString(){
-            StringBuilder sb = new StringBuilder("stringNode{");
+            StringBuilder sb = new StringBuilder("stringNode#" + which + "{");
             if(which == 1){
                 sb.append("'" + STRING.value + "'");
             }
@@ -573,7 +573,7 @@ public class Ast{
         public Token INCLUDE;
 
         public String toString(){
-            StringBuilder sb = new StringBuilder("name{");
+            StringBuilder sb = new StringBuilder("name#" + which + "{");
             if(which == 1){
                 sb.append("'" + IDENT.value + "'");
             }

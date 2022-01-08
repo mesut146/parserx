@@ -85,7 +85,7 @@ public class LrTest {
 
     @Test
     public void prec() throws Exception {
-        Tree tree = Env.tree("lr1/prec.g");
+        Tree tree = Env.tree("lr1/calc.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         LrDFAGen generator = new LrDFAGen(tree, "lalr");
         generator.generate();

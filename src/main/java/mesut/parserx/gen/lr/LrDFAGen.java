@@ -36,10 +36,7 @@ public class LrDFAGen {
 
     public void makeStart() {
         if (tree.start == null) {
-            throw new RuntimeException("no start rule is defined");
-        }
-        if (tree.getRule(tree.start) == null) {
-            throw new RuntimeException("start rule is not defined");
+            throw new RuntimeException("no start rule is declared");
         }
         start = new RuleDecl(startName, new Sequence(tree.start));
         tree.addRule(start);
@@ -54,7 +51,6 @@ public class LrDFAGen {
     }
 
     void prepare() {
-        EbnfToBnf.rhsSequence = true;
         EbnfToBnf.expand_or = true;
         EbnfToBnf.combine_or = false;
         tree = EbnfToBnf.transform(tree);
@@ -82,7 +78,7 @@ public class LrDFAGen {
     }
 
     public LrItemSet makeSet(LrItem item) {
-        LrItemSet set = new LrItemSet(item, tree, type);
+        LrItemSet set = new LrItemSet(Collections.singleton(item), tree, type);
         set.closure();
         table.addSet(set);
         return set;
@@ -103,7 +99,7 @@ public class LrDFAGen {
                 LrItem curItem = curSet.getItem();
                 if (curItem == null) break;//already done
 
-                Name symbol = curItem.getDotNode();
+                Name symbol = curItem.getDotSym();
                 if (symbol == null) continue;//dot end
 
                 LrItem toFirst = new LrItem(curItem, curItem.dotPos + 1);
@@ -196,8 +192,8 @@ public class LrDFAGen {
         done.add(set);
         for (int i = 0; i < set.all.size(); i++) {
             LrItem item = set.all.get(i);
-            if (item.getDotNode() == null) continue;
-            LrItemSet target = table.getTargetSet(set, item.getDotNode());
+            if (item.getDotSym() == null) continue;
+            LrItemSet target = table.getTargetSet(set, item.getDotSym());
             if (target == null) continue;
             LrItem newItem = new LrItem(item, item.dotPos + 1);
             for (LrItem kernel : target.kernel) {
@@ -236,7 +232,7 @@ public class LrDFAGen {
                     sb.append("reduce/reduce conflict in ").append(info.state).append("\n");
                 }
                 else {
-                    sb.append(String.format("shift/reduce conflict in %d sym=%s", info.state, info.shift.getDotNode())).append("\n");
+                    sb.append(String.format("shift/reduce conflict in %d sym=%s", info.state, info.shift.getDotSym())).append("\n");
                 }
             }
             throw new RuntimeException(sb.toString());
@@ -276,11 +272,11 @@ public class LrDFAGen {
                 else {
                     LrItem shift;
                     LrItem reduce;
-                    if (i1.hasReduce() && !i2.hasReduce() && (lr0 || i1.lookAhead.contains(i2.getDotNode()))) {
+                    if (i1.hasReduce() && !i2.hasReduce() && (lr0 || i1.lookAhead.contains(i2.getDotSym()))) {
                         shift = i2;
                         reduce = i1;
                     }
-                    else if (!i1.hasReduce() && i2.hasReduce() && i2.lookAhead.contains(i1.getDotNode())) {
+                    else if (!i1.hasReduce() && i2.hasReduce() && i2.lookAhead.contains(i1.getDotSym())) {
                         shift = i1;
                         reduce = i2;
                     }
@@ -290,7 +286,7 @@ public class LrDFAGen {
                     boolean removed = false;
                     //if same rule,check assoc
                     if (shift.rule.equals(reduce.rule)) {//todo isSame?
-                        LrItemSet target = table.getTargetSet(set, shift.getDotNode());
+                        LrItemSet target = table.getTargetSet(set, shift.getDotSym());
                         LrItem newItem = new LrItem(shift, shift.dotPos + 1);
                         for (LrItem targetItem : target.all) {
                             if (targetItem.isSame(newItem)) {
@@ -303,7 +299,7 @@ public class LrDFAGen {
                                 }
                                 else if (r) {
                                     //keep shift,remove reduce
-                                    reduce.lookAhead.remove(shift.getDotNode());
+                                    reduce.lookAhead.remove(shift.getDotSym());
                                     if (reduce.lookAhead.isEmpty()) {
                                         removeItem(set, reduce);
                                     }
@@ -331,7 +327,7 @@ public class LrDFAGen {
                             }
                             else {
                                 //prefer shift
-                                reduce.lookAhead.remove(shift.getDotNode());
+                                reduce.lookAhead.remove(shift.getDotSym());
                                 if (reduce.lookAhead.isEmpty()) {
                                     removeItem(set, reduce);
                                 }
@@ -361,7 +357,7 @@ public class LrDFAGen {
         //remove incoming and outgoing transitions
         List<LrTransition> out = new ArrayList<>();
         for (LrTransition tr : table.getTrans(set)) {
-            if (tr.symbol.equals(item.getDotNode())) {
+            if (tr.symbol.equals(item.getDotSym())) {
                 out.add(tr);
             }
         }
@@ -395,7 +391,7 @@ public class LrDFAGen {
                 LrItemSet curSet = set;
                 LrItem curItem = item;
                 while (true) {
-                    curSet = table.getTargetSet(curSet, curItem.getDotNode());
+                    curSet = table.getTargetSet(curSet, curItem.getDotSym());
                     LrItem tmpItem = new LrItem(curItem.rule, curItem.dotPos + 1);
                     //use tmp to get original item
                     for (LrItem tmp : curSet.all) {

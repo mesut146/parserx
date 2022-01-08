@@ -70,7 +70,7 @@ public class Ast{
         public Token PLUS;
 
         public String toString(){
-            StringBuilder sb = new StringBuilder("regexg1{");
+            StringBuilder sb = new StringBuilder("regexg1#" + which + "{");
             if(which == 1){
                 sb.append("'" + QUES.value + "'");
             }
@@ -103,7 +103,7 @@ public class Ast{
                 }
         }
         public String toString(){
-            StringBuilder sb = new StringBuilder("simple{");
+            StringBuilder sb = new StringBuilder("simple#" + which + "{");
             if(which == 1){
                 sb.append(normalChar.toString());
             }
@@ -173,7 +173,7 @@ public class Ast{
         public Token DOT;
 
         public String toString(){
-            StringBuilder sb = new StringBuilder("normalChar{");
+            StringBuilder sb = new StringBuilder("normalChar#" + which + "{");
             if(which == 1){
                 sb.append("'" + CHAR.value + "'");
             }
@@ -205,7 +205,7 @@ public class Ast{
         public Token BOPEN;
 
         public String toString(){
-            StringBuilder sb = new StringBuilder("rangeChar{");
+            StringBuilder sb = new StringBuilder("rangeChar#" + which + "{");
             if(which == 1){
                 sb.append("'" + CHAR.value + "'");
             }

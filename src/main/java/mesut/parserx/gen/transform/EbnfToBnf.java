@@ -1,5 +1,6 @@
 package mesut.parserx.gen.transform;
 
+import mesut.parserx.gen.ll.Normalizer;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap;
 
@@ -9,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 //transform ebnf to bnf
-public class EbnfToBnf {
+public class EbnfToBnf extends Transformer {
 
     public static boolean leftRecursive = true;//prefer left recursion on regex expansions
     public static boolean expand_or = false;//separate rule for each 'or' content
@@ -18,13 +19,14 @@ public class EbnfToBnf {
     Tree tree;//input ebnf
     Tree out;//output bnf
     CountingMap<String> countMap = new CountingMap<>();
-    String curRule;
+    RuleDecl curRule;
 
     public EbnfToBnf(Tree tree) {
         this.tree = tree;
     }
 
     public static Tree transform(Tree input) {
+        new Normalizer(input).normalize();
         return new EbnfToBnf(input).transform();
     }
 
@@ -69,80 +71,55 @@ public class EbnfToBnf {
             throw new RuntimeException("expand_or and combine_or exclusive");
         }
         for (RuleDecl decl : tree.rules) {
-            curRule = decl.baseName();
+            curRule = decl;
             transformRhs(decl);
         }
         if (combine_or) {
             out = combineOr(out);
         }
+        //make rhs sequence
+        for (RuleDecl decl : out.rules) {
+            if (!decl.rhs.isSequence()) {
+                decl.rhs = new Sequence(decl.rhs);
+            }
+        }
         return out;
     }
 
     public void transformRhs(RuleDecl decl) {
-        Node rhs = transform(decl.rhs);
+        Node rhs = decl.rhs.accept(this, null);
         if (rhs != null) {
-            if (rhsSequence && !rhs.isSequence()) {
-                rhs = new Sequence(rhs);
-            }
             addRule(new RuleDecl(decl.ref, rhs));
         }
     }
 
-    Node transform(Node node) {
-        if (node == null) return null;
-        if (node.isGroup()) {
-            node = transform(node.asGroup());
-        }
-        else if (node.isSequence()) {
-            node = transform(node.asSequence());
-        }
-        else if (node.isRegex()) {
-            node = transform(node.asRegex());
-        }
-        else if (node.isOr()) {
-            node = transform(node.asOr());
-        }
-        return node;
-    }
-
-    //todo remove this,use Normalizer instead
-    Node transform(Group group) {
-        //r = a (e1 e2) b;
-        //r = a rg1 b;
-        //rg1 = e1 e2;
-        String newName = curRule + countMap.get(curRule);
-        RuleDecl newDecl = new RuleDecl(newName, transform(group.node));
-        addRule(newDecl);
-        return newDecl.ref.copy();
-    }
-
-    Node transform(Or or) {
+    public Node visitOr(Or or, Void arg) {
         if (expand_or) {
             for (Node ch : or) {
-                RuleDecl newDecl = new RuleDecl(curRule, transform(ch));
+                RuleDecl newDecl = new RuleDecl(curRule.baseName(), ch.accept(this, null));
                 transformRhs(newDecl);
             }
+            return null;
         }
         else {
             List<Node> list = new ArrayList<>();
-            for (Node node : or) {
-                list.add(transform(node));
+            for (Node ch : or) {
+                list.add(ch.accept(this, null));
             }
             return Or.make(list);
         }
-        return null;
     }
 
-    Node transform(Sequence seq) {
+    public Node visitSequence(Sequence seq, Void arg) {
         List<Node> list = new ArrayList<>();
         for (Node ch : seq) {
-            list.add(transform(ch));
+            list.add(ch.accept(this, null));
         }
         return Sequence.make(list);
     }
 
-    Node transform(Regex regex) {
-        Name ref = new Name(curRule + countMap.get(curRule));
+    public Node visitRegex(Regex regex, Void arg) {
+        Name ref = new Name(curRule.baseName() + countMap.get(curRule.baseName()));
         if (regex.isStar() || regex.isPlus()) {
             Node node;
             //b* = € | b* b; left
@@ -182,14 +159,14 @@ public class EbnfToBnf {
                 addCh(or, ref, regex.node);
             }
             RuleDecl r = new RuleDecl(ref, Or.make(or));
-            r.rhs = transform(r.rhs);
+            r.rhs = r.rhs.accept(this, null);
             addRule(r);
             return ref;
         }
         else {
             //r? = € | a;
             Node newNode = new Or(new Epsilon(), regex.node);
-            RuleDecl r = new RuleDecl(ref, transform(newNode));
+            RuleDecl r = new RuleDecl(ref, newNode.accept(this, null));
             addRule(r);
             return ref;
         }

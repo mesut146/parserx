@@ -129,7 +129,6 @@ public class PrecedenceHandler {
             seq.set(seq.size() - 1, h2);
             seq.add(eps);
             Group group = new Group(seq);
-            group.astInfo.createNode = true;
             group.astInfo.nodeType = decl.retType;
             group.astInfo.varName = "tmp";
             seq.astInfo.outerVar = "tmp";
@@ -169,7 +168,6 @@ public class PrecedenceHandler {
         seq.set(0, factored);
         seq.add(eps);
         Group group = new Group(seq);
-        group.astInfo.createNode = true;
         group.astInfo.nodeType = decl.retType;
         group.astInfo.varName = "tmp";
         seq.astInfo.outerVar = "tmp";

@@ -5,7 +5,6 @@ import mesut.parserx.gen.ll.Type;
 public class AstInfo {
     public String varName;
     public String outerVar;
-    public Type outerCls;
     public Type nodeType;
     public boolean isFactor;//no assign
     public boolean isFactored;//epsilon
@@ -13,32 +12,25 @@ public class AstInfo {
     public boolean isPrimary;//recursion lhs
     public boolean isSecondary;//recursion rhs
     public int which = -1;
-    public boolean createNode;
     public boolean substitution;
     public String subVar;
     public boolean assignOuter;
-    public AstInfo loopExtra;
-    public AstInfo loopBound;
     public AstInfo factor;
 
     public AstInfo copy() {
         AstInfo res = new AstInfo();
         res.varName = varName;
         res.outerVar = outerVar;
-        res.outerCls = outerCls;
         res.nodeType = nodeType;
         res.isFactor = isFactor;
         res.isFactored = isFactored;
         res.isInLoop = isInLoop;
         res.which = which;
-        res.createNode = createNode;
         res.substitution = substitution;
         res.subVar = subVar;
         res.assignOuter = assignOuter;
         res.isPrimary = isPrimary;
         res.isSecondary = isSecondary;
-        res.loopExtra = loopExtra;
-        res.loopBound = loopBound;
         res.factor = factor;
         return res;
     }
@@ -89,10 +81,8 @@ public class AstInfo {
             which = other.which;
             varName = other.varName;
             outerVar = other.outerVar;
-            outerCls = other.outerCls;
             nodeType = other.nodeType;
             assignOuter = other.assignOuter;
-            createNode = other.createNode;
         }
     }
 }

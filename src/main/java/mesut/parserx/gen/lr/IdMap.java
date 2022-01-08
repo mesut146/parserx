@@ -16,7 +16,6 @@ import java.util.Map;
 //common for lexer and parser
 public class IdMap {
     public static Name EOF = new Name("EOF", true);
-    public static Name dollar = new Name("$", true);
     public static String className = "Symbols";
     public HashMap<Name, Integer> map = new HashMap<>();
     public HashMap<Integer, Name> id_to_name = new HashMap<>();

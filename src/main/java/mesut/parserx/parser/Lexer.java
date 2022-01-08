@@ -15,6 +15,7 @@ public class Lexer {
     static String[] cMapRegex = {"_", "n", "f", "r", "k", "o", "s", "c", "g", "q", "p", "t", "b", "a", "e", "d", "h", "m", "l", "u", "j", "i", "z", "y", "A-Z", "v-x", "0-9", "]-\\", "\\t", ":", "*", ">", "^", "\"", ".", ";", "[", "'", "+", "/", "<", "=", "?", "~", "!", "\\u0020", "#", ")", "(", "-", ",", "@", "`", "{", "ε", "$", "&", "%", "}", "|", "\\u0000-\\b", "\\u000e-\\u001f", "\\u000b-\\f", "\\u03b6-\\uffff", "\\u007f-\\u03b4", "\\r", "]", "\\\\", "\\n"};
     int[] skip = {0,7};
     int[] accepting = {-537235458,-64338689,-263725023,94147,0,0,0,0};
+    //boolean[] after = {$after_list$};
     //id -> token name
     String[] names = {"EOF","BOOLEAN","OPTIONS","TOKEN","SKIP","INCLUDE","START","EPSILON","LEFT","RIGHT","IDENT","SHORTCUT","BRACKET","STRING","CHAR","NUMBER","LP","RP","LBRACE","RBRACE",
 "STAR","PLUS","QUES","POW","SEPARATOR","TILDE","HASH","COMMA","OR","DOT","SEMI","MINUS","LINE_COMMENT","BLOCK_COMMENT","WS"};
@@ -266,6 +267,9 @@ public class Lexer {
                     token.name = names[ids[lastState]];
                     token.line = startLine;
                     bufStart = bufPos;
+                    /*if(!after[ids[lastState]]){
+                      curState = INITIAL;
+                    }*/
                     return token;
                 }
                 else {

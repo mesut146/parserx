@@ -167,14 +167,14 @@ public class CppRecDescent {
     }
 
     String tokenConsumer(Name token) {
-        return String.format("consume(%s, \"%s\")",tokenRef(token), token.name);
+        return String.format("consume(%s, \"%s\")", tokenRef(token), token.name);
     }
 
     void write(Node node) {
         if (node.astInfo.which != -1) {
             code.all(node.astInfo.writeWhichCpp());
         }
-        if (node.astInfo.createNode) {
+        if (node.astInfo.nodeType != null) {
             code.all(node.astInfo.writeNodeCpp());
         }
         if (node.astInfo.substitution) {
@@ -245,9 +245,6 @@ public class CppRecDescent {
                     Name name = regex.node.asName();
                     String type = name.isToken ? options.tokenClass : options.astClass + "::" + name.name;
                     code.append("std::vector<%s*> %s;", type, regex.astInfo.varName);
-                    if (regex.astInfo.loopExtra != null) {
-                        code.append("%s.push_back(%s);", regex.astInfo.varName, regex.astInfo.loopExtra.varName);
-                    }
                     code.append("while(%s){", loopExpr(set));
                     String consumer = name.isToken ? tokenConsumer(name) : name + "()";
                     code.append("%s.push_back(%s);", regex.astInfo.varName, consumer);
@@ -279,9 +276,6 @@ public class CppRecDescent {
                     Name name = regex.node.asName();
                     String type = name.isToken ? options.tokenClass : options.astClass + "." + name.name;
                     code.append("std::vector<%s*> %s;", type, regex.astInfo.varName);
-                    if (regex.astInfo.loopExtra != null) {
-                        code.append("%s.push_back(%s);", regex.astInfo.varName, regex.astInfo.loopExtra.varName);
-                    }
                     code.append("do{");
                     String consumer = name.isToken ? tokenConsumer(name) : name + "()";
                     code.append("%s.push_back(%s);", regex.astInfo.varName, consumer);

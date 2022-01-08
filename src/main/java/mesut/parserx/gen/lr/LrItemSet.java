@@ -17,8 +17,9 @@ public class LrItemSet {
     public String type;
     Tree tree;
 
-    public LrItemSet(LrItem kernel, Tree tree, String type) {
-        this.kernel.add(kernel);
+
+    public LrItemSet(Set<LrItem> kernels, Tree tree, String type) {
+        this.kernel.addAll(kernels);
         this.tree = tree;
         this.type = type;
     }
@@ -77,7 +78,7 @@ public class LrItemSet {
 
     public void closure(LrItem it) {
         if (it.isDotNonTerminal()) {
-            closure(it.getDotNode(), it);
+            closure(it.getDotSym(), it);
         }
     }
 

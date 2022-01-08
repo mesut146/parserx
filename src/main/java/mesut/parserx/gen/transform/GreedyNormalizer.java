@@ -11,7 +11,7 @@ import java.util.Set;
 
 
 public class GreedyNormalizer extends Transformer {
-    public static boolean debug = false;
+    public static boolean debug = true;
     Tree tree;
     boolean modified;
     FactorLoop factor;
@@ -47,7 +47,8 @@ public class GreedyNormalizer extends Transformer {
             TailInfo sym = hasGreedyTail(a, FirstSet.firstSet(b, tree));
             if (sym == null) continue;
             if (debug) {
-                System.out.println("greediness in " + seq);
+                System.out.println("greediness in " + curRule.ref);
+                System.out.println(seq);
             }
             modified = true;
 
@@ -105,7 +106,7 @@ public class GreedyNormalizer extends Transformer {
             }
             List<Node> res = new ArrayList<>(seq.list);
             res.remove(i + 1);
-            res.set(i, Or.make(ors));
+            res.set(i, new Group(Or.make(ors)));
             if (debug)
                 System.out.println("res=" + res);
             return Sequence.make(res);
@@ -117,7 +118,8 @@ public class GreedyNormalizer extends Transformer {
         if (node.isName() && node.asName().isToken) {
             return null;
         }
-        final List<Node> loopTail = new ArrayList<>();
+        if (node.isName() && first.contains(node.asName())) return null;
+        //final List<Node> loopTail = new ArrayList<>();
         BaseVisitor<TailInfo, Void> visitor = new BaseVisitor<TailInfo, Void>() {
             boolean foundLoop = false;
 
@@ -163,6 +165,7 @@ public class GreedyNormalizer extends Transformer {
 
             @Override
             public TailInfo visitRegex(Regex regex, Void arg) {
+                //todo plus
                 if (regex.isOptional() || regex.isStar()) {
                     Name sym = factor.helper.common(first, FirstSet.firstSet(regex.node, tree));
                     if (sym == null) return null;

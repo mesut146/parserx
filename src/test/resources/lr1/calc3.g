@@ -1,16 +1,10 @@
-token
-{
-  plus: "+";
-  lp: "(";
-  rp: ")";
-  N: [0-9]+;
-}
+include "calc-tokens.g"
 
 //productions
 
 %start = E;
-E: N | N "+" E | "(" E ")";
+E: NUM | NUM "+" E | "(" E ")";
 
-//E: (N "+")* (N | "(" E ")");
+//E: (NUM "+")* (NUM | "(" E ")");
 
 

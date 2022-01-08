@@ -43,60 +43,9 @@ public class Factor extends Transformer {
         return ref;
     }
 
-    //factor or
-    /*@Override
-    public Node visitOr(Or or, Void parent) {
-        if (true){
-            throw new RuntimeException();
-        }
-        Node node = super.visitOr(or, parent);
-        if (node.isOr()) {
-            or = node.asOr();
-        }
-        else {
-            return node;
-        }
-        for (int i = 0; i < or.size(); i++) {
-            for (int j = i + 1; j < or.size(); j++) {
-                Name sym = common(or.get(i), or.get(j));
-                if (sym == null) continue;
-                return factorOr(or, sym);
-            }
-        }
-        return or;
-    }*/
-
     public String factorName(Name sym) {
         return sym.name + "f" + factorCount.get(curRule, sym);
     }
-
-    //factor sequence
-    /*@Override
-    public Node visitSequence(Sequence s, Void parent) {
-        Node node = super.visitSequence(s, parent);
-        if (!factorSequence) {
-            return node;
-        }
-        if (node.isSequence()) {
-            s = node.asSequence();
-        }
-        else {
-            return node;
-        }
-        //A B needs factoring if A can be empty and A , B have common factor which makes A greedy
-        //A B -> A_no_eps B | B
-        Node A = s.first();
-        if (Helper.canBeEmpty(A, tree)) {
-            Node B = Helper.trim(s);
-            if (common(A, B) != null) {
-                if (debug)
-                    System.out.println("factoring greedy seq");
-                Node trimmed = Epsilons.trim(A, tree);
-                return visitOr(new Or(new Sequence(trimmed, B), B), parent);
-            }
-        }
-        return s;
-    }*/
 
     Node factorOr(Or or, Name sym) {
         sym = sym.copy();
@@ -372,6 +321,9 @@ public class Factor extends Transformer {
     }
 
     PullInfo pullRegex(Regex regex, Name sym) {
+        if (regex.astInfo.isFactor) {
+            throw new RuntimeException("cannot factor a factor loop");
+        }
         if (regex.isOptional()) {
             PullInfo info = new PullInfo();
             //A?=A | € = sym A1 | A0 | €
@@ -388,19 +340,14 @@ public class Factor extends Transformer {
         else if (regex.isPlus()) {
             //A+=A A*
             Node star = withAst(new Regex(regex.node.copy(), "*"), regex);
-            if (regex.astInfo.isFactor) {
-                star.astInfo.loopExtra = sym.astInfo;
-            }
             Node pre = regex.node.copy();
+            //pre.astInfo.isInLoop = true;
             Sequence s = new Sequence(pre, star);
             return pull(s, sym);
         }
         else {
             //A* = A+ | €
             Node plus = withAst(new Regex(regex.node.copy(), "+"), regex);
-            if (regex.astInfo.isFactor) {
-                plus.astInfo.loopExtra = sym.astInfo;
-            }
             return pull(new Or(plus, new Epsilon()), sym);
         }
     }

@@ -1,17 +1,17 @@
 token{
-  DOT = ".";
-  BAR = "|";
-  BOPEN = "[";
-  BCLOSE = "]";
-  LPAREN = "(";
-  RPAREN = ")";
-  QUES = "?";
-  STAR = "*";
-  PLUS = "+";
-  XOR = "^";
-  MINUS = "-";
-  ESCAPED = "\\" .;
-  CHAR = [^\\];
+  DOT: ".";
+  BAR: "|";
+  BOPEN: "[";
+  BCLOSE: "]";
+  LPAREN: "(";
+  RPAREN: ")";
+  QUES: "?";
+  STAR: "*";
+  PLUS: "+";
+  XOR: "^";
+  MINUS: "-";
+  ESCAPED: "\\" .;
+  CHAR: [^\\];
 }
 
 /* rules */
@@ -29,8 +29,12 @@ simple:
 |   bracket
 |   LPAREN rhs RPAREN
 ;
-bracket: BOPEN XOR? range+ BCLOSE;
+bracket: BOPEN ((XOR (range+ (XOR() XOR() range+() | ε (range_XOR_noe(XOR) range* | range_XOR_eps(XOR) ε)))) | (ε range_no_XOR range*)) BCLOSE;
 range: rangeChar rangeg1?;
+range_no_XOR: rangeChar_no_XOR rangeg1?;
+range_XOR(XOR): rangeChar_XOR(XOR) rangeg1?;
+range_XOR_eps(XOR): rangeChar_XOR(XOR) ε;
+range_XOR_noe(XOR): rangeChar_XOR(XOR) rangeg1;
 rangeg1: MINUS rangeChar;
 normalChar:
     CHAR
@@ -52,3 +56,17 @@ rangeChar:
 |   MINUS
 |   BOPEN
 ;
+rangeChar_no_XOR:
+    CHAR
+|   ESCAPED
+|   STAR
+|   PLUS
+|   QUES
+|   BAR
+|   DOT
+|   LPAREN
+|   RPAREN
+|   MINUS
+|   BOPEN
+;
+rangeChar_XOR(XOR): XOR();

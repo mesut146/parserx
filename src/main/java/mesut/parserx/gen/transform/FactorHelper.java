@@ -83,9 +83,12 @@ public class FactorHelper {
             Regex regex = node.asRegex();
             if (!regex.isOptional()) {
                 res.add(regex.node.asName());
-                for (Name s : FirstSet.firstSet(regex.node.asName(), tree)) {
-                    if (FirstSet.isEmpty(follow(regex.node, s), tree)) {
-                        res.add(s);
+                if (regex.node.asName().isRule()) {
+                    //closure
+                    for (Name s : FirstSet.firstSet(regex.node, tree)) {
+                        if (FirstSet.isEmpty(follow(regex.node, s), tree)) {
+                            res.add(s);
+                        }
                     }
                 }
             }
@@ -222,6 +225,68 @@ public class FactorHelper {
             res.name = b.asName();
             return res;
         }
+        if (a.isRegex() && a.asRegex().node.asName().equals(b)) {
+            //a+ a
+            res.isLoop = true;
+            res.name = b.asName();
+            return res;
+        }
+        if (b.isRegex() && b.asRegex().node.asName().equals(a)) {
+            //a a+());
+            res.isLoop = true;
+            res.name = a.asName();
+            return res;
+        }
+        List<Name> list = new ArrayList<>(common);
+        //rule has higher priority
+        Collections.sort(list, new Comparator<Name>() {
+            @Override
+            public int compare(Name o1, Name o2) {
+                if (o1.isRule()) {
+                    return o2.isRule() ? 0 : -1;
+                }
+                else {
+                    return 1;
+                }
+            }
+        });
+
+        //try loops
+        for (Name name : list) {
+            if (hasLoop(a, name) && hasLoop(b, name)) {
+                if (name.isRule()) {
+                    //rule loop
+                    res.isLoop = true;
+                    res.name = name;
+                    return res;
+                }
+                else {
+                    //token loop
+                    res.isLoop = true;
+                    res.name = name;
+                    return res;
+                }
+            }
+        }
+        res.name = list.get(0);
+        return res;
+    }
+
+    public commonResult commons2(Node a, Node b) {
+        commonResult res = new commonResult();
+        Set<Name> s1 = factor.first(a);
+        Set<Name> s2 = factor.first(b);
+        Set<Name> common = new HashSet<>(s1);
+        common.retainAll(s2);
+        if (common.isEmpty()) return null;
+        if (a.isName() && common.contains(a.asName())) {
+            res.name = a.asName();
+            return res;
+        }
+        if (b.isName() && common.contains(b.asName())) {
+            res.name = b.asName();
+            return res;
+        }
         if (a.isRegex() && a.asRegex().asName().equals(b)) {
             //a+ a
             res.isLoop = true;
@@ -303,6 +368,14 @@ public class FactorHelper {
             }
         }
         return res;
+    }
+
+    public List<Name> commonList(Node a, Node b) {
+        Set<Name> s1 = factor.first(a);
+        Set<Name> s2 = factor.first(b);
+        Set<Name> common = new LinkedHashSet<>(s1);
+        common.retainAll(s2);
+        return new ArrayList<>(common);
     }
 
     public Name common(Set<Name> s1, Set<Name> s2) {

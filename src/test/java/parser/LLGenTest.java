@@ -56,31 +56,31 @@ public class LLGenTest {
     public void factorAll() throws Exception {
         Factor.debug = false;
 
-//        DescTester.check(Env.tree("factor/single.g"), "A", "ac", "eb", "adb");
-//        DescTester.check(Env.tree("factor/single2.g"), "A", "aac", "aadbeb");
-//        DescTester.check(Env.tree("factor/group.g"), "A", "ab", "ace", "de");
-//        DescTester.check(Env.tree("factor/list.g"), "A", "ab", "c", "ac", "aaaaaac");
-//        DescTester.check(Env.tree("factor/group-list.g"), "A", "c", "abc", "ababc", "e", "ade");
-//        DescTester.check(Env.tree("factor/eps.g"), "A", "a", "aa");
-//        DescTester.check(Env.tree("factor/eps.g"), "B", "ab", "a", "aa");
-//        DescTester.check(Env.tree("factor/double-same.g"), "A", "aab", "aac");
-//        DescTester.check(Env.tree("factor/double-same.g"), "B", "abc", "abd");
-//        DescTester.check(Env.tree("factor/double-same-extra.g"), "A", "aab", "c", "aadb", "axb", "eb");
-//        DescTester.check(Env.tree("factor/double-same-extra2.g"), "B", "aad", "ax", "e");
-//        DescTester.check(Env.tree("factor/double-same-extra2.g"), "A", "aab", "c", "aadb", "axb", "eb");
+        DescTester.check(Env.tree("factor/single.g"), "A", "ac", "eb", "adb");
+        DescTester.check(Env.tree("factor/single2.g"), "A", "aac", "aadbeb");
+        DescTester.check(Env.tree("factor/group.g"), "A", "ab", "ace", "de");
+        DescTester.check(Env.tree("factor/list.g"), "A", "ab", "c", "ac", "aaaaaac");
+        DescTester.check(Env.tree("factor/group-list.g"), "A", "c", "abc", "ababc", "e", "ade");
+        DescTester.check(Env.tree("factor/eps.g"), "A", "a", "aa");
+        DescTester.check(Env.tree("factor/eps.g"), "B", "ab", "a", "aa");
+        DescTester.check(Env.tree("factor/double-same.g"), "A", "aab", "aac");
+        DescTester.check(Env.tree("factor/double-same.g"), "B", "abc", "abd");
+        DescTester.check(Env.tree("factor/double-same-extra.g"), "A", "aab", "c", "aadb", "axb", "eb");
+        DescTester.check(Env.tree("factor/double-same-extra2.g"), "B", "aad", "ax", "e");
+        DescTester.check(Env.tree("factor/double-same-extra2.g"), "A", "aab", "c", "aadb", "axb", "eb");
 
-//        DescTester.check(Env.tree("factor/loop.g"), "A", "aaab", "aaac");
-//        DescTester.check(Env.tree("factor/loop.g"), "B", "b", "aaab", "aaac");
-//        DescTester.check(Env.tree("factor/loop.g"), "C", "b", "c", "aaab", "aaac");
-//        DescTester.check(Env.tree("factor/loop.g"), "D", "ad", "aaab", "aaac");
-//        DescTester.check(Env.tree("factor/loop.g"), "E", "b", "dc", "ec", "af", "aaab", "aaadc", "aaaec");
+        DescTester.check(Env.tree("factor/loop.g"), "A", "aaab", "aaac");
+        DescTester.check(Env.tree("factor/loop.g"), "B", "b", "aaab", "aaac");
+        DescTester.check(Env.tree("factor/loop.g"), "C", "b", "c", "aaab", "aaac");
+        DescTester.check(Env.tree("factor/loop.g"), "D", "ad", "aaab", "aaac");
+        DescTester.check(Env.tree("factor/loop.g"), "E", "b", "dc", "ec", "af", "aaab", "aaadc", "aaaec");
 //
-        //DescTester.check(Env.tree("factor/loop2.g"), "A", "aaac", "aaad", "aaabd", "babaad");
+        DescTester.check(Env.tree("factor/loop2.g"), "A", "aaac", "aaad", "aaabd", "babaad");
         DescTester.check(Env.tree("factor/loop3.g"), "E", "cdcdae", "cdcdf", "cdcdbf", "bcdcdbf");
 
         Factor.debug = true;
-        ///DescTester.check(Env.tree("factor/plus_inside_plus.g"), "E", "aaac", "aaadaadb", "eeeb");
-        //DescTester.check(Env.tree("factor/zero_can_be_empty.g"), "E", "aaac", "eeeb", "aaab","aadadab");
+        DescTester.check(Env.tree("factor/plus_inside_plus.g"), "E", "aaac", "aaadaadb", "eeeb");
+        //DescTester.check(Env.tree("factor/zero_can_be_empty.g"), "E", "aaac", "aaab","adb","aadadab");
     }
 
     @Test

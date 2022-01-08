@@ -39,7 +39,7 @@ public class LrItem {
 
     public boolean hasReduce() {
         //if dot at end we are reducing
-        return getDotNode() == null;
+        return getDotSym() == null;
     }
 
     boolean isLr0() {
@@ -112,7 +112,7 @@ public class LrItem {
 
     //if dot follows a terminal
     public boolean isDotNonTerminal() {
-        Name name = getDotNode();
+        Name name = getDotSym();
         return name != null && !name.isToken;
     }
 
@@ -121,11 +121,17 @@ public class LrItem {
     }
 
     //node after dot
-    public Name getDotNode() {
+    public Name getDotSym() {
+        Node node = getDotNode();
+        return node == null ? null : node.asName();
+    }
+
+    //node after dot
+    public Node getDotNode() {
         if (isEpsilon()) return null;
         Sequence rhs = rule.rhs.asSequence();
         if (dotPos < rhs.size()) {
-            return rhs.get(dotPos).asName();
+            return rhs.get(dotPos);
         }
         return null;
     }
@@ -145,7 +151,7 @@ public class LrItem {
         boolean allEmpty = true;
         for (int i = dotPos + 1; i < rhs.size(); ) {
             Node node = rhs.get(i);
-            res.addAll(FirstSet.tokens(node,tree));
+            res.addAll(FirstSet.tokens(node, tree));
             if (Helper.canBeEmpty(node, tree)) {
                 i++;
                 //look next node
@@ -181,8 +187,10 @@ public class LrItem {
 
     @Override
     public int hashCode() {
-        if (hash == -1)
+        if (hash == -1) {
+            //lookahead may change later so consider initial set
             hash = Objects.hash(rule, dotPos, lookAhead);
+        }
         return hash;
     }
 }

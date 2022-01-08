@@ -5,10 +5,7 @@ import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class FactorLoop extends Transformer {
     static boolean debugMethod = false;
@@ -47,15 +44,36 @@ public class FactorLoop extends Transformer {
     }
 
     public Name noLoop(Regex sym) {
-        return sym.node.asName().copy();
+        Name name = sym.node.asName().copy();
+        name.astInfo.isInLoop = false;
+        return name;
     }
 
+    FactorHelper.commonResult find(Or or) {
+        Name loop = null;
+        for (int i = 0; i < or.size(); i++) {
+            Node a = or.get(i);
+            Set<Name> l = helper.loops(a);
+            for (int j = i + 1; j < or.size(); j++) {
+                Node b = or.get(j);
+                Set<Name> l2 = helper.loops(b);
+                Set<Name> common = new HashSet<>(l);
+                common.retainAll(l2);
+                if (!common.isEmpty()) {
+                    loop = common.iterator().next();
+                }
+                else {
 
-    /*@Override
-    public Node visitSequence(Sequence s, Void arg) {
-        factor.curRule = curRule;
-        return factor.visitSequence(s, arg);
-    }*/
+                }
+            }
+        }
+        if (loop != null) {
+            FactorHelper.commonResult res = new FactorHelper.commonResult();
+            res.isLoop = true;
+            res.name = loop;
+        }
+        return null;
+    }
 
     @Override
     public Node visitOr(Or or, Void arg) {
@@ -318,7 +336,7 @@ public class FactorLoop extends Transformer {
             if (FirstSet.isEmpty(tmp.one, tree)) {
                 Regex factored = new Regex(tmp.one.copy(), "+");
                 factored.astInfo = regex.astInfo.copy();
-                factored.astInfo.isFactored = true;
+                //factored.astInfo.isFactored = true;
                 factored.astInfo.factor = sym.astInfo;
                 if (tmp.zero == null) {
                     //(a A(a))+
@@ -328,29 +346,32 @@ public class FactorLoop extends Transformer {
                 }
                 else {
                     //(a A(a) | A_no_a)+
-                    //(a A(a))+ (A_no_a A* | €) | A_no_a A*
-                    //a+ (A(a)()+ A_no_a A* | A(a)()+) | A_no_a A*
+                    //(a A(a))+ (A_no_a A*)? | A_no_a A*
+                    //a+ A(a)+ (A_no_a A*)? | A_no_a A*
                     Regex star = new Regex(regex.node, "*");
                     star.astInfo = regex.astInfo.copy();
-                    Sequence s = new Sequence(factored, tmp.zero, star);
-                    res.one = new Or(s, factored);
-                    res.zero = new Sequence(tmp.zero, star);
+                    Sequence seq = new Sequence(tmp.zero, star);
+                    res.one = new Sequence(factored, new Regex(new Group(seq.copy()), "?"));
+                    res.zero = seq.copy();
                     return res;
                 }
             }
             else if (FirstSet.canBeEmpty(tmp.one, tree)) {
                 if (tmp.zero == null) {
                     //A+ = (a A(a))+ = (a A_a_eps(a) | a A_a_noe(a))+
-                    //(a A_a_eps(a))+ (a A_a_noe(a) A*)? | a A_a_noe(a) A*
                     //a+ A_a_eps(a)+ (a A_a_noe(a) A*)? | a A_a_noe(a) A*
+                    //a a* A_a_eps(a)+ (a A_a_noe(a) A*)? | a A_a_noe(a) A*
+                    //a a* A_a_eps(a)+ a A_a_noe(a) A* | a+ A_a_eps(a)+ | a A_a_noe(a) A*
+                    //a T A_a_noe(a) A* | a+ A_a_eps(a)+ | a A_a_noe(a) A*
+                    //T: a* A_a_eps(a)+ a
                     Epsilons.Info eps = Epsilons.trimInfo(tmp.one, tree);
 
                     Regex factored = new Regex(eps.eps.copy(), "+");
                     factored.astInfo = regex.astInfo.copy();
-                    factored.astInfo.isFactored = true;
+                    //factored.astInfo.isFactored = true;
                     factored.astInfo.factor = sym.astInfo;
 
-                    Regex star = new Regex(regex.node, "*");
+                    Regex star = new Regex(regex.node.copy(), "*");
                     star.astInfo = regex.astInfo.copy();
 
                     Name factor = noLoop(sym);

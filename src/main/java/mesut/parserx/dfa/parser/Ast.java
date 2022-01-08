@@ -50,7 +50,7 @@ public class Ast{
         public trSimple trSimple;
 
         public String toString(){
-            StringBuilder sb = new StringBuilder("trLineg1{");
+            StringBuilder sb = new StringBuilder("trLineg1#" + which + "{");
             if(which == 1){
                 sb.append(trArrow.toString());
             }
@@ -113,7 +113,7 @@ public class Ast{
                 }
         }
         public String toString(){
-            StringBuilder sb = new StringBuilder("finalList{");
+            StringBuilder sb = new StringBuilder("finalList#" + which + "{");
             if(which == 1){
                 sb.append(namedState);
             }
@@ -214,7 +214,7 @@ public class Ast{
         public Token ANY;
 
         public String toString(){
-            StringBuilder sb = new StringBuilder("INPUT{");
+            StringBuilder sb = new StringBuilder("INPUT#" + which + "{");
             if(which == 1){
                 sb.append("'" + BRACKET.value + "'");
             }

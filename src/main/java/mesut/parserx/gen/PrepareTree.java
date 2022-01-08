@@ -14,6 +14,9 @@ public class PrepareTree extends Transformer {
     }
 
     public void check() {
+        if (tree.start != null && tree.getRule(tree.start) == null) {
+            throw new RuntimeException("start rule declared but not defined");
+        }
         transformAll();
         for (TokenDecl decl : tree.tokens) {
             if (decl.after != null && tree.getToken(decl.after.name) == null) {

@@ -1,7 +1,6 @@
 package mesut.parserx.gen.targets;
 
 import mesut.parserx.gen.CodeWriter;
-import mesut.parserx.gen.Insn;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.Normalizer;
 import mesut.parserx.gen.ll.RecDescent;
@@ -73,7 +72,12 @@ public class JavaAstGen {
             c.append("return sb.toString();");
         }
         else {
-            c.append("StringBuilder sb = new StringBuilder(\"%s{\");", curRule);
+            if (rhs.isOr()) {
+                c.append("StringBuilder sb = new StringBuilder(\"%s#\" + which + \"{\");", curRule);
+            }
+            else {
+                c.append("StringBuilder sb = new StringBuilder(\"%s{\");", curRule);
+            }
             getPrint(rhs, c);
             c.append("return sb.append(\"}\").toString();");
         }
@@ -178,7 +182,6 @@ public class JavaAstGen {
         }
         else if (node.isName()) {
             node.astInfo.outerVar = outerVar;
-            node.astInfo.outerCls = outerCls;
             Name name = node.asName();
             //check if user supplied var name
             setVarName(name, outerCls);
@@ -190,7 +193,6 @@ public class JavaAstGen {
         }
         else if (node.isRegex()) {
             node.astInfo.outerVar = outerVar;
-            node.astInfo.outerCls = outerCls;
             Regex regex = node.asRegex();
             Node ch = regex.node;
             if (regex.isOptional()) {
@@ -200,7 +202,6 @@ public class JavaAstGen {
                 Name name = ch.asName();
                 setVarName(name, outerCls);
                 ch.astInfo.isInLoop = true;
-                ch.astInfo.outerCls = outerCls;
                 ch.astInfo.outerVar = outerVar;
                 String type = name.isToken ? options.tokenClass : name.name;
                 parent.append("public List<%s> %s = new ArrayList<>();", type, name.astInfo.varName);
@@ -223,11 +224,9 @@ public class JavaAstGen {
                 else {
                     //sequence
                     //complex choice point inits holder
-                    ch.astInfo.createNode = true;
                     ch.astInfo.nodeType = clsName;
                     ch.astInfo.varName = v;
                     ch.astInfo.outerVar = outerVar;
-                    ch.astInfo.outerCls = outerCls;
                     ch.astInfo.assignOuter = true;
                     parent.append(String.format("%s %s;", clsName.name, v));
                     CodeWriter c = new CodeWriter(false);

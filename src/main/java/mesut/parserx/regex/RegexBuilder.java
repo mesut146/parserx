@@ -51,11 +51,11 @@ public class RegexBuilder {
             }
         }
 
-        Or or = new Or();
-        for (Transition transition : nfa.trans[nfa.initial]) {
+        List<Node> or = new ArrayList<>();
+        for (Transition transition : nfa.get(nfa.initial)) {
             or.add(alphabet.getRegex(transition.input));
         }
-        return or.normal();
+        return Or.make(or);
     }
 
 
@@ -175,7 +175,7 @@ public class RegexBuilder {
                     if (ch.isEpsilon()) {
                         List<Node> list = node.asOr().list;
                         list.remove(ch);
-                        node = new Regex(Or.make(list), "?");
+                        node = new Regex(new Group(Or.make(list)), "?");
                         break;
                     }
                 }

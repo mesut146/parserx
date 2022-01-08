@@ -1,11 +1,8 @@
 package parser;
 
 import common.Env;
-import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.gen.lldfa.LLDfaBuilder;
-import mesut.parserx.gen.lldfa.LLDfaParserGen;
-import mesut.parserx.gen.lldfa.LLDfaRegex;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 import org.junit.Test;
@@ -26,36 +23,22 @@ public class LLDfaTest {
     public void dfa() throws IOException {
         //Tree tree = Env.tree("lldfa/a.g");
         //Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g"));
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
+        //Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
+        Tree tree = Env.tree("lldfa/factor.g");
         LLDfaBuilder builder = new LLDfaBuilder(tree);
         builder.build();
-        NFA nfa = builder.dfa;
-        NFA dfa = nfa.dfa();
-        dfa = Minimization.combineAlphabet(dfa);
-        dots(dfa, tree.file);
+        //dfa = Minimization.combineAlphabet(dfa);
+        dots(builder.dfa, tree.file);
     }
 
     @Test
     public void llregex() throws IOException {
         //Tree tree = Env.tree("lldfa/a.g");
         Tree tree = Env.tree("lldfa/factor.g");
-        LLDfaRegex regex = new LLDfaRegex(tree);
-        regex.makeRegex(tree.getRule("E"));
+        LLDfaBuilder builder = new LLDfaBuilder(tree);
+        builder.build();
         //c | a a* c | c b b* | a a* c b b*
-        dots(regex.nfa, tree.file);
+        dots(builder.dfa, tree.file);
     }
 
-    @Test
-    public void real() throws IOException {
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
-        //tree.options.outDir = Env.dotDir().getAbsolutePath();
-        tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/parser/lldfa";
-        tree.options.packageName = "parser.lldfa";
-        tree.options.lexerClass = "Lexer1";
-        tree.options.parserClass = "Parser1";
-        tree.options.tokenClass = "Token1";
-        LLDfaParserGen gen = new LLDfaParserGen(tree);
-        gen.gen();
-
-    }
 }
