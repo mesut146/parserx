@@ -8,6 +8,7 @@ token{
  EPSILON: "%epsilon" | "%empty" | "ε";
  LEFT: "%left";
  RIGHT: "%right";
+ JOIN: "%join";
  IDENT: [a-zA-Z_] [a-zA-Z0-9_]*;
  SHORTCUT: "[:" IDENT ":]";
  BRACKET: "[" ([^\r\n\\\u005d] | "\\" .)* "]";
@@ -68,6 +69,7 @@ skipBlock: "skip" "{" tokenDecl* "}";
 tokenDecl: "#"? name ("-" name)? SEPARATOR rhs ";";
 ruleDecl: name args? SEPARATOR rhs ";";
 args: "(" name rest=("," name)* ")";
+//args: "(" %join(name, ",")  ")";
 
 rhs: sequence ("|" sequence)*;
 sequence: regex+ assoc=("%left" | "%right")? label=("#" name)?;
@@ -84,6 +86,9 @@ untilNode: "~" regex;
 dotNode: ".";
 name: IDENT | "token" | "tokens" | "skip" | "options" | "include";
 repeatNode: "{" rhs "}";
+
+join: "%join" "(" nameOrString: "," nameOrString: ")";
+nameOrString: name | stringNode;
 
 //bracketOpt: "[" rhs "]";
 

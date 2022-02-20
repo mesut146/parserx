@@ -12,7 +12,10 @@ public class LrItem {
     public RuleDecl rule;
     public int dotPos;
     public Set<LrItemSet> gotoSet = new HashSet<>();
+    public Set<mesut.parserx.gen.lldfa.ItemSet> gotoSet2 = new HashSet<>();
+    public boolean closured1 = false, closured2 = false;
     public LrItem sender;
+    public Set<Integer> ids = new HashSet<>();
     int hash = -1;
 
     public LrItem(RuleDecl rule, int dotPos) {
@@ -27,6 +30,7 @@ public class LrItem {
     public LrItem(LrItem item, int dotPos) {
         this(item.rule, dotPos);
         this.lookAhead = new HashSet<>(item.lookAhead);
+        gotoSet2 = item.gotoSet2;
     }
 
     public static boolean isEpsilon(RuleDecl decl) {
@@ -123,7 +127,7 @@ public class LrItem {
     //node after dot
     public Name getDotSym() {
         Node node = getDotNode();
-        return node == null ? null : node.asName();
+        return node == null ? null : (node.isName() ? node.asName() : node.asRegex().node.asName());
     }
 
     //node after dot
@@ -137,12 +141,17 @@ public class LrItem {
     }
 
     //2 node after dot
-    public Name getDotNode2() {
+    public Node getDotNode2() {
         Sequence rhs = rule.rhs.asSequence();
         if (dotPos < rhs.size() - 1) {
-            return rhs.get(dotPos + 1).asName();
+            return rhs.get(dotPos + 1);
         }
         return null;
+    }
+
+    public Name getDotSym2() {
+        Node node = getDotNode2();
+        return node == null ? null : (node.isName() ? node.asName() : node.asRegex().node.asName());
     }
 
     public Set<Name> follow(Tree tree) {

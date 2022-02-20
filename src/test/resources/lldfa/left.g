@@ -2,5 +2,5 @@ include "../common.g"
 
 %start = E;
 
-E: A* c | a* d;
-A: a | b;
+E: E a | b;
+A: b a* c | E d;

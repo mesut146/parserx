@@ -26,6 +26,7 @@ public class Tree {
     CountingMap<String> newNameCnt = new CountingMap<>();
     Map<String, String> senderMap = new HashMap<>();
     HashSet<Name> originalRules = new HashSet<>();
+    public boolean checkDup = true;
 
     public Tree() {
     }
@@ -120,9 +121,11 @@ public class Tree {
     }
 
     public void addRule(RuleDecl rule) {
-        for (RuleDecl old : rules) {
-            if (old.ref.equals(rule.ref)) {
-                throw new RuntimeException("duplicate rule");
+        if(checkDup){
+            for (RuleDecl old : rules) {
+                if (old.ref.equals(rule.ref)) {
+                    throw new RuntimeException("duplicate rule");
+                }
             }
         }
         rule.index = rules.size();
