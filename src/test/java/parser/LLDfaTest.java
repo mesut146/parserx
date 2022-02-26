@@ -23,17 +23,34 @@ public class LLDfaTest {
         Runtime.getRuntime().exec("dot -Tpng -O " + file);
     }
 
+    void single(String path) throws IOException{
+        Tree tree = Env.tree(path);
+        LLDfaBuilder builder = new LLDfaBuilder(tree);
+        builder.factor();
+        //builder.normalize();
+        dot(builder);
+    }    
+
     @Test
     public void dfa() throws IOException {
          Env.dir = "/asd/parserx";
         //Tree tree = Env.tree("lldfa/a.g");
         //Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g"));
         //Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
-        Tree tree = Env.tree("lldfa/right.g");
-        LLDfaBuilder builder = new LLDfaBuilder(tree);
-        builder.factor();
-        //dfa = Minimization.combineAlphabet(dfa);
-        dot(builder);
+        single("lldfa/factor.g");
+        single("lldfa/left.g");
+        single("lldfa/left-indirect.g");
+        single("lldfa/right.g");
+        single("lldfa/right-indirect.g");
+        single("lldfa/greedy.g");
+        single("lldfa/greedy2.g");
+        single("lldfa/or.g");
+        single("lldfa/len2.g");
+        single("lldfa/sr.g");
+        //single("lldfa/sr2.g");
+        single("lldfa/rr.g");
     }
+    
+    
 
 }

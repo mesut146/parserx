@@ -10,27 +10,34 @@ import java.util.*;
 public class LrItem {
     public Set<Name> lookAhead = new HashSet<>();
     public RuleDecl rule;
+    public Sequence rhs;
     public int dotPos;
     public Set<LrItemSet> gotoSet = new HashSet<>();
     public Set<mesut.parserx.gen.lldfa.ItemSet> gotoSet2 = new HashSet<>();
-    public boolean closured1 = false, closured2 = false;
+    public boolean[] closured;
     public LrItem sender;
     public Set<Integer> ids = new HashSet<>();
     int hash = -1;
+    public static int lastId = 0;
 
     public LrItem(RuleDecl rule, int dotPos) {
         this.rule = rule;
         this.dotPos = dotPos;
+        this.rhs = rule.rhs.asSequence();
         if (isEpsilon()) {
             //act as reduce
             this.dotPos = 1;
         }
+        ids.add(lastId++);
+        closured = new boolean[rhs.size()];
     }
 
     public LrItem(LrItem item, int dotPos) {
         this(item.rule, dotPos);
         this.lookAhead = new HashSet<>(item.lookAhead);
-        gotoSet2 = item.gotoSet2;
+        this.gotoSet2 = item.gotoSet2;
+        this.ids = item.ids;
+        lastId--;
     }
 
     public static boolean isEpsilon(RuleDecl decl) {
@@ -45,6 +52,16 @@ public class LrItem {
         //if dot at end we are reducing
         return getDotSym() == null;
     }
+    
+    public boolean isReduce(Tree tree){
+        for(int i = dotPos;i < rhs.size();i++){
+            Node node = rhs.get(i);
+            if(!Helper.canBeEmpty(node, tree)){
+                return false;
+            }    
+        }
+        return true;
+    }    
 
     boolean isLr0() {
         return lookAhead.isEmpty();
@@ -54,7 +71,7 @@ public class LrItem {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(rule.ref);
-        sb.append(" -> ");
+        sb.append(": ");
         Sequence rhs = rule.rhs.asSequence();
         for (int i = 0; i < rhs.size(); i++) {
             if (i == dotPos) {
@@ -123,6 +140,25 @@ public class LrItem {
     public boolean isEpsilon() {
         return isEpsilon(rule);
     }
+    
+    /*public Iterator<Node> iter(){
+        return new Iterator(){
+            int i = dotPos;
+            public Node next(){
+                return rhs.get(i++);
+            }
+            public boolean hasNext(){
+                return i < rhs.size() && FirstSet.canBeEmpty(rhs.get(i), tree);
+            }
+        };
+    }    */
+
+    public Node getNode(int pos){
+        Sequence s = rule.rhs.asSequence();
+        if(pos < s.size())
+            return s.get(pos);
+        return null;
+    }    
 
     //node after dot
     public Name getDotSym() {
@@ -133,7 +169,6 @@ public class LrItem {
     //node after dot
     public Node getDotNode() {
         if (isEpsilon()) return null;
-        Sequence rhs = rule.rhs.asSequence();
         if (dotPos < rhs.size()) {
             return rhs.get(dotPos);
         }
@@ -142,7 +177,6 @@ public class LrItem {
 
     //2 node after dot
     public Node getDotNode2() {
-        Sequence rhs = rule.rhs.asSequence();
         if (dotPos < rhs.size() - 1) {
             return rhs.get(dotPos + 1);
         }
@@ -154,9 +188,9 @@ public class LrItem {
         return node == null ? null : (node.isName() ? node.asName() : node.asRegex().node.asName());
     }
 
+    //first set of follow of dot node
     public Set<Name> follow(Tree tree) {
         HashSet<Name> res = new HashSet<>();
-        Sequence rhs = rule.rhs.asSequence();
         boolean allEmpty = true;
         for (int i = dotPos + 1; i < rhs.size(); ) {
             Node node = rhs.get(i);
@@ -176,7 +210,7 @@ public class LrItem {
         }
         return res;
     }
-
+    
     @Override
     public boolean equals(Object other) {
         if (this == other) return true;

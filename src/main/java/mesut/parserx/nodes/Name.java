@@ -40,6 +40,14 @@ public class Name extends Node {
             sb.append(astInfo);
         return sb.toString();
     }
+    
+    public String debug(){
+        boolean d =debug;
+        debug = true;
+        String res = toString();
+        debug = d;
+        return res;
+    }    
 
     @Override
     public boolean equals(Object o) {

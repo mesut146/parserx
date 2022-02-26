@@ -16,7 +16,7 @@ public class ItemSet {
     public List <LrItem> reduce = new ArrayList < > ();
     public boolean isStart = false;
     public int stateId = -1;
-    static int lastId = 0;
+    public static int lastId = 0;
     public String type;
     Tree tree;
     public List < Transition > transitions = new ArrayList < > ();
@@ -68,23 +68,20 @@ public class ItemSet {
     public List<LrItem> genReduces() {
         List <LrItem > res = new ArrayList <>();
         for (LrItem it: kernel) {
-            if (!hasReduce(it)) continue;
+            if (!it.isReduce(tree)) continue;
             //is there any transition with my reduce symbol
             for (ItemSet gt: it.gotoSet2) {
                 for (LrItem gti: gt.all) {
-                    Name sym = gti.getDotSym();
-                    if (sym == null || sym.isToken) continue;
-                    if (sym.equals(it.rule.ref)) {
-                        int newPos = gti.getDotNode().isStar() ? gti.dotPos : gti.dotPos + 1;
-                        LrItem target = new LrItem(gti, newPos);
-                        target.gotoSet2.add(gt);
-                        res.add(target);
+                    for(int i = gti.dotPos;i < gti.rhs.size();i++){
+                        if(i > gti.dotPos && !FirstSet.canBeEmpty(gti.getNode(i - 1), tree)) break;
+                        Name sym = sym(gti.getNode(i));
+                        if (sym.equals(it.rule.ref)) {
+                            int newPos = gti.getNode(i).isStar() ? i : i + 1;
+                            LrItem target = new LrItem(gti, newPos);
+                            target.gotoSet2.add(gt);
+                            res.add(target);
+                        }
                     }
-                    /*if (FirstSet.canBeEmpty(gti.getDotNode(), tree)) {
-                        LrItem target2 = new LrItem(gti, gti.dotPos + 2);
-                        target2.gotoSet2.add(gt);
-                        toAdd.add(target2);
-                    }*/
                 }
             }
         }
@@ -93,7 +90,7 @@ public class ItemSet {
 
     boolean hasReduce(LrItem item) {
         if (item.getDotNode() == null) return true;
-        Sequence seq = item.rule.rhs.asSequence();
+        Sequence seq = item.rhs;
         if (item.dotPos == seq.size() - 1) {
             return FirstSet.canBeEmpty(seq.get(item.dotPos), tree);
         }
@@ -121,64 +118,54 @@ public class ItemSet {
             }
         }
     }
+    
+    boolean common(Node s1, Node s2){
+        return new FactorHelper(tree, new Factor(tree)).common(s1, s2) != null;
+    }
+    
+    Name sym(Node node){
+        return node.isName() ? node.asName() : node.asRegex().node.asName();
+    }    
 
     public void closure(LrItem item) {
-        //if two alternations are different and have common factor
-        //closure is forced to reveal factor
-        Name s1 = item.getDotSym();
-        if (s1 == null || s1.isToken) return;
-        /*if (isStart || stateId == 0) {
-            item.closured1 = true;
-            closure(s1, item);
-            return;
-        }*/
+        //if dot sym have common factor ,closure is forced to reveal factor
         List<Name> syms = symbols();
-        if (FirstSet.canBeEmpty(s1, tree) && item.getDotNode2() != null) {
-            Name next = item.getDotSym2();
-            //two consecutive syms
-            if (new FactorHelper(tree, new Factor(tree)).common(s1, next) != null) {
-                    item.closured1 = true;
-                    closure(s1, item);
-                    if(next.isRule()){
-                        item.closured2 = true;
-                        closure(next, item);
+        for(int i = item.dotPos;i < item.rhs.size();i++){
+            if(i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
+            Node node = item.getNode(i);
+            Name sym = sym(node);
+            if(sym.isToken) continue;
+            //check two consecutive syms have common
+            for(int j = item.dotPos;j < item.rhs.size();j++){
+                if(i == j) continue;
+                if(j > item.dotPos && !FirstSet.canBeEmpty(item.getNode(j - 1), tree)) break;
+                Node next = item.getNode(j);
+                if(common(node, next)){
+                    item.closured[i] = true;
+                    closure(sym, item);
+                    break;
+                }
+            }
+            if(item.closured[i]) continue;
+            //check dot sym and any other sym have common
+            for (Name s2 : syms) {
+                    if (s2 == sym) continue;
+                    if (common(sym, s2)) {
+                        item.closured[i] = true;
+                        closure(sym, item);
+                        break;
                     }
-                    return;
-            }
-            if(next.isRule()){
-                //second and other
-                for (Name s2 : syms) {
-                    if (s2 == s1 || s2 == next) continue;
-                    //if (next.equals(s2) || (next.isToken && s2.isToken)) continue;
-                    if (new FactorHelper(tree, new Factor(tree)).common(next, s2) != null) {
-                        item.closured2 = true;
-                        closure(next, item);
-                        return;
-                    }
-                }//for
-            }
-        }
-        for(Name s2 : syms){
-            if(s1 == s2) continue;
-            //if (s1.equals(s2) || (s1.isToken && s2.isToken)) continue;
-            if (new FactorHelper(tree, new Factor(tree)).common(s1, s2) != null) {
-                item.closured1 = true;
-                closure(s1, item);
-                return;
-            }
+            }//for
         }    
     }
     
     List<Name> symbols(){
         List<Name> res = new ArrayList<>();
-        for(LrItem it : all){
-            Name s1 = it.getDotSym();
-            if(s1 == null) continue;
-            res.add(s1);
-            if(FirstSet.canBeEmpty(s1, tree)){
-                Name s2 = it.getDotSym2();
-                if(s2 == null) continue;
-                res.add(s2);
+        for(LrItem item : all){
+            for(int i = item.dotPos;i < item.rhs.size();i++){
+                if(i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
+                Node node = item.getNode(i);
+                res.add(sym(node));
             }
         }
         return res;

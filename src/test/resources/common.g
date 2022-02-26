@@ -6,6 +6,8 @@ token{
   e: "e";
   f: "f";
   g: "g";
+  h: "h";
+  k: "k";
   m: "m";
   n: "n";
   p: "p";

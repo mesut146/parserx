@@ -15,13 +15,17 @@ public class LLDfaBuilder {
     public Name rule;
     public Tree tree;
     ItemSet firstSet;
+    Map<Name, List<LrItem>> firstItems = new HashMap<>();
     Set<ItemSet> all = new HashSet<>();
     Set<ItemSet> all2 = new HashSet<>();
     Queue<ItemSet> queue = new LinkedList<>();
     int lastId = 0;
+    String type = "lr1";
+    public static Name dollar = new Name("$", true);//eof
 
     public LLDfaBuilder(Tree tree) {
         this.tree = tree;
+        ItemSet.lastId = LrItem.lastId = 0;
     }
 
     void prepare() {
@@ -103,18 +107,25 @@ public class LLDfaBuilder {
         prepare();
         queue.clear();
         all.clear();
-        //lastId = 0;
+        //ItemSet.lastId = 0;
+        //LrItem.lastId = 0;
         System.out.println("building " + rule);
         
         Set<ItemSet> done = new HashSet<>();
         
-        firstSet = new ItemSet(tree, "lr0");
+        firstSet = new ItemSet(tree, type);
         firstSet.isStart = true;
         
         for(RuleDecl rd : tree.getRules(rule)){
             LrItem first = new LrItem(rd, 0);
-            first.ids.add(lastId++);
+            first.lookAhead.add(dollar);
             firstSet.addItem(first);
+            List<LrItem> list = firstItems.get(rd.ref);
+            if(list == null){
+                list = new ArrayList<>();
+                firstItems.put(rd.ref, list);
+            }
+            list.add(first);
         }    
         
         all.add(firstSet);
@@ -122,40 +133,48 @@ public class LLDfaBuilder {
 
         while (!queue.isEmpty()) {
             ItemSet curSet = queue.poll();
+            System.out.println("curSet = " + curSet.stateId);
             //closure here because it needs all items
             curSet.closure();
             Map<Name, List<LrItem>> map = new HashMap<>();
             for (LrItem item : curSet.all) {
+                //System.out.println("item = " + item);
                 //improve stars as non closured
-                Node symNode = item.getDotNode();
-                 if (symNode == null) continue;
-                 if(!item.closured2 && FirstSet.canBeEmpty(symNode, tree)){
-                     Name next = item.getDotSym2();
-                     if(next != null){
-                         int np = item.getDotNode2().isStar() ? item.dotPos + 1: item.dotPos + 2;
-                         LrItem nextItem = new LrItem(item,  np);
-                         nextItem.gotoSet2.add(curSet);
-                         List<LrItem> list = map.get(next);
-                         if(list == null){
-                             list = new ArrayList<>();
-                             map.put(next, list);
-                         }
-                         list.add(nextItem);
-                         //handle(curSet, next, nextItem);
-                     } 
-                 }
-                Name sym = item.getDotSym();
-                if(item.closured1) continue;
-                int newPos = symNode.isStar() ? item.dotPos : item.dotPos + 1;
-                LrItem target = new LrItem(item,  newPos);
-                target.gotoSet2.add(curSet);
-                List<LrItem> list = map.get(sym);
-                if(list == null){
-                    list = new ArrayList<>();
-                    map.put(sym, list);
+                for(int i = item.dotPos;i < item.rhs.size(); i++){
+                    if(i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
+                    if(item.closured[i]) continue;
+                    
+                    Node node = item.getNode(i);               
+                    Name sym = node.isName() ? node.asName() : node.asRegex().node.asName();             
+                    int newPos = node.isStar() ? i : i + 1;
+                    LrItem target;
+                    if(i > item.dotPos){
+                        //prev part is epsilon, create correct reducer item
+                        //a b .c? d? .e
+                        List<Node> rhs = new ArrayList<>(item.rhs.list);
+                        for(int j = 0;j < (i - item.dotPos);j++){
+                            rhs.remove(item.dotPos);
+                        }    
+                        RuleDecl rd = new RuleDecl(item.rule.ref, new Sequence(rhs));
+                        target = new LrItem(rd, item.dotPos + 1);
+                    }else{
+                        target = new LrItem(item,  newPos);
+                    }
+                    target.gotoSet2.add(curSet);
+                    List<LrItem> list = map.get(sym);
+                    if(list == null){
+                        list = new ArrayList<>();
+                        map.put(sym, list);
+                    }else{
+                        //factor
+                        Name f = sym.copy();
+                        f.astInfo.isFactor = true;
+                        map.remove(sym);
+                        map.put(f, list);
+                        System.out.println("factor " + f);
+                    }    
+                    list.add(target);
                 }
-                list.add(target);
-                //handle(curSet, sym, target);
             }
             makeTrans(curSet, map);
         }
@@ -165,34 +184,25 @@ public class LLDfaBuilder {
     void makeTrans(ItemSet curSet, Map<Name, List<LrItem>> map){
         System.out.println("makeTrans " + curSet.stateId + " " + map);
         for(Map.Entry<Name, List<LrItem>> e : map.entrySet()){
-                Name sym = e.getKey();
-                List<LrItem> list = e.getValue();
-                ItemSet s = new ItemSet(tree, "lr0");
-                s.addAll(list);
-                s.addAll(s.genReduces());
-                list = new ArrayList<>(s.kernel);
-                ItemSet targetSet = getTarget(curSet, sym);
-                if(targetSet != null){
-                    for(LrItem target : list){
-                         targetSet.addItem(target);
-                         //queue.add(targetSet);
-                     }
-                }else{
-                    targetSet = findSimilar(list);
-                    if(targetSet != null){
-                        System.out.println("found similar " + targetSet.stateId);
-                        curSet.addTransition(sym, targetSet);
-                    }else{
-                        targetSet = new ItemSet(tree, "lr0");
-                        for(LrItem it : list){
-                            targetSet.addItem(it);
-                        }
-                        all.add(targetSet);
-                        curSet.addTransition(sym, targetSet);
-                        queue.add(targetSet);
-                    }
-                }    
-            } 
+            Name sym = e.getKey();
+            List<LrItem> list = e.getValue();
+            ItemSet s = new ItemSet(tree, type);
+            s.addAll(list);
+            s.addAll(s.genReduces());
+            ItemSet.lastId--;
+            list = new ArrayList<>(s.kernel);
+            ItemSet targetSet = findSimilar(list);
+            if(targetSet != null){
+                //System.out.println("found similar " + targetSet.stateId);
+                curSet.addTransition(sym, targetSet);
+            }else{
+                targetSet = new ItemSet(tree, type);
+                targetSet.addAll(list);
+                all.add(targetSet);
+                curSet.addTransition(sym, targetSet);
+                queue.add(targetSet);
+            }
+        } 
     }    
     
     ItemSet  getTarget(ItemSet set, Name sym){
@@ -211,7 +221,7 @@ public class LLDfaBuilder {
     }    
     
     ItemSet findSimilar(List<LrItem> target){
-        System.out.println("similar " + target);
+        //System.out.println("similar " + target);
         sort(target);
         for(ItemSet set : all){
             if(target.size() != set.kernel.size()) continue;
@@ -229,6 +239,29 @@ public class LLDfaBuilder {
         return null;
     }
     
+    public void normalize(){
+        for(ItemSet set : all){
+            for(LrItem it : set.all){
+                if(!it.isReduce(tree)) continue;
+                //has shift reduce conflict?
+                trace(set, it);
+            }    
+        }    
+    }
+    
+    void trace(ItemSet set, LrItem it){
+        System.out.println("trace "+it);
+        for(Transition tr:set.transitions){
+            //System.out.println("sym "+tr.symbol.debug());
+            if(tr.symbol.astInfo.isFactor){
+                ItemSet target = tr.target;
+                target.addItem(it);
+                System.out.println("moved "+ set.stateId + " " + it);
+                //set.all.remove(it);
+            }    
+        }    
+    }    
+    
     public void dot(java.io.PrintWriter w){
         w.println("digraph G{");
         w.println("rankdir = TD");
@@ -237,16 +270,21 @@ public class LLDfaBuilder {
             StringBuilder sb = new StringBuilder();
             sb.append("<");
             for(LrItem it : set.all){
-                String line = it.toString();
+                String line = it.toString() + " " + it.ids;
                 line = line.replace(">", "&gt;");
-                if(it.hasReduce()){
+                if(it.isReduce(tree)){
                     sb.append("<FONT color=\"blue\">");
                     sb.append(line);
                     sb.append("</FONT>");
-                }else{
+                }else if(it.dotPos == 0){
+                    sb.append("<FONT color=\"red\">");
+                    sb.append(line);
+                    sb.append("</FONT>");
+                }    
+                else{
                     sb.append(line);
                 }
-                sb.append("<BR/>");
+                sb.append("<BR ALIGN=\"LEFT\"/>");
             }
             sb.append(">");
             w.printf("%s [shape=box xlabel=\"%s\" label=%s]\n",set.stateId, set.stateId, sb);
