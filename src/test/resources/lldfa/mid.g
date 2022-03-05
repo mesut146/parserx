@@ -1,6 +1,4 @@
 include "../common.g"
 
-%start = E;
-
-E: A d | a* e;
+E: A x | a* y;
 A: a A b | c;

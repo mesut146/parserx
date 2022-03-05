@@ -1,7 +1,7 @@
 include "../common.g"
 
 E: A* x | B* y;
-A: a b c?;
+A: a b;
 B: d? a b;
 
-//last a b goes A(a,b): a() b() c
+//A: a b c?; greedy

@@ -191,6 +191,9 @@ public class LrItem {
     //first set of follow of dot node
     public Set<Name> follow(Tree tree) {
         HashSet<Name> res = new HashSet<>();
+        if(getNode(dotPos).isStar()){
+            res.addAll(FirstSet.tokens(getNode(dotPos), tree));
+        }    
         boolean allEmpty = true;
         for (int i = dotPos + 1; i < rhs.size(); ) {
             Node node = rhs.get(i);

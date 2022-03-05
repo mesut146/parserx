@@ -10,6 +10,7 @@ token{
  RIGHT: "%right";
  JOIN: "%join";
  IDENT: [a-zA-Z_] [a-zA-Z0-9_]*;
+ CALL_BEGIN: IDENT "(";
  SHORTCUT: "[:" IDENT ":]";
  BRACKET: "[" ([^\r\n\\\u005d] | "\\" .)* "]";
  STRING: "\"" ([^\r\n\\"] | "\\" .)* "\"";
@@ -86,6 +87,8 @@ untilNode: "~" regex;
 dotNode: ".";
 name: IDENT | "token" | "tokens" | "skip" | "options" | "include";
 repeatNode: "{" rhs "}";
+
+call: CALL_BEGIN IDENT ("," IDENT)* ")";
 
 join: "%join" "(" nameOrString: "," nameOrString: ")";
 nameOrString: name | stringNode;

@@ -16,12 +16,14 @@ public class LLDfaBuilder {
     public Tree tree;
     ItemSet firstSet;
     Map<Name, List<LrItem>> firstItems = new HashMap<>();
+    Map<ItemSet, Name> firstSets = new HashMap<>();
+    Set<ItemSet> finals = new HashSet<>();
     Set<ItemSet> all = new HashSet<>();
     Set<ItemSet> all2 = new HashSet<>();
     Queue<ItemSet> queue = new LinkedList<>();
-    int lastId = 0;
     String type = "lr1";
     public static Name dollar = new Name("$", true);//eof
+    boolean moved;
 
     public LLDfaBuilder(Tree tree) {
         this.tree = tree;
@@ -37,7 +39,6 @@ public class LLDfaBuilder {
         for(RuleDecl rd : tree.rules){
             Node rhs = rd.rhs;
             if(rhs.isOr()){
-                int id = 0;
                 for(Node ch : rhs.asOr()){
                     ch = plus(ch);
                     res.addRule(new RuleDecl(rd.ref, ch));
@@ -48,8 +49,6 @@ public class LLDfaBuilder {
             }
         }
         tree = res;
-        
-        //first.lookAhead.add(LrDFAGen.dollar);
     }
     
     Sequence plus(Node node){
@@ -109,7 +108,7 @@ public class LLDfaBuilder {
         all.clear();
         //ItemSet.lastId = 0;
         //LrItem.lastId = 0;
-        System.out.println("building " + rule);
+        System.out.println("building " + rule +" in " + tree.file.getName());
         
         Set<ItemSet> done = new HashSet<>();
         
@@ -148,7 +147,7 @@ public class LLDfaBuilder {
                     Name sym = node.isName() ? node.asName() : node.asRegex().node.asName();             
                     int newPos = node.isStar() ? i : i + 1;
                     LrItem target;
-                    if(i > item.dotPos){
+                    if(false && i > item.dotPos){
                         //prev part is epsilon, create correct reducer item
                         //a b .c? d? .e
                         List<Node> rhs = new ArrayList<>(item.rhs.list);
@@ -178,6 +177,9 @@ public class LLDfaBuilder {
             }
             makeTrans(curSet, map);
         }
+        moveReductions();
+        //mergeFinals();
+        //eliminate();
         all2.addAll(all);
     }
     
@@ -186,22 +188,24 @@ public class LLDfaBuilder {
         for(Map.Entry<Name, List<LrItem>> e : map.entrySet()){
             Name sym = e.getKey();
             List<LrItem> list = e.getValue();
-            ItemSet s = new ItemSet(tree, type);
-            s.addAll(list);
-            s.addAll(s.genReduces());
-            ItemSet.lastId--;
-            list = new ArrayList<>(s.kernel);
-            ItemSet targetSet = findSimilar(list);
-            if(targetSet != null){
-                //System.out.println("found similar " + targetSet.stateId);
-                curSet.addTransition(sym, targetSet);
+            ItemSet targetSet = new ItemSet(tree, type);
+            targetSet.addAll(list);
+            targetSet.addAll(targetSet.genReduces());
+            
+            ItemSet sim = findSimilar(new ArrayList<>(targetSet.kernel));
+            if(sim != null){
+                ItemSet.lastId--;
+                //merge lookaheads
+                for(LrItem it : targetSet.all){
+                    sim.update(it);
+                }
+                targetSet = sim;
             }else{
-                targetSet = new ItemSet(tree, type);
-                targetSet.addAll(list);
                 all.add(targetSet);
-                curSet.addTransition(sym, targetSet);
                 queue.add(targetSet);
             }
+            curSet.addTransition(sym, targetSet);
+            System.out.printf("trans %d -> %d with %s\n", curSet.stateId,targetSet.stateId,sym);
         } 
     }    
     
@@ -220,6 +224,7 @@ public class LLDfaBuilder {
          });   
     }    
     
+    //find a set that has same kernel
     ItemSet findSimilar(List<LrItem> target){
         //System.out.println("similar " + target);
         sort(target);
@@ -239,32 +244,208 @@ public class LLDfaBuilder {
         return null;
     }
     
-    public void normalize(){
-        for(ItemSet set : all){
-            for(LrItem it : set.all){
-                if(!it.isReduce(tree)) continue;
-                //has shift reduce conflict?
-                trace(set, it);
+    public void moveReductions(){
+        if(true) return;
+        moved = true;
+        while(moved){
+            moved = false;
+            Set<LrItem> toRemove = new HashSet<>();
+            for(ItemSet set : all){
+                for(LrItem it : set.all){
+                    if(!it.isReduce(tree)) continue;
+                    if(it.lookAhead.contains(dollar)) continue;
+                    //has shift reduce conflict?
+                    moveReduction(set, it);
+                    if(it.lookAhead.isEmpty()) toRemove.add(it);
+                }
+                for(LrItem it:toRemove){
+                    for(int i = 0;i < set.all.size();i++){
+                        if(it.isSame(set.all.get(i))){
+                            set.all.remove(i);
+                            System.out.println("deleted " + it);
+                            break;
+                        }    
+                    }
+                }    
+            }
+        }
+    }
+    
+    void moveReduction(ItemSet set, LrItem it){
+        //System.out.println("trace "+it);
+        for(Transition tr:set.transitions){
+            if(tr.target == set) continue;
+            //if(!tr.symbol.isName()) continue;
+            //System.out.println("sym "+tr.symbol.debug());
+            if(tr.symbol.astInfo.isFactor){
+                ItemSet target = tr.target;
+                System.out.printf("moved %d -> %d %s\n", set.stateId, target.stateId, it);
+                LrItem it2= new LrItem(it, it.dotPos);
+                it.lookAhead.remove(tr.symbol.asName());
+                it2.lookAhead.clear();
+                for(Transition tr2:target.transitions){
+                    //todo not all
+                    Name sym = tr2.symbol.isSequence()?tr2.symbol.asSequence().last().asName():tr2.symbol.asName();
+                    it2.lookAhead.add(sym);
+                }
+                target.addItem(it2);
+                
+                System.out.printf("new = %s\n", it2);
+                moved = true;
+            }else{
+                Name sym = tr.symbol.isSequence()?tr.symbol.asSequence().last().asName():tr.symbol.asName();
+                it.lookAhead.remove(sym);
+                Name s = it.rule.ref.copy();
+                s.name += "$";
+                tr.symbol = seq(s, tr.symbol);
+                moved = true;
             }    
         }    
     }
     
-    void trace(ItemSet set, LrItem it){
-        System.out.println("trace "+it);
-        for(Transition tr:set.transitions){
-            //System.out.println("sym "+tr.symbol.debug());
-            if(tr.symbol.astInfo.isFactor){
-                ItemSet target = tr.target;
-                target.addItem(it);
-                System.out.println("moved "+ set.stateId + " " + it);
-                //set.all.remove(it);
-            }    
+    Sequence seq(Node a, Node b){
+        if(b.isSequence()){
+            Sequence s = b.asSequence();
+            s.list.add(0, a);
+            return s;
+        }else{
+            return new Sequence(a,b);
         }    
     }    
     
+    public void eliminate(){
+        List<ItemSet> toRemove = new ArrayList<>();
+        for(ItemSet set:all){
+            boolean hasReduce = false;
+            for(LrItem it:set.all){
+                hasReduce |= it.isReduce(tree);
+            }
+            //   if(!hasReduce && !set.isStart 
+            if(!set.isStart && canBeRemoved2(set)){
+                System.out.println("rem " + set.stateId);
+                //eliminate(set);
+                //toRemove.add(set);
+            }    
+        }
+        all.removeAll(toRemove);
+    }
+    
+    boolean canBeRemoved(ItemSet set){
+        //if it has 2 unique out going trans
+        int cnt = 0;
+        for(Transition tr:set.transitions){
+            if(tr.target != set) cnt++;
+        }
+        return cnt <= 1;
+    }
+    
+    boolean canBeRemoved2(ItemSet set){
+        if(hasFinal(set)) return false;
+        //looping through final state
+        Set<Integer> visited = new HashSet<>();
+        Queue<ItemSet> queue = new LinkedList<>();
+        for(Transition tr:set.transitions){
+            if(tr.target != set){
+                queue.add(tr.target);
+                visited.add(tr.target.stateId);
+            }
+        }
+        //discover
+        while(!queue.isEmpty()){
+            ItemSet cur = queue.poll();
+            for(Transition tr:cur.transitions){
+                if(tr.target == set && reachFinal(cur, set)) return false;
+                if(tr.target != set && visited.add(tr.target.stateId)) queue.add(tr.target);
+            }
+        }
+        return true;
+    }
+    
+    boolean reachFinal(ItemSet from, ItemSet except){
+        Set<Integer> visited = new HashSet<>();
+        Queue<ItemSet> queue = new LinkedList<>();
+        queue.add(from);
+        visited.add(from.stateId);
+        while(!queue.isEmpty()){
+            ItemSet cur = queue.poll();
+            if(hasFinal(cur)) return true;
+            for(Transition tr:cur.transitions){
+                ItemSet trg = tr.target;
+                if(trg == except) continue;
+                if(visited.add(trg.stateId))  queue.add(trg);
+            }
+        }
+        return false;
+    }    
+    
+    boolean hasFinal(ItemSet set){
+        for(LrItem it : set.all){
+            
+            if(it.isReduce(tree) && it.lookAhead.contains(dollar)) return true;
+         }
+         return false;
+    }
+    
+    void eliminate(ItemSet set){
+        System.out.println("removing " + set.stateId);
+        Node loop = loopSym(set);
+        for(ItemSet from:all){
+            if(from == set) continue;
+            List<Transition> toRemove = new ArrayList<>();
+            List<Transition> toAdd = new ArrayList<>();
+            for(Transition tr:from.transitions){
+                if(tr.target != set) continue;
+                toRemove.add(tr);
+                for(Transition tr2:set.transitions){
+                    if(tr2.target == set) continue;
+                    if(loop == null){
+                        toAdd.add(new Transition(from, new Sequence(tr.symbol, tr2.symbol), tr2.target));
+                    }else{
+                        toAdd.add(new Transition(from, new Sequence(tr.symbol, new Regex(loop, "*"), tr2.symbol), tr2.target));
+                    }    
+                }
+            }
+            from.transitions.removeAll(toRemove);
+            from.transitions.addAll(toAdd);
+        }
+     }
+     
+     Node loopSym(ItemSet set){
+         for(Transition tr:set.transitions){
+             if(tr.target == set) return tr.symbol;
+         }
+         return null;   
+     }
+     
+     void mergeFinals(){
+         ItemSet ns = new ItemSet(tree, type);
+         for(Iterator<ItemSet> it=all.iterator();it.hasNext();){
+             ItemSet set=it.next();
+             for(LrItem item:set.all){
+                 if(item.lookAhead.contains(dollar) && item.isReduce(tree)){
+                     ns.addAll(set.all);
+                     for(Transition in:set.incomings){
+                         in.target = ns;
+                         System.out.printf("new1 %d -> %d\n", in.from.stateId,ns.stateId);
+                     }
+                     for(Transition tr:set.transitions){
+                         tr.from = ns;
+                         ns.addTransition(tr.symbol, tr.target);
+                         System.out.printf("new2 %d -> %d\n", ns.stateId,tr.target.stateId);
+                     }
+                     it.remove();
+                     System.out.printf("final %d\n", set.stateId);
+                     break;
+                 }    
+             }    
+         }
+         System.out.printf("new final = %d\n", ns.stateId);
+         all.add(ns);
+     }    
+    
     public void dot(java.io.PrintWriter w){
         w.println("digraph G{");
-        w.println("rankdir = TD");
+        //w.println("rankdir = TD");
         w.println("size=\"100,100\";");
         for(ItemSet set: all2){
             StringBuilder sb = new StringBuilder();

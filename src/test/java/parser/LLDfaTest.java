@@ -24,6 +24,7 @@ public class LLDfaTest {
     }
 
     void single(String path) throws IOException{
+        System.out.println("------------------------------------");
         Tree tree = Env.tree(path);
         LLDfaBuilder builder = new LLDfaBuilder(tree);
         builder.factor();
@@ -38,6 +39,8 @@ public class LLDfaTest {
         //Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g"));
         //Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
         single("lldfa/factor.g");
+        single("lldfa/mid.g");
+        single("lldfa/mid2.g");
         single("lldfa/left.g");
         single("lldfa/left-indirect.g");
         single("lldfa/right.g");
@@ -45,6 +48,8 @@ public class LLDfaTest {
         single("lldfa/greedy.g");
         single("lldfa/greedy2.g");
         single("lldfa/or.g");
+        single("lldfa/or-mid.g");
+        single("lldfa/or2.g");
         single("lldfa/len2.g");
         single("lldfa/sr.g");
         //single("lldfa/sr2.g");

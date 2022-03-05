@@ -20,6 +20,7 @@ public class ItemSet {
     public String type;
     Tree tree;
     public List < Transition > transitions = new ArrayList < > ();
+    public List < Transition > incomings = new ArrayList < > ();
 
     public ItemSet(LrItem kernel, Tree tree, String type) {
         this.kernel.add(kernel);
@@ -47,9 +48,19 @@ public class ItemSet {
         }    
     }   
 
-    public void addTransition(Name sym, ItemSet target) {
-        transitions.add(new Transition(sym, target));
+    public void addTransition(Node sym, ItemSet target) {
+        for(Transition t:transitions){
+            if(t.symbol.equals(sym) && t.target == target) return;
+        }
+        
+        Transition tr = new Transition(this, sym, target);
+        transitions.add(tr);
+        target.incomings.add(tr);
     }
+    
+    public void addComing(Node sym, ItemSet from){
+        incomings.add(new Transition(from, sym, this));
+    }    
 
     public boolean hasReduce() {
         return !getReduce().isEmpty();
@@ -181,31 +192,37 @@ public class ItemSet {
                 newItem.lookAhead = new HashSet < > (laList);
             }
             newItem.sender = sender;
-            addItem0(newItem);
+            addOrUpdate(newItem);
         }
     }
+    
+    void addOrUpdate(LrItem item){
+        if (type.equals("lr0")) return;
+        if(!update(item)){
+            all.add(item);
+            closure(item);
+        }
+    }    
 
-    void addItem0(LrItem item) {
+    public boolean update(LrItem item) {
         for (LrItem prev: all) {
             if (!prev.isSame(item)) continue;
-            if (type.equals("lr0")) {
-                return;
-            }
             //merge la
             prev.lookAhead.addAll(item.lookAhead);
+            prev.ids.addAll(item.ids);
             //update other items too
-            if (item.isDotNonTerminal()) {
+            /*if (item.isDotNonTerminal()) {
                 for (LrItem cl: all) {
                     if (cl.sender == prev) {
                         cl.lookAhead.addAll(prev.lookAhead);
-                        addItem0(cl);
+                        update(cl);
                     }
                 }
-            }
-            return;
+            }*/
+            return true;
         }
-        all.add(item);
-        closure(item);
+        return false;
     }
+    
 
 }
