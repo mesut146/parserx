@@ -19,7 +19,11 @@ rhs: seq ("|" seq)*;
 seq: regex+;
 regex: simple ("?" | "*" | "+")?;
 simple: normalChar | bracket | "(" rhs ")";
-bracket: "[" "^"? range+ "]";
-range: rangeChar ("-" rangeChar)?;
 normalChar: CHAR | ESCAPED | "-" | ".";
-rangeChar: CHAR | ESCAPED | "*" | "+" | "?" | "|" | "." | "(" | ")" | "^" | "-" | "[";
+bracket: "[" "^"? range+ "]";
+bracket: "[" "^" rangeAll+ "]" | "[" rangeNop rangeAll* "]";
+rangeAll: rangeChar ("-" rangeChar)?;
+rangeNop: rangeChar2 ("-" rangeChar2)?
+
+rangeChar: CHAR | ESCAPED | "*" | "+" | "?" | "|" | "." | "(" | ")"  | "-" | "[";
+rangeChar2: rangeChar | "^";

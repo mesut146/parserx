@@ -200,6 +200,15 @@ public class AstBuilder {
             String s = node.SHORTCUT.value;
             return new Group(Shortcut.from(s.substring(2, s.length() - 2)));
         }
+        else if(node.call != null){
+            String s = node.call.CALL_BEGIN.value;
+            Name res = new Name(s.substring(0, s.length() - 1));
+            res.args.add(new Name(node.call.IDENT.value));
+            for(Ast.callg1 arg : node.call.g1){
+                res.args.add(new Name(arg.IDENT.value));
+            }
+            return res;
+        }    
         else {
             throw new RuntimeException("unexpected");
         }

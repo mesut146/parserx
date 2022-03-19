@@ -470,6 +470,7 @@ public class Ast{
         public Token EPSILON;
         public repeatNode repeatNode;
         public Token SHORTCUT;
+        public call call;
 
         public String toString(){
             StringBuilder sb = new StringBuilder("simple#" + which + "{");
@@ -499,6 +500,9 @@ public class Ast{
             }
             else if(which == 9){
                 sb.append("'" + SHORTCUT.value + "'");
+            }
+            else if(which == 10){
+                sb.append(call.toString());
             }
             return sb.append("}").toString();
         }
@@ -604,6 +608,77 @@ public class Ast{
             sb.append(rhs.toString());
             sb.append(",");
             sb.append("'" + RBRACE.value + "'");
+            return sb.append("}").toString();
+        }
+    }
+    public static class call{
+        public Token CALL_BEGIN;
+        public Token IDENT;
+        public List<callg1> g1 = new ArrayList<>();
+        public Token RP;
+
+        public String toString(){
+            StringBuilder sb = new StringBuilder("call{");
+            sb.append("'" + CALL_BEGIN.value + "'");
+            sb.append(",");
+            sb.append("'" + IDENT.value + "'");
+            if(!g1.isEmpty()) sb.append(",");
+            if(!g1.isEmpty()){
+                sb.append('[');
+                for(int i = 0;i < g1.size();i++){
+                    sb.append(g1.get(i).toString());
+                    if(i < g1.size() - 1) sb.append(",");
+                }
+                sb.append(']');
+            }
+            sb.append(",");
+            sb.append("'" + RP.value + "'");
+            return sb.append("}").toString();
+        }
+    }
+    public static class callg1{
+        public Token COMMA;
+        public Token IDENT;
+
+        public String toString(){
+            StringBuilder sb = new StringBuilder("callg1{");
+            sb.append("'" + COMMA.value + "'");
+            sb.append(",");
+            sb.append("'" + IDENT.value + "'");
+            return sb.append("}").toString();
+        }
+    }
+    public static class join{
+        public Token JOIN;
+        public Token LP;
+        public Token COMMA;
+        public Token RP;
+
+        public String toString(){
+            StringBuilder sb = new StringBuilder("join{");
+            sb.append("'" + JOIN.value + "'");
+            sb.append(",");
+            sb.append("'" + LP.value + "'");
+            sb.append(",");
+            sb.append("'" + COMMA.value + "'");
+            sb.append(",");
+            sb.append("'" + RP.value + "'");
+            return sb.append("}").toString();
+        }
+    }
+    public static class nameOrString{
+        public int which;
+        public name name;
+        public stringNode stringNode;
+
+        public String toString(){
+            StringBuilder sb = new StringBuilder("nameOrString#" + which + "{");
+            if(which == 1){
+                sb.append(name.toString());
+            }
+            else if(which == 2){
+                sb.append(stringNode.toString());
+            }
             return sb.append("}").toString();
         }
     }

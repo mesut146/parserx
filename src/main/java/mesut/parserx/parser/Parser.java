@@ -225,6 +225,7 @@ public class Parser{
         boolean first = true;
         while(flag){
             switch(la.type){
+                case Tokens.CALL_BEGIN:
                 case Tokens.OPTIONS:
                 case Tokens.BRACKET:
                 case Tokens.TOKEN:
@@ -335,6 +336,7 @@ public class Parser{
                 }
                 break;
             }
+            case Tokens.CALL_BEGIN:
             case Tokens.BRACKET:
             case Tokens.LBRACE:
             case Tokens.TILDE:
@@ -354,7 +356,7 @@ public class Parser{
                 break;
             }
             default:{
-                throw new RuntimeException("expecting one of [OPTIONS,BRACKET,TOKEN,SKIP,TILDE,DOT,EPSILON,CHAR,LP,INCLUDE,IDENT,LBRACE,SHORTCUT,STRING] got: "+la);
+                throw new RuntimeException("expecting one of [CALL_BEGIN,OPTIONS,BRACKET,TOKEN,SKIP,TILDE,DOT,EPSILON,CHAR,LP,INCLUDE,IDENT,LBRACE,SHORTCUT,STRING] got: "+la);
             }
         }
         return res;
@@ -478,8 +480,14 @@ public class Parser{
                 res.SHORTCUT = consume(Tokens.SHORTCUT, "SHORTCUT");
                 break;
             }
+            case Tokens.CALL_BEGIN:
+            {
+                res.which = 10;
+                res.call = call();
+                break;
+            }
             default:{
-                throw new RuntimeException("expecting one of [OPTIONS,BRACKET,TOKEN,SKIP,TILDE,DOT,EPSILON,CHAR,LP,INCLUDE,IDENT,LBRACE,SHORTCUT,STRING] got: "+la);
+                throw new RuntimeException("expecting one of [CALL_BEGIN,OPTIONS,BRACKET,TOKEN,SKIP,TILDE,DOT,EPSILON,CHAR,LP,INCLUDE,IDENT,LBRACE,SHORTCUT,STRING] got: "+la);
             }
         }
         return res;
@@ -537,8 +545,14 @@ public class Parser{
                 res.SHORTCUT = consume(Tokens.SHORTCUT, "SHORTCUT");
                 break;
             }
+            case Tokens.CALL_BEGIN:
+            {
+                res.which = 10;
+                res.call = call();
+                break;
+            }
             default:{
-                throw new RuntimeException("expecting one of [BRACKET,LBRACE,TILDE,DOT,SHORTCUT,EPSILON,CHAR,LP,STRING] got: "+la);
+                throw new RuntimeException("expecting one of [CALL_BEGIN,BRACKET,LBRACE,TILDE,DOT,SHORTCUT,EPSILON,CHAR,LP,STRING] got: "+la);
             }
         }
         return res;
@@ -645,6 +659,60 @@ public class Parser{
         res.LBRACE = consume(Tokens.LBRACE, "LBRACE");
         res.rhs = rhs();
         res.RBRACE = consume(Tokens.RBRACE, "RBRACE");
+        return res;
+    }
+
+    public Ast.call call(){
+        Ast.call res = new Ast.call();
+        res.CALL_BEGIN = consume(Tokens.CALL_BEGIN, "CALL_BEGIN");
+        res.IDENT = consume(Tokens.IDENT, "IDENT");
+        while(la.type == Tokens.COMMA){
+            res.g1.add(callg1());
+        }
+        res.RP = consume(Tokens.RP, "RP");
+        return res;
+    }
+
+    public Ast.callg1 callg1(){
+        Ast.callg1 res = new Ast.callg1();
+        res.COMMA = consume(Tokens.COMMA, "COMMA");
+        res.IDENT = consume(Tokens.IDENT, "IDENT");
+        return res;
+    }
+
+    public Ast.join join(){
+        Ast.join res = new Ast.join();
+        res.JOIN = consume(Tokens.JOIN, "JOIN");
+        res.LP = consume(Tokens.LP, "LP");
+        res.COMMA = consume(Tokens.COMMA, "COMMA");
+        res.RP = consume(Tokens.RP, "RP");
+        return res;
+    }
+
+    public Ast.nameOrString nameOrString(){
+        Ast.nameOrString res = new Ast.nameOrString();
+        switch(la.type){
+            case Tokens.IDENT:
+            case Tokens.OPTIONS:
+            case Tokens.TOKEN:
+            case Tokens.SKIP:
+            case Tokens.INCLUDE:
+            {
+                res.which = 1;
+                res.name = name();
+                break;
+            }
+            case Tokens.CHAR:
+            case Tokens.STRING:
+            {
+                res.which = 2;
+                res.stringNode = stringNode();
+                break;
+            }
+            default:{
+                throw new RuntimeException("expecting one of [IDENT,OPTIONS,TOKEN,SKIP,CHAR,STRING,INCLUDE] got: "+la);
+            }
+        }
         return res;
     }
 

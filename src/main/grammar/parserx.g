@@ -78,7 +78,7 @@ sequence: regex+ assoc=("%left" | "%right")? label=("#" name)?;
 regex: name "=" simple type=("*" | "+" | "?")?
      | simple type=("*" | "+" | "?")?;
 
-simple: group | name | stringNode | bracketNode | untilNode | dotNode | EPSILON | repeatNode | SHORTCUT;
+simple: group | name | stringNode | bracketNode | untilNode | dotNode | EPSILON | repeatNode | SHORTCUT | call;
 
 group: "(" rhs ")";
 stringNode: STRING | CHAR;

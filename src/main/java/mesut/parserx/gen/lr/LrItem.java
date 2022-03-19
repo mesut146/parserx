@@ -16,6 +16,9 @@ public class LrItem {
     public Set<mesut.parserx.gen.lldfa.ItemSet> gotoSet2 = new HashSet<>();
     public boolean[] closured;
     public LrItem sender;
+    public int senderDot;
+    public List<LrItem> reduceParent = new ArrayList<>();
+    public LrItem reduceChild;
     public Set<Integer> ids = new HashSet<>();
     int hash = -1;
     public static int lastId = 0;

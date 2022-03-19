@@ -75,12 +75,10 @@ public class ItemSet {
         }
         return list;
     }
-
-    public List<LrItem> genReduces() {
-        List <LrItem > res = new ArrayList <>();
-        for (LrItem it: kernel) {
-            if (!it.isReduce(tree)) continue;
-            //is there any transition with my reduce symbol
+    
+    void gen(LrItem it, List<LrItem> list){
+         if (!it.isReduce(tree)) return;
+         //is there any transition with my reduce symbol
             for (ItemSet gt: it.gotoSet2) {
                 for (LrItem gti: gt.all) {
                     for(int i = gti.dotPos;i < gti.rhs.size();i++){
@@ -89,24 +87,37 @@ public class ItemSet {
                         if (sym.equals(it.rule.ref)) {
                             int newPos = gti.getNode(i).isStar() ? i : i + 1;
                             LrItem target = new LrItem(gti, newPos);
-                            target.gotoSet2.add(gt);
-                            res.add(target);
+                            if(target.isReduce(tree)){
+                                it.reduceParent.add(target);
+                                target.reduceChild = it;
+                            }    
+                            //target.gotoSet2.add(gt);
+                            if(!list.contains(target)){
+                                list.add(target);
+                                gen(target, list);
+                            }
                         }
                     }
                 }
             }
+    }
+
+    public List<LrItem> genReduces() {
+        List <LrItem > res = new ArrayList <>();
+        for (LrItem it: kernel) {
+            gen(it, res);
         }
         return res;
     }
 
-    boolean hasReduce(LrItem item) {
+    /*boolean hasReduce(LrItem item) {
         if (item.getDotNode() == null) return true;
         Sequence seq = item.rhs;
         if (item.dotPos == seq.size() - 1) {
             return FirstSet.canBeEmpty(seq.get(item.dotPos), tree);
         }
         return false;
-    }
+    }*/
 
     @Override
     public String toString() {
