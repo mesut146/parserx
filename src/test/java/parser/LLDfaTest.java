@@ -37,14 +37,14 @@ public class LLDfaTest {
          Env.dir = "/asd/parserx";
         //Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g"));
         //Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
-        /*single("lldfa/mid.g");
+        single("lldfa/mid.g");
         single("lldfa/mid2.g");
         single("lldfa/left.g");
         single("lldfa/left-indirect.g");
         single("lldfa/right.g");
-        single("lldfa/right-indirect.g");*/
+        single("lldfa/right-indirect.g");
         
-        /* single("lldfa/factor.g");
+        single("lldfa/factor.g");
         single("lldfa/greedy.g");
         single("lldfa/greedy2.g");
         single("lldfa/rr-loop.g");
@@ -53,15 +53,20 @@ public class LLDfaTest {
         single("lldfa/rr-loop2.g");
         single("lldfa/rr-loop2-len2.g");
         single("lldfa/len2.g");
-        single("lldfa/sr.g");*/
-        //single("lldfa/sr2.g");
-        //single("lldfa/rr.g");
-        //single("lldfa/rr-loop-sub.g");
-        //single("lldfa/rr-loop-rec.g");
+        single("lldfa/sr.g");
+        single("lldfa/sr2.g");
+        single("lldfa/rr.g");
+        single("lldfa/rr-loop-sub.g");
+        single("lldfa/rr-loop-rec.g");
         single("lldfa/sr-loop.g");
         //single("lldfa/rr2.g");
     }
-    
+    @Test
+    public void single() throws IOException {
+         //Env.dir = "/asd/parserx";
+         single("lldfa/rr-loop2-len2.g");
+         single("lldfa/rr-loop-x.g");
+    }
     
 
 }

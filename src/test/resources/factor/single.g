@@ -5,6 +5,14 @@ B: a d | e;
 
 
 /*
+A: a (A1(a) | A2(a)) | A1_no_a
+A1(a): B(a) b
+A2(a): a(a) c
+A1_no_a: B_no_a b
+B(a): B1(a)
+B1(a): a(a) d
+B_no_a: e
+
 A: a (B(a) b | a(a) c) | B_no_a b;
 B(a): a(a) d;
 B_no_a: e;

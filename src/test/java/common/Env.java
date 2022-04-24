@@ -10,10 +10,10 @@ import java.io.IOException;
 import java.net.URL;
 
 public class Env {
-    public static String dir = "/home/mesut/Desktop/IdeaProjects/parserx";
-
+    public static String dir = new File(".").getAbsolutePath();
+    
     public static File dotDir() {
-        return new File(dir + "/dots");
+        return new File(dir, "dots");
     }
 
     public static File dotFile(String name) throws IOException {

@@ -181,6 +181,29 @@ public class ItemSet {
         }    
     }
     
+    boolean isFactor(LrItem item, int i){
+    	List<Name> syms = symbols();
+    	Node node = item.getNode(i);
+        Name sym = sym(node);
+        //check two consecutive syms have common
+            for(int j = item.dotPos;j < item.rhs.size();j++){
+                if(i == j) continue;
+                if(j > item.dotPos && !FirstSet.canBeEmpty(item.getNode(j - 1), tree)) break;
+                Node next = item.getNode(j);
+                if(common(node, next)){
+   	             return true;
+                }
+            }
+            //check dot sym and any other sym have common
+            for (Name s2 : syms) {
+                    if (s2 == sym) continue;
+                    if (common(sym, s2)) {
+                        return true;
+                    }
+            }//for
+            return false;
+	}
+ 
     List<Name> symbols(){
         List<Name> res = new ArrayList<>();
         for(LrItem item : all){

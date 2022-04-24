@@ -136,7 +136,7 @@ public class LLDfaBuilder {
             System.out.println("curSet = " + curSet.stateId);
             //closure here because it needs all items
             curSet.closure();
-            Map<Name, List<LrItem>> map = new HashMap<>();
+            Map<Node, List<LrItem>> map = new HashMap<>();
             for (LrItem item : curSet.all) {
                 //System.out.println("item = " + item);
                 //improve stars as non closured
@@ -145,12 +145,30 @@ public class LLDfaBuilder {
                     if(item.closured[i]) continue;
                     
                     Node node = item.getNode(i);               
-                    Name sym = node.isName() ? node.asName() : node.asRegex().node.asName();             
+                    Node sym = node.isName() ? node.asName() : node.asRegex().node.asName();
                     int newPos = node.isStar() ? i : i + 1;
                     LrItem target;
-                    if(false && i > item.dotPos){
+                    if(node.isOptional() && sym.asName().isToken && !curSet.isFactor(item, i)){
+                    	//.a? b c | b d -> a b c
+						List<Node> rhs = new ArrayList<>(item.rhs.list.subList(i, item.rhs.size()));
+						rhs.set(0, sym);
+                        sym = Sequence.make(rhs);
+                        target = new LrItem(item, item.rhs.size());
+                        System.out.println("shrink opt="+sym);
+                    }
+                    //if sym is not factor shrink transition
+                    else if(canShrink(curSet, item, i)){
+                    	List<Node> rhs = new ArrayList<>(item.rhs.list.subList(i, item.rhs.size()));
+                        sym = Sequence.make(rhs);
+                        target = new LrItem(item, item.rhs.size());
+                        System.out.println("shrink="+sym);
+                        target.gotoSet2.add(curSet);
+                        addMap(map, sym, target);
+                        break;
+                    }
+                    else if(false && i > item.dotPos){
                         //prev part is epsilon, create correct reducer item
-                        //a b .c? d? .e
+                        //a b .c? d? e | a b .d f
                         List<Node> rhs = new ArrayList<>(item.rhs.list);
                         for(int j = item.dotPos;j < i;j++){
                             rhs.remove(item.dotPos);
@@ -161,43 +179,60 @@ public class LLDfaBuilder {
                         RuleDecl rd = new RuleDecl(item.rule.ref, new Sequence(rhs));
                         target = new LrItem(rd, item.dotPos + 1);
                     }else{
-                        if(false && i == item.dotPos && node.isOptional()){
-                            List<Node> rhs = new ArrayList<>(item.rhs.list);
-                            rhs.set(i, sym);
-                            RuleDecl rd = new RuleDecl(item.rule.ref, new Sequence(rhs));
-                            target = new LrItem(rd, item.dotPos + 1);
-                        }else{
-                            target = new LrItem(item,  newPos);
-                        }
+                    	target = new LrItem(item,  newPos);
                     }
                     target.gotoSet2.add(curSet);
-                    List<LrItem> list = map.get(sym);
-                    if(list == null){
-                        list = new ArrayList<>();
-                        map.put(sym, list);
-                    }else{
-                        //factor
-                        Name f = sym.copy();
-                        f.astInfo.isFactor = true;
-                        map.remove(sym);
-                        map.put(f, list);
-                        System.out.println("factor " + f);
-                    }    
-                    list.add(target);
+                    addMap(map, sym, target);
+             
                 }
             }
             makeTrans(curSet, map);
         }
         //moveReductions();
         //mergeFinals();
-        //eliminate();
+        eliminate();
         all2.addAll(all);
     }
     
-    void makeTrans(ItemSet curSet, Map<Name, List<LrItem>> map){
+    boolean canShrink(ItemSet set, LrItem item, int i){
+    	Node node = item.getNode(i);               
+        Name sym = node.isName() ? node.asName() : node.asRegex().node.asName();
+                   
+        if(node.isName() && sym.isToken && !set.isFactor(item, i)) return true;
+        if(set.isFactor(item, i)) return false;
+        if(!Helper.canBeEmpty(node, tree)) return true;//not closured
+        return !isFollowHasFactor(set, item, i);
+    }
+    
+    boolean isFollowHasFactor(ItemSet set, LrItem item, int pos){
+    	for(int i = pos + 1;i < item.rhs.size();i++){
+    		//if(i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
+    		if(set.isFactor(item, i)) return true;
+    		if(!FirstSet.canBeEmpty(item.getNode(i), tree)) break;
+    	}
+    	return false;
+    }
+    
+    void addMap(Map<Node, List<LrItem>> map, Node sym, LrItem target){
+    	List<LrItem> list = map.get(sym);
+                    if(list == null){
+                        list = new ArrayList<>();
+                        map.put(sym, list);
+                    }else{
+                        //factor
+                        Node f = sym.copy();
+                        f.astInfo.isFactor = true;
+                        map.remove(sym);
+                        map.put(f, list);
+                        System.out.println("factor " + f);
+                    }    
+                    list.add(target);
+    }
+    
+    void makeTrans(ItemSet curSet, Map<Node, List<LrItem>> map){
         System.out.println("makeTrans " + curSet.stateId + " " + map);
-        for(Map.Entry<Name, List<LrItem>> e : map.entrySet()){
-            Name sym = e.getKey();
+        for(Map.Entry<Node, List<LrItem>> e : map.entrySet()){
+            Node sym = e.getKey();
             List<LrItem> list = e.getValue();
             ItemSet targetSet = new ItemSet(tree, type);
             targetSet.addAll(list);
@@ -364,11 +399,11 @@ public class LLDfaBuilder {
             for(ItemSet set : all){
                 if(set.isStart) continue;
                 if(canBeRemoved2(set)){
-                    System.out.println("rem " + set.stateId);
                     eliminate(set);
                     toRemove.add(set);
                 }    
             }
+            if(toRemove.isEmpty()) break;
             all.removeAll(toRemove);
             toRemove.clear();
         }
@@ -377,18 +412,21 @@ public class LLDfaBuilder {
     boolean has1OutGoing(ItemSet set){
         int cnt = 0;
         for(Transition tr:set.transitions){
-            if(tr.target != set) cnt++;
+            if(tr.target.stateId != set.stateId) cnt++;
         }
         return cnt == 1;
     }
     
     boolean canBeRemoved2(ItemSet set){
+    	System.out.println("canBeRemoved2 " + set.stateId);
         if(!has1OutGoing(set)) return false;
+        
         if(hasFinal(set)) return false;
+        if(true) return true;
         //looping through final state
         Set<Integer> visited = new HashSet<>();
         Queue<ItemSet> queue = new LinkedList<>();
-        for(Transition tr:set.transitions){
+        for(Transition tr : set.transitions){
             if(tr.target != set){
                 queue.add(tr.target);
                 visited.add(tr.target.stateId);
@@ -397,8 +435,9 @@ public class LLDfaBuilder {
         //discover
         while(!queue.isEmpty()){
             ItemSet cur = queue.poll();
-            for(Transition tr:cur.transitions){
-                if(tr.target == set && reachFinal(cur, set)) return false;
+            boolean r = reachFinal(cur, set);
+            for(Transition tr : cur.transitions){
+                if(tr.target == set && r) return false;
                 if(tr.target != set && visited.add(tr.target.stateId)) queue.add(tr.target);
             }
         }
@@ -406,6 +445,7 @@ public class LLDfaBuilder {
     }
     
     boolean reachFinal(ItemSet from, ItemSet except){
+    	//System.out.printf("reachFinal %d -> %d\n", from.stateId, except.stateId);
         Set<Integer> visited = new HashSet<>();
         Queue<ItemSet> queue = new LinkedList<>();
         queue.add(from);
@@ -413,7 +453,7 @@ public class LLDfaBuilder {
         while(!queue.isEmpty()){
             ItemSet cur = queue.poll();
             if(hasFinal(cur)) return true;
-            for(Transition tr:cur.transitions){
+            for(Transition tr : cur.transitions){
                 ItemSet trg = tr.target;
                 if(trg == except) continue;
                 if(visited.add(trg.stateId))  queue.add(trg);
@@ -433,7 +473,7 @@ public class LLDfaBuilder {
         System.out.println("eliminate " + set.stateId);
         Node loop = null;
         Transition out = null;
-        for(Transition tr:set.transitions){
+        for(Transition tr : set.transitions){
              if(tr.target == set) loop = tr.symbol;
              else out = tr;
          }
