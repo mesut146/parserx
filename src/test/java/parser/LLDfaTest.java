@@ -30,7 +30,15 @@ public class LLDfaTest {
         builder.factor();
         //builder.normalize();
         dot(builder);
-    }    
+    }
+    
+        @Test
+    public void all() throws IOException {
+		File dir=new File(Env.dir, "src/test/resources/lldfa");
+		for(String s : dir.list()){
+			single("lldfa/"+s);
+		}
+	}
 
     @Test
     public void dfa() throws IOException {
@@ -60,6 +68,12 @@ public class LLDfaTest {
         single("lldfa/rr-loop-rec.g");
         single("lldfa/sr-loop.g");
         //single("lldfa/rr2.g");
+        
+        single("lldfa/rr-loop-deep.g");
+        single("lldfa/rr-loop-deep1.g");
+        single("lldfa/rr-loop-deep2.g");
+        single("lldfa/rr-loop-deep3.g");
+        single("lldfa/rr-loop-deep4.g");
     }
     @Test
     public void single() throws IOException {

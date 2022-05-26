@@ -190,7 +190,7 @@ public class LLDfaBuilder {
         }
         //moveReductions();
         //mergeFinals();
-        eliminate();
+        //eliminate();
         all2.addAll(all);
     }
     
@@ -483,7 +483,7 @@ public class LLDfaBuilder {
             if(loop == null){
                 in.symbol = new Sequence(wrapOr(in.symbol), wrapOr(out.symbol));
             }else{
-                in.symbol = new Sequence(wrapOr(in.symbol), new Regex(wrapOr(loop), "*"), wrapOr(out.symbol));
+                in.symbol = new Sequence(wrapOr(in.symbol), new Regex(new Group(wrapOr(loop)), "*"), wrapOr(out.symbol));
             }    
         }
         combine();
