@@ -194,6 +194,76 @@ public class LLDfaBuilder {
         all2.addAll(all);
     }
     
+    public void write(){
+        CodeWriter w = new CodeWriter();
+        if (options.packageName != null) {
+            w.append("package %s;", options.packageName);
+            w.append("");
+        }
+        w.append("import java.util.List;");
+        w.append("import java.util.ArrayList;");
+        w.append("");
+        w.append("public class %s{", options.parserClass);
+        
+        w.append("%s lexer;", options.lexerClass);
+        w.append("%s la;", options.tokenClass);
+        
+        w.append("public %s(%s lexer) throws IOException{", options.parserClass, options.lexerClass);
+
+        w.all("this.lexer = lexer;\nla = lexer.next();\n}");
+        w.append("");
+
+        writeConsume();
+        
+        void writeRule();
+        
+        w.append("}");
+        File file = new File(options.outDir, options.parserClass + ".java");
+        Utils.write(w.get(), file);
+    }
+    
+    void writeRule(){
+        Map<LrItem, String> names = new HashMap<>();
+        for(ItemSet set : all){
+            if(set.isStart){
+                w.append("public %s %s(){", rule.type, rule.name);
+                //create res
+                w.append("%s res = new %s();", rule.type, rule.type);
+            }else{
+                w.append("public %s S%d{", rule.type, set.stateId);
+            }
+            if(set.symbol != null){
+                w.append("%s f = consume(Tokens.%s);", options.tokenClass, set.symbol.name);
+            }
+            int cnt = 0;
+            Map<Name, List<LrItem>> map = new HashMap<>();
+            for(LrItem item : set.all){
+                //factor consume & assign
+                //node creations
+                //if reduce then assign
+                
+                if(item.dotPos == 0){
+                    Type type = item.;
+                    String name = "v" + cnt++;
+                    w.append("%s %s = new %s();", name);
+                    names.put(item, name);
+                }else if(item.getNode(item.dotPos - 1).equals(set.symbol)){
+                    String name = names.get(item);
+                    w.append("%s.%s = f;", name, item.getNode(item.dotPos - 1).astInfo.varName);
+                }else if(item.isReduce()){
+                    //assign parent
+                    for(LrItem parent : item.reduceParent){
+                        Node p=parent.getNode(parent.doPos - 1);
+                        w.append("%s.%s = %s;", names.get(parent), p.astInfo.varName, names.get(item));
+                    }
+                }
+            }
+            //collect syms
+            
+            w.append("}");
+        }
+    }
+    
     boolean canShrink(ItemSet set, LrItem item, int i){
     	Node node = item.getNode(i);               
         Name sym = node.isName() ? node.asName() : node.asRegex().node.asName();
@@ -227,6 +297,10 @@ public class LLDfaBuilder {
                         System.out.println("factor " + f);
                     }    
                     list.add(target);
+                    if(target.symbol != null && target.symbol.equals(sym)){
+                        new RuntimeException("invalid state: multi symbol");
+                    }
+                    target.symbol = sym;
     }
     
     void makeTrans(ItemSet curSet, Map<Node, List<LrItem>> map){

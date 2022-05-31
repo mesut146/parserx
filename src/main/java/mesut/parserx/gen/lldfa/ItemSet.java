@@ -21,6 +21,7 @@ public class ItemSet {
     Tree tree;
     public List < Transition > transitions = new ArrayList < > ();
     public List < Transition > incomings = new ArrayList < > ();
+    public Name symbol;
 
     public ItemSet(LrItem kernel, Tree tree, String type) {
         this.kernel.add(kernel);
