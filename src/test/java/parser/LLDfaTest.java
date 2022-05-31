@@ -2,6 +2,8 @@ package parser;
 
 import common.Env;
 import mesut.parserx.dfa.NFA;
+import mesut.parserx.gen.lldfa.JavaGen;
+import mesut.parserx.gen.lldfa.LLDFAGen;
 import mesut.parserx.gen.lldfa.LLDfaBuilder;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
@@ -16,14 +18,14 @@ public class LLDfaTest {
         nfa.dot(new FileWriter(file));
         Runtime.getRuntime().exec("dot -Tpng -O " + file);
     }
-    
+
     void dot(LLDfaBuilder b) throws IOException {
         File file = Env.dotFile(Utils.newName(b.tree.file.getName(), ".dot"));
         b.dot(new PrintWriter(new FileWriter(file)));
         Runtime.getRuntime().exec("dot -Tpng -O " + file);
     }
 
-    void single(String path) throws IOException{
+    void single(String path) throws IOException {
         System.out.println("------------------------------------");
         Tree tree = Env.tree(path);
         LLDfaBuilder builder = new LLDfaBuilder(tree);
@@ -31,18 +33,17 @@ public class LLDfaTest {
         //builder.normalize();
         dot(builder);
     }
-    
-        @Test
+
+    @Test
     public void all() throws IOException {
-		File dir=new File(Env.dir, "src/test/resources/lldfa");
-		for(String s : dir.list()){
-			single("lldfa/"+s);
-		}
-	}
+        File dir = new File(Env.dir, "src/test/resources/lldfa");
+        for (String s : dir.list()) {
+            single("lldfa/" + s);
+        }
+    }
 
     @Test
     public void dfa() throws IOException {
-         Env.dir = "/asd/parserx";
         //Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g"));
         //Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
         single("lldfa/mid.g");
@@ -51,7 +52,7 @@ public class LLDfaTest {
         single("lldfa/left-indirect.g");
         single("lldfa/right.g");
         single("lldfa/right-indirect.g");
-        
+
         single("lldfa/factor.g");
         single("lldfa/greedy.g");
         single("lldfa/greedy2.g");
@@ -68,19 +69,26 @@ public class LLDfaTest {
         single("lldfa/rr-loop-rec.g");
         single("lldfa/sr-loop.g");
         //single("lldfa/rr2.g");
-        
+
         single("lldfa/rr-loop-deep.g");
         single("lldfa/rr-loop-deep1.g");
         single("lldfa/rr-loop-deep2.g");
         single("lldfa/rr-loop-deep3.g");
         single("lldfa/rr-loop-deep4.g");
     }
+
     @Test
     public void single() throws IOException {
-         //Env.dir = "/asd/parserx";
-         single("lldfa/rr-loop2-len2.g");
-         single("lldfa/rr-loop-x.g");
+        single("lldfa/rr-loop2-len2.g");
+        single("lldfa/rr-loop-x.g");
     }
-    
 
+
+    @Test
+    public void single2() throws IOException {
+        String path = "lldfa/rr-loop.g";
+        Tree tree = Env.tree(path);
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        LLDFAGen.gen(tree, "java");
+    }
 }

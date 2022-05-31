@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+@SuppressWarnings("unchecked")
 public class LrDFA {
     public static boolean debugTransition = false;
     public List<LrTransition>[] map = new List[100];
@@ -35,7 +36,7 @@ public class LrDFA {
 
     void expand(int id) {
         if (id >= map.length) {
-            List<LrTransition>[] tmp = new List[map.length * 2];
+            List[] tmp = new List[map.length * 2];
             System.arraycopy(map, 0, tmp, 0, map.length);
             map = tmp;
         }

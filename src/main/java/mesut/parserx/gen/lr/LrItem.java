@@ -55,16 +55,16 @@ public class LrItem {
         //if dot at end we are reducing
         return getDotSym() == null;
     }
-    
-    public boolean isReduce(Tree tree){
-        for(int i = dotPos;i < rhs.size();i++){
+
+    public boolean isReduce(Tree tree) {
+        for (int i = dotPos; i < rhs.size(); i++) {
             Node node = rhs.get(i);
-            if(!Helper.canBeEmpty(node, tree)){
+            if (!Helper.canBeEmpty(node, tree)) {
                 return false;
-            }    
+            }
         }
         return true;
-    }    
+    }
 
     boolean isLr0() {
         return lookAhead.isEmpty();
@@ -156,12 +156,12 @@ public class LrItem {
         };
     }    */
 
-    public Node getNode(int pos){
+    public Node getNode(int pos) {
         Sequence s = rule.rhs.asSequence();
-        if(pos < s.size())
+        if (pos < s.size())
             return s.get(pos);
         return null;
-    }    
+    }
 
     //node after dot
     public Name getDotSym() {
@@ -194,9 +194,9 @@ public class LrItem {
     //first set of follow of dot node
     public Set<Name> follow(Tree tree) {
         HashSet<Name> res = new HashSet<>();
-        if(getNode(dotPos).isStar()){
+        if (getNode(dotPos).isStar()) {
             res.addAll(FirstSet.tokens(getNode(dotPos), tree));
-        }    
+        }
         boolean allEmpty = true;
         for (int i = dotPos + 1; i < rhs.size(); ) {
             Node node = rhs.get(i);
@@ -216,7 +216,7 @@ public class LrItem {
         }
         return res;
     }
-    
+
     @Override
     public boolean equals(Object other) {
         if (this == other) return true;

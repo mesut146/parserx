@@ -103,7 +103,7 @@ public class JavaRecDescent {
         Utils.write(c.get(), file);
     }
 
-    String peekExpr() {
+    static String peekExpr() {
         return "la.type";
     }
 
@@ -292,7 +292,7 @@ public class JavaRecDescent {
         }
     }
 
-    String loopExpr(Set<Name> set) {
+    public static String loopExpr(Set<Name> set) {
         StringBuilder sb = new StringBuilder();
         for (Iterator<Name> it = set.iterator(); it.hasNext(); ) {
             Name tok = it.next();
