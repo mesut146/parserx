@@ -5,7 +5,6 @@ import mesut.parserx.gen.FirstSetNode;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.lr.LrDFAGen;
-import mesut.parserx.gen.ll.Multi;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.GreedyNormalizer;
 import mesut.parserx.nodes.Tree;
@@ -27,13 +26,6 @@ public class LLGenTest {
         Factor.debug = true;
         Factor.debugPull = false;
         RecDescent.gen(tree, "java");
-    }
-    
-    @Test
-    public void multi() throws IOException {
-        Tree tree = Env.tree("factor/single.g");
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        Multi.gen(tree, "java");
     }
 
     @Test

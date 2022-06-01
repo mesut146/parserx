@@ -105,7 +105,7 @@ public class AstBuilder {
         for (Ast.regex r : node.regex) {
             list.add(visitRegex(r));
         }
-        if (list.size() == 1) return list.get(0);
+        //if (list.size() == 1) return list.get(0);
         Sequence s = new Sequence(list);
         if (node.assoc != null) {
             if (s.size() != 3 && s.size() != 5) {

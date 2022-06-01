@@ -37,12 +37,14 @@ public class CppAstGen {
             writePrinter(decl.baseName(), decl.rhs, sourceWriter, false);
 
             if (decl.rhs.isOr()) {
-                for (int i = 1; i <= decl.rhs.asOr().size(); i++) {
-                    if (!RecDescent.isSimple(decl.rhs.asOr().get(i - 1))) {
-                        String alt = decl.baseName() + i;
+                int id = 1;
+                for (Node ch : decl.rhs.asOr()) {
+                    if (!options.useSimple || !RecDescent.isSimple(ch)) {
+                        String alt = decl.baseName() + id;
                         sourceWriter.append("%s::%s::%s::%s() = default;", options.astClass, decl.baseName(), alt, alt);
-                        writePrinter(decl.baseName() + i, decl.rhs.asOr().get(i - 1), sourceWriter, true);
+                        writePrinter(alt, ch, sourceWriter, true);
                     }
+                    id++;
                 }
             }
         }
@@ -63,7 +65,7 @@ public class CppAstGen {
 
         astWriter.append("class %s{", options.astClass);
         astWriter.append("public:");
-        //fowards
+        //forwards
         for (RuleDecl decl : tree.rules) {
             astWriter.append("class %s;", decl.baseName());
         }
@@ -91,10 +93,12 @@ public class CppAstGen {
         astWriter.append("%s();", decl.baseName());//ctor
         if (decl.rhs.isOr()) {
             //forward alts
-            for (int i = 1; i <= decl.rhs.asOr().size(); i++) {
-                if (!RecDescent.isSimple(decl.rhs.asOr().get(i - 1))) {
-                    astWriter.append("class %s;", decl.baseName() + i);
+            int id = 1;
+            for (Node ch : decl.rhs.asOr()) {
+                if (!options.useSimple || !RecDescent.isSimple(ch)) {
+                    astWriter.append("class %s;", decl.baseName() + id);
                 }
+                id++;
             }
             astWriter.append("");
         }
@@ -245,7 +249,7 @@ public class CppAstGen {
 
                 //in case of factorization pre-write some code
                 ch.astInfo.which = num;
-                if (RecDescent.isSimple(ch)) {
+                if (options.useSimple && RecDescent.isSimple(ch)) {
                     //todo vname
                     //ch.astInfo.varName = parentClass.toLowerCase() + num;
                     model(ch, outerCls, outerVar, parent);

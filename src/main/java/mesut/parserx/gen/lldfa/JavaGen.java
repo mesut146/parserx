@@ -5,10 +5,7 @@ import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.Type;
 import mesut.parserx.gen.lr.LrItem;
-import mesut.parserx.nodes.Name;
-import mesut.parserx.nodes.Node;
-import mesut.parserx.nodes.RuleDecl;
-import mesut.parserx.nodes.Tree;
+import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
 import java.io.File;
@@ -78,8 +75,8 @@ public class JavaGen {
                 w.append("public %s S%d(){", rule.retType, set.stateId);
             }
 
-            //collect items and la
-            Map<Name, List<LrItem>> map = new HashMap<>();
+            //collect items by la
+            Map<Name, List<LrItem>> groups = new HashMap<>();
             int cnt = 0;
             for (LrItem item : set.all) {
                 //factor consume & assign
@@ -89,12 +86,19 @@ public class JavaGen {
                     names.put(item, name);
                 }
                 if (item.dotPos < item.rhs.size()) {
-                    Set<Name> tokens = FirstSet.tokens(item.getDotNode(), tree);
+                    Node rest;
+                    if (item.rhs.size() - item.dotPos == 1) {
+                        rest = item.getDotNode();
+                    }
+                    else {
+                        rest = Sequence.make(item.rhs.list.subList(item.dotPos, item.rhs.size()));
+                    }
+                    Set<Name> tokens = FirstSet.tokens(rest, tree);
                     if (!tokens.isEmpty()) {
                         for (Name token : tokens) {
-                            List<LrItem> list = map.getOrDefault(token, new ArrayList<>());
+                            List<LrItem> list = groups.getOrDefault(token, new ArrayList<>());
                             list.add(item);
-                            map.put(token, list);
+                            groups.put(token, list);
                         }
                     }
                     else {
@@ -103,11 +107,19 @@ public class JavaGen {
                 }
             }
             //process items
-            for (Name sym : map.keySet()) {
-                List<LrItem> list = map.get(sym);
-                w.append("if(la.type == Tokens.%s){", sym.name);
+            boolean first = true;
+            for (Name sym : groups.keySet()) {
+                List<LrItem> list = groups.get(sym);
+                if (first) {
+                    w.append("if(la.type == Tokens.%s){", sym.name);
+                    first = false;
+                }
+                else {
+                    w.append("else if(la.type == Tokens.%s){", sym.name);
+                }
                 //define factor
                 w.append("%s la = consume(Tokens.%s);", options.tokenClass, sym.name);
+                //create and assign nodes
                 for (LrItem item : list) {
                     if (item.dotPos == 0) {
                         Type type = item.rule.which == -1 ? rule.retType : item.rule.rhs.astInfo.nodeType;
@@ -121,13 +133,41 @@ public class JavaGen {
                         }
                     }
                 }
+                for (LrItem item : list) {
+                    Name node = has(item, sym);
+                    if (node != null) {
+                        w.append("%s.%s = la;", names.get(item), node.astInfo.varName);
+                    }
+                }
                 ItemSet target = builder.getTarget(set, sym);
+                //inline target reductions
+                for (LrItem item : target.all) {
+                    if (item.isReduce(tree)) {
+                        if (item.lookAhead.contains(LLDfaBuilder.dollar)) {
+                            LrItem sender = null;
+                            for (LrItem s : list) {
+                                if (s.rule.equals(item.rule)) {
+                                    sender = s;
+                                }
+                            }
+                            w.append("res.which = %d;", item.rule.which);
+                            w.append("res.%s = %s;", item.rhs.astInfo.varName, names.get(sender));
+                            w.append("return res;");
+                        }
+                        else {
+                            for (LrItem parent : item.reduceParent) {
+                                w.append("%s.%s = %s;", names.get(parent), parent.getNode(parent.dotPos).astInfo.varName, names.get(item));
+                            }
+                        }
+
+                    }
+                }
                 if (target.transitions.isEmpty()) {
                     //inline
                     for (LrItem targetItem : target.all) {
                         if (targetItem.dotPos > 0 && targetItem.getNode(targetItem.dotPos - 1).equals(sym)) {
                             //assign factor
-                            w.append("%s.%s = la;", names.get(targetItem), targetItem.getNode(targetItem.dotPos - 1).astInfo.varName);
+                            //w.append("%s.%s = la;", names.get(targetItem), targetItem.getNode(targetItem.dotPos - 1).astInfo.varName);
                         }
                     }
                 }
@@ -139,6 +179,19 @@ public class JavaGen {
             w.append("return res;");
             w.append("}");
         }
+    }
+
+    Name has(LrItem item, Name sym) {
+        for (int i = item.dotPos; i < item.rhs.size(); i++) {
+            Node ch = item.getNode(i);
+            if (ch.equals(sym)) {
+                return ch.asName();
+            }
+            if (!FirstSet.canBeEmpty(ch, tree)) {
+                break;
+            }
+        }
+        return null;
     }
 
     boolean isTargetEnd(ItemSet target) {

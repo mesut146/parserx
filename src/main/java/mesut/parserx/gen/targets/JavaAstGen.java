@@ -185,10 +185,6 @@ public class JavaAstGen {
             Name name = node.asName();
             //check if user supplied var name
             setVarName(name, outerCls);
-            /*Insn.AssignOuter assignOuter = new Insn.AssignOuter();
-            assignOuter.outerVar = outerVar;
-            assignOuter.varName = name.astInfo.varName;
-            name.insnList.add(assignOuter);*/
             parent.append("public %s %s;", name.isToken ? options.tokenClass : name.name, name.astInfo.varName);
         }
         else if (node.isRegex()) {
@@ -210,25 +206,25 @@ public class JavaAstGen {
         }
         else if (node.isOr()) {
             parent.append("public int which;");
-            int num = 1;
+            int id = 1;
             for (Node ch : node.asOr()) {
                 if (ch.isEpsilon()) continue;
-                Type clsName = new Type(outerCls, Utils.camel(outerCls.name) + num);
-                String v = outerCls.name.toLowerCase() + num;
 
                 //in case of factorization pre-write some code
-                ch.astInfo.which = num;
-                if (RecDescent.isSimple(ch)) {
+                ch.astInfo.which = id;
+                if (options.useSimple && RecDescent.isSimple(ch)) {
                     model(ch, outerCls, outerVar, parent);
                 }
                 else {
                     //sequence
                     //complex choice point inits holder
+                    Type clsName = new Type(outerCls, Utils.camel(outerCls.name) + id);
+                    String v = outerCls.name.toLowerCase() + id;
                     ch.astInfo.nodeType = clsName;
                     ch.astInfo.varName = v;
                     ch.astInfo.outerVar = outerVar;
                     ch.astInfo.assignOuter = true;
-                    parent.append(String.format("%s %s;", clsName.name, v));
+                    parent.append("%s %s;", clsName.name, v);
                     CodeWriter c = new CodeWriter(false);
                     c.append("public static class %s{", clsName.name);
                     model(ch, clsName, v, c);
@@ -236,11 +232,8 @@ public class JavaAstGen {
                     c.append("}");
                     classes.all(c.get());
                 }
-                num++;
+                id++;
             }
-        }
-        else if (!node.isEpsilon()) {
-            throw new RuntimeException("invalid node: " + node.getClass());
         }
     }
 
