@@ -1,0 +1,64 @@
+E(){
+ if(la==b){
+  res = new E
+  e1=new E1
+  e2=new E2
+  e2.b=la
+  consume(b)
+  res=S1(res, e1, e2)
+ }
+ return null;
+}
+
+S1(E res, E1 e1, E2 e2){
+ if(la==$ || la==a){
+   res.which=2
+   res.e2=e2
+ }
+ if(la==a{
+  e1.a=la
+  consume(a)
+  res=S2()
+ }
+}
+
+S2(E res, E1 e1){
+  if(la==$ || la==a){
+   res.which=1
+   res.e1=e1
+  }
+  if(la==a){
+   e1.a=la
+   consume(a)
+   S2(res, e1)
+  }
+}
+
+--inlined
+E(){
+ if(la==b){
+  res = new E
+  e1=new E1
+  e2=new E2
+  e2.b=la
+  consume(b)
+  --S1
+  if(la==$ || la==a){
+   res.which=2
+   res.e2=e2
+  }
+
+  if(la==a{
+   e1.a=la
+   consume(a)
+   --S2
+   if(la==$ || la==a){
+    
+   }
+   while(la==a){
+    res2=new E
+   }
+  }
+ }
+ return null;
+}

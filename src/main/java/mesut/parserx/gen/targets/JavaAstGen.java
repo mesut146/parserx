@@ -12,9 +12,9 @@ import mesut.parserx.utils.Utils;
 import java.io.File;
 import java.io.IOException;
 
-public class JavaAstGen {
+public class JavaAstGen{
     public Tree tree;
-    CodeWriter astWriter = new CodeWriter(true);
+    CodeWriter w = new CodeWriter(true);
     CodeWriter classes;
     Options options;
     //class name -> map of node -> count
@@ -30,38 +30,38 @@ public class JavaAstGen {
     public void genAst() throws IOException {
         new Normalizer(tree).normalize();
         if (options.packageName != null) {
-            astWriter.append("package %s;", options.packageName);
-            astWriter.append("");
+            w.append("package %s;", options.packageName);
+            w.append("");
         }
-        astWriter.append("import java.util.List;");
-        astWriter.append("import java.util.ArrayList;");
-        astWriter.append("");
+        w.append("import java.util.List;");
+        w.append("import java.util.ArrayList;");
+        w.append("");
 
-        astWriter.append("public class %s{", options.astClass);
+        w.append("public class %s{", options.astClass);
         for (RuleDecl decl : tree.rules) {
             groupCount = 1;
             curRule = decl.baseName();
             model(decl);
         }
-        astWriter.append("}");
+        w.append("}");
 
         File file = new File(options.outDir, options.astClass + ".java");
-        Utils.write(astWriter.get(), file);
+        Utils.write(w.get(), file);
         varCount.clear();
     }
 
     void model(RuleDecl decl) {
         classes = new CodeWriter(true);
-        astWriter.append("public static class %s{", decl.baseName());
-        model(decl.rhs, decl.retType, "res", astWriter);
-        astWriter.all(classes.get());
+        w.append("public static class %s{", decl.baseName());
+        model(decl.rhs, decl.retType, "res", w);
+        w.all(classes.get());
         if (tree.isOriginal(decl.ref) && options.genVisitor) {
-            astWriter.append("public <R,P> R accept(%sVisitor<R,P> visitor, P arg){", options.parserClass);
-            astWriter.all("return visitor.visit%s(this, arg);\n}", Utils.camel(decl.baseName()));
+            w.append("public <R,P> R accept(%sVisitor<R,P> visitor, P arg){", options.parserClass);
+            w.all("return visitor.visit%s(this, arg);\n}", Utils.camel(decl.baseName()));
         }
         //todo create parent
-        writePrinter(decl.rhs, astWriter, false);
-        astWriter.append("}");
+        writePrinter(decl.rhs, w, false);
+        w.append("}");
     }
 
     void writePrinter(Node rhs, CodeWriter c, boolean isAlt) {
@@ -161,9 +161,6 @@ public class JavaAstGen {
                 c.append("}");//if
             }
         }
-        else {
-            throw new RuntimeException("invalid child");
-        }
     }
 
     void setVarName(Name name, Type outerCls) {
@@ -173,6 +170,7 @@ public class JavaAstGen {
             name.astInfo.varName = varName;
         }
     }
+
 
     private void model(Node node, Type outerCls, String outerVar, CodeWriter parent) {
         if (node.isSequence()) {

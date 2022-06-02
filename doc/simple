@@ -1,0 +1,60 @@
+E(){
+ if(la == a){
+  e1=new E1
+  e2=new E2
+  a1=new A1
+  c1=new C1
+  
+  la=consume(a)
+  a1.a=la
+  c1.a=la
+  --S2
+  a=new A
+  a.which=1
+  a.a1=a1
+  
+  c=new C
+  c.which=1
+  c.c1=c1
+  
+  e1.A=a
+  e2.C=c
+  
+  if(la==c){
+   b1=new B1
+   d1=new D1
+   
+   la=consume(c)
+   b1.c=la
+   d1.c=la
+   --S4
+   if(la==x){
+    b=new B
+    e1.B=b
+    b.which=1
+    b.b1=b1
+    --S6
+    res=new E
+    res.which=1
+    res.e1=e1
+    return res
+   }else if(la==y){
+    d=new D
+    d.which=1
+    d.d1=d1
+    --S6
+    res=new E
+    res.which=1
+    res.e1=e1
+    return res
+   }
+   else if(la==y)
+  }
+  
+ }else if(la == b){
+  e1=new E1
+  e2=new E2
+  a1=new A1
+  c1=new C1
+ }
+}

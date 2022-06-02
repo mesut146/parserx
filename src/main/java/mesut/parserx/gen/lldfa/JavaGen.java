@@ -76,36 +76,7 @@ public class JavaGen {
             }
 
             //collect items by la
-            Map<Name, List<LrItem>> groups = new HashMap<>();
-            int cnt = 0;
-            for (LrItem item : set.all) {
-                //factor consume & assign
-                //node creations
-                if (item.dotPos == 0) {
-                    String name = "v" + cnt++;
-                    names.put(item, name);
-                }
-                if (item.dotPos < item.rhs.size()) {
-                    Node rest;
-                    if (item.rhs.size() - item.dotPos == 1) {
-                        rest = item.getDotNode();
-                    }
-                    else {
-                        rest = Sequence.make(item.rhs.list.subList(item.dotPos, item.rhs.size()));
-                    }
-                    Set<Name> tokens = FirstSet.tokens(rest, tree);
-                    if (!tokens.isEmpty()) {
-                        for (Name token : tokens) {
-                            List<LrItem> list = groups.getOrDefault(token, new ArrayList<>());
-                            list.add(item);
-                            groups.put(token, list);
-                        }
-                    }
-                    else {
-                        throw new RuntimeException("");
-                    }
-                }
-            }
+            Map<Name, List<LrItem>> groups = group(names, set);
             //process items
             boolean first = true;
             for (Name sym : groups.keySet()) {
@@ -118,14 +89,14 @@ public class JavaGen {
                     w.append("else if(la.type == Tokens.%s){", sym.name);
                 }
                 //define factor
-                w.append("%s la = consume(Tokens.%s);", options.tokenClass, sym.name);
+                //w.append("%s la = consume(Tokens.%s);", options.tokenClass, sym.name);
                 //create and assign nodes
                 for (LrItem item : list) {
                     if (item.dotPos == 0) {
                         Type type = item.rule.which == -1 ? rule.retType : item.rule.rhs.astInfo.nodeType;
                         w.append("%s %s = new %s();", type, names.get(item), type);
                     }
-                    else if (item.isReduce(tree)) {
+                    else if (set.isStart && item.isReduce(tree)) {
                         //assign parent
                         for (LrItem parent : item.reduceParent) {
                             Node pNode = parent.getNode(parent.dotPos);
@@ -141,27 +112,7 @@ public class JavaGen {
                 }
                 ItemSet target = builder.getTarget(set, sym);
                 //inline target reductions
-                for (LrItem item : target.all) {
-                    if (item.isReduce(tree)) {
-                        if (item.lookAhead.contains(LLDfaBuilder.dollar)) {
-                            LrItem sender = null;
-                            for (LrItem s : list) {
-                                if (s.rule.equals(item.rule)) {
-                                    sender = s;
-                                }
-                            }
-                            w.append("res.which = %d;", item.rule.which);
-                            w.append("res.%s = %s;", item.rhs.astInfo.varName, names.get(sender));
-                            w.append("return res;");
-                        }
-                        else {
-                            for (LrItem parent : item.reduceParent) {
-                                w.append("%s.%s = %s;", names.get(parent), parent.getNode(parent.dotPos).astInfo.varName, names.get(item));
-                            }
-                        }
-
-                    }
-                }
+                inline(names, list, target);
                 if (target.transitions.isEmpty()) {
                     //inline
                     for (LrItem targetItem : target.all) {
@@ -179,6 +130,64 @@ public class JavaGen {
             w.append("return res;");
             w.append("}");
         }
+    }
+
+    private void inline(Map<LrItem, String> names, List<LrItem> list, ItemSet target) {
+        for (LrItem item : target.all) {
+            if (item.isReduce(tree)) {
+                if (item.lookAhead.contains(LLDfaBuilder.dollar)) {
+                    LrItem sender = null;
+                    for (LrItem s : list) {
+                        if (s.rule.equals(item.rule)) {
+                            sender = s;
+                        }
+                    }
+                    w.append("res.which = %d;", item.rule.which);
+                    w.append("res.%s = %s;", item.rhs.astInfo.varName, names.get(sender));
+                    w.append("return res;");
+                }
+                else {
+                    for (LrItem parent : item.reduceParent) {
+                        w.append("%s.%s = %s;", names.get(parent), parent.getNode(parent.dotPos).astInfo.varName, names.get(item));
+                    }
+                }
+
+            }
+        }
+    }
+
+    private Map<Name, List<LrItem>> group(Map<LrItem, String> names, ItemSet set) {
+        Map<Name, List<LrItem>> groups = new HashMap<>();
+        int cnt = 0;
+        for (LrItem item : set.all) {
+            //factor consume & assign
+            //node creations
+            if (item.dotPos == 0) {
+                String name = "v" + cnt++;
+                names.put(item, name);
+            }
+            if (item.dotPos < item.rhs.size()) {
+                Node rest;
+                if (item.rhs.size() - item.dotPos == 1) {
+                    rest = item.getDotNode();
+                }
+                else {
+                    rest = Sequence.make(item.rhs.list.subList(item.dotPos, item.rhs.size()));
+                }
+                Set<Name> tokens = FirstSet.tokens(rest, tree);
+                if (!tokens.isEmpty()) {
+                    for (Name token : tokens) {
+                        List<LrItem> list = groups.getOrDefault(token, new ArrayList<>());
+                        list.add(item);
+                        groups.put(token, list);
+                    }
+                }
+                else {
+                    throw new RuntimeException("");
+                }
+            }
+        }
+        return groups;
     }
 
     Name has(LrItem item, Name sym) {

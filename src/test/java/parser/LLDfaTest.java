@@ -86,7 +86,9 @@ public class LLDfaTest {
 
     @Test
     public void single2() throws IOException {
-        String path = "lldfa/rr-loop.g";
+        //String path = "lldfa/rr-loop.g";
+        String path = "lldfa/simple.g";
+        single(path);
         Tree tree = Env.tree(path);
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         LLDFAGen.gen(tree, "java");

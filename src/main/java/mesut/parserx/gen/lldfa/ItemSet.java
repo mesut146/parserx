@@ -112,15 +112,6 @@ public class ItemSet {
         return res;
     }
 
-    /*boolean hasReduce(LrItem item) {
-        if (item.getDotNode() == null) return true;
-        Sequence seq = item.rhs;
-        if (item.dotPos == seq.size() - 1) {
-            return FirstSet.canBeEmpty(seq.get(item.dotPos), tree);
-        }
-        return false;
-    }*/
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

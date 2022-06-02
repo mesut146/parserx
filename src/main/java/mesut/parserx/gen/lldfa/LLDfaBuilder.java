@@ -19,16 +19,13 @@ public class LLDfaBuilder {
     public Tree tree;
     ItemSet firstSet;
     Map<Name, List<LrItem>> firstItems = new HashMap<>();
-    Map<ItemSet, Name> firstSets = new HashMap<>();
-    Set<ItemSet> finals = new HashSet<>();
-    Set<ItemSet> all = new HashSet<>();
+    Set<ItemSet> all;
     Set<ItemSet> all2 = new HashSet<>();
     Queue<ItemSet> queue = new LinkedList<>();
     String type = "lr1";
     public static Name dollar = new Name("$", true);//eof
-    Map<LrItem, Name> reducers = new HashMap<>();
-    Set<ItemSet> extras = new HashSet<>();
     Map<String, Set<ItemSet>> rules = new HashMap<>();
+    Set<ItemSet> inlined = new HashSet<>();
 
 
     public LLDfaBuilder(Tree tree) {
@@ -87,42 +84,46 @@ public class LLDfaBuilder {
 
     public void factor() {
         for (RuleDecl rd : tree.rules) {
-            final boolean[] res = new boolean[1];
-            Transformer t = new Transformer(tree) {
-                public Node visitOr(Or or, Void p) {
-                    for (int i = 0; i < or.size(); i++) {
-                        //try seq
-                        or.get(i).accept(this, null);
-                        for (int j = i + 1; j < or.size(); j++) {
-                            if (hasCommon(or.get(i), or.get(j))) {
-                                res[0] = true;
-                            }
-                        }
-                    }
-                    return or;
-                }
-
-                public Node visitSequence(Sequence seq, Void p) {
-                    //greedy norm
-                    return seq;
-                }
-            };
-            rd.rhs.accept(t, null);
-            if (res[0]) {
+            FactorVisitor visitor = new FactorVisitor();
+            visitor.tree = tree;
+            if (rd.rhs.accept(visitor, null)) {
                 rule = rd.ref;
                 build();
             }
         }
     }
 
-    boolean hasCommon(Node a, Node b) {
+    static class FactorVisitor extends BaseVisitor<Boolean, Void> {
+        Tree tree;
+
+        @Override
+        public Boolean visitOr(Or or, Void arg) {
+            for (int i = 0; i < or.size(); i++) {
+                //try seq
+                or.get(i).accept(this, null);
+                for (int j = i + 1; j < or.size(); j++) {
+                    if (hasCommon(or.get(i), or.get(j), tree)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public Boolean visitSequence(Sequence seq, Void arg) {
+            return false;
+        }
+    }
+
+    static boolean hasCommon(Node a, Node b, Tree tree) {
         return new FactorHelper(tree, new Factor(tree)).common(a, b) != null;
     }
 
     public void build() {
         prepare();
         queue.clear();
-        all = new HashSet<>();
+        all = new TreeSet<>(Comparator.comparingInt(set -> set.stateId));
         //ItemSet.lastId = 0;
         //LrItem.lastId = 0;
         System.out.println("building " + rule + " in " + tree.file.getName());
@@ -188,9 +189,11 @@ public class LLDfaBuilder {
         //moveReductions();
         //mergeFinals();
         //eliminate();
+        findInlined();
         all2.addAll(all);
         rules.put(rule.name, all);
     }
+
 
     boolean canShrink(ItemSet set, LrItem item, int i) {
         Node node = item.getNode(i);
@@ -290,16 +293,6 @@ public class LLDfaBuilder {
         return null;
     }
 
-    public void createReducers() {
-        for (ItemSet set : all) {
-            for (LrItem it : set.all) {
-                if (!it.isReduce(tree)) continue;
-                if (it.lookAhead.contains(dollar)) continue;
-                //createReducer(it, set);
-            }
-        }
-    }
-
     public void moveReductions() {
         Queue<ItemSet> q = new LinkedList<>(all);
         while (!q.isEmpty()) {
@@ -394,6 +387,12 @@ public class LLDfaBuilder {
         }
     }
 
+    private void findInlined() {
+        for(){
+
+        }
+    }
+
     public void eliminate() {
         List<ItemSet> toRemove = new ArrayList<>();
         while (all.size() > 2) {
@@ -405,7 +404,7 @@ public class LLDfaBuilder {
                 }
             }
             if (toRemove.isEmpty()) break;
-            all.removeAll(toRemove);
+            toRemove.forEach(all::remove);
             toRemove.clear();
         }
     }
@@ -491,8 +490,6 @@ public class LLDfaBuilder {
         combine();
     }
 
-    void replaceByRef() {
-    }
 
     Node wrapOr(Node sym) {
         if (sym.isOr()) return new Group(sym);
