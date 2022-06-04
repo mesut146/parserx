@@ -3,7 +3,7 @@ package mesut.parserx.gen;
 public class CodeWriter {
     static int count = 4;
     public boolean auto;
-    StringBuilder sb = new StringBuilder();
+    public StringBuilder sb = new StringBuilder();
     int level = 0;
     String indent;
 
@@ -20,6 +20,24 @@ public class CodeWriter {
             }
         }
         indent = sb.toString();
+    }
+
+
+    public void print(String line, Object... args) {
+        if (line.isEmpty()) {
+            sb.append("\n");
+            return;
+        }
+        if (auto && line.endsWith("}")) {
+            down();
+        }
+        if (args.length != 0) {
+            line = String.format(line, args);
+        }
+        sb.append(indent).append(line);
+        if (auto && line.endsWith("{")) {
+            up();
+        }
     }
 
     public void append(String line, Object... args) {

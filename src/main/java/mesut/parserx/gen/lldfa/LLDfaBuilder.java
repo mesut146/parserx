@@ -112,6 +112,15 @@ public class LLDfaBuilder {
 
         @Override
         public Boolean visitSequence(Sequence seq, Void arg) {
+            for (int i = 0; i < seq.size(); i++) {
+                if (i == seq.size() - 1) break;
+
+                Node a = seq.get(i).copy();
+                Node b = seq.get(i + 1).copy();
+                if (a.astInfo.isFactored) continue;
+                GreedyNormalizer.TailInfo sym = GreedyNormalizer.hasGreedyTail(a, FirstSet.firstSet(b, tree), tree, new FactorLoop(tree, new Factor(tree)));
+                if (sym != null) return true;
+            }
             return false;
         }
     }
@@ -388,9 +397,34 @@ public class LLDfaBuilder {
     }
 
     private void findInlined() {
-        for(){
-
+        for (ItemSet set : all) {
+            if (canBeInlined(set)) {
+                inlined.add(set);
+            }
         }
+    }
+
+    boolean canBeInlined(ItemSet set) {
+        if (countOutgoings(set) == 1) return true;
+        //looping through final state
+        Set<Integer> visited = new HashSet<>();
+        Queue<ItemSet> queue = new LinkedList<>();
+        for (Transition tr : set.transitions) {
+            if (tr.target != set) {
+                queue.add(tr.target);
+                visited.add(tr.target.stateId);
+            }
+        }
+        //discover
+        while (!queue.isEmpty()) {
+            ItemSet cur = queue.poll();
+            boolean r = reachFinal(cur, set);
+            for (Transition tr : cur.transitions) {
+                if (tr.target == set && r) return false;
+                if (tr.target != set && visited.add(tr.target.stateId)) queue.add(tr.target);
+            }
+        }
+        return true;
     }
 
     public void eliminate() {
@@ -409,20 +443,19 @@ public class LLDfaBuilder {
         }
     }
 
-    boolean has1OutGoing(ItemSet set) {
+    int countOutgoings(ItemSet set) {
         int cnt = 0;
         for (Transition tr : set.transitions) {
             if (tr.target.stateId != set.stateId) cnt++;
         }
-        return cnt == 1;
+        return cnt;
     }
 
     boolean canBeRemoved2(ItemSet set) {
         System.out.println("canBeRemoved2 " + set.stateId);
-        if (!has1OutGoing(set)) return false;
+        if (countOutgoings(set) != 1) return false;
 
         if (hasFinal(set)) return false;
-        if (true) return true;
         //looping through final state
         Set<Integer> visited = new HashSet<>();
         Queue<ItemSet> queue = new LinkedList<>();

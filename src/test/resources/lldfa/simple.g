@@ -1,6 +1,6 @@
 include "../common.g"
 
-E: A B x | C D y;
+E: A B x | A D y;
 A: a | b;
 C: a | b;
 

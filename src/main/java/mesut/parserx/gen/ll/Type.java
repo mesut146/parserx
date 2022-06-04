@@ -33,4 +33,11 @@ public class Type {
         }
         return scope.cpp() + "::" + name;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Type)) return false;
+        Type type = (Type) o;
+        return scope.equals(type.scope) && name.equals(type.name);
+    }
 }
