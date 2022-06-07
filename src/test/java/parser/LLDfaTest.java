@@ -94,4 +94,12 @@ public class LLDfaTest {
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         LLDFAGen.gen(tree, "java");
     }
+
+    @Test
+    public void real() throws Exception {
+        /*DescTester.check(Env.tree("lldfa/simple.g"), "E",
+                "acx", "adx", "bcx", "bdx",
+                "acy", "ady", "bcy", "bdy");*/
+        DescTester.check(Env.tree("lldfa/rr-loop.g"), "E", "x", "y", "ax", "ababx");
+    }
 }

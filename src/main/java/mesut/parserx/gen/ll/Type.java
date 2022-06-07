@@ -38,6 +38,6 @@ public class Type {
     public boolean equals(Object o) {
         if (!(o instanceof Type)) return false;
         Type type = (Type) o;
-        return scope.equals(type.scope) && name.equals(type.name);
+        return toString().equals(type.toString());
     }
 }

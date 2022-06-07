@@ -2,6 +2,7 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.ll.AstGen;
+import mesut.parserx.gen.targets.JavaRecDescent;
 import mesut.parserx.nodes.Tree;
 
 import java.io.IOException;
@@ -15,6 +16,6 @@ public class LLDFAGen {
             new JavaGen(tree).gen();
         }
 
-        //LexerGenerator.gen(tree, target);
+        LexerGenerator.gen(tree, target);
     }
 }

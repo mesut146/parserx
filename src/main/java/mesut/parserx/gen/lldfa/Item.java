@@ -1,4 +1,4 @@
-package mesut.parserx.gen.lr;
+package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
@@ -6,19 +6,20 @@ import mesut.parserx.nodes.*;
 
 import java.util.*;
 
-//lr0,lr1
-public class LrItem {
+public class Item {
     public Set<Name> lookAhead = new HashSet<>();
     public RuleDecl rule;
     public Sequence rhs;
     public int dotPos;
-    public Set<LrItemSet> gotoSet = new HashSet<>();
-    public LrItem sender;
+    public Set<ItemSet> gotoSet2 = new HashSet<>();
+    public boolean[] closured;
+    public List<Item> senders = new ArrayList<>();
+    public List<Item> reduceParent = new ArrayList<>();
+    public Item reduceChild;
     public Set<Integer> ids = new HashSet<>();
-    int hash = -1;
     public static int lastId = 0;
 
-    public LrItem(RuleDecl rule, int dotPos) {
+    public Item(RuleDecl rule, int dotPos) {
         this.rule = rule;
         this.dotPos = dotPos;
         this.rhs = rule.rhs.asSequence();
@@ -27,13 +28,15 @@ public class LrItem {
             this.dotPos = 1;
         }
         ids.add(lastId++);
+        closured = new boolean[rhs.size()];
     }
 
-    public LrItem(LrItem item, int dotPos) {
+    public Item(Item item, int dotPos) {
         this(item.rule, dotPos);
         this.lookAhead = new HashSet<>(item.lookAhead);
+        this.gotoSet2 = item.gotoSet2;
         this.ids = new HashSet<>(item.ids);
-        this.sender = item;
+        this.senders.add(item);
         lastId--;
     }
 
@@ -137,7 +140,7 @@ public class LrItem {
     public boolean isEpsilon() {
         return isEpsilon(rule);
     }
-    
+
     /*public Iterator<Node> iter(){
         return new Iterator(){
             int i = dotPos;
@@ -216,7 +219,7 @@ public class LrItem {
         if (this == other) return true;
         if (other == null || getClass() != other.getClass()) return false;
 
-        LrItem item = (LrItem) other;
+        Item item = (Item) other;
 
         //if (hash == item.hash) return true;
         if (dotPos != item.dotPos) return false;
@@ -224,16 +227,13 @@ public class LrItem {
     }
 
     //without lookahead
-    public boolean isSame(LrItem other) {
+    public boolean isSame(Item other) {
         return dotPos == other.dotPos && Objects.equals(rule, other.rule);
     }
 
     @Override
     public int hashCode() {
-        if (hash == -1) {
-            //lookahead may change later so consider initial set
-            hash = Objects.hash(rule, dotPos, lookAhead);
-        }
-        return hash;
+        //lookahead may change later so consider initial set
+        return Objects.hash(rule, dotPos, lookAhead);
     }
 }

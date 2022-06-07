@@ -2,7 +2,6 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.nodes.*;
 import mesut.parserx.gen.*;
-import mesut.parserx.gen.lr.*;
 import mesut.parserx.gen.transform.*;
 
 import java.util.ArrayList;
@@ -11,9 +10,8 @@ import java.util.List;
 import java.util.Set;
 
 public class ItemSet {
-    public Set<LrItem> kernel = new HashSet<>();
-    public List<LrItem> all = new ArrayList<>();
-    public List<LrItem> reduce = new ArrayList<>();
+    public Set<Item> kernel = new HashSet<>();
+    public List<Item> all = new ArrayList<>();
     public boolean isStart = false;
     public int stateId = -1;
     public static int lastId = 0;
@@ -23,29 +21,21 @@ public class ItemSet {
     public List<Transition> incomings = new ArrayList<>();
     public Node symbol;
 
-    public ItemSet(LrItem kernel, Tree tree, String type) {
-        this.kernel.add(kernel);
-        all.add(kernel);
-        this.tree = tree;
-        this.type = type;
-        stateId = lastId++;
-    }
-
     public ItemSet(Tree tree, String type) {
         this.tree = tree;
         this.type = type;
         stateId = lastId++;
     }
 
-    public void addItem(LrItem item) {
+    public void addItem(Item item) {
         if (!all.contains(item)) {
             kernel.add(item);
             all.add(item);
         }
     }
 
-    public void addAll(List<LrItem> list) {
-        for (LrItem it : list) {
+    public void addAll(List<Item> list) {
+        for (Item it : list) {
             addItem(it);
         }
     }
@@ -68,9 +58,9 @@ public class ItemSet {
         return !getReduce().isEmpty();
     }
 
-    public List<LrItem> getReduce() {
-        List<LrItem> list = new ArrayList<>();
-        for (LrItem item : all) {
+    public List<Item> getReduce() {
+        List<Item> list = new ArrayList<>();
+        for (Item item : all) {
             if (item.hasReduce()) {
                 list.add(item);
             }
@@ -78,17 +68,17 @@ public class ItemSet {
         return list;
     }
 
-    void gen(LrItem it, List<LrItem> list) {
+    void gen(Item it, List<Item> list) {
         if (!it.isReduce(tree)) return;
         //is there any transition with my reduce symbol
         for (ItemSet gt : it.gotoSet2) {
-            for (LrItem gti : gt.all) {
+            for (Item gti : gt.all) {
                 for (int i = gti.dotPos; i < gti.rhs.size(); i++) {
                     if (i > gti.dotPos && !FirstSet.canBeEmpty(gti.getNode(i - 1), tree)) break;
                     Name sym = sym(gti.getNode(i));
                     if (sym.equals(it.rule.ref)) {
                         int newPos = gti.getNode(i).isStar() ? i : i + 1;
-                        LrItem target = new LrItem(gti, newPos);
+                        Item target = new Item(gti, newPos);
                         if (target.isReduce(tree)) {
                             it.reduceParent.add(target);
                             target.reduceChild = it;
@@ -104,9 +94,9 @@ public class ItemSet {
         }
     }
 
-    public List<LrItem> genReduces() {
-        List<LrItem> res = new ArrayList<>();
-        for (LrItem it : kernel) {
+    public List<Item> genReduces() {
+        List<Item> res = new ArrayList<>();
+        for (Item it : kernel) {
             gen(it, res);
         }
         return res;
@@ -124,10 +114,10 @@ public class ItemSet {
 
     public void closure() {
         addAll(genReduces());
-        for (LrItem item : kernel) {
+        for (Item item : kernel) {
             closure(item);
         }
-        for (LrItem it : all) {
+        for (Item it : all) {
             if (it.dotPos == 0) {
                 it.gotoSet2.add(this);
             }
@@ -142,7 +132,7 @@ public class ItemSet {
         return node.isName() ? node.asName() : node.asRegex().node.asName();
     }
 
-    public void closure(LrItem item) {
+    public void closure(Item item) {
         //if dot sym have common factor ,closure is forced to reveal factor
         List<Name> syms = symbols();
         for (int i = item.dotPos; i < item.rhs.size(); i++) {
@@ -174,7 +164,7 @@ public class ItemSet {
         }
     }
 
-    boolean isFactor(LrItem item, int i) {
+    boolean isFactor(Item item, int i) {
         List<Name> syms = symbols();
         Node node = item.getNode(i);
         Name sym = sym(node);
@@ -199,7 +189,7 @@ public class ItemSet {
 
     List<Name> symbols() {
         List<Name> res = new ArrayList<>();
-        for (LrItem item : all) {
+        for (Item item : all) {
             for (int i = item.dotPos; i < item.rhs.size(); i++) {
                 if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
                 Node node = item.getNode(i);
@@ -209,43 +199,35 @@ public class ItemSet {
         return res;
     }
 
-    private void closure(Name node, LrItem sender) {
+    private void closure(Name node, Item sender) {
         if (node.isToken) return;
 
         Set<Name> laList = sender.follow(tree);
         for (RuleDecl decl : tree.getRules(node)) {
-            LrItem newItem = new LrItem(decl, 0);
+            Item newItem = new Item(decl, 0);
             if (!type.equals("lr0")) {
                 newItem.lookAhead = new HashSet<>(laList);
             }
-            newItem.sender = sender;
+            newItem.senders.add(sender);
             addOrUpdate(newItem);
         }
     }
 
-    void addOrUpdate(LrItem item) {
+    void addOrUpdate(Item item) {
         if (type.equals("lr0")) return;
-        if (!update(item)) {
+        if (!update(item, false)) {
             all.add(item);
             closure(item);
         }
     }
 
-    public boolean update(LrItem item) {
-        for (LrItem prev : all) {
+    public boolean update(Item item, boolean updateIds) {
+        for (Item prev : all) {
             if (!prev.isSame(item)) continue;
             //merge la
             prev.lookAhead.addAll(item.lookAhead);
-            prev.ids.addAll(item.ids);
-            //update other items too
-            /*if (item.isDotNonTerminal()) {
-                for (LrItem cl: all) {
-                    if (cl.sender == prev) {
-                        cl.lookAhead.addAll(prev.lookAhead);
-                        update(cl);
-                    }
-                }
-            }*/
+            if (updateIds) prev.ids.addAll(item.ids);
+            prev.senders.addAll(item.senders);
             return true;
         }
         return false;

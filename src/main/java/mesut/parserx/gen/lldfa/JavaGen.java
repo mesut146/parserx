@@ -4,7 +4,6 @@ import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.Type;
-import mesut.parserx.gen.lr.LrItem;
 import mesut.parserx.gen.targets.JavaRecDescent;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
@@ -21,7 +20,9 @@ public class JavaGen {
     RuleDecl rule;
     Tree tree;
     Options options;
-    Map<Integer, Map<Type, String>> nameMap = new HashMap<>();
+    Map<Integer, Map<Name, List<Variable>>> nameMap = new HashMap<>();
+    Map<Integer, List<Variable>> paramMap = new HashMap<>();
+    ItemSet curSet;
 
     public JavaGen(Tree tree) {
         this.tree = tree;
@@ -29,7 +30,7 @@ public class JavaGen {
         options = tree.options;
     }
 
-    public void gen() {
+    public void gen() throws IOException {
         builder.factor();
         w = new CodeWriter(true);
         if (options.packageName != null) {
@@ -38,6 +39,7 @@ public class JavaGen {
         }
         w.append("import java.util.List;");
         w.append("import java.util.ArrayList;");
+        w.append("import java.io.IOException;");
         w.append("");
         w.append("public class %s{", options.parserClass);
 
@@ -61,11 +63,11 @@ public class JavaGen {
 
         w.append("}");
         File file = new File(options.outDir, options.parserClass + ".java");
-        try {
-            Utils.write(w.get(), file);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
+        Utils.write(w.get(), file);
+        JavaRecDescent recDescent = new JavaRecDescent(tree);
+        recDescent.genTokenType();
+
     }
 
     void writeRule(Set<ItemSet> all) {
@@ -75,54 +77,76 @@ public class JavaGen {
         }
     }
 
+    String params(ItemSet set) {
+        if (set.isStart) return "";
+        StringBuilder sb = new StringBuilder();
+        int cnt = 0;
+
+        for (Variable e : paramMap.get(set.stateId)) {
+            if (cnt++ > 0) {
+                sb.append(", ");
+            }
+            sb.append(e.type);
+            sb.append(" ");
+            sb.append(e.name);
+        }
+
+        return sb.toString();
+    }
+
+    static class Variable {
+        Type type;
+        String name;
+        Item item;
+        Variable bind;//if this is param then bind to local var
+
+        public Variable(Type type, String name, Item item) {
+            this.type = type;
+            this.name = name;
+            this.item = item;
+        }
+
+        @Override
+        public String toString() {
+            return type + " " + name;
+        }
+    }
+
     void writeSet(ItemSet set) {
+        curSet = set;
         if (set.transitions.isEmpty()) return;
         if (set.isStart) {
-            w.append("public %s %s(){", rule.retType, rule.getName());
-            //create res
-            w.append("%s res = new %s();", rule.retType, rule.retType);
+            w.append("public %s %s(%s) throws IOException{", rule.retType, rule.getName(), params(set));
         }
         else {
-            w.append("public %s S%d(){", rule.retType, set.stateId);
+            w.append("public void S%d(%s) throws IOException{", set.stateId, params(set));
         }
 
         //collect items by la
-        Map<Name, List<LrItem>> groups = group(set);
-
+        Map<Name, List<Item>> groups = group(set);
+        writeReduces(set);
         //process items
         boolean first = true;
         for (Name sym : groups.keySet()) {
-            List<LrItem> list = groups.get(sym);
-            Map<Type, String> names = new HashMap<>();
-            writeReduces(set, names, list);
-            if (first) {
-                w.append("if(la.type == Tokens.%s){", sym.name);
-                first = false;
-            }
-            else {
-                w.append("else if(la.type == Tokens.%s){", sym.name);
-            }
-            //create and assign nodes
-            createNodes(list, names);
-            assign(list, names);
-            nameMap.put(set.stateId, names);
+            List<Item> list = groups.get(sym);
 
-            /*
-            for (LrItem item : list) {
-                if (set.isStart && item.isReduce(tree)) {
-                    //assign parent
-                    for (LrItem parent : item.reduceParent) {
-                        Node pNode = parent.getNode(parent.dotPos);
-                        w.append("%s.%s = %s;", names.get(parent.rule.retType), pNode.astInfo.varName, names.get(item.rule.retType));
-                    }
-                }
-            }*/
+            w.append("%sif(la.type == Tokens.%s){", first ? "" : "else ", sym.name);
+            first = false;
+            //create and assign nodes
+            createNodes(list, sym);
+            assign(list, sym);
+
             //assign la
-            for (LrItem item : list) {
+            for (Item item : list) {
                 Name node = has(item, sym);
                 if (node != null) {
-                    Type type = item.rule.which == -1 ? item.rule.retType : item.rhs.astInfo.nodeType;
-                    w.append("%s.%s = la;", names.get(type), node.astInfo.varName);
+                    //todo local
+                    if (node.astInfo.isInLoop) {
+                        w.append("%s.%s.add(la);", getBoth(item, sym), node.astInfo.varName);
+                    }
+                    else {
+                        w.append("%s.%s = la;", getBoth(item, sym), node.astInfo.varName);
+                    }
                 }
             }
             //get next la
@@ -132,62 +156,161 @@ public class JavaGen {
             //inline target reductions
             if (target.transitions.isEmpty()) {
                 //inline
-                for (LrItem targetItem : target.all) {
-                    if (targetItem.dotPos > 0 && targetItem.getNode(targetItem.dotPos - 1).equals(sym)) {
-                        //assign factor
-                        //w.append("%s.%s = la;", names.get(targetItem), targetItem.getNode(targetItem.dotPos - 1).astInfo.varName);
-                    }
-                }
+                inline(target, sym);
             }
             else {
-                w.print("res = S%d(", target.stateId);
-                boolean f = true;
-                for (Type key : names.keySet()) {
-                    if (!f) {
-                        w.sb.append(", ");
-                    }
-                    w.sb.append(names.get(key));
-                    f = false;
+                //todo looping args, multi state args?
+                List<Variable> targetParams = new ArrayList<>();
+                if (!paramMap.containsKey(target.stateId)) {
+                    paramMap.put(target.stateId, targetParams);
                 }
-                w.sb.append(");\n");
+                w.print("S%d(%s);\n", target.stateId, args(targetParams, sym));
+            }
+            if (set.isStart) {
+                for (Variable v : nameMap.get(set.stateId).get(sym)) {
+                    if (v.item == null && v.type.equals(rule.retType)) {
+                        w.append("return %s;", v.name);
+                        break;
+                    }
+                }
             }
             w.append("}");
         }
-        w.append("return res;");
+        if (set.isStart) {
+            //todo print la
+            w.append("throw new RuntimeException(\"\");");
+        }
         w.append("}");
     }
 
+    String args(List<Variable> targetParams, Name sym) {
+        StringBuilder sb = new StringBuilder();
+        int param_cnt = 0;
+        //curParams + createdVars
+        boolean hasParams = false;
+        if (paramMap.containsKey(curSet.stateId)) {
+            boolean f = true;
+            Set<Variable> red = getReduced();
+            for (Variable v : paramMap.get(curSet.stateId)) {
+                if (red.contains(v)) continue;
+                if (!f) sb.append(", ");
+                sb.append(v.name);
+                targetParams.add(new Variable(v.type, "p" + param_cnt++, v.item));
+                f = false;
+                hasParams = true;
+            }
+        }
+        if (hasParams && !nameMap.get(curSet.stateId).isEmpty()) sb.append(", ");
+        boolean f = true;
+        for (Variable v : nameMap.get(curSet.stateId).get(sym)) {
+            if (!f) sb.append(", ");
+            sb.append(v.name);
+            targetParams.add(new Variable(v.type, "p" + param_cnt++, v.item));
+            f = false;
+        }
+        return sb.toString();
+    }
 
-    private void assign(List<LrItem> list, Map<Type, String> names) {
+    Set<Variable> getReduced() {
+        Set<Variable> ignored = new HashSet<>();
+        for (Item item : curSet.all) {
+            if (!item.isReduce(tree)) continue;
+            //mark holder
+            for (Variable v : paramMap.get(curSet.stateId)) {
+                //remove holder
+                if (v.item == null && v.type.equals(item.rule.retType)) {
+                    ignored.add(v);
+                }
+                //alt
+                if (v.item != null && item.rule.which != -1 && v.type.equals(item.rule.rhs.astInfo.nodeType)) {
+                    ignored.add(v);
+                }
+                //normal
+                if (v.item != null && item.rule.which == -1 && v.type.equals(item.rule.rhs.astInfo.nodeType)) {
+                    ignored.add(v);
+                }
+            }
+
+        }
+        return ignored;
+    }
+
+    boolean hasCommon(Set<Integer> s1, Set<Integer> s2) {
+        Set<Integer> tmp = new HashSet<>(s1);
+        tmp.retainAll(s2);
+        return !tmp.isEmpty();
+    }
+
+    String getName(Type type, Name sym) {
+        for (Variable v : nameMap.get(curSet.stateId).get(sym)) {
+            if (v.type.equals(type)) return v.name;
+        }
+        return null;
+    }
+
+    boolean sameItem(Item i1, Item i2) {
+        return hasCommon(i1.ids, i2.ids);
+    }
+
+    String getParam(Item item) {
+        for (Variable v : paramMap.get(curSet.stateId)) {
+            if (v.item != null && sameItem(v.item, item)) {
+                return v.name;
+            }
+        }
+        return null;
+    }
+
+    String getParam(Type type) {
+        for (Variable v : paramMap.get(curSet.stateId)) {
+            if (v.type.equals(type)) {
+                return v.name;
+            }
+        }
+        return null;
+    }
+
+    String getBoth(Item item, Name sym) {
+        if (sym == null) {
+            return getParam(item);
+        }
+        String res = getName(getType(item), sym);
+        if (res == null) return getParam(item);
+        return res;
+    }
+
+    private void assign(List<Item> list, Name sym) {
         Set<String> done = new HashSet<>();
         //assign created nodes
-        for (LrItem item : list) {
+        for (Item item : list) {
             if (item.dotPos != 0) continue;
             //no alt
             if (item.rule.which == -1) {
-                String name = names.get(item.rule.retType);
-                for (LrItem sender : senders(item, list)) {
-                    Type type = sender.rule.which == -1 ? sender.rule.retType : sender.rhs.astInfo.nodeType;
-                    w.append("%s.%s = %s;", names.get(type), sender.getDotNode().astInfo.varName, name);
+                String name = getName(item.rule.retType, sym);
+                for (Item sender : senders(item, list)) {
+                    w.append("%s.%s = %s;", getName(getType(sender), sym), sender.getDotNode().astInfo.varName, name);
                 }
             }
             else {
-                //parent
+                //alt holder
                 if (!done.contains(item.rule.baseName()) && !item.lookAhead.contains(dollar)) {
-                    String name = names.get(item.rule.retType);
                     done.add(item.rule.baseName());
-                    for (LrItem sender : senders(item, list)) {
-                        Type type = sender.rule.which == -1 ? sender.rule.retType : sender.rhs.astInfo.nodeType;
-                        w.append("%s.%s = %s;", names.get(type), sender.getDotNode().astInfo.varName, name);
+                    for (Item sender : item.senders) {
+                        if (sender.getDotNode().isStar()) {
+                            w.append("%s.%s.add(%s);", getBoth(sender, sym), sender.getDotNode().astInfo.varName, getName(item.rule.retType, sym));
+                        }
+                        else {
+                            w.append("%s.%s = %s;", getBoth(sender, sym), sender.getDotNode().astInfo.varName, getName(item.rule.retType, sym));
+                        }
                     }
                 }
             }
         }
     }
 
-    List<LrItem> senders(LrItem item, List<LrItem> list) {
-        List<LrItem> res = new ArrayList<>();
-        for (LrItem sender : list) {
+    List<Item> senders(Item item, List<Item> list) {
+        List<Item> res = new ArrayList<>();
+        for (Item sender : list) {
             if (sender.getDotNode().equals(item.rule.ref)) {
                 res.add(sender);
             }
@@ -195,46 +318,68 @@ public class JavaGen {
         return res;
     }
 
-    private void createNodes(List<LrItem> list, Map<Type, String> names) {
+    private void createNodes(List<Item> list, Name sym) {
+        List<Variable> names = new ArrayList<>();
         Set<String> done = new HashSet<>();
         int cnt = 0;
-        for (LrItem item : list) {
+        for (Item item : list) {
             if (item.dotPos != 0) continue;
             //no alt
             if (item.rule.which == -1) {
                 String name = "v" + cnt++;
-                names.put(item.rule.retType, name);
+                names.add(new Variable(item.rule.retType, name, item));
                 w.append("%s %s = new %s();", item.rule.retType, name, item.rule.retType);
             }
             else {
                 //parent
                 if (!done.contains(item.rule.baseName())) {
                     String pname = "v" + cnt++;
-                    names.put(item.rule.retType, pname);
+                    names.add(new Variable(item.rule.retType, pname, null));
                     done.add(item.rule.baseName());
                     w.append("%s %s = new %s();", item.rule.retType, pname, item.rule.retType);
                 }
                 //alt
                 String name = "v" + cnt++;
-                names.put(item.rule.rhs.astInfo.nodeType, name);
+                names.add(new Variable(item.rule.rhs.astInfo.nodeType, name, item));
                 w.append("%s %s = new %s();", item.rule.rhs.astInfo.nodeType, name, item.rule.rhs.astInfo.nodeType);
             }
         }
+        Map<Name, List<Variable>> map = nameMap.computeIfAbsent(curSet.stateId, k -> new HashMap<>());
+        map.put(sym, names);
     }
 
-    private void writeReduces(ItemSet set, Map<Type, String> names, List<LrItem> list) {
-        for (LrItem item : set.all) {
+    private void writeReduces(ItemSet set) {
+        for (Item item : set.all) {
             if (!item.isReduce(tree)) continue;
-            if (item.rule.which == -1) continue;//only alts
+            if (item.rule.which == -1) continue;//only alts have assign
             w.append("if(%s){", JavaRecDescent.loopExpr(item.lookAhead));
-            String pname = names.get(getType(item));
-            w.append("%s.which = %d;", pname, item.rule.which);
-            w.append("%s.%s = %s;", pname, item.rhs.astInfo.varName, pname);
+            String holder = getParam(item.rule.retType);
+            w.append("%s.which = %d;", holder, item.rule.which);
+            w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getParam(item));
             w.append("}");
         }
     }
 
-    Type getType(LrItem item) {
+    private void inline(ItemSet set, Name sym) {
+        for (Item item : set.all) {
+            if (!item.isReduce(tree)) continue;
+            if (item.rule.which == -1) continue;//only alts have assign
+            w.append("if(%s){", JavaRecDescent.loopExpr(item.lookAhead));
+            String holder;
+            if (curSet.isStart) {
+                holder = getName(item.rule.retType, sym);
+            }
+            else {
+                holder = getParam(item.rule.retType);
+            }
+
+            w.append("%s.which = %d;", holder, item.rule.which);
+            w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getBoth(item, sym));//todo
+            w.append("}");
+        }
+    }
+
+    Type getType(Item item) {
         if (item.rule.which == -1) {
             return item.rule.retType;
         }
@@ -243,9 +388,9 @@ public class JavaGen {
         }
     }
 
-    private Map<Name, List<LrItem>> group(ItemSet set) {
-        Map<Name, List<LrItem>> groups = new HashMap<>();
-        for (LrItem item : set.all) {
+    private Map<Name, List<Item>> group(ItemSet set) {
+        Map<Name, List<Item>> groups = new HashMap<>();
+        for (Item item : set.all) {
             //factor consume & assign
             if (item.dotPos >= item.rhs.size()) continue;
             Node rest;
@@ -258,7 +403,7 @@ public class JavaGen {
             Set<Name> tokens = FirstSet.tokens(rest, tree);
             if (!tokens.isEmpty()) {
                 for (Name token : tokens) {
-                    List<LrItem> list = groups.getOrDefault(token, new ArrayList<>());
+                    List<Item> list = groups.getOrDefault(token, new ArrayList<>());
                     list.add(item);
                     groups.put(token, list);
                 }
@@ -270,7 +415,8 @@ public class JavaGen {
         return groups;
     }
 
-    Name has(LrItem item, Name sym) {
+    Name has(Item item, Name sym) {
+        //todo loop
         for (int i = item.dotPos; i < item.rhs.size(); i++) {
             Node ch = item.getNode(i);
             if (ch.equals(sym)) {
@@ -281,9 +427,5 @@ public class JavaGen {
             }
         }
         return null;
-    }
-
-    boolean isTargetEnd(ItemSet target) {
-        return builder.hasFinal(target) && target.transitions.isEmpty();
     }
 }

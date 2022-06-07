@@ -100,23 +100,21 @@ public class LrItemSet {
 
     void addItem(LrItem item) {
         for (LrItem prev : all) {
-            if (prev.isSame(item)) {
-                if (type.equals("lr0")) {
-                    return;
-                }
-                //merge la
-                prev.lookAhead.addAll(item.lookAhead);
-                //update other items too
-                if (item.isDotNonTerminal()) {
-                    for (LrItem cl : all) {
-                        if (cl.sender == prev) {
-                            cl.lookAhead.addAll(prev.lookAhead);
-                            addItem(cl);
-                        }
-                    }
-                }
+            if (prev.isSame(item)) continue;
+            if (type.equals("lr0")) {
                 return;
             }
+            //merge la
+            prev.lookAhead.addAll(item.lookAhead);
+            //update other items too
+            if (!item.isDotNonTerminal()) return;
+            for (LrItem cl : all) {
+                if (cl.sender == prev) {
+                    cl.lookAhead.addAll(prev.lookAhead);
+                    addItem(cl);
+                }
+            }
+            return;
         }
         all.add(item);
         closure(item);

@@ -3,6 +3,7 @@ package parser;
 import common.Env;
 import mesut.parserx.gen.ll.DotBuilder;
 import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.lldfa.LLDFAGen;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 
@@ -29,7 +30,8 @@ public class DescTester {
 
         String outDir = Env.dotDir().getAbsolutePath();
         tree.options.outDir = outDir;
-        RecDescent.gen(tree, "java");
+        //RecDescent.gen(tree, "java");
+        LLDFAGen.gen(tree, "java");
 
         File out = new File(outDir, "out");
         if (out.exists()) {

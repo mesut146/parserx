@@ -83,7 +83,7 @@ public class JavaRecDescent {
         code.append("}");
     }
 
-    void genTokenType() throws IOException {
+    public void genTokenType() throws IOException {
         CodeWriter c = new CodeWriter(true);
         if (options.packageName != null) {
             c.append("package %s;", options.packageName);
@@ -296,7 +296,7 @@ public class JavaRecDescent {
         StringBuilder sb = new StringBuilder();
         for (Iterator<Name> it = set.iterator(); it.hasNext(); ) {
             Name tok = it.next();
-            sb.append(String.format("%s == %s.%s", peekExpr(), tokens, tok.name));
+            sb.append(String.format("%s == %s.%s", peekExpr(), tokens, tok.name.equals("$") ? "EOF" : tok.name));
             if (it.hasNext()) {
                 sb.append(" || ");
             }
