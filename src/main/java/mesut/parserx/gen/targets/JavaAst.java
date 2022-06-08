@@ -9,7 +9,6 @@ import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
 import mesut.parserx.utils.Utils;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -28,16 +27,6 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
         this.tree = tree;
         this.options = tree.options;
         p = new Printer();
-    }
-
-    static class Info {
-        Type outerCls;
-        String outerVar;
-
-        public Info(Type outerCls, String outerVar) {
-            this.outerCls = outerCls;
-            this.outerVar = outerVar;
-        }
     }
 
     public void genAst() throws IOException {
@@ -150,7 +139,6 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
     void orInit(Or or) {
         for (Node ch : or) {
             if (ch.isEpsilon()) continue;
-            //in case of factorization pre-write some code
             if (options.useSimple && RecDescent.isSimple(ch)) {
             }
             else {
@@ -159,6 +147,8 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
                 Type clsName = ch.astInfo.nodeType;
 
                 w.append("public static class %s{", clsName.name);
+                //holder ref
+                w.append("%s holder;", curRule);
                 ch.accept(this, new Info(clsName, ch.astInfo.varName));
                 p.writePrinter(ch, true);
                 w.append("}");
@@ -166,6 +156,15 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
         }
     }
 
+    static class Info {
+        Type outerCls;
+        String outerVar;
+
+        public Info(Type outerCls, String outerVar) {
+            this.outerCls = outerCls;
+            this.outerVar = outerVar;
+        }
+    }
 
     class Printer extends BaseVisitor<Void, Void> {
 

@@ -97,9 +97,14 @@ public class LLDfaTest {
 
     @Test
     public void real() throws Exception {
-        /*DescTester.check(Env.tree("lldfa/simple.g"), "E",
+        DescTester.check(Env.tree("lldfa/simple.g"), "E",
                 "acx", "adx", "bcx", "bdx",
-                "acy", "ady", "bcy", "bdy");*/
-        DescTester.check(Env.tree("lldfa/rr-loop.g"), "E", "x", "y", "ax", "ababx");
+                "acy", "ady", "bcy", "bdy");
+        DescTester.check(Env.tree("lldfa/rr-loop.g"), "E",
+                "x", "y", "ax", "ababx",
+                "ay", "bbaay");
+        DescTester.check(Env.tree("lldfa/rr-loop.g"), "F",
+                "x", "y", "ax", "ababx",
+                "ay", "bbaay");
     }
 }

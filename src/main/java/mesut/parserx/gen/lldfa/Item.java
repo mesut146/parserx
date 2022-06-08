@@ -15,8 +15,10 @@ public class Item {
     public boolean[] closured;
     public List<Item> senders = new ArrayList<>();
     public List<Item> reduceParent = new ArrayList<>();
+    public List<Item> siblings = new ArrayList<>();
     public Item reduceChild;
     public Set<Integer> ids = new HashSet<>();
+    public boolean advanced = false;//dot star but advanced
     public static int lastId = 0;
 
     public Item(RuleDecl rule, int dotPos) {

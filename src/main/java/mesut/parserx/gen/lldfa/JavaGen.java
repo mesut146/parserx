@@ -23,15 +23,17 @@ public class JavaGen {
     Map<Integer, Map<Name, List<Variable>>> nameMap = new HashMap<>();
     Map<Integer, List<Variable>> paramMap = new HashMap<>();
     ItemSet curSet;
+    boolean skipHolder = true;
 
     public JavaGen(Tree tree) {
         this.tree = tree;
-        builder = new LLDfaBuilder(tree);
         options = tree.options;
     }
 
     public void gen() throws IOException {
+        builder = new LLDfaBuilder(tree);
         builder.factor();
+        tree = builder.tree;
         w = new CodeWriter(true);
         if (options.packageName != null) {
             w.append("package %s;", options.packageName);
@@ -56,7 +58,7 @@ public class JavaGen {
         builder.inlined.forEach(set -> System.out.printf("inlined=%d\n", set.stateId));
 
         for (String ruleName : builder.rules.keySet()) {
-            if (!ruleName.equals("E")) continue;
+            //if (!ruleName.equals("E")) continue;
             rule = tree.getRule(ruleName);
             writeRule(builder.rules.get(ruleName));
         }
@@ -163,8 +165,11 @@ public class JavaGen {
                 List<Variable> targetParams = new ArrayList<>();
                 if (!paramMap.containsKey(target.stateId)) {
                     paramMap.put(target.stateId, targetParams);
+                    w.print("S%d(%s);\n", target.stateId, args(targetParams, sym));
                 }
-                w.print("S%d(%s);\n", target.stateId, args(targetParams, sym));
+                else {
+                    w.print("S%d(%s);\n", target.stateId, args2(paramMap.get(target.stateId), sym));
+                }
             }
             if (set.isStart) {
                 for (Variable v : nameMap.get(set.stateId).get(sym)) {
@@ -189,25 +194,65 @@ public class JavaGen {
         //curParams + createdVars
         boolean hasParams = false;
         if (paramMap.containsKey(curSet.stateId)) {
-            boolean f = true;
-            Set<Variable> red = getReduced();
+            boolean first = true;
+            Set<Variable> reduced = getReduced();
             for (Variable v : paramMap.get(curSet.stateId)) {
-                if (red.contains(v)) continue;
-                if (!f) sb.append(", ");
+                if (reduced.contains(v)) continue;
+                if (!first) sb.append(", ");
                 sb.append(v.name);
                 targetParams.add(new Variable(v.type, "p" + param_cnt++, v.item));
-                f = false;
+                first = false;
                 hasParams = true;
             }
         }
         if (hasParams && !nameMap.get(curSet.stateId).isEmpty()) sb.append(", ");
-        boolean f = true;
+        boolean first = true;
         for (Variable v : nameMap.get(curSet.stateId).get(sym)) {
-            if (!f) sb.append(", ");
+            if (skipHolder && v.item == null) continue;//skip holder, alt already has ref in it
+            if (!first) sb.append(", ");
             sb.append(v.name);
             targetParams.add(new Variable(v.type, "p" + param_cnt++, v.item));
+            first = false;
+        }
+        return sb.toString();
+    }
+
+    String args2(List<Variable> targetParams, Name sym) {
+        StringBuilder sb = new StringBuilder();
+        boolean f = true;
+        for (Variable v : targetParams) {
+            //locate by item
+            if (v.item == null) {
+                throw new RuntimeException("not yet");
+            }
+            if (!f) sb.append(", ");
+            sb.append(getBoth(v.item, sym));
             f = false;
         }
+        /*int param_cnt = 0;
+        //curParams + createdVars
+        boolean hasParams = false;
+        if (paramMap.containsKey(curSet.stateId)) {
+            boolean first = true;
+            Set<Variable> reduced = getReduced();
+            for (Variable v : paramMap.get(curSet.stateId)) {
+                if (reduced.contains(v)) continue;
+                if (!first) sb.append(", ");
+                sb.append(v.name);
+                targetParams.add(new Variable(v.type, "p" + param_cnt++, v.item));
+                first = false;
+                hasParams = true;
+            }
+        }
+        if (hasParams && !nameMap.get(curSet.stateId).isEmpty()) sb.append(", ");
+        boolean first = true;
+        for (Variable v : nameMap.get(curSet.stateId).get(sym)) {
+            if (skipHolder && v.item == null) continue;//skip holder, alt already has ref in it
+            if (!first) sb.append(", ");
+            sb.append(v.name);
+            targetParams.add(new Variable(v.type, "p" + param_cnt++, v.item));
+            first = false;
+        }*/
         return sb.toString();
     }
 
@@ -279,6 +324,49 @@ public class JavaGen {
         return res;
     }
 
+    private void createNodes(List<Item> list, Name sym) {
+        List<Variable> vars = new ArrayList<>();
+        Set<String> done = new HashSet<>();
+        int cnt = 0;
+        Map<Item, String> holderMap = new HashMap<>();
+        for (Item item : list) {
+            if (item.dotPos != 0) continue;
+            if (item.advanced) continue;
+            //no alt
+            if (item.rule.which == -1) {
+                String name = "v" + cnt++;
+                vars.add(new Variable(item.rule.retType, name, item));
+                w.append("%s %s = new %s();", item.rule.retType, name, item.rule.retType);
+            }
+            else {
+                //parent
+                if (!done.contains(item.rule.baseName())) {
+                    String pname = "v" + cnt++;
+                    vars.add(new Variable(item.rule.retType, pname, null));
+                    done.add(item.rule.baseName());
+                    w.append("%s %s = new %s();", item.rule.retType, pname, item.rule.retType);
+                    holderMap.put(item, pname);
+                }
+                //alt
+                String name = "v" + cnt++;
+                String pname = holderMap.get(item);
+                if (pname == null) {
+                    for (Item sib : holderMap.keySet()) {
+                        if (item.siblings.contains(sib)) {
+                            pname = holderMap.get(sib);
+                            break;
+                        }
+                    }
+                }
+                vars.add(new Variable(item.rule.rhs.astInfo.nodeType, name, item));
+                w.append("%s %s = new %s();", item.rule.rhs.astInfo.nodeType, name, item.rule.rhs.astInfo.nodeType);
+                w.append("%s.holder = %s;", name, pname);
+            }
+        }
+        Map<Name, List<Variable>> map = nameMap.computeIfAbsent(curSet.stateId, k -> new HashMap<>());
+        map.put(sym, vars);
+    }
+
     private void assign(List<Item> list, Name sym) {
         Set<String> done = new HashSet<>();
         //assign created nodes
@@ -318,42 +406,19 @@ public class JavaGen {
         return res;
     }
 
-    private void createNodes(List<Item> list, Name sym) {
-        List<Variable> names = new ArrayList<>();
-        Set<String> done = new HashSet<>();
-        int cnt = 0;
-        for (Item item : list) {
-            if (item.dotPos != 0) continue;
-            //no alt
-            if (item.rule.which == -1) {
-                String name = "v" + cnt++;
-                names.add(new Variable(item.rule.retType, name, item));
-                w.append("%s %s = new %s();", item.rule.retType, name, item.rule.retType);
-            }
-            else {
-                //parent
-                if (!done.contains(item.rule.baseName())) {
-                    String pname = "v" + cnt++;
-                    names.add(new Variable(item.rule.retType, pname, null));
-                    done.add(item.rule.baseName());
-                    w.append("%s %s = new %s();", item.rule.retType, pname, item.rule.retType);
-                }
-                //alt
-                String name = "v" + cnt++;
-                names.add(new Variable(item.rule.rhs.astInfo.nodeType, name, item));
-                w.append("%s %s = new %s();", item.rule.rhs.astInfo.nodeType, name, item.rule.rhs.astInfo.nodeType);
-            }
-        }
-        Map<Name, List<Variable>> map = nameMap.computeIfAbsent(curSet.stateId, k -> new HashMap<>());
-        map.put(sym, names);
-    }
-
     private void writeReduces(ItemSet set) {
         for (Item item : set.all) {
             if (!item.isReduce(tree)) continue;
             if (item.rule.which == -1) continue;//only alts have assign
             w.append("if(%s){", JavaRecDescent.loopExpr(item.lookAhead));
-            String holder = getParam(item.rule.retType);
+            //String holder = getParam(item.rule.retType);
+            String holder;
+            if (skipHolder) {
+                holder = getParam(item) + ".holder";
+            }
+            else {
+                holder = getParam(item.rule.retType);
+            }
             w.append("%s.which = %d;", holder, item.rule.which);
             w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getParam(item));
             w.append("}");
@@ -366,13 +431,17 @@ public class JavaGen {
             if (item.rule.which == -1) continue;//only alts have assign
             w.append("if(%s){", JavaRecDescent.loopExpr(item.lookAhead));
             String holder;
-            if (curSet.isStart) {
-                holder = getName(item.rule.retType, sym);
+            if (skipHolder) {
+                holder = getBoth(item, sym) + ".holder";
             }
             else {
-                holder = getParam(item.rule.retType);
+                if (curSet.isStart) {
+                    holder = getName(item.rule.retType, sym);
+                }
+                else {
+                    holder = getParam(item.rule.retType);
+                }
             }
-
             w.append("%s.which = %d;", holder, item.rule.which);
             w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getBoth(item, sym));//todo
             w.append("}");

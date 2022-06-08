@@ -1,8 +1,12 @@
 package mesut.parserx.gen.lldfa;
 
-import mesut.parserx.nodes.*;
-import mesut.parserx.gen.*;
-import mesut.parserx.gen.transform.*;
+import mesut.parserx.gen.FirstSet;
+import mesut.parserx.gen.transform.Factor;
+import mesut.parserx.gen.transform.FactorHelper;
+import mesut.parserx.nodes.Name;
+import mesut.parserx.nodes.Node;
+import mesut.parserx.nodes.RuleDecl;
+import mesut.parserx.nodes.Tree;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -79,6 +83,7 @@ public class ItemSet {
                     if (sym.equals(it.rule.ref)) {
                         int newPos = gti.getNode(i).isStar() ? i : i + 1;
                         Item target = new Item(gti, newPos);
+                        target.advanced = gti.getNode(i).isStar();
                         if (target.isReduce(tree)) {
                             it.reduceParent.add(target);
                             target.reduceChild = it;
@@ -203,6 +208,7 @@ public class ItemSet {
         if (node.isToken) return;
 
         Set<Name> laList = sender.follow(tree);
+        Set<Item> set = new HashSet<>();
         for (RuleDecl decl : tree.getRules(node)) {
             Item newItem = new Item(decl, 0);
             if (!type.equals("lr0")) {
@@ -210,6 +216,11 @@ public class ItemSet {
             }
             newItem.senders.add(sender);
             addOrUpdate(newItem);
+            set.add(newItem);
+        }
+        for (Item item : set) {
+            item.siblings.addAll(set);
+            item.siblings.remove(item);
         }
     }
 

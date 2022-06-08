@@ -1,16 +1,15 @@
 package mesut.parserx.gen.lldfa;
 
-import mesut.parserx.dfa.Alphabet;
-import mesut.parserx.dfa.NFA;
+import mesut.parserx.gen.AstInfo;
+import mesut.parserx.gen.FirstSet;
+import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.ll.Normalizer;
-import mesut.parserx.gen.lr.LrDFAGen;
-import mesut.parserx.gen.*;
-import mesut.parserx.gen.transform.*;
+import mesut.parserx.gen.transform.Factor;
+import mesut.parserx.gen.transform.FactorHelper;
+import mesut.parserx.gen.transform.FactorLoop;
+import mesut.parserx.gen.transform.GreedyNormalizer;
 import mesut.parserx.nodes.*;
-import mesut.parserx.utils.Utils;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 public class LLDfaBuilder {
@@ -82,9 +81,11 @@ public class LLDfaBuilder {
     }
 
     public void factor() {
-        for (RuleDecl rd : tree.rules) {
+        Tree old = tree;
+        prepare();
+        for (RuleDecl rd : old.rules) {
             FactorVisitor visitor = new FactorVisitor();
-            visitor.tree = tree;
+            visitor.tree = old;
             if (rd.rhs.accept(visitor, null)) {
                 rule = rd.ref;
                 build();
@@ -129,7 +130,6 @@ public class LLDfaBuilder {
     }
 
     public void build() {
-        prepare();
         queue.clear();
         all = new TreeSet<>(Comparator.comparingInt(set -> set.stateId));
         //ItemSet.lastId = 0;
@@ -145,6 +145,10 @@ public class LLDfaBuilder {
             firstSet.addItem(first);
             List<Item> list = firstItems.computeIfAbsent(rd.ref, k -> new ArrayList<>());
             list.add(first);
+        }
+        for (Item item : firstSet.all) {
+            item.siblings.addAll(firstSet.all);
+            item.siblings.remove(item);
         }
 
         all.add(firstSet);
