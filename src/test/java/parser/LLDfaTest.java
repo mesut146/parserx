@@ -2,14 +2,16 @@ package parser;
 
 import common.Env;
 import mesut.parserx.dfa.NFA;
-import mesut.parserx.gen.lldfa.JavaGen;
 import mesut.parserx.gen.lldfa.LLDFAGen;
 import mesut.parserx.gen.lldfa.LLDfaBuilder;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 public class LLDfaTest {
 
@@ -97,7 +99,7 @@ public class LLDfaTest {
 
     @Test
     public void real() throws Exception {
-        DescTester.check(Env.tree("lldfa/simple.g"), "E",
+        /*DescTester.check(Env.tree("lldfa/simple.g"), "E",
                 "acx", "adx", "bcx", "bdx",
                 "acy", "ady", "bcy", "bdy");
         DescTester.check(Env.tree("lldfa/rr-loop.g"), "E",
@@ -105,6 +107,12 @@ public class LLDfaTest {
                 "ay", "bbaay");
         DescTester.check(Env.tree("lldfa/rr-loop.g"), "F",
                 "x", "y", "ax", "ababx",
-                "ay", "bbaay");
+                "ay", "bbaay");*/
+        DescTester.check(Env.tree("lldfa/rr-loop2.g"), "E",
+                "acx", "bdx", "abcdx",
+                "acy", "bdy", "abcdy");
+        /*DescTester.check(Env.tree("lldfa/rr-loop-len2.g"), "F",
+                "x", "y", "ax", "ababx",
+                "ay", "bbaay");*/
     }
 }

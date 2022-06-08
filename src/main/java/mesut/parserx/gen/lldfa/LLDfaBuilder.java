@@ -66,7 +66,9 @@ public class LLDfaBuilder {
         for (Node ch : seq) {
             if (ch.isPlus()) {
                 Regex rn = ch.asRegex();
-                list.add(rn.node.copy());
+                Node copy = rn.node.copy();
+                //copy.astInfo.isInLoop = true;
+                list.add(copy);
                 Regex star = new Regex(rn.node.copy(), "*");
                 star.astInfo = rn.astInfo.copy();
                 list.add(star);

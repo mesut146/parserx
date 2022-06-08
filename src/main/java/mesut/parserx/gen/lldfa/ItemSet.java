@@ -133,7 +133,7 @@ public class ItemSet {
         return new FactorHelper(tree, new Factor(tree)).common(s1, s2) != null;
     }
 
-    Name sym(Node node) {
+    public static Name sym(Node node) {
         return node.isName() ? node.asName() : node.asRegex().node.asName();
     }
 

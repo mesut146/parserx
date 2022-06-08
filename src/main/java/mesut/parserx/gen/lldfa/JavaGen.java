@@ -376,7 +376,12 @@ public class JavaGen {
             if (item.rule.which == -1) {
                 String name = getName(item.rule.retType, sym);
                 for (Item sender : senders(item, list)) {
-                    w.append("%s.%s = %s;", getName(getType(sender), sym), sender.getDotNode().astInfo.varName, name);
+                    if (sender.getDotNode().astInfo.isInLoop) {
+                        w.append("%s.%s.add(%s);", getName(getType(sender), sym), sender.getDotNode().astInfo.varName, name);
+                    }
+                    else {
+                        w.append("%s.%s = %s;", getName(getType(sender), sym), sender.getDotNode().astInfo.varName, name);
+                    }
                 }
             }
             else {
@@ -384,11 +389,13 @@ public class JavaGen {
                 if (!done.contains(item.rule.baseName()) && !item.lookAhead.contains(dollar)) {
                     done.add(item.rule.baseName());
                     for (Item sender : item.senders) {
-                        if (sender.getDotNode().isStar()) {
-                            w.append("%s.%s.add(%s);", getBoth(sender, sym), sender.getDotNode().astInfo.varName, getName(item.rule.retType, sym));
+                        Name node = has(sender, item.rule.ref);
+                        if (node.astInfo.isInLoop) {
+                            w.append("%s.%s.add(%s);", getBoth(sender, sym), node.astInfo.varName, getName(item.rule.retType, sym));
                         }
                         else {
-                            w.append("%s.%s = %s;", getBoth(sender, sym), sender.getDotNode().astInfo.varName, getName(item.rule.retType, sym));
+                            //todo sender dot empty, .A* B
+                            w.append("%s.%s = %s;", getBoth(sender, sym), node.astInfo.varName, getName(item.rule.retType, sym));
                         }
                     }
                 }
@@ -488,8 +495,8 @@ public class JavaGen {
         //todo loop
         for (int i = item.dotPos; i < item.rhs.size(); i++) {
             Node ch = item.getNode(i);
-            if (ch.equals(sym)) {
-                return ch.asName();
+            if (ItemSet.sym(ch).equals(sym)) {
+                return ItemSet.sym(ch);
             }
             if (!FirstSet.canBeEmpty(ch, tree)) {
                 break;
