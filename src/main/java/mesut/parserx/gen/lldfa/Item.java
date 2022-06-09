@@ -133,27 +133,10 @@ public class Item {
         return sb.toString();
     }
 
-    //if dot follows a terminal
-    public boolean isDotNonTerminal() {
-        Name name = getDotSym();
-        return name != null && !name.isToken;
-    }
-
     public boolean isEpsilon() {
         return isEpsilon(rule);
     }
 
-    /*public Iterator<Node> iter(){
-        return new Iterator(){
-            int i = dotPos;
-            public Node next(){
-                return rhs.get(i++);
-            }
-            public boolean hasNext(){
-                return i < rhs.size() && FirstSet.canBeEmpty(rhs.get(i), tree);
-            }
-        };
-    }    */
 
     public Node getNode(int pos) {
         Sequence s = rule.rhs.asSequence();
@@ -177,27 +160,14 @@ public class Item {
         return null;
     }
 
-    //2 node after dot
-    public Node getDotNode2() {
-        if (dotPos < rhs.size() - 1) {
-            return rhs.get(dotPos + 1);
-        }
-        return null;
-    }
-
-    public Name getDotSym2() {
-        Node node = getDotNode2();
-        return node == null ? null : (node.isName() ? node.asName() : node.asRegex().node.asName());
-    }
-
-    //first set of follow of dot node
-    public Set<Name> follow(Tree tree) {
+    //first set of follow of pos node
+    public Set<Name> follow(Tree tree, int pos) {
         HashSet<Name> res = new HashSet<>();
-        if (getNode(dotPos).isStar()) {
-            res.addAll(FirstSet.tokens(getNode(dotPos), tree));
+        if (getNode(pos).isStar()) {
+            res.addAll(FirstSet.tokens(getNode(pos), tree));
         }
         boolean allEmpty = true;
-        for (int i = dotPos + 1; i < rhs.size(); ) {
+        for (int i = pos + 1; i < rhs.size(); ) {
             Node node = rhs.get(i);
             res.addAll(FirstSet.tokens(node, tree));
             if (Helper.canBeEmpty(node, tree)) {

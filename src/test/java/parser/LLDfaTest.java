@@ -99,20 +99,36 @@ public class LLDfaTest {
 
     @Test
     public void real() throws Exception {
-        /*DescTester.check(Env.tree("lldfa/simple.g"), "E",
-                "acx", "adx", "bcx", "bdx",
-                "acy", "ady", "bcy", "bdy");
-        DescTester.check(Env.tree("lldfa/rr-loop.g"), "E",
-                "x", "y", "ax", "ababx",
-                "ay", "bbaay");
-        DescTester.check(Env.tree("lldfa/rr-loop.g"), "F",
-                "x", "y", "ax", "ababx",
-                "ay", "bbaay");*/
-        DescTester.check(Env.tree("lldfa/rr-loop2.g"), "E",
-                "acx", "bdx", "abcdx",
-                "acy", "bdy", "abcdy");
-        /*DescTester.check(Env.tree("lldfa/rr-loop-len2.g"), "F",
-                "x", "y", "ax", "ababx",
-                "ay", "bbaay");*/
+//        DescTester.check(Env.tree("lldfa/simple.g"), "E",
+//                "acx", "adx", "bcx", "bdx",
+//                "acy", "ady", "bcy", "bdy");
+        DescTester.check(Builder.tree("lldfa/simple.g").rule("E").
+                input("acx", "E#1{A#1{'a'}, B#1{'c'}, 'x'}").
+                input("adx", "E#1{A#1{'a'}, B#2{'d'}, 'x'}").
+                input("bcx","E#1{A#2{'b'}, B#1{'c'}, 'x'}").
+                input("bdx","E#1{A#2{'b'}, B#2{'d'}, 'x'}").
+                input("acy", "E#2{A#1{'a'}, B#1{'c'}, 'x'}").
+                input("ady", "E#2{A#1{'a'}, B#2{'d'}, 'x'}").
+                input("bcy","E#2{A#2{'b'}, B#1{'c'}, 'x'}").
+                input("bdy","E#2{A#2{'b'}, B#2{'d'}, 'x'}"));
+//        DescTester.check(Env.tree("lldfa/rr-loop.g"), "E",
+//                "x", "y", "ax", "ababx",
+//                "ay", "bbaay");
+//        DescTester.check(Env.tree("lldfa/rr-loop.g"), "F",
+//                "x", "y", "ax", "ababx",
+//                "ay", "bbaay");
+//        DescTester.check(Env.tree("lldfa/rr-loop2.g"), "E",
+//                "acx", "bdx", "abcdx",
+//                "acy", "bdy", "abcdy");
+//        DescTester.check(Env.tree("lldfa/rr-loop-len2.g"), "E",
+//                "x", "y", "abx", "abcdx",
+//                "aby", "abcdy");
+//        DescTester.check(Env.tree("lldfa/rr-loop-len2.g"), "F",
+//                "x", "y", "abx", "abcdx",
+//                "aby", "abcdy");
+//        DescTester.check(Env.tree("lldfa/rr-loop2-len2.g"), "E",
+//                "abefx", "abcdefghx", "abefy", "abcdefghy");
+//        DescTester.check(Env.tree("lldfa/rr-loop-x.g"), "E",
+//                "x", "y", "abacx", "abacy");
     }
 }

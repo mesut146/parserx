@@ -142,10 +142,19 @@ public class CppAstGen {
         else if (node.isSequence()) {
             Sequence s = node.asSequence();
             for (int i = 0; i < s.size(); i++) {
-                getPrint(s.get(i), c);
-                if (i < s.size() - 1) {
-                    c.append("sb << \"%s\";", options.sequenceDelimiter);
+                if (i > 0) {
+                    Node prev = s.get(i - 1);
+                    if (prev.isOptional()) {
+                        c.append("if(%s != null) sb << \"%s\";", prev.astInfo.varName, options.sequenceDelimiter);
+                    }
+                    else if (prev.isStar()) {
+                        c.append("if(!%s.empty()) sb << \"%s\";", prev.asRegex().node.astInfo.varName, options.sequenceDelimiter);
+                    }
+                    else {
+                        c.append("sb << \"%s\";", options.sequenceDelimiter);
+                    }
                 }
+                getPrint(s.get(i), c);
             }
         }
         else if (node.isRegex()) {

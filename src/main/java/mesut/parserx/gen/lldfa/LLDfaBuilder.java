@@ -11,6 +11,8 @@ import mesut.parserx.gen.transform.GreedyNormalizer;
 import mesut.parserx.nodes.*;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LLDfaBuilder {
     public Name rule;
@@ -24,11 +26,14 @@ public class LLDfaBuilder {
     public static Name dollar = new Name("$", true);//eof
     Map<String, Set<ItemSet>> rules = new HashMap<>();
     Set<ItemSet> inlined = new HashSet<>();
+    public static Logger logger = Logger.getLogger(LLDfaBuilder.class.getName());
 
 
     public LLDfaBuilder(Tree tree) {
         this.tree = tree;
         ItemSet.lastId = Item.lastId = 0;
+        logger.setLevel(Level.ALL);
+        Logger.getGlobal().setLevel(Level.ALL);
     }
 
     void prepare() {
@@ -136,7 +141,8 @@ public class LLDfaBuilder {
         all = new TreeSet<>(Comparator.comparingInt(set -> set.stateId));
         //ItemSet.lastId = 0;
         //Item.lastId = 0;
-        System.out.println("building " + rule + " in " + tree.file.getName());
+
+        logger.log(Level.FINE, "building " + rule + " in " + tree.file.getName());
 
         firstSet = new ItemSet(tree, type);
         firstSet.isStart = true;
@@ -158,7 +164,8 @@ public class LLDfaBuilder {
 
         while (!queue.isEmpty()) {
             ItemSet curSet = queue.poll();
-            System.out.println("curSet = " + curSet.stateId);
+            //if (log) System.out.println("curSet = " + curSet.stateId);
+            logger.log(Level.FINE, "curSet = " + curSet.stateId);
             //closure here because it needs all items
             curSet.closure();
             Map<Node, List<Item>> map = new HashMap<>();
@@ -179,14 +186,14 @@ public class LLDfaBuilder {
                         rhs.set(0, sym);
                         sym = Sequence.make(rhs);
                         target = new Item(item, item.rhs.size());
-                        System.out.println("shrink opt=" + sym);
+                        logger.log(Level.FINE, "shrink opt=" + sym);
                     }
                     //if sym is not factor shrink transition
                     else if (canShrink(curSet, item, i) && item.rhs.size() - i > 1) {
                         List<Node> rhs = new ArrayList<>(item.rhs.list.subList(i, item.rhs.size()));
                         sym = Sequence.make(rhs);
                         target = new Item(item, item.rhs.size());
-                        System.out.println("shrink=" + sym);
+                        logger.log(Level.FINE, "shrink=" + sym);
                         target.gotoSet2.add(curSet);
                         addMap(map, sym, target);
                         break;
@@ -240,13 +247,13 @@ public class LLDfaBuilder {
             f.astInfo.isFactor = true;
             map.remove(sym);
             map.put(f, list);
-            System.out.println("factor " + f);
+            logger.log(Level.FINE, "factor " + f);
         }
         list.add(target);
     }
 
     void makeTrans(ItemSet curSet, Map<Node, List<Item>> map) {
-        System.out.println("makeTrans " + curSet.stateId + " " + map);
+        logger.log(Level.FINE, "makeTrans " + curSet.stateId + " " + map);
         for (Map.Entry<Node, List<Item>> e : map.entrySet()) {
             Node sym = e.getKey();
             List<Item> list = e.getValue();
@@ -272,7 +279,7 @@ public class LLDfaBuilder {
             }
             targetSet.symbol = sym;
             curSet.addTransition(sym, targetSet);
-            System.out.printf("trans %d -> %d with %s\n", curSet.stateId, targetSet.stateId, sym);
+            logger.log(Level.FINE, String.format("trans %d -> %d with %s\n", curSet.stateId, targetSet.stateId, sym));
         }
     }
 

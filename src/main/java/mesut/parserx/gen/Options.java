@@ -12,5 +12,5 @@ public class Options {
     public String nodeSuffix = "";
     public boolean useSimple = true;
 
-    public String sequenceDelimiter = ",";
+    public String sequenceDelimiter = ", ";
 }

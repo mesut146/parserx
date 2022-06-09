@@ -205,11 +205,10 @@ public class JavaGen {
                 hasParams = true;
             }
         }
-        if (hasParams && !nameMap.get(curSet.stateId).isEmpty()) sb.append(", ");
         boolean first = true;
         for (Variable v : nameMap.get(curSet.stateId).get(sym)) {
             if (skipHolder && v.item == null) continue;//skip holder, alt already has ref in it
-            if (!first) sb.append(", ");
+            if (!first || hasParams) sb.append(", ");
             sb.append(v.name);
             targetParams.add(new Variable(v.type, "p" + param_cnt++, v.item));
             first = false;
@@ -451,6 +450,9 @@ public class JavaGen {
             }
             w.append("%s.which = %d;", holder, item.rule.which);
             w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getBoth(item, sym));//todo
+            if (!curSet.isStart && item.lookAhead.contains(dollar)) {
+                w.append("return;");//todo dollar is enough?
+            }
             w.append("}");
         }
     }

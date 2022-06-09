@@ -206,19 +206,19 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
         @Override
         public Void visitSequence(Sequence s, Void arg) {
             for (int i = 0; i < s.size(); i++) {
-                s.get(i).accept(this, null);
-                if (i < s.size() - 1) {
-                    Node next = s.get(i + 1);
-                    if (next.isOptional()) {
-                        w.append("if(%s != null) sb.append(\"%s\");", next.astInfo.varName, options.sequenceDelimiter);
+                if (i > 0) {
+                    Node prev = s.get(i - 1);
+                    if (prev.isOptional()) {
+                        w.append("if(%s != null) sb.append(\"%s\");", prev.astInfo.varName, options.sequenceDelimiter);
                     }
-                    else if (next.isStar()) {
-                        w.append("if(!%s.isEmpty()) sb.append(\"%s\");", next.asRegex().node.astInfo.varName, options.sequenceDelimiter);
+                    else if (prev.isStar()) {
+                        w.append("if(!%s.isEmpty()) sb.append(\"%s\");", prev.asRegex().node.astInfo.varName, options.sequenceDelimiter);
                     }
                     else {
                         w.append("sb.append(\"%s\");", options.sequenceDelimiter);
                     }
                 }
+                s.get(i).accept(this, null);
             }
             return null;
         }

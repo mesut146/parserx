@@ -54,24 +54,6 @@ public class ItemSet {
         target.incomings.add(tr);
     }
 
-    public void addComing(Node sym, ItemSet from) {
-        incomings.add(new Transition(from, sym, this));
-    }
-
-    public boolean hasReduce() {
-        return !getReduce().isEmpty();
-    }
-
-    public List<Item> getReduce() {
-        List<Item> list = new ArrayList<>();
-        for (Item item : all) {
-            if (item.hasReduce()) {
-                list.add(item);
-            }
-        }
-        return list;
-    }
-
     void gen(Item it, List<Item> list) {
         if (!it.isReduce(tree)) return;
         //is there any transition with my reduce symbol
@@ -152,7 +134,7 @@ public class ItemSet {
                 Node next = item.getNode(j);
                 if (common(node, next)) {
                     item.closured[i] = true;
-                    closure(sym, item);
+                    closure(sym, i, item);
                     break;
                 }
             }
@@ -162,7 +144,7 @@ public class ItemSet {
                 if (s2 == sym) continue;
                 if (common(sym, s2)) {
                     item.closured[i] = true;
-                    closure(sym, item);
+                    closure(sym, i, item);
                     break;
                 }
             }//for
@@ -204,10 +186,10 @@ public class ItemSet {
         return res;
     }
 
-    private void closure(Name node, Item sender) {
+    private void closure(Name node, int pos, Item sender) {
         if (node.isToken) return;
 
-        Set<Name> laList = sender.follow(tree);
+        Set<Name> laList = sender.follow(tree, pos);
         Set<Item> set = new HashSet<>();
         for (RuleDecl decl : tree.getRules(node)) {
             Item newItem = new Item(decl, 0);
