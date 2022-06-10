@@ -39,6 +39,9 @@ public class Item {
         this.gotoSet2 = item.gotoSet2;
         this.ids = new HashSet<>(item.ids);
         this.senders.add(item);
+        if (item.getNode(item.dotPos).isStar()) {
+            advanced = true;
+        }
         lastId--;
     }
 

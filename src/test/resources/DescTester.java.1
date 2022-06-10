@@ -10,7 +10,7 @@ public class DescTester{
     Lexer l = new Lexer(new StringReader(in));
     Parser p = new Parser(l);
     Method m = Parser.class.getDeclaredMethod(rule);
-    System.out.println(m.invoke(p));
+    System.out.print(m.invoke(p));
   }
 
 

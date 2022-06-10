@@ -88,13 +88,7 @@ public class Utils {
     }
 
     public static String read(InputStream in) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        BufferedReader br = new BufferedReader(new InputStreamReader(in));
-        String line;
-        while ((line = br.readLine()) != null) {
-            sb.append(line).append("\n");
-        }
-        return sb.toString();
+        return new String(in.readAllBytes());
     }
 
     public static String read(File file) throws IOException {

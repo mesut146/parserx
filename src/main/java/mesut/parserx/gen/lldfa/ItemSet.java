@@ -65,7 +65,7 @@ public class ItemSet {
                     if (sym.equals(it.rule.ref)) {
                         int newPos = gti.getNode(i).isStar() ? i : i + 1;
                         Item target = new Item(gti, newPos);
-                        target.advanced = gti.getNode(i).isStar();
+                        //target.advanced = gti.getNode(i).isStar();
                         if (target.isReduce(tree)) {
                             it.reduceParent.add(target);
                             target.reduceChild = it;

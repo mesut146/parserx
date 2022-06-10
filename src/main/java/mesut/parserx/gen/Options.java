@@ -13,4 +13,5 @@ public class Options {
     public boolean useSimple = true;
 
     public String sequenceDelimiter = ", ";
+    public String arrayDelimiter = ", ";
 }

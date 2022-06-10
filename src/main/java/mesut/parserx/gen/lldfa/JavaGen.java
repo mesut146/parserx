@@ -124,62 +124,100 @@ public class JavaGen {
             w.append("public void S%d(%s) throws IOException{", set.stateId, params(set));
         }
 
-        //collect items by la
-        Map<Name, List<Item>> groups = group(set);
         writeReduces(set);
-        //process items
         boolean first = true;
-        for (Name sym : groups.keySet()) {
-            List<Item> list = groups.get(sym);
+        for (Transition tr : set.transitions) {
+            if (tr.symbol.isName()) {
+                Name sym = tr.symbol.asName();
+                //collect items by la
+                Map<Name, List<Item>> groups = group(set);
+                List<Item> list = groups.get(sym);
+                w.append("%sif(la.type == Tokens.%s){", first ? "" : "else ", sym.name);
+                first = false;
+                //create and assign nodes
+                createNodes(list, sym);
+                assign(list, sym);
 
-            w.append("%sif(la.type == Tokens.%s){", first ? "" : "else ", sym.name);
-            first = false;
-            //create and assign nodes
-            createNodes(list, sym);
-            assign(list, sym);
-
-            //assign la
-            for (Item item : list) {
-                Name node = has(item, sym);
-                if (node != null) {
-                    //todo local
-                    if (node.astInfo.isInLoop) {
-                        w.append("%s.%s.add(la);", getBoth(item, sym), node.astInfo.varName);
-                    }
-                    else {
-                        w.append("%s.%s = la;", getBoth(item, sym), node.astInfo.varName);
+                //assign la
+                for (Item item : list) {
+                    Name node = has(item, sym);
+                    if (node != null) {
+                        //todo local
+                        if (node.astInfo.isInLoop) {
+                            w.append("%s.%s.add(la);", getBoth(item, sym), node.astInfo.varName);
+                        }
+                        else {
+                            w.append("%s.%s = la;", getBoth(item, sym), node.astInfo.varName);
+                        }
                     }
                 }
-            }
-            //get next la
-            //todo beginning of every state is better
-            w.append("la = lexer.%s();", options.lexerFunction);
-            ItemSet target = builder.getTarget(set, sym);
-            //inline target reductions
-            if (target.transitions.isEmpty()) {
-                //inline
-                inline(target, sym);
-            }
-            else {
-                //todo looping args, multi state args?
-                List<Variable> targetParams = new ArrayList<>();
-                if (!paramMap.containsKey(target.stateId)) {
-                    paramMap.put(target.stateId, targetParams);
-                    w.print("S%d(%s);\n", target.stateId, args(targetParams, sym));
+                //get next la
+                //todo beginning of every state is better
+                w.append("la = lexer.%s();", options.lexerFunction);
+                ItemSet target = builder.getTarget(set, sym);
+                //inline target reductions
+                if (target.transitions.isEmpty()) {
+                    //inline
+                    inline(target, sym);
                 }
                 else {
-                    w.print("S%d(%s);\n", target.stateId, args2(paramMap.get(target.stateId), sym));
+                    //todo looping args, multi state args?
+                    List<Variable> targetParams = new ArrayList<>();
+                    if (!paramMap.containsKey(target.stateId)) {
+                        paramMap.put(target.stateId, targetParams);
+                        w.print("S%d(%s);\n", target.stateId, args(targetParams, sym));
+                    }
+                    else {
+                        w.print("S%d(%s);\n", target.stateId, args2(paramMap.get(target.stateId), sym));
+                    }
                 }
+                if (set.isStart) {
+                    for (Variable v : nameMap.get(set.stateId).get(sym)) {
+                        if (v.item == null && v.type.equals(rule.retType)) {
+                            w.append("return %s;", v.name);
+                            break;
+                        }
+                    }
+                }
+                w.append("}");
             }
-            if (set.isStart) {
-                for (Variable v : nameMap.get(set.stateId).get(sym)) {
-                    if (v.item == null && v.type.equals(rule.retType)) {
-                        w.append("return %s;", v.name);
+            else {
+                Sequence sym = tr.symbol.asSequence();
+                Set<Name> laList = FirstSet.tokens(sym, tree);
+                w.append("%sif(){", first ? "" : "else ", JavaRecDescent.loopExpr(laList));
+                first = false;
+                Item item = null;
+                for (Item it : set.all) {
+                    if (it.dotPos == it.rhs.size()) continue;
+                    Node rest = Sequence.make(it.rhs.list.subList(it.dotPos, it.rhs.size()));
+                    if (hasCommon(rest, sym)) {
+                        item = it;
                         break;
                     }
                 }
+                if (item == null) throw new RuntimeException("can not happen");
+                //create and assign nodes
+                int cnt = 0;
+                if (item.rule.which == -1) {
+                    String name = "v" + cnt++;
+                    w.append("%s %s = new %s();", item.rule.retType, name, item.rule.retType);
+                }
+                else {
+                    String name = "v" + cnt++;
+                    w.append("%s %s = new %s();", item.rule.rhs.astInfo.nodeType, name, item.rule.rhs.astInfo.nodeType);
+                    w.append("%s.holder = %s;", name);
+                }
+
+                //consume all
+                for (Node ch : sym) {
+                    if (ch.isName()) {
+
+                    }
+                    else if (ch.isRegex()) {
+
+                    }
+                }
             }
-            w.append("}");
         }
         if (set.isStart) {
             //todo print la
@@ -187,6 +225,15 @@ public class JavaGen {
         }
         w.append("}");
     }
+
+    private boolean hasCommon(Node n1, Node n2) {
+        Set<Name> s1 = FirstSet.tokens(n1, tree);
+        Set<Name> s2 = FirstSet.tokens(n2, tree);
+        Set<Name> set = new HashSet<>(s1);
+        set.retainAll(s2);
+        return !set.isEmpty();
+    }
+
 
     String args(List<Variable> targetParams, Name sym) {
         StringBuilder sb = new StringBuilder();
@@ -323,6 +370,7 @@ public class JavaGen {
         return res;
     }
 
+
     private void createNodes(List<Item> list, Name sym) {
         List<Variable> vars = new ArrayList<>();
         Set<String> done = new HashSet<>();
@@ -371,21 +419,26 @@ public class JavaGen {
         //assign created nodes
         for (Item item : list) {
             if (item.dotPos != 0) continue;
+            if (item.advanced) continue;
             //no alt
             if (item.rule.which == -1) {
                 String name = getName(item.rule.retType, sym);
-                for (Item sender : senders(item, list)) {
-                    if (sender.getDotNode().astInfo.isInLoop) {
-                        w.append("%s.%s.add(%s);", getName(getType(sender), sym), sender.getDotNode().astInfo.varName, name);
+                for (Item sender : item.senders) {
+                    Name node = has(sender, item.rule.ref);
+                    if (node.astInfo.isInLoop) {
+                        w.append("%s.%s.add(%s);", getBoth(sender, sym), node.astInfo.varName, name);
                     }
                     else {
-                        w.append("%s.%s = %s;", getName(getType(sender), sym), sender.getDotNode().astInfo.varName, name);
+                        w.append("%s.%s = %s;", getBoth(sender, sym), node.astInfo.varName, name);
                     }
                 }
             }
             else {
                 //alt holder
-                if (!done.contains(item.rule.baseName()) && !item.lookAhead.contains(dollar)) {
+                if (item.lookAhead.contains(dollar)) {
+
+                }
+                if (!done.contains(item.rule.baseName())) {
                     done.add(item.rule.baseName());
                     for (Item sender : item.senders) {
                         Name node = has(sender, item.rule.ref);
@@ -405,7 +458,8 @@ public class JavaGen {
     List<Item> senders(Item item, List<Item> list) {
         List<Item> res = new ArrayList<>();
         for (Item sender : list) {
-            if (sender.getDotNode().equals(item.rule.ref)) {
+            //todo epsilon
+            if (ItemSet.sym(sender.getDotNode()).equals(item.rule.ref)) {
                 res.add(sender);
             }
         }
@@ -451,7 +505,7 @@ public class JavaGen {
             w.append("%s.which = %d;", holder, item.rule.which);
             w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getBoth(item, sym));//todo
             if (!curSet.isStart && item.lookAhead.contains(dollar)) {
-                w.append("return;");//todo dollar is enough?
+                //w.append("return;");//todo dollar is enough?
             }
             w.append("}");
         }
@@ -469,15 +523,8 @@ public class JavaGen {
     private Map<Name, List<Item>> group(ItemSet set) {
         Map<Name, List<Item>> groups = new HashMap<>();
         for (Item item : set.all) {
-            //factor consume & assign
-            if (item.dotPos >= item.rhs.size()) continue;
-            Node rest;
-            if (item.rhs.size() - item.dotPos == 1) {
-                rest = item.getDotNode();
-            }
-            else {
-                rest = Sequence.make(item.rhs.list.subList(item.dotPos, item.rhs.size()));
-            }
+            if (item.dotPos == item.rhs.size()) continue;
+            Node rest = Sequence.make(item.rhs.list.subList(item.dotPos, item.rhs.size()));
             Set<Name> tokens = FirstSet.tokens(rest, tree);
             if (!tokens.isEmpty()) {
                 for (Name token : tokens) {

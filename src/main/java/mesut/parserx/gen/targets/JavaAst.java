@@ -238,7 +238,7 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
                 else {
                     w.append("sb.append(%s.get(i).toString());", v);
                 }
-                w.append("if(i < %s.size() - 1) sb.append(\",\");", v);
+                w.append("if(i < %s.size() - 1) sb.append(\"%s\");", v, options.arrayDelimiter);
                 w.append("}");
                 w.append("sb.append(']');");
                 w.append("}");

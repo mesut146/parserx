@@ -1,7 +1,7 @@
 include "../common.g"
 
-F: E | a+ z | t;
+F: E | a* z | t;
 
-E: A+ x | B+ y | s;
+E: A* x | B* y | s;
 A: a | b;
 B: a | b;

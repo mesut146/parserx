@@ -107,8 +107,7 @@ public class GreedyNormalizer extends Transformer {
             List<Node> res = new ArrayList<>(seq.list);
             res.remove(i + 1);
             res.set(i, new Group(Or.make(ors)));
-            if (debug)
-                System.out.println("res=" + res);
+            if (debug) System.out.println("res=" + res);
             return Sequence.make(res);
         }
         return seq;
@@ -138,6 +137,7 @@ public class GreedyNormalizer extends Transformer {
 
             @Override
             public TailInfo visitSequence(Sequence seq, Void arg) {
+                if (seq.size() == 1) return seq.get(0).accept(this, arg);
                 /*if (foundLoop) {
                     loopTail.addAll(seq.list);
                     return null;//?
