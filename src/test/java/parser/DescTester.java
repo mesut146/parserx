@@ -64,10 +64,12 @@ public class DescTester {
             try {
                 Assert.assertEquals(info.expected, Utils.read(p2.getInputStream()));
             } catch (Throwable e) {
+                System.err.println("in tree " + tree.file.getName());
                 System.err.println("err for input: " + info.input);
                 throw e;
             }
             if (p2.waitFor() != 0) {
+                System.err.println("in tree " + tree.file.getName());
                 throw new RuntimeException("err for input " + info.input);
             }
         }
@@ -112,6 +114,7 @@ public class DescTester {
                 String res = method.invoke(null, info.rule, info.input).toString();
                 Assert.assertEquals(info.expected, res);
             } catch (Throwable e) {
+                System.err.println("in tree " + tree.file.getName());
                 System.err.println("err for input: " + info.input);
                 throw e;
             }

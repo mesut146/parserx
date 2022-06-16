@@ -3,6 +3,7 @@ package mesut.parserx.gen.lldfa;
 import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Options;
+import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.ll.Type;
 import mesut.parserx.gen.targets.JavaRecDescent;
 import mesut.parserx.nodes.*;
@@ -20,7 +21,7 @@ public class JavaGen {
     RuleDecl rule;
     Tree tree;
     Options options;
-    Map<Integer, Map<Name, List<Variable>>> nameMap = new HashMap<>();
+    Map<Integer, Map<Node, List<Variable>>> nameMap = new HashMap<>();
     Map<Integer, List<Variable>> paramMap = new HashMap<>();
     ItemSet curSet;
     boolean skipHolder = true;
@@ -54,13 +55,18 @@ public class JavaGen {
         w.all("this.lexer = lexer;\nla = lexer.next();\n}");
         w.append("");
 
-        //writeConsume();
-        builder.inlined.forEach(set -> System.out.printf("inlined=%d\n", set.stateId));
+        writeConsume();
+        //builder.inlined.forEach(set -> System.out.printf("inlined=%d\n", set.stateId));
 
         for (String ruleName : builder.rules.keySet()) {
             //if (!ruleName.equals("E")) continue;
             rule = tree.getRule(ruleName);
             writeRule(builder.rules.get(ruleName));
+        }
+        for (RuleDecl decl : builder.ebnf.rules) {
+            if (builder.rules.containsKey(decl.baseName())) continue;
+            rule = decl;
+            writeNormal();
         }
 
         w.append("}");
@@ -70,6 +76,64 @@ public class JavaGen {
         JavaRecDescent recDescent = new JavaRecDescent(tree);
         recDescent.genTokenType();
 
+    }
+
+    private void writeNormal() {
+        w.append("public %s %s() throws IOException{", rule.retType, rule.baseName());
+        w.append("%s res = new %s();", rule.retType, rule.retType);
+        rule.rhs.accept(new NormalWriter(), null);
+        w.append("return res;");
+        w.append("}");
+    }
+
+    class NormalWriter extends BaseVisitor<Void, Void> {
+        Stack<String> outer = new Stack<>();
+
+        public NormalWriter() {
+            outer.push("res");
+        }
+
+        @Override
+        public Void visitOr(Or or, Void arg) {
+            int id = 1;
+            for (Node ch : or) {
+                w.append("%sif(%s){", id > 1 ? "else " : "", JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree)));
+                w.append("%s %s = new %s();", ch.astInfo.nodeType, ch.astInfo.varName, ch.astInfo.nodeType);
+                w.append("%s.holder = res;", ch.astInfo.varName);
+                w.append("res.%s = %s;", ch.astInfo.varName, ch.astInfo.varName);
+                w.append("res.which = %s;", id++);
+                ch.accept(this, arg);
+                w.append("}");
+            }
+            w.append("else throw new RuntimeException(\"expecting one of %s got: \"+la);", FirstSet.tokens(or, tree));
+            return null;
+        }
+
+        @Override
+        public Void visitSequence(Sequence seq, Void arg) {
+            return super.visitSequence(seq, arg);
+        }
+
+        @Override
+        public Void visitName(Name name, Void arg) {
+            consumer(name, name.astInfo.outerVar);
+            return null;
+        }
+    }
+
+    void writeConsume() {
+        w.append("%s consume(int type, String name){", options.tokenClass);
+        w.append("if(la.type != type){");
+        w.append("throw new RuntimeException(\"unexpected token: \" + la + \" expecting: \" + name);");
+        w.all("}");
+        w.append("try{");
+        w.append("%s res = la;", options.tokenClass);
+        w.append("la = lexer.next();");
+        w.append("return res;");
+        w.all("}\ncatch(IOException e){");
+        w.append("throw new RuntimeException(e);");
+        w.append("}");
+        w.append("}");
     }
 
     void writeRule(Set<ItemSet> all) {
@@ -126,9 +190,11 @@ public class JavaGen {
 
         writeReduces(set);
         boolean first = true;
+        Set<Name> allLa = new HashSet<>();
         for (Transition tr : set.transitions) {
             if (tr.symbol.isName()) {
                 Name sym = tr.symbol.asName();
+                allLa.add(sym);
                 //collect items by la
                 Map<Name, List<Item>> groups = group(set);
                 List<Item> list = groups.get(sym);
@@ -141,23 +207,23 @@ public class JavaGen {
                 //assign la
                 for (Item item : list) {
                     Name node = has(item, sym);
-                    if (node != null) {
-                        //todo local
-                        if (node.astInfo.isInLoop) {
-                            w.append("%s.%s.add(la);", getBoth(item, sym), node.astInfo.varName);
-                        }
-                        else {
-                            w.append("%s.%s = la;", getBoth(item, sym), node.astInfo.varName);
-                        }
+                    if (node == null) continue;
+                    //todo local
+                    if (node.astInfo.isInLoop) {
+                        w.append("%s.%s.add(la);", getBoth(item, sym), node.astInfo.varName);
+                    }
+                    else {
+                        w.append("%s.%s = la;", getBoth(item, sym), node.astInfo.varName);
                     }
                 }
                 //get next la
                 //todo beginning of every state is better
                 w.append("la = lexer.%s();", options.lexerFunction);
-                ItemSet target = builder.getTarget(set, sym);
+                //ItemSet target = builder.getTarget(set, sym);
+                ItemSet target = tr.target;
                 //inline target reductions
                 if (target.transitions.isEmpty()) {
-                    //inline
+                    //inline final state
                     inline(target, sym);
                 }
                 else {
@@ -179,12 +245,13 @@ public class JavaGen {
                         }
                     }
                 }
-                w.append("}");
+                w.append("}");//if
             }
             else {
                 Sequence sym = tr.symbol.asSequence();
                 Set<Name> laList = FirstSet.tokens(sym, tree);
-                w.append("%sif(){", first ? "" : "else ", JavaRecDescent.loopExpr(laList));
+                allLa.addAll(laList);
+                w.append("%sif(%s){", first ? "" : "else ", JavaRecDescent.loopExpr(laList));
                 first = false;
                 Item item = null;
                 for (Item it : set.all) {
@@ -197,33 +264,102 @@ public class JavaGen {
                 }
                 if (item == null) throw new RuntimeException("can not happen");
                 //create and assign nodes
-                int cnt = 0;
-                if (item.rule.which == -1) {
-                    String name = "v" + cnt++;
-                    w.append("%s %s = new %s();", item.rule.retType, name, item.rule.retType);
+                String vname;
+                if (item.dotPos == 0) {
+                    List<Variable> vars = new ArrayList<>();
+                    if (item.rule.which == -1) {
+                        vname = "v0";
+                        w.append("%s %s = new %s();", item.rule.retType, vname, item.rule.retType);
+                        vars.add(new Variable(item.rule.retType, vname, item));
+                    }
+                    else {
+                        //holder
+                        String pname = "v0";
+                        vname = "v1";
+                        vars.add(new Variable(item.rule.retType, pname, null));
+                        w.append("%s %s = new %s();", item.rule.retType, pname, item.rule.retType);
+                        //alt
+                        w.append("%s %s = new %s();", item.rule.rhs.astInfo.nodeType, vname, item.rule.rhs.astInfo.nodeType);
+                        w.append("%s.holder = %s;", vname, pname);
+                        vars.add(new Variable(item.rule.rhs.astInfo.nodeType, vname, item));
+                    }
+                    Map<Node, List<Variable>> map = nameMap.computeIfAbsent(curSet.stateId, k -> new HashMap<>());
+                    map.put(sym, vars);
                 }
                 else {
-                    String name = "v" + cnt++;
-                    w.append("%s %s = new %s();", item.rule.rhs.astInfo.nodeType, name, item.rule.rhs.astInfo.nodeType);
-                    w.append("%s.holder = %s;", name);
+                    vname = getParam(item);
                 }
 
                 //consume all
                 for (Node ch : sym) {
                     if (ch.isName()) {
-
+                        consumer(ch.asName(), vname);
                     }
                     else if (ch.isRegex()) {
-
+                        Regex regex = ch.asRegex();
+                        if (regex.isOptional()) {
+                            w.append("if(%s){", JavaRecDescent.loopExpr(FirstSet.tokens(regex.node, tree)));
+                            consumer(regex.node.asName(), vname);
+                            w.append("}");
+                        }
+                        else if (regex.isStar()) {
+                            w.append("while(%s){", JavaRecDescent.loopExpr(FirstSet.tokens(regex.node, tree)));
+                            consumer(regex.node.asName(), vname);
+                            w.append("}");
+                        }
                     }
                 }
+
+                ItemSet target = tr.target;
+                //inline target reductions
+                if (target.transitions.isEmpty()) {
+                    //inline final state
+                    inline(target, sym);
+                }
+                else {
+                    //todo looping args, multi state args?
+                    List<Variable> targetParams = new ArrayList<>();
+                    if (!paramMap.containsKey(target.stateId)) {
+                        paramMap.put(target.stateId, targetParams);
+                        w.print("S%d(%s);\n", target.stateId, args(targetParams, sym));
+                    }
+                    else {
+                        w.print("S%d(%s);\n", target.stateId, args2(paramMap.get(target.stateId), sym));
+                    }
+                }
+                if (set.isStart) {
+                    for (Variable v : nameMap.get(set.stateId).get(sym)) {
+                        if (v.item == null && v.type.equals(rule.retType)) {
+                            w.append("return %s;", v.name);
+                            break;
+                        }
+                    }
+                }
+
+                w.append("}");
             }
         }
-        if (set.isStart) {
+        if (!set.transitions.isEmpty()) {
             //todo print la
-            w.append("throw new RuntimeException(\"\");");
+            w.append("else throw new RuntimeException(\"expecting one of %s got: \"+la);", allLa);
         }
         w.append("}");
+    }
+
+    private void consumer(Name name, String vname) {
+        String rhs;
+        if (name.isToken) {
+            rhs = String.format("consume(%s.%s, \"%s\")", RecDescent.tokens, name.name, name.name);
+        }
+        else {
+            rhs = name.name + "()";
+        }
+        if (name.astInfo.isInLoop) {
+            w.append("%s.%s.add(%s);", vname, name.astInfo.varName, rhs);
+        }
+        else {
+            w.append("%s.%s = %s;", vname, name.astInfo.varName, rhs);
+        }
     }
 
     private boolean hasCommon(Node n1, Node n2) {
@@ -234,8 +370,7 @@ public class JavaGen {
         return !set.isEmpty();
     }
 
-
-    String args(List<Variable> targetParams, Name sym) {
+    String args(List<Variable> targetParams, Node sym) {
         StringBuilder sb = new StringBuilder();
         int param_cnt = 0;
         //curParams + createdVars
@@ -263,7 +398,7 @@ public class JavaGen {
         return sb.toString();
     }
 
-    String args2(List<Variable> targetParams, Name sym) {
+    String args2(List<Variable> targetParams, Node sym) {
         StringBuilder sb = new StringBuilder();
         boolean f = true;
         for (Variable v : targetParams) {
@@ -332,9 +467,11 @@ public class JavaGen {
         return !tmp.isEmpty();
     }
 
-    String getName(Type type, Name sym) {
-        for (Variable v : nameMap.get(curSet.stateId).get(sym)) {
-            if (v.type.equals(type)) return v.name;
+    String getName(Type type, Node sym) {
+        if (nameMap.containsKey(curSet.stateId)) {
+            for (Variable v : nameMap.get(curSet.stateId).get(sym)) {
+                if (v.type.equals(type)) return v.name;
+            }
         }
         return null;
     }
@@ -361,7 +498,7 @@ public class JavaGen {
         return null;
     }
 
-    String getBoth(Item item, Name sym) {
+    String getBoth(Item item, Node sym) {
         if (sym == null) {
             return getParam(item);
         }
@@ -410,7 +547,7 @@ public class JavaGen {
                 w.append("%s.holder = %s;", name, pname);
             }
         }
-        Map<Name, List<Variable>> map = nameMap.computeIfAbsent(curSet.stateId, k -> new HashMap<>());
+        Map<Node, List<Variable>> map = nameMap.computeIfAbsent(curSet.stateId, k -> new HashMap<>());
         map.put(sym, vars);
     }
 
@@ -486,6 +623,32 @@ public class JavaGen {
     }
 
     private void inline(ItemSet set, Name sym) {
+        for (Item item : set.all) {
+            if (!item.isReduce(tree)) continue;
+            if (item.rule.which == -1) continue;//only alts have assign
+            w.append("if(%s){", JavaRecDescent.loopExpr(item.lookAhead));
+            String holder;
+            if (skipHolder) {
+                holder = getBoth(item, sym) + ".holder";
+            }
+            else {
+                if (curSet.isStart) {
+                    holder = getName(item.rule.retType, sym);
+                }
+                else {
+                    holder = getParam(item.rule.retType);
+                }
+            }
+            w.append("%s.which = %d;", holder, item.rule.which);
+            w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getBoth(item, sym));//todo
+            if (!curSet.isStart && item.lookAhead.contains(dollar)) {
+                //w.append("return;");//todo dollar is enough?
+            }
+            w.append("}");
+        }
+    }
+
+    private void inline(ItemSet set, Sequence sym) {
         for (Item item : set.all) {
             if (!item.isReduce(tree)) continue;
             if (item.rule.which == -1) continue;//only alts have assign

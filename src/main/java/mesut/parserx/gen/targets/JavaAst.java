@@ -167,6 +167,8 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
     }
 
     class Printer extends BaseVisitor<Void, Void> {
+        int cur = 0;
+        Node prev;
 
         void writePrinter(Node rhs, boolean isAlt) {
             w.append("public String toString(){");
@@ -199,27 +201,39 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
 
         @Override
         public Void visitName(Name name, Void arg) {
+            if (cur > 0) {
+                //todo comma
+                if (prev.isOptional()) {
+                    w.append("if(%s != null){", prev.astInfo.varName);
+                    w.append("sb.append(\"%s\");", options.sequenceDelimiter);
+                    w.append("}");
+                }
+                else if (prev.isStar()) {
+                    w.append("if(!%s.isEmpty()){", prev.astInfo.varName);
+                    w.append("sb.append(\"%s\");", options.sequenceDelimiter);
+                    w.append("}");
+                }
+                else {
+                    w.append("sb.append(\"%s\");", options.sequenceDelimiter);
+                }
+            }
             w.append("sb.append(%s);", printer(name));
             return null;
         }
 
         @Override
         public Void visitSequence(Sequence s, Void arg) {
+            int backup = cur;
+            cur = 0;
+            Node back = prev;
             for (int i = 0; i < s.size(); i++) {
-                if (i > 0) {
-                    Node prev = s.get(i - 1);
-                    if (prev.isOptional()) {
-                        w.append("if(%s != null) sb.append(\"%s\");", prev.astInfo.varName, options.sequenceDelimiter);
-                    }
-                    else if (prev.isStar()) {
-                        w.append("if(!%s.isEmpty()) sb.append(\"%s\");", prev.asRegex().node.astInfo.varName, options.sequenceDelimiter);
-                    }
-                    else {
-                        w.append("sb.append(\"%s\");", options.sequenceDelimiter);
-                    }
-                }
-                s.get(i).accept(this, null);
+                Node ch = s.get(i);
+                ch.accept(this, null);
+                cur++;
+                prev = ch;
             }
+            cur = backup;
+            prev = back;
             return null;
         }
 
@@ -229,6 +243,9 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
             Name name = regex.node.asName();
             if (regex.isStar() || regex.isPlus()) {
                 w.append("if(!%s.isEmpty()){", v);
+                if (cur > 0) {
+                    w.append("sb.append(\"%s\");", options.sequenceDelimiter);
+                }
                 w.append("sb.append('[');");
                 w.append("for(int i = 0;i < %s.size();i++){", v);
 
@@ -244,7 +261,9 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
                 w.append("}");
             }
             else {
-                w.append("sb.append(%s == null?\"\":%s);", v, printer(name));
+                w.append("if(%s != null){", v);
+                regex.node.accept(this, null);
+                w.append("}");
             }
             return null;
         }

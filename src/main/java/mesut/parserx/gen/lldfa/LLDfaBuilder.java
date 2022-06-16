@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 public class LLDfaBuilder {
     public Name rule;
     public Tree tree;
+    public Tree ebnf;
     ItemSet firstSet;
     Map<Name, List<Item>> firstItems = new HashMap<>();
     Set<ItemSet> all;
@@ -30,19 +31,18 @@ public class LLDfaBuilder {
 
 
     public LLDfaBuilder(Tree tree) {
-        this.tree = tree;
+        this.ebnf = tree;
         ItemSet.lastId = Item.lastId = 0;
         logger.setLevel(Level.ALL);
-        Logger.getGlobal().setLevel(Level.ALL);
     }
 
     void prepare() {
-        new Normalizer(tree).normalize();
-        tree.prepare();
+        new Normalizer(ebnf).normalize();
+        ebnf.prepare();
 
-        Tree res = new Tree(tree);
-        res.checkDup = false;
-        for (RuleDecl rd : tree.rules) {
+        tree = new Tree(ebnf);
+        tree.checkDup = false;
+        for (RuleDecl rd : ebnf.rules) {
             Node rhs = rd.rhs;
             if (rhs.isOr()) {
                 int id = 1;
@@ -51,17 +51,16 @@ public class LLDfaBuilder {
                     RuleDecl decl = new RuleDecl(rd.ref, ch);
                     decl.retType = rd.retType;
                     decl.which = id++;
-                    res.addRule(decl);
+                    tree.addRule(decl);
                 }
             }
             else {
                 rhs = plus(rhs);
                 RuleDecl decl = new RuleDecl(rd.ref, rhs);
                 decl.retType = rd.retType;
-                res.addRule(decl);
+                tree.addRule(decl);
             }
         }
-        tree = res;
     }
 
     Sequence plus(Node node) {
@@ -88,11 +87,10 @@ public class LLDfaBuilder {
     }
 
     public void factor() {
-        Tree old = tree;
         prepare();
-        for (RuleDecl rd : old.rules) {
+        for (RuleDecl rd : ebnf.rules) {
             FactorVisitor visitor = new FactorVisitor();
-            visitor.tree = old;
+            visitor.tree = ebnf;
             if (rd.rhs.accept(visitor, null)) {
                 rule = rd.ref;
                 build();
