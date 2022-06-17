@@ -16,7 +16,7 @@ public class RegexPrinter extends BaseVisitor<String, Void> {
 
     @Override
     public String visitRegex(Regex regex, Void arg) {
-        return regex.node.accept(this, arg) + regex.type;
+        return regex.node.accept(this, arg) + regex.type.toString();
     }
 
     @Override

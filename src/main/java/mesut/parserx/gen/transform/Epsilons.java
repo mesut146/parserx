@@ -80,7 +80,7 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
             }
             else {
                 //A+ | €
-                res.noEps = new Regex(regex.node, "+");
+                res.noEps = new Regex(regex.node, RegexType.PLUS);
                 res.noEps.astInfo = regex.astInfo.copy();
                 res.eps = new Epsilon();
             }
@@ -91,7 +91,7 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
             //A+ = A A* = (A_noe | A_eps) A*
             //A_noe A* | A_eps A*
             Info tmp = trim(regex.node);
-            Regex star = new Regex(regex.node, "*");
+            Regex star = new Regex(regex.node, RegexType.STAR);
             star.astInfo = regex.astInfo.copy();
             Node no = tmp.noEps.copy();
             no.astInfo.isInLoop = true;

@@ -135,7 +135,7 @@ public class RegexBuilder {
             if (node.isSequence() || node.isOr()) {
                 node = new Group(node);
             }
-            path.add(new Regex(node, "*"));
+            path.add(new Regex(node, RegexType.STAR));
         }
         if (!out.epsilon) {
             Node o = idToNode(out);
@@ -159,11 +159,7 @@ public class RegexBuilder {
         List<Transition> trList = nfa.trans[state];
         Map<Integer, List<Node>> map = new HashMap<>();//target -> regex
         for (Transition tr : trList) {
-            List<Node> arr = map.get(tr.target);
-            if (arr == null) {
-                arr = new ArrayList<>();
-                map.put(tr.target, arr);
-            }
+            List<Node> arr = map.computeIfAbsent(tr.target, k -> new ArrayList<>());
             arr.add(idToNode(tr));
         }
         trList.clear();
@@ -175,7 +171,7 @@ public class RegexBuilder {
                     if (ch.isEpsilon()) {
                         List<Node> list = node.asOr().list;
                         list.remove(ch);
-                        node = new Regex(new Group(Or.make(list)), "?");
+                        node = new Regex(new Group(Or.make(list)), RegexType.OPTIONAL);
                         break;
                     }
                 }

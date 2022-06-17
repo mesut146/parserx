@@ -87,11 +87,6 @@ public class JavaGen {
     }
 
     class NormalWriter extends BaseVisitor<Void, Void> {
-        Stack<String> outer = new Stack<>();
-
-        public NormalWriter() {
-            outer.push("res");
-        }
 
         @Override
         public Void visitOr(Or or, Void arg) {
@@ -117,6 +112,28 @@ public class JavaGen {
         @Override
         public Void visitName(Name name, Void arg) {
             consumer(name, name.astInfo.outerVar);
+            return null;
+        }
+
+        @Override
+        public Void visitRegex(Regex regex, Void arg) {
+            Node ch = regex.node;
+            if (regex.isOptional()) {
+                w.append("if(%s){", JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree)));
+                ch.accept(this, null);
+                w.append("}");
+            }
+            else if (regex.isStar()) {
+                w.append("while(%s){", JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree)));
+                ch.accept(this, null);
+                w.append("}");
+            }
+            else {
+                w.append("do{");
+                ch.accept(this, null);
+                w.down();
+                w.append("}while(%s);", JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree)));
+            }
             return null;
         }
     }
@@ -192,7 +209,7 @@ public class JavaGen {
         boolean first = true;
         Set<Name> allLa = new HashSet<>();
         for (Transition tr : set.transitions) {
-            if (tr.symbol.isName()) {
+            if (tr.symbol.isName() && tr.symbol.asName().isToken) {
                 Name sym = tr.symbol.asName();
                 allLa.add(sym);
                 //collect items by la
@@ -239,7 +256,7 @@ public class JavaGen {
                 }
                 if (set.isStart) {
                     for (Variable v : nameMap.get(set.stateId).get(sym)) {
-                        if (v.item == null && v.type.equals(rule.retType)) {
+                        if (/*v.item == null &&*/ v.type.equals(rule.retType)) {
                             w.append("return %s;", v.name);
                             break;
                         }
@@ -248,7 +265,8 @@ public class JavaGen {
                 w.append("}");//if
             }
             else {
-                Sequence sym = tr.symbol.asSequence();
+                Node sym = tr.symbol;
+                Sequence seq = sym.isSequence() ? sym.asSequence() : new Sequence(sym);
                 Set<Name> laList = FirstSet.tokens(sym, tree);
                 allLa.addAll(laList);
                 w.append("%sif(%s){", first ? "" : "else ", JavaRecDescent.loopExpr(laList));
@@ -291,7 +309,7 @@ public class JavaGen {
                 }
 
                 //consume all
-                for (Node ch : sym) {
+                for (Node ch : seq) {
                     if (ch.isName()) {
                         consumer(ch.asName(), vname);
                     }
@@ -314,7 +332,7 @@ public class JavaGen {
                 //inline target reductions
                 if (target.transitions.isEmpty()) {
                     //inline final state
-                    inline(target, sym);
+                    inline(target, seq);
                 }
                 else {
                     //todo looping args, multi state args?
@@ -387,13 +405,15 @@ public class JavaGen {
                 hasParams = true;
             }
         }
-        boolean first = true;
-        for (Variable v : nameMap.get(curSet.stateId).get(sym)) {
-            if (skipHolder && v.item == null) continue;//skip holder, alt already has ref in it
-            if (!first || hasParams) sb.append(", ");
-            sb.append(v.name);
-            targetParams.add(new Variable(v.type, "p" + param_cnt++, v.item));
-            first = false;
+        if (nameMap.containsKey(curSet.stateId)) {
+            boolean first = true;
+            for (Variable v : nameMap.get(curSet.stateId).get(sym)) {
+                if (skipHolder && v.item == null) continue;//skip holder, alt already has ref in it
+                if (!first || hasParams) sb.append(", ");
+                sb.append(v.name);
+                targetParams.add(new Variable(v.type, "p" + param_cnt++, v.item));
+                first = false;
+            }
         }
         return sb.toString();
     }

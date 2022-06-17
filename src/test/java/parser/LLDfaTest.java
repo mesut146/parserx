@@ -17,9 +17,9 @@ public class LLDfaTest {
     void dot(LLDfaBuilder b) throws IOException {
         File file = Env.dotFile(Utils.newName(b.tree.file.getName(), ".dot"));
         b.dot(new PrintWriter(new FileWriter(file)));
-        Runtime.getRuntime().exec("dot -Tpng -O " + file);
         try {
-            Thread.sleep(100);
+            Runtime.getRuntime().exec("dot -Tpng -O " + file).waitFor();
+            //Thread.sleep(100);
             file.delete();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -31,7 +31,6 @@ public class LLDfaTest {
         Tree tree = Env.tree(path);
         LLDfaBuilder builder = new LLDfaBuilder(tree);
         builder.factor();
-        //builder.normalize();
         dot(builder);
     }
 
@@ -39,45 +38,19 @@ public class LLDfaTest {
     public void all() throws IOException {
         File dir = new File(Env.dir, "src/test/resources/lldfa");
         for (String s : dir.list()) {
-            if (s.equals("greedy.g")) continue;
-            if (s.equals("greedy2.g")) continue;
+            if (s.equals("greedy-loop.g")) continue;
+            if (s.equals("greedy-loop2.g")) continue;
             single("lldfa/" + s);
         }
     }
 
     @Test
-    public void dfa() throws IOException {
-        //Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g"));
+    public void dfa() throws Exception {
+        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g"));
         //Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
-        single("lldfa/mid.g");
-        single("lldfa/mid2.g");
-        single("lldfa/left.g");
-        single("lldfa/left-indirect.g");
-        single("lldfa/right.g");
-        single("lldfa/right-indirect.g");
-
-        single("lldfa/factor.g");
-        single("lldfa/greedy.g");
-        single("lldfa/greedy2.g");
-        single("lldfa/rr-loop.g");
-        single("lldfa/rr-loop-len2.g");
-        single("lldfa/rr-loop-x.g");
-        single("lldfa/rr-loop2.g");
-        single("lldfa/rr-loop2-len2.g");
-        single("lldfa/len2.g");
-        single("lldfa/sr.g");
-        single("lldfa/sr2.g");
-        single("lldfa/rr.g");
-        single("lldfa/rr-loop-sub.g");
-        single("lldfa/rr-loop-rec.g");
-        single("lldfa/sr-loop.g");
-        //single("lldfa/rr2.g");
-
-        single("lldfa/rr-loop-deep.g");
-        single("lldfa/rr-loop-deep1.g");
-        single("lldfa/rr-loop-deep2.g");
-        single("lldfa/rr-loop-deep3.g");
-        single("lldfa/rr-loop-deep4.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        //LLDFAGen.gen(tree, "java");
+        DescTester.check2(Builder.tree(tree).rule("tree").input("E: a b c;", ""));
     }
 
 
@@ -93,11 +66,33 @@ public class LLDfaTest {
     }
 
     @Test
-    public void rr() throws Exception {
+    public void sr() throws Exception {
         DescTester.check(Builder.tree("lldfa/sr.g").rule("E").
                 input("abcdx", "E#1{A{'a'}, C#1{'b'}, 'c', 'd', 'x'}").
                 input("aecdx", "E#1{A{'a'}, C#2{'e'}, 'c', 'd', 'x'}").
                 input("abcdy", "E#2{'a', B{'b'}, 'c', 'd', 'y'}"));
+
+        DescTester.check(Builder.tree("lldfa/sr2.g").rule("E").
+                input("abcx", "E#1{A{'a', 'b'}, 'c', 'x'}").
+                input("abcy", "E#2{B{'a', 'b', 'c'}, 'y'}"));
+
+        DescTester.check(Builder.tree("lldfa/sr-loop.g").rule("E").
+                input("abcx", "E#1{[A{C{'a', 'b'}, 'c'}], 'x'}").
+                input("abcabcx", "E#1{[A{C{'a', 'b'}, 'c'}, A{C{'a', 'b'}, 'c'}], 'x'}").
+                input("abcy", "E#2{[B{'a', 'b', 'c'}], 'y'}").
+                input("abcabcy", "E#2{[B{'a', 'b', 'c'}, B{'a', 'b', 'c'}], 'y'}"));
+    }
+
+    @Test
+    public void greedy() throws Exception {
+//        DescTester.check2(Builder.tree("lldfa/greedy-opt.g").rule("E").
+//                input("ax", "").
+//                input("aax", ""));
+        DescTester.check2(Builder.tree("lldfa/greedy-opt2.g").rule("E").
+                input("cya", "").
+                input("cyaebda", ""));
+
+        single("lldfa/greedy-opt2.g");
     }
 
     @Test

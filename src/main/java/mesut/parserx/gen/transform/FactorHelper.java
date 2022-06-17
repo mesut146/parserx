@@ -188,11 +188,11 @@ public class FactorHelper {
             }
             else if (regex.isPlus()) {
                 //A+=A A*
-                return new Sequence(f, new Regex(regex.node, "*"));
+                return new Sequence(f, new Regex(regex.node, RegexType.STAR));
             }
             else {
                 //A*=A A* | €
-                return new Sequence(f, new Regex(regex.node, "*"));
+                return new Sequence(f, new Regex(regex.node, RegexType.STAR));
             }
         }
         else if (node.isName()) {

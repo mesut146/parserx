@@ -1,5 +1,6 @@
 package mesut.parserx.nodes;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,9 +42,7 @@ public class Sequence extends NodeList {
         return NodeList.join(list, " ");
     }
 
-    @Override
-    public Node normal() {
-        normalCh();
+    public Node unwrap() {
         if (size() == 1) {
             if (astInfo.which != -1) {
                 throw new RuntimeException("norm with code");
@@ -52,15 +51,25 @@ public class Sequence extends NodeList {
             res.label = label;
             return res;
         }
-        Sequence res = new Sequence();
+        return this;
+    }
+
+    @Override
+    public Node normal() {
+        normalCh();
+        if (size() == 1) {
+            return unwrap();
+        }
+        List<Node> arr = new ArrayList<>();
         for (Node ch : this) {
             if (ch.isSequence()) {
-                res.addAll(ch.asSequence().list);
+                arr.addAll(ch.asSequence().list);
             }
             else {
-                res.add(ch);
+                arr.add(ch);
             }
         }
+        Sequence res = new Sequence(arr);
         res.astInfo = astInfo.copy();
         res.assocLeft = assocLeft;
         res.assocRight = assocRight;

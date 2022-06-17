@@ -115,7 +115,7 @@ public class Simplify extends Transformer {
         Node res = null;
         if (regex.isOptional()) {
             if (ch.isPlus()) {
-                res = new Regex(ch.asRegex().node, "*");
+                res = new Regex(ch.asRegex().node, RegexType.STAR);
             }
             else if (ch.isStar() || ch.isOptional()) {
                 res = ch;
@@ -126,12 +126,12 @@ public class Simplify extends Transformer {
                 res = ch;
             }
             if (ch.isOptional()) {
-                ch = new Regex(ch.asRegex().node, "*");
+                ch = new Regex(ch.asRegex().node, RegexType.STAR);
             }
         }
         else {
             if (ch.isOptional() || ch.isStar()) {
-                res = new Regex(ch.asRegex().node, "*");
+                res = new Regex(ch.asRegex().node, RegexType.STAR);
             }
             if (ch.isPlus()) {
                 res = ch;

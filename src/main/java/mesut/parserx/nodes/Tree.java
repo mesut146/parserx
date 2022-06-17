@@ -121,7 +121,7 @@ public class Tree {
     }
 
     public void addRule(RuleDecl rule) {
-        if(checkDup){
+        if (checkDup) {
             for (RuleDecl old : rules) {
                 if (old.ref.equals(rule.ref)) {
                     throw new RuntimeException("duplicate rule");
@@ -220,15 +220,22 @@ public class Tree {
         }
     }
 
+    boolean isStr(Node node, String str) {
+        if (node.isSequence()) {
+            node = node.asSequence().normal();
+        }
+        return node.isString() && node.asString().value.equals(str);
+    }
+
     //find token by string literal
     public TokenDecl getTokenByValue(String val) {
         for (TokenDecl decl : tokens) {
-            if (decl.rhs.isString() && decl.rhs.asString().value.equals(val)) {
+            if (isStr(decl.rhs, val)) {
                 return decl;
             }
             else if (decl.rhs.isOr()) {
                 for (Node ch : decl.rhs.asOr()) {
-                    if (ch.isString() && ch.asString().value.equals(val)) {
+                    if (isStr(ch, val)) {
                         return decl;
                     }
                 }

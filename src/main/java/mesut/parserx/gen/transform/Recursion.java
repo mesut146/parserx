@@ -55,7 +55,7 @@ public class Recursion {
         info.zero.astInfo.isPrimary = true;
         info.one.astInfo.varName = "res";
         info.one.astInfo.isSecondary = true;
-        decl.rhs = Sequence.make(info.zero, new Regex(info.one, "*"));
+        decl.rhs = Sequence.make(info.zero, new Regex(info.one, RegexType.STAR));
 
         if (!cycle) return;
         //solve other refs as well to get rif of greedy loops

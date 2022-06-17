@@ -3,44 +3,37 @@ package mesut.parserx.nodes;
 public class Regex extends Node {
 
     public Node node;
-    public String type;
+    public RegexType type;
 
-    public Regex(Node rule, String type) {
+    public Regex(Node rule, RegexType type) {
         if (rule.isSequence() || rule.isOr()) {
             throw new RuntimeException("invalid child, wrap using group");
         }
         this.node = rule;
-        setType(type);
+        this.type = type;
         if (isStar() || isPlus()) {
             this.node.astInfo.isInLoop = true;
         }
     }
 
     public boolean isStar() {
-        return type.equals("*");
+        return type == RegexType.STAR;
     }
 
     public boolean isPlus() {
-        return type.equals("+");
+        return type == RegexType.PLUS;
     }
 
     public boolean isOptional() {
-        return type.equals("?");
-    }
-
-    public void setType(String type) {
-        if (!"+*?".contains(type)) {
-            throw new RuntimeException("invalid regex type: " + type);
-        }
-        this.type = type;
+        return type == RegexType.OPTIONAL;
     }
 
     @Override
     public String toString() {
         if (astInfo.isFactored) {
-            return node + type + "()";
+            return node + type.toString() + "()";
         }
-        return node + type;
+        return node + type.toString();
     }
 
     @Override

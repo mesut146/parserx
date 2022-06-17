@@ -30,7 +30,7 @@ public class DescTester {
         Utils.write(Utils.read(Env.getResFile("DescTester.java.1")), tester);
 
         String outDir = Env.dotDir().getAbsolutePath();
-        Tree tree = Env.tree(builder.tree);
+        Tree tree = builder.tree;
         tree.options.outDir = outDir;
         //RecDescent.gen(tree, "java");
         LLDFAGen.gen(tree, "java");
@@ -80,7 +80,7 @@ public class DescTester {
         Utils.write(Utils.read(Env.getResFile("DescTester.java.2")), tester);
 
         String outDir = Env.dotDir().getAbsolutePath();
-        Tree tree = Env.tree(builder.tree);
+        Tree tree = builder.tree;
         tree.options.outDir = outDir;
         //RecDescent.gen(tree, "java");
         LLDFAGen.gen(tree, "java");

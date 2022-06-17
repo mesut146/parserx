@@ -168,6 +168,7 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
 
     class Printer extends BaseVisitor<Void, Void> {
         int cur = 0;
+        boolean nonEmpty = false;
 
         void writePrinter(Node rhs, boolean isAlt) {
             w.append("public String toString(){");
@@ -206,7 +207,6 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
                 w.append("}");
             }
             w.append("sb.append(%s);", printer(name.astInfo.varName, name.isToken));
-            w.append("first = false;");
             return null;
         }
 
@@ -219,6 +219,12 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
                 Node ch = s.get(i);
                 ch.accept(this, null);
                 cur++;
+                if (ch.isName()) {
+                    if (!nonEmpty) {
+                        w.append("first = false;");
+                    }
+                    nonEmpty = true;
+                }
             }
             cur = backup;
             return null;

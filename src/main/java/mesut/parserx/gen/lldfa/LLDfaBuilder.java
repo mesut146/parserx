@@ -73,7 +73,7 @@ public class LLDfaBuilder {
                 Node copy = rn.node.copy();
                 //copy.astInfo.isInLoop = true;
                 list.add(copy);
-                Regex star = new Regex(rn.node.copy(), "*");
+                Regex star = new Regex(rn.node.copy(), RegexType.STAR);
                 star.astInfo = rn.astInfo.copy();
                 list.add(star);
             }
@@ -124,7 +124,9 @@ public class LLDfaBuilder {
                 Node b = seq.get(i + 1).copy();
                 if (a.astInfo.isFactored) continue;
                 GreedyNormalizer.TailInfo sym = GreedyNormalizer.hasGreedyTail(a, FirstSet.firstSet(b, tree), tree, new FactorLoop(tree, new Factor(tree)));
-                if (sym != null) return true;
+                if (sym != null) {
+                    throw new RuntimeException(seq + " has greediness");
+                }
             }
             return false;
         }
@@ -132,6 +134,45 @@ public class LLDfaBuilder {
 
     static boolean hasCommon(Node a, Node b, Tree tree) {
         return new FactorHelper(tree, new Factor(tree)).common(a, b) != null;
+    }
+
+    Set<Name> computeLa(Name ref) {
+        Set<Name> set = new HashSet<>();
+        BaseVisitor<Void, Void> visitor = new BaseVisitor<>() {
+            @Override
+            public Void visitSequence(Sequence seq, Void arg) {
+                for (int i = 0; i < seq.size(); i++) {
+                    Node ch = seq.get(i);
+                    if (i == seq.size() - 1) {
+                        set.addAll(computeLa(curRule.ref));
+                    }
+                    if (ch.equals(ref) && i < seq.size() - 1) {
+                        Sequence rest = new Sequence(seq.list.subList(i + 1, seq.size()));
+                        set.addAll(FirstSet.tokens(rest, tree));
+                    }
+                    else if (ch.isRegex() && ch.asRegex().node.equals(ref)) {
+                        Regex regex = ch.asRegex();
+                        if (regex.isOptional() && i < seq.size() - 1) {
+                            Sequence rest = new Sequence(seq.list.subList(i + 1, seq.size()));
+                            set.addAll(FirstSet.tokens(rest, tree));
+                        }
+                        else if (regex.isStar()) {
+
+                        }
+                        else if (regex.isPlus()) {
+
+                        }
+                    }
+                }
+                return null;
+            }
+        };
+        for (RuleDecl decl : tree.rules) {
+            if (decl.ref.equals(ref)) continue;
+            visitor.curRule = decl;
+            decl.rhs.accept(visitor, null);
+        }
+        return set;
     }
 
     public void build() {
@@ -526,7 +567,7 @@ public class LLDfaBuilder {
                 in.symbol = new Sequence(wrapOr(in.symbol), wrapOr(out.symbol));
             }
             else {
-                in.symbol = new Sequence(wrapOr(in.symbol), new Regex(new Group(wrapOr(loop)), "*"), wrapOr(out.symbol));
+                in.symbol = new Sequence(wrapOr(in.symbol), new Regex(new Group(wrapOr(loop)), RegexType.STAR), wrapOr(out.symbol));
             }
         }
         combine();

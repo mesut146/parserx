@@ -330,7 +330,7 @@ public class Factor extends Transformer {
             PullInfo pi = pull(regex.node, sym);
             info.one = withAst(pi.one, regex);
             if (pi.zero != null) {
-                info.zero = withAst(new Regex(pi.zero.copy(), "?"), regex);
+                info.zero = withAst(new Regex(pi.zero.copy(), RegexType.OPTIONAL), regex);
             }
             else {
                 info.zero = new Epsilon();
@@ -339,7 +339,7 @@ public class Factor extends Transformer {
         }
         else if (regex.isPlus()) {
             //A+=A A*
-            Node star = withAst(new Regex(regex.node.copy(), "*"), regex);
+            Node star = withAst(new Regex(regex.node.copy(), RegexType.STAR), regex);
             Node pre = regex.node.copy();
             //pre.astInfo.isInLoop = true;
             Sequence s = new Sequence(pre, star);
@@ -347,7 +347,7 @@ public class Factor extends Transformer {
         }
         else {
             //A* = A+ | €
-            Node plus = withAst(new Regex(regex.node.copy(), "+"), regex);
+            Node plus = withAst(new Regex(regex.node.copy(), RegexType.PLUS), regex);
             return pull(new Or(plus, new Epsilon()), sym);
         }
     }

@@ -90,7 +90,7 @@ public class FactorLoop extends Transformer {
                 Name sym = result.name.copy();
                 sym.astInfo = new AstInfo();
                 if (result.isLoop) {
-                    Regex factorSym = new Regex(sym, "+");
+                    Regex factorSym = new Regex(sym, RegexType.PLUS);
                     if (Factor.debug) System.out.printf("factoring loop %s in %s\n", factorSym, curRule.ref);
                     factorSym.astInfo.isFactor = true;
                     factorSym.node.astInfo.isFactor = true;
@@ -299,7 +299,7 @@ public class FactorLoop extends Transformer {
             return res;
         }
         //A*: A+ | €
-        Regex plus = new Regex(regex.node.copy(), "+");
+        Regex plus = new Regex(regex.node.copy(), RegexType.PLUS);
         plus.astInfo = regex.astInfo.copy();
         Factor.PullInfo tmp = pull(plus, sym);
         if (tmp.zero == null) {
@@ -323,7 +323,7 @@ public class FactorLoop extends Transformer {
         }
         if (helper.hasLoop(regex.node, noLoop(sym))) {
             //A+ = A A*
-            Regex star = new Regex(regex.node.copy(), "*");
+            Regex star = new Regex(regex.node.copy(), RegexType.STAR);
             star.astInfo = regex.astInfo.copy();
             return pull(new Sequence(regex.node.copy(), star), sym);
         }
@@ -334,7 +334,7 @@ public class FactorLoop extends Transformer {
             factorSingle.astInfo.varName = factor.factorName(factorSingle);
             Factor.PullInfo tmp = factor.pull(regex.node, factorSingle);
             if (FirstSet.isEmpty(tmp.one, tree)) {
-                Regex factored = new Regex(tmp.one.copy(), "+");
+                Regex factored = new Regex(tmp.one.copy(), RegexType.PLUS);
                 factored.astInfo = regex.astInfo.copy();
                 //factored.astInfo.isFactored = true;
                 factored.astInfo.factor = sym.astInfo;
@@ -348,10 +348,10 @@ public class FactorLoop extends Transformer {
                     //(a A(a) | A_no_a)+
                     //(a A(a))+ (A_no_a A*)? | A_no_a A*
                     //a+ A(a)+ (A_no_a A*)? | A_no_a A*
-                    Regex star = new Regex(regex.node, "*");
+                    Regex star = new Regex(regex.node, RegexType.STAR);
                     star.astInfo = regex.astInfo.copy();
                     Sequence seq = new Sequence(tmp.zero, star);
-                    res.one = new Sequence(factored, new Regex(new Group(seq.copy()), "?"));
+                    res.one = new Sequence(factored, new Regex(new Group(seq.copy()), RegexType.OPTIONAL));
                     res.zero = seq.copy();
                     return res;
                 }
@@ -366,18 +366,18 @@ public class FactorLoop extends Transformer {
                     //T: a* A_a_eps(a)+ a
                     Epsilons.Info eps = Epsilons.trimInfo(tmp.one, tree);
 
-                    Regex factored = new Regex(eps.eps.copy(), "+");
+                    Regex factored = new Regex(eps.eps.copy(), RegexType.PLUS);
                     factored.astInfo = regex.astInfo.copy();
                     //factored.astInfo.isFactored = true;
                     factored.astInfo.factor = sym.astInfo;
 
-                    Regex star = new Regex(regex.node.copy(), "*");
+                    Regex star = new Regex(regex.node.copy(), RegexType.STAR);
                     star.astInfo = regex.astInfo.copy();
 
                     Name factor = noLoop(sym);
                     factor.astInfo.isFactor = true;
                     Sequence tail = new Sequence(factorSingle.copy(), eps.noEps.copy(), star.copy());
-                    Sequence one = new Sequence(factored, new Regex(new Group(tail), "?"));
+                    Sequence one = new Sequence(factored, new Regex(new Group(tail), RegexType.OPTIONAL));
                     Sequence zero = new Sequence(factorSingle.copy(), eps.noEps.copy(), star.copy());
                     res.one = one;
                     res.zero = zero;
@@ -408,7 +408,7 @@ public class FactorLoop extends Transformer {
             Factor.PullInfo res = new Factor.PullInfo();
             Factor.PullInfo tmp = pull(regex.node, sym);
             res.one = tmp.one;
-            res.zero = new Regex(tmp.zero, "?");
+            res.zero = new Regex(tmp.zero, RegexType.OPTIONAL);
             return res;
         }
     }

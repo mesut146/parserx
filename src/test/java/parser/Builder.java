@@ -1,10 +1,14 @@
 package parser;
 
+import common.Env;
+import mesut.parserx.nodes.Tree;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Builder {
-    String tree;
+    Tree tree;
     String curRule;
     List<RuleInfo> cases = new ArrayList<>();
 
@@ -16,7 +20,17 @@ public class Builder {
 
     public static Builder tree(String name) {
         Builder res = new Builder();
-        res.tree = name;
+        try {
+            res.tree = Env.tree(name);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return res;
+    }
+
+    public static Builder tree(Tree tree) {
+        Builder res = new Builder();
+        res.tree = tree;
         return res;
     }
 

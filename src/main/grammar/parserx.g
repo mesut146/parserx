@@ -85,7 +85,7 @@ stringNode: STRING | CHAR;
 bracketNode: BRACKET;//easier to handle as token
 untilNode: "~" regex;
 dotNode: ".";
-name: IDENT | "token" | "tokens" | "skip" | "options" | "include";
+name: IDENT | TOKEN | "skip" | "options" | "include";
 repeatNode: "{" rhs "}";
 
 call: CALL_BEGIN IDENT ("," IDENT)* ")";

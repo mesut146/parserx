@@ -1,6 +1,7 @@
 package mesut.parserx.nodes;
 
 public class BaseVisitor<R, A> implements Visitor<R, A> {
+    public RuleDecl curRule;
 
     @Override
     public R visitEpsilon(Epsilon epsilon, A arg) {

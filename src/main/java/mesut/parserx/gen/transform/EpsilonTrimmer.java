@@ -146,10 +146,10 @@ public class EpsilonTrimmer extends Transformer {
         }
         else if (regex.isStar()) {
             modified = true;
-            return new Regex(ch, "+");
+            return new Regex(ch, RegexType.PLUS);
         }
         else {
-            return new Regex(ch, "+");
+            return new Regex(ch, RegexType.PLUS);
         }
     }
 

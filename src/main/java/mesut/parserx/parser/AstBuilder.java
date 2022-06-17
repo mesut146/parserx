@@ -148,7 +148,7 @@ public class AstBuilder {
             Node res = visitSimple(node.regex1.simple);
             res.astInfo.varName = name;
             if (node.regex1.type != null) {
-                String type = node.regex1.type.PLUS != null ? "+" : (node.regex1.type.STAR != null ? "*" : "?");
+                RegexType type = node.regex1.type.PLUS != null ? RegexType.PLUS : (node.regex1.type.STAR != null ? RegexType.STAR : RegexType.OPTIONAL);
                 return new Regex(res, type);
             }
             return res;
@@ -156,7 +156,7 @@ public class AstBuilder {
         else {
             Node res = visitSimple(node.regex2.simple);
             if (node.regex2.type != null) {
-                String type = node.regex2.type.PLUS != null ? "+" : (node.regex2.type.STAR != null ? "*" : "?");
+                RegexType type = node.regex2.type.PLUS != null ? RegexType.PLUS : (node.regex2.type.STAR != null ? RegexType.STAR : RegexType.OPTIONAL);
                 return new Regex(res, type);
             }
             return res;
@@ -194,7 +194,7 @@ public class AstBuilder {
             if (rhs.isSequence() || rhs.isOr()) {
                 rhs = new Group(rhs);
             }
-            return new Regex(rhs, "*");
+            return new Regex(rhs, RegexType.STAR);
         }
         else if (node.SHORTCUT != null) {
             String s = node.SHORTCUT.value;

@@ -133,7 +133,7 @@ public class PrecedenceHandler {
             group.astInfo.varName = "tmp";
             seq.astInfo.outerVar = "tmp";
 
-            return new Sequence(higher, new Regex(group, "*"));
+            return new Sequence(higher, new Regex(group, RegexType.STAR));
         }
         else {
             //right assoc
@@ -172,7 +172,7 @@ public class PrecedenceHandler {
         group.astInfo.varName = "tmp";
         seq.astInfo.outerVar = "tmp";
 
-        return new Sequence(higher, new Regex(group, "*"));
+        return new Sequence(higher, new Regex(group, RegexType.STAR));
     }
 
     private void collect(RuleDecl decl, Or or, List<Node> primList) {

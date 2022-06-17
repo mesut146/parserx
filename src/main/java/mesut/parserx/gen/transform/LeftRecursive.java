@@ -204,7 +204,7 @@ public class LeftRecursive {
             throw new RuntimeException("invalid tail: " + one);
         }
         //a0 | A t,   a0 t*
-        return removeDirect(new Sequence(info.zero, new Regex(tail, "*")), ref);
+        return removeDirect(new Sequence(info.zero, new Regex(tail, RegexType.STAR)), ref);
     }
 
     //split regex into proper left recursive version
@@ -244,7 +244,7 @@ public class LeftRecursive {
                 one = new Or(makeSeq(s.one, regex));
             }
             else if (regex.isPlus()) {
-                Regex star = new Regex(regex.node, "*");
+                Regex star = new Regex(regex.node, RegexType.STAR);
                 if (s.zero != null) {
                     zero = makeSeq(s.zero, star);
                 }

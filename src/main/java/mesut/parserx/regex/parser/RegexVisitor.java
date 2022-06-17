@@ -88,13 +88,13 @@ public class RegexVisitor {
         }
         if (regex.g1 != null) {
             if (regex.g1.PLUS != null) {
-                return new Regex(node, "+");
+                return new Regex(node, RegexType.PLUS);
             }
             else if (regex.g1.STAR != null) {
-                return new Regex(node, "*");
+                return new Regex(node, RegexType.STAR);
             }
             else {
-                return new Regex(node, "?");
+                return new Regex(node, RegexType.OPTIONAL);
             }
         }
         return node;

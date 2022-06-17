@@ -113,87 +113,15 @@ public class GreedyNormalizer extends Transformer {
         return seq;
     }
 
+
+
     public static TailInfo hasGreedyTail(Node node, final Set<Name> first, Tree tree, FactorLoop factor) {
         if (node.isName() && node.asName().isToken) {
             return null;
         }
         if (node.isName() && first.contains(node.asName())) return null;
         //final List<Node> loopTail = new ArrayList<>();
-        BaseVisitor<TailInfo, Void> visitor = new BaseVisitor<TailInfo, Void>() {
-            boolean foundLoop = false;
-
-            @Override
-            public TailInfo visitName(Name name, Void arg) {
-                if (first.contains(name)) {
-                    TailInfo info = new TailInfo();
-                    info.sym = name.copy();
-                    return info;
-                }
-                if (name.isRule()) {
-                    return tree.getRule(name).rhs.accept(this, arg);
-                }
-                return null;
-            }
-
-            @Override
-            public TailInfo visitSequence(Sequence seq, Void arg) {
-                if (seq.size() == 1) return seq.get(0).accept(this, arg);
-                /*if (foundLoop) {
-                    loopTail.addAll(seq.list);
-                    return null;//?
-                }*/
-                Node a = seq.first();
-                Node b = Helper.trim(seq);
-                TailInfo info = b.accept(this, arg);
-                if (info != null) {
-                    info.list.add(0, a.copy());
-                    return info;
-                }
-                if (FirstSet.canBeEmpty(b, tree)) {
-                    //Epsilons.trimInfo(b,tree);
-                    return a.accept(this, arg);
-                }
-                else {
-                    return null;
-                }
-            }
-
-            @Override
-            public TailInfo visitGroup(Group group, Void arg) {
-                return group.node.accept(this, arg);
-            }
-
-            @Override
-            public TailInfo visitRegex(Regex regex, Void arg) {
-                //todo plus
-                if (regex.isOptional() || regex.isStar()) {
-                    Name sym = factor.helper.common(first, FirstSet.firstSet(regex.node, tree));
-                    if (sym == null) return null;
-                    if (regex.isStar()) {
-                        foundLoop = true;
-                        throw new RuntimeException("greedy loop in " + node + " la=" + sym);
-                    }
-                    TailInfo info = new TailInfo();
-                    info.sym = sym.copy();
-                    return info;
-                }
-                return regex.node.accept(this, arg);
-            }
-
-            @Override
-            public TailInfo visitOr(Or or, Void arg) {
-                if (!FirstSet.canBeEmpty(or, tree)) {
-                    return null;
-                }
-                for (Node ch : or) {
-                    TailInfo res = ch.accept(this, arg);
-                    if (res != null) {
-                        return res;
-                    }
-                }
-                return null;
-            }
-        };
+        BaseVisitor<TailInfo, Void> visitor = new GreedyVisitor(first, tree, factor, node);
         return node.accept(visitor, null);
     }
 
@@ -202,5 +130,93 @@ public class GreedyNormalizer extends Transformer {
         Name sym;
         List<Node> list = new ArrayList<>();
         List<Node> loopTail = new ArrayList<>();
+    }
+
+    private static class GreedyVisitor extends BaseVisitor<TailInfo, Void> {
+        private final Set<Name> first;
+        private final Tree tree;
+        private final FactorLoop factor;
+        private final Node node;
+        boolean foundLoop;
+
+        public GreedyVisitor(Set<Name> first, Tree tree, FactorLoop factor, Node node) {
+            this.first = first;
+            this.tree = tree;
+            this.factor = factor;
+            this.node = node;
+            foundLoop = false;
+        }
+
+        @Override
+        public TailInfo visitName(Name name, Void arg) {
+            if (first.contains(name)) {
+                TailInfo info = new TailInfo();
+                info.sym = name.copy();
+                return info;
+            }
+            if (name.isRule()) {
+                return tree.getRule(name).rhs.accept(this, arg);
+            }
+            return null;
+        }
+
+        @Override
+        public TailInfo visitSequence(Sequence seq, Void arg) {
+            if (seq.size() == 1) return seq.get(0).accept(this, arg);
+            /*if (foundLoop) {
+                loopTail.addAll(seq.list);
+                return null;//?
+            }*/
+            Node a = seq.first();
+            Node b = Helper.trim(seq);
+            TailInfo info = b.accept(this, arg);
+            if (info != null) {
+                info.list.add(0, a.copy());
+                return info;
+            }
+            if (FirstSet.canBeEmpty(b, tree)) {
+                //Epsilons.trimInfo(b,tree);
+                return a.accept(this, arg);
+            }
+            else {
+                return null;
+            }
+        }
+
+        @Override
+        public TailInfo visitGroup(Group group, Void arg) {
+            return group.node.accept(this, arg);
+        }
+
+        @Override
+        public TailInfo visitRegex(Regex regex, Void arg) {
+            //todo plus
+            if (regex.isOptional() || regex.isStar()) {
+                Name sym = factor.helper.common(first, FirstSet.firstSet(regex.node, tree));
+                if (sym == null) return null;
+                if (regex.isStar()) {
+                    foundLoop = true;
+                    throw new RuntimeException("greedy loop in " + node + " la=" + sym);
+                }
+                TailInfo info = new TailInfo();
+                info.sym = sym.copy();
+                return info;
+            }
+            return regex.node.accept(this, arg);
+        }
+
+        @Override
+        public TailInfo visitOr(Or or, Void arg) {
+            if (!FirstSet.canBeEmpty(or, tree)) {
+                return null;
+            }
+            for (Node ch : or) {
+                TailInfo res = ch.accept(this, arg);
+                if (res != null) {
+                    return res;
+                }
+            }
+            return null;
+        }
     }
 }
