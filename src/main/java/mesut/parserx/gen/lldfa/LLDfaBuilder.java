@@ -136,45 +136,6 @@ public class LLDfaBuilder {
         return new FactorHelper(tree, new Factor(tree)).common(a, b) != null;
     }
 
-    Set<Name> computeLa(Name ref) {
-        Set<Name> set = new HashSet<>();
-        BaseVisitor<Void, Void> visitor = new BaseVisitor<>() {
-            @Override
-            public Void visitSequence(Sequence seq, Void arg) {
-                for (int i = 0; i < seq.size(); i++) {
-                    Node ch = seq.get(i);
-                    if (i == seq.size() - 1) {
-                        set.addAll(computeLa(curRule.ref));
-                    }
-                    if (ch.equals(ref) && i < seq.size() - 1) {
-                        Sequence rest = new Sequence(seq.list.subList(i + 1, seq.size()));
-                        set.addAll(FirstSet.tokens(rest, tree));
-                    }
-                    else if (ch.isRegex() && ch.asRegex().node.equals(ref)) {
-                        Regex regex = ch.asRegex();
-                        if (regex.isOptional() && i < seq.size() - 1) {
-                            Sequence rest = new Sequence(seq.list.subList(i + 1, seq.size()));
-                            set.addAll(FirstSet.tokens(rest, tree));
-                        }
-                        else if (regex.isStar()) {
-
-                        }
-                        else if (regex.isPlus()) {
-
-                        }
-                    }
-                }
-                return null;
-            }
-        };
-        for (RuleDecl decl : tree.rules) {
-            if (decl.ref.equals(ref)) continue;
-            visitor.curRule = decl;
-            decl.rhs.accept(visitor, null);
-        }
-        return set;
-    }
-
     public void build() {
         queue.clear();
         all = new TreeSet<>(Comparator.comparingInt(set -> set.stateId));
@@ -185,10 +146,18 @@ public class LLDfaBuilder {
 
         firstSet = new ItemSet(tree, type);
         firstSet.isStart = true;
+        Set<Name> la = LaFinder.computeLa(rule, tree);
+        if (rule.equals(tree.start)) {
+            la.add(dollar);
+        }
+        if (tree.start != null && !rule.equals(tree.start)) {
+            //throw new RuntimeException("la need to be computed");
+        }
 
         for (RuleDecl rd : tree.getRules(rule)) {
             Item first = new Item(rd, 0);
-            first.lookAhead.add(dollar);
+            //first.lookAhead.add(dollar);
+            first.lookAhead.addAll(la);
             firstSet.addItem(first);
             List<Item> list = firstItems.computeIfAbsent(rd.ref, k -> new ArrayList<>());
             list.add(first);

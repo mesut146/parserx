@@ -3,6 +3,8 @@ package parser;
 import common.Env;
 import mesut.parserx.gen.lldfa.LLDFAGen;
 import mesut.parserx.gen.lldfa.LLDfaBuilder;
+import mesut.parserx.gen.lldfa.LaFinder;
+import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 import org.junit.Test;
@@ -53,6 +55,11 @@ public class LLDfaTest {
         DescTester.check2(Builder.tree(tree).rule("tree").input("E: a b c;", ""));
     }
 
+    @Test
+    public void computeLa() {
+        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g"));
+        System.out.println(LaFinder.computeLa(new Name("regex"), tree));
+    }
 
     @Test
     public void single2() throws IOException {
