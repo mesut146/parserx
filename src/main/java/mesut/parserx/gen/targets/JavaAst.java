@@ -168,7 +168,6 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
 
     class Printer extends BaseVisitor<Void, Void> {
         int cur = 0;
-        Node prev;
 
         void writePrinter(Node rhs, boolean isAlt) {
             w.append("public String toString(){");
@@ -190,34 +189,24 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
             w.append("}");//toString
         }
 
-        String printer(Name name) {
-            if (name.isToken) {
-                return String.format("\"'\" + %s.value + \"'\"", name.astInfo.varName);
+        String printer(String expr, boolean isToken) {
+            if (isToken) {
+                return String.format("\"'\" + %s.value + \"'\"", expr);
             }
             else {
-                return String.format("%s.toString()", name.astInfo.varName);
+                return String.format("%s.toString()", expr);
             }
         }
 
         @Override
         public Void visitName(Name name, Void arg) {
             if (cur > 0) {
-                //todo comma
-                if (prev.isOptional()) {
-                    w.append("if(%s != null){", prev.astInfo.varName);
-                    w.append("sb.append(\"%s\");", options.sequenceDelimiter);
-                    w.append("}");
-                }
-                else if (prev.isStar()) {
-                    w.append("if(!%s.isEmpty()){", prev.astInfo.varName);
-                    w.append("sb.append(\"%s\");", options.sequenceDelimiter);
-                    w.append("}");
-                }
-                else {
-                    w.append("sb.append(\"%s\");", options.sequenceDelimiter);
-                }
+                w.append("if(!first){");
+                w.append("sb.append(\"%s\");", options.sequenceDelimiter);
+                w.append("}");
             }
-            w.append("sb.append(%s);", printer(name));
+            w.append("sb.append(%s);", printer(name.astInfo.varName, name.isToken));
+            w.append("first = false;");
             return null;
         }
 
@@ -225,44 +214,40 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
         public Void visitSequence(Sequence s, Void arg) {
             int backup = cur;
             cur = 0;
-            Node back = prev;
+            w.append("boolean first = true;");
             for (int i = 0; i < s.size(); i++) {
                 Node ch = s.get(i);
                 ch.accept(this, null);
                 cur++;
-                prev = ch;
             }
             cur = backup;
-            prev = back;
             return null;
         }
 
         @Override
         public Void visitRegex(Regex regex, Void arg) {
-            String v = regex.node.astInfo.varName;
             Name name = regex.node.asName();
-            if (regex.isStar() || regex.isPlus()) {
-                w.append("if(!%s.isEmpty()){", v);
-                if (cur > 0) {
-                    w.append("sb.append(\"%s\");", options.sequenceDelimiter);
-                }
-                w.append("sb.append('[');");
-                w.append("for(int i = 0;i < %s.size();i++){", v);
-
-                if (name.isToken) {
-                    w.append("sb.append(\"'\" + %s.get(i).value + \"'\");", v);
-                }
-                else {
-                    w.append("sb.append(%s.get(i).toString());", v);
-                }
-                w.append("if(i < %s.size() - 1) sb.append(\"%s\");", v, options.arrayDelimiter);
-                w.append("}");
-                w.append("sb.append(']');");
+            String v = name.astInfo.varName;
+            if (regex.isOptional()) {
+                w.append("if(%s != null){", v);
+                name.accept(this, null);
+                w.append("first = false;");
                 w.append("}");
             }
             else {
-                w.append("if(%s != null){", v);
-                regex.node.accept(this, null);
+                w.append("if(!%s.isEmpty()){", v);
+                if (cur > 0) {
+                    w.append("if(!first){");
+                    w.append("sb.append(\"%s\");", options.sequenceDelimiter);
+                    w.append("}");
+                }
+                w.append("sb.append('[');");
+                w.append("for(int i = 0;i < %s.size();i++){", v);
+                w.append("sb.append(%s);", printer(String.format("%s.get(i)", v), name.isToken));
+                w.append("if(i < %s.size() - 1) sb.append(\"%s\");", v, options.arrayDelimiter);
+                w.append("}");
+                w.append("sb.append(']');");
+                w.append("first = false;");
                 w.append("}");
             }
             return null;
