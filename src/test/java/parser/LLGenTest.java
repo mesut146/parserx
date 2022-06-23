@@ -94,20 +94,6 @@ public class LLGenTest {
         DescTester.check(tree, "tree", Utils.read(Env.getResFile("pred.g")));
     }
 
-    @Test
-    @Ignore
-    public void math() throws IOException {
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        Factor.debug = true;
-
-        FirstSetNode firstSetNode = new FirstSetNode(tree);
-        FirstSetNode.SymbolNode s = tree.getRule("line").rhs.accept(firstSetNode, null);
-        System.out.println(s);
-
-        RecDescent.gen(tree, "java");
-    }
-
 
     @Test
     public void recursion() throws Exception {

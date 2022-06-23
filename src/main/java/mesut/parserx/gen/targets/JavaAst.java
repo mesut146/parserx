@@ -179,10 +179,10 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
             }
             else {
                 if (rhs.isOr()) {
-                    w.append("StringBuilder sb = new StringBuilder(\"%s#\" + which + \"{\");", curRule);
+                    w.append("StringBuilder sb = new StringBuilder(\"%s#\" + which + \"{\");", JavaAst.this.curRule);
                 }
                 else {
-                    w.append("StringBuilder sb = new StringBuilder(\"%s{\");", curRule);
+                    w.append("StringBuilder sb = new StringBuilder(\"%s{\");", JavaAst.this.curRule);
                 }
                 rhs.accept(this, null);
                 w.append("return sb.append(\"}\").toString();");

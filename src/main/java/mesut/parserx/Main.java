@@ -5,6 +5,7 @@ import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Validator;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.lldfa.LLDFAGen;
 import mesut.parserx.gen.lr.AstBuilderGen;
 import mesut.parserx.gen.lr.CodeGen;
 import mesut.parserx.gen.transform.Factor;
@@ -26,7 +27,7 @@ import java.util.List;
 public class Main {
 
     static List<String> cmds = Arrays.asList("-left", "-factor", "-epsilon",
-            "-optimize", "-dfa", "-nfa", "-nfa2dfa", "-regex", "-lr0", "-desc", "-lexer", "-lalr", "-lr1", "-lr0");
+            "-optimize", "-dfa", "-nfa", "-nfa2dfa", "-regex", "-lr0", "-desc", "-lldfa", "-lexer", "-lalr", "-lr1", "-lr0");
 
     static String usageStr = "usage:\n" +
             "java -jar <jarfile> <command>\n" +
@@ -41,6 +42,7 @@ public class Main {
             "-regex                            nfa to regex\n" +
             "-lexer [-out <path>] [-package <pkg>] [-lexerClass <cls>] [-lexerFunc <func>] [-tokenClass <cls>]  generates just lexer\n" +
             "-desc [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates LL(1) recursive descent parser\n" +
+            "-lldfa [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates LL(1) recursive descent parser\n" +
             "-lalr [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lalr parser" +
             "-lr1 [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lr(1) parser" +
             "-lr0 [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lr(0) parser" +
@@ -247,7 +249,7 @@ public class Main {
                     generator.dfa.dot(new FileWriter(new File(tree.options.outDir, Utils.newName(input.getName(), "dot"))));
                 }
             }
-            else if (cmd.contains("-desc")) {
+            else if (cmd.contains("-desc") || cmd.contains("-lldfa")) {
                 Tree tree = Tree.makeTree(input);
                 if (output == null) {
                     tree.options.outDir = input.getParent();
@@ -274,7 +276,12 @@ public class Main {
                     tree.options.astClass = astClass;
                 }
                 checkLang(lang);
-                RecDescent.gen(tree, lang);
+                if (cmd.contains("-lldfa")) {
+                    LLDFAGen.gen(tree, lang);
+                }
+                else {
+                    RecDescent.gen(tree, lang);
+                }
             }
             else if (cmd.contains("-lalr") || cmd.contains("-lr1") || cmd.contains("-lr0")) {
                 Tree tree = Tree.makeTree(input);

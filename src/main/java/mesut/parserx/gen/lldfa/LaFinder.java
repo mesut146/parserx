@@ -24,6 +24,10 @@ public class LaFinder extends BaseVisitor<Void, Void> {
         LaFinder finder = new LaFinder(tree);
         finder.ref = ref;
         if (done.containsKey(ref)) return done.get(ref);
+        done.put(ref, finder.set);
+        if (ref.equals(tree.start)) {
+            finder.set.add(LLDfaBuilder.dollar);
+        }
         for (RuleDecl decl : tree.rules) {
             //if (decl.ref.equals(ref)) continue;
             finder.curRule = decl;
@@ -41,6 +45,9 @@ public class LaFinder extends BaseVisitor<Void, Void> {
                 if (i < seq.size() - 1) {
                     Sequence rest = new Sequence(seq.list.subList(i + 1, seq.size()));
                     set.addAll(FirstSet.tokens(rest, tree));
+                    if (FirstSet.canBeEmpty(rest, tree)) {
+                        set.addAll(computeLa(curRule.ref, tree));
+                    }
                 }
                 match = true;
             }
@@ -52,6 +59,9 @@ public class LaFinder extends BaseVisitor<Void, Void> {
                 }
                 if (i < seq.size() - 1) {
                     Sequence rest = new Sequence(seq.list.subList(i + 1, seq.size()));
+                    if (FirstSet.canBeEmpty(rest, tree)) {
+                        set.addAll(computeLa(curRule.ref, tree));
+                    }
                     set.addAll(FirstSet.tokens(rest, tree));
                 }
             }

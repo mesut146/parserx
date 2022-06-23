@@ -1,12 +1,16 @@
 package parser;
 
 import common.Env;
+import mesut.parserx.gen.FirstSetNode;
+import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.lldfa.LLDFAGen;
 import mesut.parserx.gen.lldfa.LLDfaBuilder;
 import mesut.parserx.gen.lldfa.LaFinder;
+import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -46,13 +50,32 @@ public class LLDfaTest {
         }
     }
 
+    void dump(LLDfaBuilder b) throws IOException {
+        File file = Env.dotFile(Utils.newName(b.tree.file.getName(), ".dump"));
+        b.dump(new PrintWriter(new FileWriter(file)));
+    }
+
     @Test
-    public void dfa() throws Exception {
+    public void parserx() throws Exception {
         Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g"));
         //Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         //LLDFAGen.gen(tree, "java");
-        DescTester.check2(Builder.tree(tree).rule("tree").input("E: a b c;", ""));
+        DescTester.check2(Builder.tree(tree).rule("tree").input(Utils.read(tree.file), ""));
+        LLDfaBuilder builder = new LLDfaBuilder(tree);
+        builder.factor();
+        dump(builder);
+    }
+
+    @Test
+    public void math() throws Exception {
+        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+
+        DescTester.check2(Builder.tree(tree).rule("line").input("a+b*c", ""));
+        LLDfaBuilder builder = new LLDfaBuilder(tree);
+        //builder.factor();
+        dump(builder);
     }
 
     @Test

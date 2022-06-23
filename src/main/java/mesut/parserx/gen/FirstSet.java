@@ -4,10 +4,7 @@ import mesut.parserx.nodes.*;
 
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class FirstSet extends BaseVisitor<Void, Void> {
     Tree tree;
@@ -63,7 +60,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     }
 
     public static Set<Name> tokens(Node node, Tree tree) {
-        Set<Name> res = new HashSet<>();
+        Set<Name> res = new TreeSet<>();
         for (Name name : firstSet(node, tree)) {
             if (name.isToken) {
                 res.add(name);

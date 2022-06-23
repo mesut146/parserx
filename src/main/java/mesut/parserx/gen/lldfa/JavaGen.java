@@ -357,11 +357,22 @@ public class JavaGen {
                 w.append("}");
             }
         }
-        if (!set.transitions.isEmpty()) {
-            //todo print la
+        if (!set.transitions.isEmpty() && set.isStart) {
             w.append("else throw new RuntimeException(\"expecting one of %s got: \"+la);", allLa);
         }
         w.append("}");
+    }
+
+    Map<Set<Name>, List<Item>> collectReduces(ItemSet set) {
+        Map<Set<Name>, List<Item>> map = new HashMap<>();
+        for (var item : set.all) {
+            if (!item.isReduce(tree)) continue;
+            var la = item.lookAhead;
+            var list = map.getOrDefault(la, new ArrayList<>());
+            list.add(item);
+            map.put(la, list);
+        }
+        return map;
     }
 
     private void consumer(Name name, String vname) {
@@ -624,20 +635,22 @@ public class JavaGen {
     }
 
     private void writeReduces(ItemSet set) {
-        for (Item item : set.all) {
-            if (!item.isReduce(tree)) continue;
-            if (item.rule.which == -1) continue;//only alts have assign
-            w.append("if(%s){", JavaRecDescent.loopExpr(item.lookAhead));
-            //String holder = getParam(item.rule.retType);
-            String holder;
-            if (skipHolder) {
-                holder = getParam(item) + ".holder";
+        for (var e : collectReduces(set).entrySet()) {
+            var la = e.getKey();
+            w.append("if(%s){", JavaRecDescent.loopExpr(la));
+            for (Item item : e.getValue()) {
+                if (item.rule.which == -1) continue;//only alts have assign
+                //String holder = getParam(item.rule.retType);
+                String holder;
+                if (skipHolder) {
+                    holder = getParam(item) + ".holder";
+                }
+                else {
+                    holder = getParam(item.rule.retType);
+                }
+                w.append("%s.which = %d;", holder, item.rule.which);
+                w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getParam(item));
             }
-            else {
-                holder = getParam(item.rule.retType);
-            }
-            w.append("%s.which = %d;", holder, item.rule.which);
-            w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getParam(item));
             w.append("}");
         }
     }

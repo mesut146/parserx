@@ -10,6 +10,7 @@ import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.gen.transform.GreedyNormalizer;
 import mesut.parserx.nodes.*;
 
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,7 +48,7 @@ public class LLDfaBuilder {
             if (rhs.isOr()) {
                 int id = 1;
                 for (Node ch : rhs.asOr()) {
-                    ch = plus(ch);
+                    ch = expandPlus(ch);
                     RuleDecl decl = new RuleDecl(rd.ref, ch);
                     decl.retType = rd.retType;
                     decl.which = id++;
@@ -55,7 +56,7 @@ public class LLDfaBuilder {
                 }
             }
             else {
-                rhs = plus(rhs);
+                rhs = expandPlus(rhs);
                 RuleDecl decl = new RuleDecl(rd.ref, rhs);
                 decl.retType = rd.retType;
                 tree.addRule(decl);
@@ -63,7 +64,8 @@ public class LLDfaBuilder {
         }
     }
 
-    Sequence plus(Node node) {
+    //rewrite a+ as a a*
+    Sequence expandPlus(Node node) {
         AstInfo info = node.astInfo;
         Sequence seq = node.isSequence() ? node.asSequence() : new Sequence(node);
         List<Node> list = new ArrayList<>();
@@ -71,7 +73,6 @@ public class LLDfaBuilder {
             if (ch.isPlus()) {
                 Regex rn = ch.asRegex();
                 Node copy = rn.node.copy();
-                //copy.astInfo.isInLoop = true;
                 list.add(copy);
                 Regex star = new Regex(rn.node.copy(), RegexType.STAR);
                 star.astInfo = rn.astInfo.copy();
@@ -146,9 +147,13 @@ public class LLDfaBuilder {
 
         firstSet = new ItemSet(tree, type);
         firstSet.isStart = true;
-        Set<Name> la = LaFinder.computeLa(rule, tree);
+        Set<Name> la;
         if (rule.equals(tree.start)) {
+            la = new HashSet<>();
             la.add(dollar);
+        }
+        else {
+            la = LaFinder.computeLa(rule, tree);
         }
         if (tree.start != null && !rule.equals(tree.start)) {
             //throw new RuntimeException("la need to be computed");
@@ -215,14 +220,10 @@ public class LLDfaBuilder {
             }
             makeTrans(curSet, map);
         }
-        //moveReductions();
-        //mergeFinals();
-        //eliminate();
         findInlined();
         all2.addAll(all);
         rules.put(rule.name, all);
     }
-
 
     boolean canShrink(ItemSet set, Item item, int i) {
         Node node = item.getNode(i);
@@ -291,13 +292,6 @@ public class LLDfaBuilder {
         }
     }
 
-    ItemSet getTarget(ItemSet set, Name sym) {
-        for (Transition tr : set.transitions) {
-            if (tr.symbol.equals(sym)) return tr.target;
-        }
-        return null;
-    }
-
     void sort(List<Item> list) {
         list.sort(Comparator.comparingInt(item -> item.rule.index));
     }
@@ -322,100 +316,7 @@ public class LLDfaBuilder {
         return null;
     }
 
-    public void moveReductions() {
-        Queue<ItemSet> q = new LinkedList<>(all);
-        while (!q.isEmpty()) {
-            Set<Item> toRemove = new HashSet<>();
-            ItemSet set = q.poll();
-            //clear sub reductions, they only needed for reducers
-            for (Iterator<Item> it = set.all.iterator(); it.hasNext(); ) {
-                Item item = it.next();
-                if (!item.isReduce(tree)) continue;
-                if (item.lookAhead.contains(dollar)) continue;
-                if (!item.reduceParent.isEmpty()) {
-                    it.remove();
-                    System.out.println("rem sub = " + item);
-                }
-            }
-            //move parent reductions
-            for (Item it : set.all) {
-                if (!it.isReduce(tree)) continue;
-                if (it.lookAhead.contains(dollar)) continue;
-                moveReduction(set, it, q);
-                if (it.lookAhead.isEmpty()) toRemove.add(it);
-            }
-            for (Item it : toRemove) {
-                for (int i = 0; i < set.all.size(); i++) {
-                    if (it.isSame(set.all.get(i))) {
-                        set.all.remove(i);
-                        set.kernel.remove(it);
-                        System.out.println("deleted " + set.stateId + " " + it);
-                        break;
-                    }
-                }
-            }
-
-        }
-    }
-
-    List<Item> findParents(Item it) {
-        List<Item> parents = new ArrayList<>();
-        if (it.reduceParent.isEmpty()) {
-            parents.add(it);
-            return parents;
-        }
-        for (Item p : it.reduceParent) {
-            parents.addAll(findParents(p));
-        }
-        return parents;
-    }
-
-    void moveReduction(ItemSet set, Item it, Queue<ItemSet> q) {
-        //System.out.println("trace "+it);
-        for (Transition tr : set.transitions) {
-            if (tr.target == set) continue;
-            //if(!tr.symbol.isName()) continue;
-            //System.out.println("sym "+tr.symbol.debug());
-            //copy for each symbol
-            Item cur = new Item(it, it.dotPos);
-            if (tr.symbol.astInfo.isFactor) {
-                ItemSet target = tr.target;
-                System.out.printf("moved %d -> %d %s\n", set.stateId, target.stateId, it);
-                Item it2 = new Item(it, it.dotPos);
-                it2.senders.addAll(it.senders);
-                it.lookAhead.remove(tr.symbol.asName());
-                it2.lookAhead.clear();
-                for (Transition tr2 : target.transitions) {
-                    //todo not all
-                    Name sym = tr2.symbol.isSequence() ? tr2.symbol.asSequence().last().asName() : tr2.symbol.asName();
-                    it2.lookAhead.add(sym);
-                }
-                target.addItem(it2);
-                if (!q.contains(target)) q.add(target);
-                System.out.printf("new = %s\n", it2);
-            }
-            else {
-                Name sym = tr.symbol.isSequence() ? tr.symbol.asSequence().last().asName() : tr.symbol.asName();
-                it.lookAhead.remove(sym);
-                Name s = it.rule.ref.copy();
-                s.name += "$";
-                tr.symbol = seq(s, tr.symbol);
-            }
-        }
-    }
-
-    Sequence seq(Node a, Node b) {
-        if (b.isSequence()) {
-            Sequence s = b.asSequence();
-            s.list.add(0, a);
-            return s;
-        }
-        else {
-            return new Sequence(a, b);
-        }
-    }
-
-    private void findInlined() {
+    public void findInlined() {
         for (ItemSet set : all) {
             if (canBeInlined(set)) {
                 inlined.add(set);
@@ -423,7 +324,7 @@ public class LLDfaBuilder {
         }
     }
 
-    boolean canBeInlined(ItemSet set) {
+    public boolean canBeInlined(ItemSet set) {
         if (countOutgoings(set) == 1) return true;
         //looping through final state
         Set<Integer> visited = new HashSet<>();
@@ -446,23 +347,8 @@ public class LLDfaBuilder {
         return true;
     }
 
-    public void eliminate() {
-        List<ItemSet> toRemove = new ArrayList<>();
-        while (all.size() > 2) {
-            for (ItemSet set : all) {
-                if (set.isStart) continue;
-                if (canBeRemoved2(set)) {
-                    eliminate(set);
-                    toRemove.add(set);
-                }
-            }
-            if (toRemove.isEmpty()) break;
-            toRemove.forEach(all::remove);
-            toRemove.clear();
-        }
-    }
 
-    int countOutgoings(ItemSet set) {
+    public static int countOutgoings(ItemSet set) {
         int cnt = 0;
         for (Transition tr : set.transitions) {
             if (tr.target.stateId != set.stateId) cnt++;
@@ -470,33 +356,7 @@ public class LLDfaBuilder {
         return cnt;
     }
 
-    boolean canBeRemoved2(ItemSet set) {
-        System.out.println("canBeRemoved2 " + set.stateId);
-        if (countOutgoings(set) != 1) return false;
-
-        if (hasFinal(set)) return false;
-        //looping through final state
-        Set<Integer> visited = new HashSet<>();
-        Queue<ItemSet> queue = new LinkedList<>();
-        for (Transition tr : set.transitions) {
-            if (tr.target != set) {
-                queue.add(tr.target);
-                visited.add(tr.target.stateId);
-            }
-        }
-        //discover
-        while (!queue.isEmpty()) {
-            ItemSet cur = queue.poll();
-            boolean r = reachFinal(cur, set);
-            for (Transition tr : cur.transitions) {
-                if (tr.target == set && r) return false;
-                if (tr.target != set && visited.add(tr.target.stateId)) queue.add(tr.target);
-            }
-        }
-        return true;
-    }
-
-    boolean reachFinal(ItemSet from, ItemSet except) {
+    public boolean reachFinal(ItemSet from, ItemSet except) {
         //System.out.printf("reachFinal %d -> %d\n", from.stateId, except.stateId);
         Set<Integer> visited = new HashSet<>();
         Queue<ItemSet> queue = new LinkedList<>();
@@ -514,93 +374,34 @@ public class LLDfaBuilder {
         return false;
     }
 
-    boolean hasFinal(ItemSet set) {
+    public boolean hasFinal(ItemSet set) {
         for (Item it : set.all) {
             if (it.isReduce(tree) && it.lookAhead.contains(dollar)) return true;
         }
         return false;
     }
 
-    void eliminate(ItemSet set) {
-        System.out.println("eliminate " + set.stateId);
-        Node loop = null;
-        Transition out = null;
-        for (Transition tr : set.transitions) {
-            if (tr.target == set) loop = tr.symbol;
-            else out = tr;
-        }
-        for (Transition in : set.incomings) {
-            in.target = out.target;
-            out.target.incomings.remove(out);
-            if (loop == null) {
-                in.symbol = new Sequence(wrapOr(in.symbol), wrapOr(out.symbol));
-            }
-            else {
-                in.symbol = new Sequence(wrapOr(in.symbol), new Regex(new Group(wrapOr(loop)), RegexType.STAR), wrapOr(out.symbol));
-            }
-        }
-        combine();
-    }
-
-
-    Node wrapOr(Node sym) {
-        if (sym.isOr()) return new Group(sym);
-        return sym;
-    }
-
-    Node loopSym(ItemSet set) {
-        for (Transition tr : set.transitions) {
-            if (tr.target == set) return tr.symbol;
-        }
-        return null;
-    }
-
-    void mergeFinals() {
-        ItemSet ns = new ItemSet(tree, type);
-        for (Iterator<ItemSet> it = all.iterator(); it.hasNext(); ) {
-            ItemSet set = it.next();
-            for (Item item : set.all) {
-                if (item.lookAhead.contains(dollar) && item.isReduce(tree)) {
-                    ns.addAll(set.all);
-                    for (Transition in : set.incomings) {
-                        in.target = ns;
-                        System.out.printf("new1 %d -> %d\n", in.from.stateId, ns.stateId);
-                    }
-                    for (Transition tr : set.transitions) {
-                        tr.from = ns;
-                        ns.addTransition(tr.symbol, tr.target);
-                        System.out.printf("new2 %d -> %d\n", ns.stateId, tr.target.stateId);
-                    }
-                    it.remove();
-                    System.out.printf("final %d\n", set.stateId);
-                    break;
+    public void dump(PrintWriter w) {
+        for (var e : this.rules.entrySet()) {
+            w.println("----------------------------------");
+            w.println("//" + e.getKey());
+            for (var set : e.getValue()) {
+                w.println("----------------------------------");
+                w.printf("S%d\n", set.stateId);
+                for (var item : set.all) {
+                    w.printf("%s\n", item);
+                }
+                w.println();
+                for (var tr : set.transitions) {
+                    w.printf("%s -> %s\n", tr.symbol, tr.target.stateId);
                 }
             }
         }
-        combine();
-        System.out.printf("new final = %d\n", ns.stateId);
-        all.add(ns);
+        w.flush();
+        w.close();
     }
 
-    void combine() {
-        for (ItemSet set : all) {
-            //target -> ors
-            Map<ItemSet, List<Node>> map = new HashMap<>();
-            for (Transition tr : set.transitions) {
-                List<Node> list = map.computeIfAbsent(tr.target, k -> new ArrayList<>());
-                list.add(tr.symbol);
-                tr.target.incomings.remove(tr);
-            }
-            set.transitions.clear();
-            for (ItemSet trg : map.keySet()) {
-                List<Node> list = map.get(trg);
-                Node sym = list.size() == 1 ? list.get(0) : new Or(list);
-                set.addTransition(sym, trg);
-            }
-        }
-    }
-
-    public void dot(java.io.PrintWriter w) {
+    public void dot(PrintWriter w) {
         w.println("digraph G{");
         //w.println("rankdir = TD");
         w.println("size=\"100,100\";");

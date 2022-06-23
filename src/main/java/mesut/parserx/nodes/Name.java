@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 //rule or token symbol
-public class Name extends Node {
+public class Name extends Node implements Comparable<Name> {
 
     public static boolean debug = false;
     public String name;
@@ -40,14 +40,14 @@ public class Name extends Node {
             sb.append(astInfo);
         return sb.toString();
     }
-    
-    public String debug(){
-        boolean d =debug;
+
+    public String debug() {
+        boolean d = debug;
         debug = true;
         String res = toString();
         debug = d;
         return res;
-    }    
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -70,5 +70,12 @@ public class Name extends Node {
     @Override
     public <R, A> R accept(Visitor<R, A> visitor, A arg) {
         return visitor.visitName(this, arg);
+    }
+
+    @Override
+    public int compareTo(Name o) {
+        if (isToken && !o.isToken) return -1;
+        if (!isToken && o.isToken) return 1;
+        return name.compareTo(o.name);
     }
 }

@@ -194,7 +194,7 @@ public class ItemSet {
         for (RuleDecl decl : tree.getRules(node)) {
             Item newItem = new Item(decl, 0);
             if (!type.equals("lr0")) {
-                newItem.lookAhead = new HashSet<>(laList);
+                newItem.lookAhead.addAll(laList);
             }
             newItem.senders.add(sender);
             addOrUpdate(newItem);

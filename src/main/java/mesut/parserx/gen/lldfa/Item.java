@@ -7,7 +7,7 @@ import mesut.parserx.nodes.*;
 import java.util.*;
 
 public class Item {
-    public Set<Name> lookAhead = new HashSet<>();
+    public Set<Name> lookAhead = new TreeSet<>();
     public RuleDecl rule;
     public Sequence rhs;
     public int dotPos;
@@ -35,7 +35,7 @@ public class Item {
 
     public Item(Item item, int dotPos) {
         this(item.rule, dotPos);
-        this.lookAhead = new HashSet<>(item.lookAhead);
+        this.lookAhead.addAll(item.lookAhead);
         this.gotoSet2 = item.gotoSet2;
         this.ids = new HashSet<>(item.ids);
         this.senders.add(item);

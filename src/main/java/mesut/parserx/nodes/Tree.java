@@ -230,9 +230,7 @@ public class Tree {
     //find token by string literal
     public TokenDecl getTokenByValue(String val) {
         for (TokenDecl decl : tokens) {
-            if (isStr(decl.rhs, val)) {
-                return decl;
-            }
+            if (isStr(decl.rhs, val)) return decl;
             else if (decl.rhs.isOr()) {
                 for (Node ch : decl.rhs.asOr()) {
                     if (isStr(ch, val)) {
