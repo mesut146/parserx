@@ -57,7 +57,7 @@ public class ItemSet {
     void gen(Item it, List<Item> list) {
         if (!it.isReduce(tree)) return;
         //is there any transition with my reduce symbol
-        for (ItemSet gt : it.gotoSet2) {
+        for (ItemSet gt : it.gotoSet) {
             for (Item gti : gt.all) {
                 for (int i = gti.dotPos; i < gti.rhs.size(); i++) {
                     if (i > gti.dotPos && !FirstSet.canBeEmpty(gti.getNode(i - 1), tree)) break;
@@ -106,7 +106,7 @@ public class ItemSet {
         }
         for (Item it : all) {
             if (it.dotPos == 0) {
-                it.gotoSet2.add(this);
+                it.gotoSet.add(this);
             }
         }
     }

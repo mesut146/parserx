@@ -11,13 +11,13 @@ public class Item {
     public RuleDecl rule;
     public Sequence rhs;
     public int dotPos;
-    public Set<ItemSet> gotoSet2 = new HashSet<>();
+    public Set<ItemSet> gotoSet = new HashSet<>();
     public boolean[] closured;
-    public List<Item> senders = new ArrayList<>();
+    public List<Item> senders = new ArrayList<>();//prev item
     public List<Item> reduceParent = new ArrayList<>();
     public List<Item> siblings = new ArrayList<>();
     public Item reduceChild;
-    public Set<Integer> ids = new HashSet<>();
+    public Set<Integer> ids = new TreeSet<>();
     public boolean advanced = false;//dot star but advanced
     public static int lastId = 0;
 
@@ -36,7 +36,7 @@ public class Item {
     public Item(Item item, int dotPos) {
         this(item.rule, dotPos);
         this.lookAhead.addAll(item.lookAhead);
-        this.gotoSet2 = item.gotoSet2;
+        this.gotoSet = item.gotoSet;
         this.ids = new HashSet<>(item.ids);
         this.senders.add(item);
         if (item.getNode(item.dotPos).isStar()) {
@@ -45,25 +45,16 @@ public class Item {
         lastId--;
     }
 
-    public static boolean isEpsilon(RuleDecl decl) {
-        Sequence rhs = decl.rhs.asSequence();
-        if (rhs.size() == 1) {
-            return rhs.get(0).isEpsilon();
-        }
+    public boolean isEpsilon() {
+        if (rhs.size() == 1) return rhs.get(0).isEpsilon();
         return false;
     }
 
-    public boolean hasReduce() {
-        //if dot at end we are reducing
-        return getDotSym() == null;
-    }
-
+    //dot end or rest is empty
     public boolean isReduce(Tree tree) {
         for (int i = dotPos; i < rhs.size(); i++) {
             Node node = rhs.get(i);
-            if (!Helper.canBeEmpty(node, tree)) {
-                return false;
-            }
+            if (!Helper.canBeEmpty(node, tree)) return false;
         }
         return true;
     }
@@ -136,30 +127,11 @@ public class Item {
         return sb.toString();
     }
 
-    public boolean isEpsilon() {
-        return isEpsilon(rule);
-    }
-
 
     public Node getNode(int pos) {
         Sequence s = rule.rhs.asSequence();
         if (pos < s.size())
             return s.get(pos);
-        return null;
-    }
-
-    //node after dot
-    public Name getDotSym() {
-        Node node = getDotNode();
-        return node == null ? null : (node.isName() ? node.asName() : node.asRegex().node.asName());
-    }
-
-    //node after dot
-    public Node getDotNode() {
-        if (isEpsilon()) return null;
-        if (dotPos < rhs.size()) {
-            return rhs.get(dotPos);
-        }
         return null;
     }
 

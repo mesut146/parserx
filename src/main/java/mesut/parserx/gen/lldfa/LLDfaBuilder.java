@@ -10,6 +10,9 @@ import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.gen.transform.GreedyNormalizer;
 import mesut.parserx.nodes.*;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.logging.Level;
@@ -154,6 +157,9 @@ public class LLDfaBuilder {
         }
         else {
             la = LaFinder.computeLa(rule, tree);
+            if (tree.start == null) {
+                la.add(dollar);
+            }
         }
         if (tree.start != null && !rule.equals(tree.start)) {
             //throw new RuntimeException("la need to be computed");
@@ -161,6 +167,7 @@ public class LLDfaBuilder {
 
         for (RuleDecl rd : tree.getRules(rule)) {
             Item first = new Item(rd, 0);
+            first.gotoSet.add(firstSet);
             //first.lookAhead.add(dollar);
             first.lookAhead.addAll(la);
             firstSet.addItem(first);
@@ -207,14 +214,14 @@ public class LLDfaBuilder {
                         sym = Sequence.make(rhs);
                         target = new Item(item, item.rhs.size());
                         logger.log(Level.FINE, "shrink=" + sym);
-                        target.gotoSet2.add(curSet);
+                        //target.gotoSet.add(curSet);
                         addMap(map, sym, target);
                         break;
                     }
                     else {
                         target = new Item(item, newPos);
                     }
-                    target.gotoSet2.add(curSet);
+                    //target.gotoSet.add(curSet);
                     addMap(map, sym, target);
                 }
             }

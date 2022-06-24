@@ -1,16 +1,12 @@
 package parser;
 
 import common.Env;
-import mesut.parserx.gen.FirstSetNode;
-import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.lldfa.LLDFAGen;
 import mesut.parserx.gen.lldfa.LLDfaBuilder;
 import mesut.parserx.gen.lldfa.LaFinder;
-import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -38,6 +34,7 @@ public class LLDfaTest {
         LLDfaBuilder builder = new LLDfaBuilder(tree);
         builder.factor();
         dot(builder);
+        dump(builder);
     }
 
     @Test
@@ -96,15 +93,28 @@ public class LLDfaTest {
     }
 
     @Test
-    public void sr() throws Exception {
-        DescTester.check(Builder.tree("lldfa/sr.g").rule("E").
-                input("abcdx", "E#1{A{'a'}, C#1{'b'}, 'c', 'd', 'x'}").
-                input("aecdx", "E#1{A{'a'}, C#2{'e'}, 'c', 'd', 'x'}").
-                input("abcdy", "E#2{'a', B{'b'}, 'c', 'd', 'y'}"));
+    public void rightRec() throws Exception {
+        DescTester.check2(Builder.tree("lldfa/right.g").rule("E").
+                input("y", "E#3{'y'}").
+                input("ax", "E#2{'a', 'x'}").
+                input("ay", "E#1{'a', E#3{'y'}}").
+                input("aax", "E#1{'a', E#2{'a', 'x'}}"));
+        DescTester.check2(Builder.tree("lldfa/right-factor.g").rule("A").
+                input("aax", "A#1{['a', 'a'], 'x'}").
+                input("by", "A#2{B#2{'b'}, 'y'}").
+                input("aaby", "A#2{B#1{'a', B#1{'a', B#2{'b'}}}, 'y'}"));
+    }
 
-        DescTester.check(Builder.tree("lldfa/sr2.g").rule("E").
-                input("abcx", "E#1{A{'a', 'b'}, 'c', 'x'}").
-                input("abcy", "E#2{B{'a', 'b', 'c'}, 'y'}"));
+    @Test
+    public void sr() throws Exception {
+//        DescTester.check(Builder.tree("lldfa/sr.g").rule("E").
+//                input("abcdx", "E#1{A{'a'}, C#1{'b'}, 'c', 'd', 'x'}").
+//                input("aecdx", "E#1{A{'a'}, C#2{'e'}, 'c', 'd', 'x'}").
+//                input("abcdy", "E#2{'a', B{'b'}, 'c', 'd', 'y'}"));
+//
+//        DescTester.check(Builder.tree("lldfa/sr2.g").rule("E").
+//                input("abcx", "E#1{A{'a', 'b'}, 'c', 'x'}").
+//                input("abcy", "E#2{B{'a', 'b', 'c'}, 'y'}"));
 
         DescTester.check(Builder.tree("lldfa/sr-loop.g").rule("E").
                 input("abcx", "E#1{[A{C{'a', 'b'}, 'c'}], 'x'}").

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DescTester {
+    public static boolean dump = true;
 
     public static void check(Builder builder) throws Exception {
         File tester = new File(Env.dotDir(), "DescTester.java");
@@ -33,6 +34,9 @@ public class DescTester {
         Tree tree = builder.tree;
         tree.options.outDir = outDir;
         //RecDescent.gen(tree, "java");
+        if (dump) {
+            tree.options.dump = true;
+        }
         LLDFAGen.gen(tree, "java");
 
         File out = new File(outDir, "out");
@@ -83,6 +87,9 @@ public class DescTester {
         Tree tree = builder.tree;
         tree.options.outDir = outDir;
         //RecDescent.gen(tree, "java");
+        if (dump) {
+            tree.options.dump = true;
+        }
         LLDFAGen.gen(tree, "java");
 
         File out = new File(outDir, "out");

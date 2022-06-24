@@ -212,6 +212,7 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
 
         @Override
         public Void visitSequence(Sequence s, Void arg) {
+            nonEmpty = false;
             int backup = cur;
             cur = 0;
             w.append("boolean first = true;");
@@ -219,8 +220,8 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
                 Node ch = s.get(i);
                 ch.accept(this, null);
                 cur++;
-                if (ch.isName()) {
-                    if (!nonEmpty) {
+                if (ch.isName() && i < s.size() - 1) {
+                    if (!nonEmpty) {//is already set
                         w.append("first = false;");
                     }
                     nonEmpty = true;
