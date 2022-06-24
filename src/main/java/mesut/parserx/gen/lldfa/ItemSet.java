@@ -208,7 +208,7 @@ public class ItemSet {
 
     void addOrUpdate(Item item) {
         if (type.equals("lr0")) return;
-        if (!update(item, false)) {
+        if (!update(item, true)) {
             all.add(item);
             closure(item);
         }
@@ -221,9 +221,17 @@ public class ItemSet {
             prev.lookAhead.addAll(item.lookAhead);
             if (updateIds) prev.ids.addAll(item.ids);
             prev.senders.addAll(item.senders);
+            updateChildren(prev);
             return true;
         }
         return false;
+    }
+
+    private void updateChildren(Item prev) {
+        /*for (Item ch : all) {
+            if (!ch.senders.contains(prev)) continue;
+            ch.lookAhead.add()
+        }*/
     }
 
 
