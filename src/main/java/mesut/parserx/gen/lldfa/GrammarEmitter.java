@@ -11,6 +11,24 @@ public class GrammarEmitter {
     Set<ItemSet> all;
     Tree tree;
 
+    public GrammarEmitter(LLDfaBuilder builder) {
+        this.builder = builder;
+        this.tree = builder.tree;
+    }
+
+    public void emit() {
+        for (var e : builder.rules.entrySet()) {
+            if (!e.getKey().equals("E")) continue;
+            all = e.getValue();
+            //moveReductions();
+            //mergeFinals();
+            eliminate();
+            e.setValue(all);
+        }
+        //File file = new File(tree.options.outDir, Utils.newName(tree.file.getName(), "-emit.g"));
+        //builder.dot(null);
+    }
+
     public void moveReductions() {
         Queue<ItemSet> q = new LinkedList<>(all);
         while (!q.isEmpty()) {
@@ -59,6 +77,7 @@ public class GrammarEmitter {
         return parents;
     }
 
+    //move reduction into transition symbol
     public void moveReduction(ItemSet set, Item it, Queue<ItemSet> q) {
         //System.out.println("trace "+it);
         for (Transition tr : set.transitions) {
@@ -105,10 +124,12 @@ public class GrammarEmitter {
     }
 
     public void eliminate() {
+        mergeFinals();
         List<ItemSet> toRemove = new ArrayList<>();
         while (all.size() > 2) {
             for (ItemSet set : all) {
                 if (set.isStart) continue;
+                if (set.stateId == 4) continue;
                 if (canBeRemoved2(set)) {
                     eliminate(set);
                     toRemove.add(set);

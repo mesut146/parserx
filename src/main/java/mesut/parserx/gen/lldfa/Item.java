@@ -15,7 +15,7 @@ public class Item {
     public boolean[] closured;
     public List<Item> senders = new ArrayList<>();//prev item
     public List<Item> reduceParent = new ArrayList<>();
-    public List<Item> siblings = new ArrayList<>();
+    public Set<Item> siblings = new HashSet<>();
     public Item reduceChild;
     public Set<Integer> ids = new TreeSet<>();
     public boolean advanced = false;//dot star but advanced
@@ -39,10 +39,15 @@ public class Item {
         this.gotoSet = item.gotoSet;
         this.ids = new HashSet<>(item.ids);
         this.senders.add(item);
+        this.siblings = item.siblings;
         if (item.getNode(item.dotPos).isStar()) {
             advanced = true;
         }
         lastId--;
+    }
+
+    public boolean isAlt() {
+        return rule.which != -1;
     }
 
     public boolean isEpsilon() {

@@ -202,7 +202,6 @@ public class ItemSet {
         }
         for (Item item : set) {
             item.siblings.addAll(set);
-            item.siblings.remove(item);
         }
     }
 

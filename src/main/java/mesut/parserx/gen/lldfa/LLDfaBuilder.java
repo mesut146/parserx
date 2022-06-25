@@ -10,9 +10,6 @@ import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.gen.transform.GreedyNormalizer;
 import mesut.parserx.nodes.*;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.logging.Level;
@@ -176,7 +173,6 @@ public class LLDfaBuilder {
         }
         for (Item item : firstSet.all) {
             item.siblings.addAll(firstSet.all);
-            item.siblings.remove(item);
         }
 
         all.add(firstSet);
@@ -412,42 +408,45 @@ public class LLDfaBuilder {
         w.println("digraph G{");
         //w.println("rankdir = TD");
         w.println("size=\"100,100\";");
-        for (ItemSet set : all2) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("<");
-            for (Item it : set.all) {
-                String line = it.toString() + " " + it.ids;
-                line = line.replace(">", "&gt;");
-                if (it.isReduce(tree)) {
-                    sb.append("<FONT color=\"blue\">");
-                    sb.append(line);
-                    sb.append("</FONT>");
+        for (var all : rules.values()) {
+            for (ItemSet set : all) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("<");
+                for (Item it : set.all) {
+                    String line = it.toString() + " " + it.ids;
+                    line = line.replace(">", "&gt;");
+                    if (it.isReduce(tree)) {
+                        sb.append("<FONT color=\"blue\">");
+                        sb.append(line);
+                        sb.append("</FONT>");
+                    }
+                    else if (it.dotPos == 0) {
+                        sb.append("<FONT color=\"red\">");
+                        sb.append(line);
+                        sb.append("</FONT>");
+                    }
+                    else {
+                        sb.append(line);
+                    }
+                    sb.append("<BR ALIGN=\"LEFT\"/>");
                 }
-                else if (it.dotPos == 0) {
-                    sb.append("<FONT color=\"red\">");
-                    sb.append(line);
-                    sb.append("</FONT>");
+                sb.append(">");
+                w.printf("%s [shape=box xlabel=\"%s\" label=%s]\n", set.stateId, set.stateId, sb);
+                for (Transition tr : set.transitions) {
+                    StringBuilder sb2 = new StringBuilder();
+                    if (tr.symbol.astInfo.isFactor) {
+                        sb2.append("<<FONT color=\"green\">");
+                        sb2.append(tr.symbol);
+                        sb2.append("</FONT>>");
+                    }
+                    else {
+                        sb2.append("\"").append(tr.symbol).append("\"");
+                    }
+                    w.printf("%s -> %s [label=%s]\n", set.stateId, tr.target.stateId, sb2);
                 }
-                else {
-                    sb.append(line);
-                }
-                sb.append("<BR ALIGN=\"LEFT\"/>");
-            }
-            sb.append(">");
-            w.printf("%s [shape=box xlabel=\"%s\" label=%s]\n", set.stateId, set.stateId, sb);
-            for (Transition tr : set.transitions) {
-                StringBuilder sb2 = new StringBuilder();
-                if (tr.symbol.astInfo.isFactor) {
-                    sb2.append("<<FONT color=\"green\">");
-                    sb2.append(tr.symbol);
-                    sb2.append("</FONT>>");
-                }
-                else {
-                    sb2.append("\"").append(tr.symbol).append("\"");
-                }
-                w.printf("%s -> %s [label=%s]\n", set.stateId, tr.target.stateId, sb2);
             }
         }
+
         w.println("\n}");
         w.close();
     }

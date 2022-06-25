@@ -1,6 +1,7 @@
 package parser;
 
 import common.Env;
+import mesut.parserx.gen.lldfa.GrammarEmitter;
 import mesut.parserx.gen.lldfa.LLDFAGen;
 import mesut.parserx.gen.lldfa.LLDfaBuilder;
 import mesut.parserx.gen.lldfa.LaFinder;
@@ -41,8 +42,7 @@ public class LLDfaTest {
     public void all() throws IOException {
         File dir = new File(Env.dir, "src/test/resources/lldfa");
         for (String s : dir.list()) {
-            if (s.equals("greedy-loop.g")) continue;
-            if (s.equals("greedy-loop2.g")) continue;
+            if (s.startsWith("greedy")) continue;
             single("lldfa/" + s);
         }
     }
@@ -149,6 +149,19 @@ public class LLDfaTest {
                 input("ay", "E#2{'a', 'y'}").
                 input("zpt", "E#3{A{'z'}, [B#1{'p'}, B#2{'t'}]}").
                 input("zptc", "E#3{A{'z'}, [B#1{'p'}, B#2{'t'}], 'c'}"));
+    }
+
+    @Test
+    public void emitter() throws IOException {
+        Tree tree = Env.tree("lldfa/factor.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        LLDfaBuilder builder = new LLDfaBuilder(tree);
+        builder.factor();
+        GrammarEmitter emitter = new GrammarEmitter(builder);
+        emitter.emit();
+        tree.file = new File(tree.file.getParent(), Utils.newName(tree.file.getName(), "-emit.g"));
+        builder.tree = tree;
+        dot(builder);
     }
 
     @Test
