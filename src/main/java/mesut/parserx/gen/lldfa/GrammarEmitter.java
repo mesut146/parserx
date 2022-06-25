@@ -20,9 +20,9 @@ public class GrammarEmitter {
         for (var e : builder.rules.entrySet()) {
             if (!e.getKey().equals("E")) continue;
             all = e.getValue();
-            //moveReductions();
+            moveReductions();
             //mergeFinals();
-            eliminate();
+            //eliminate();
             e.setValue(all);
         }
         //File file = new File(tree.options.outDir, Utils.newName(tree.file.getName(), "-emit.g"));
@@ -85,7 +85,7 @@ public class GrammarEmitter {
             //if(!tr.symbol.isName()) continue;
             //System.out.println("sym "+tr.symbol.debug());
             //copy for each symbol
-            Item cur = new Item(it, it.dotPos);
+            //Item cur = new Item(it, it.dotPos);
             if (tr.symbol.astInfo.isFactor) {
                 ItemSet target = tr.target;
                 System.out.printf("moved %d -> %d %s\n", set.stateId, target.stateId, it);
@@ -106,7 +106,7 @@ public class GrammarEmitter {
                 Name sym = tr.symbol.isSequence() ? tr.symbol.asSequence().last().asName() : tr.symbol.asName();
                 it.lookAhead.remove(sym);
                 Name s = it.rule.ref.copy();
-                s.name += "$";
+                s.name += "()";
                 tr.symbol = seq(s, tr.symbol);
             }
         }
