@@ -9,11 +9,12 @@ import mesut.parserx.gen.transform.FactorHelper;
 import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.gen.transform.GreedyNormalizer;
 import mesut.parserx.nodes.*;
+import mesut.parserx.utils.Debug;
 
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.logging.Formatter;
+import java.util.logging.*;
 
 public class LLDfaBuilder {
     public Name rule;
@@ -34,7 +35,21 @@ public class LLDfaBuilder {
     public LLDfaBuilder(Tree tree) {
         this.ebnf = tree;
         ItemSet.lastId = Item.lastId = 0;
+        initLog();
+    }
+
+    private void initLog() {
         logger.setLevel(Level.ALL);
+        var handler = new ConsoleHandler();
+        handler.setLevel(Level.ALL);
+        handler.setFormatter(new Formatter() {
+            @Override
+            public String format(LogRecord record) {
+                return formatMessage(record) + "\n";
+                //return record.getMessage() + "\n";
+            }
+        });
+        logger.addHandler(handler);
     }
 
     void prepare() {
@@ -96,6 +111,9 @@ public class LLDfaBuilder {
                 rule = rd.ref;
                 build();
             }
+        }
+        if (tree.options.dump) {
+            Debug.dot(tree, this);
         }
     }
 
@@ -180,10 +198,12 @@ public class LLDfaBuilder {
 
         while (!queue.isEmpty()) {
             ItemSet curSet = queue.poll();
+            if (curSet.stateId == 8) break;
             //if (log) System.out.println("curSet = " + curSet.stateId);
             logger.log(Level.FINE, "curSet = " + curSet.stateId);
             //closure here because it needs all items
             curSet.closure();
+            //curSet.addAll(curSet.genReduces());
             Map<Node, List<Item>> map = new HashMap<>();
             for (Item item : curSet.all) {
                 //System.out.println("item = " + item);
@@ -272,13 +292,14 @@ public class LLDfaBuilder {
             ItemSet targetSet = new ItemSet(tree, type);
             targetSet.addAll(list);
             targetSet.addAll(targetSet.genReduces());
+            targetSet.alreadyGenReduces = true;
 
             ItemSet sim = findSimilar(new ArrayList<>(targetSet.kernel));
             if (sim != null) {
                 ItemSet.lastId--;
                 //merge lookaheads
                 for (Item it : targetSet.all) {
-                    sim.update(it, true);
+                    sim.update(it, true, true);
                 }
                 targetSet = sim;
             }
@@ -291,7 +312,7 @@ public class LLDfaBuilder {
             }
             targetSet.symbol = sym;
             curSet.addTransition(sym, targetSet);
-            logger.log(Level.FINE, String.format("trans %d -> %d with %s\n", curSet.stateId, targetSet.stateId, sym));
+            logger.log(Level.FINE, String.format("trans %d -> %d with %s", curSet.stateId, targetSet.stateId, sym));
         }
     }
 
@@ -413,7 +434,7 @@ public class LLDfaBuilder {
                 StringBuilder sb = new StringBuilder();
                 sb.append("<");
                 for (Item it : set.all) {
-                    String line = it.toString() + " " + it.ids;
+                    String line = it.toString();
                     line = line.replace(">", "&gt;");
                     if (it.isReduce(tree)) {
                         sb.append("<FONT color=\"blue\">");

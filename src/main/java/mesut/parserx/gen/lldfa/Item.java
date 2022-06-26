@@ -90,6 +90,7 @@ public class Item {
             sb.append(" , ");
             sb.append(NodeList.join(new ArrayList<>(lookAhead), "/"));
         }
+        sb.append(" ").append(ids);
         return sb.toString();
     }
 
@@ -129,6 +130,7 @@ public class Item {
                 if (it.hasNext()) sb.append("/");
             }
         }
+        sb.append(" ").append(ids);
         return sb.toString();
     }
 

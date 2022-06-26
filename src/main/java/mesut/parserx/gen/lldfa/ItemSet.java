@@ -17,13 +17,14 @@ public class ItemSet {
     public Set<Item> kernel = new HashSet<>();
     public List<Item> all = new ArrayList<>();
     public boolean isStart = false;
-    public int stateId = -1;
+    public int stateId;
     public static int lastId = 0;
     public String type;
     Tree tree;
     public List<Transition> transitions = new ArrayList<>();
     public List<Transition> incomings = new ArrayList<>();
     public Node symbol;
+    boolean alreadyGenReduces = false;
 
     public ItemSet(Tree tree, String type) {
         this.tree = tree;
@@ -100,7 +101,9 @@ public class ItemSet {
     }
 
     public void closure() {
-        addAll(genReduces());
+        if (!alreadyGenReduces)
+            addAll(genReduces());
+        alreadyGenReduces = true;
         for (Item item : kernel) {
             closure(item);
         }
@@ -207,19 +210,20 @@ public class ItemSet {
 
     void addOrUpdate(Item item) {
         if (type.equals("lr0")) return;
-        if (!update(item, true)) {
+        if (!update(item, true, false)) {
             all.add(item);
             closure(item);
         }
     }
 
-    public boolean update(Item item, boolean updateIds) {
+    public boolean update(Item item, boolean updateIds, boolean updateGoto) {
         for (Item prev : all) {
             if (!prev.isSame(item)) continue;
             //merge la
             prev.lookAhead.addAll(item.lookAhead);
             if (updateIds) prev.ids.addAll(item.ids);
             prev.senders.addAll(item.senders);
+            prev.gotoSet.addAll(item.gotoSet);
             updateChildren(prev);
             return true;
         }
@@ -234,4 +238,16 @@ public class ItemSet {
     }
 
 
+    @Override
+    public int hashCode() {
+        return stateId;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj.getClass() != ItemSet.class) return false;
+        ItemSet other = (ItemSet) obj;
+        return stateId == other.stateId;
+    }
 }
