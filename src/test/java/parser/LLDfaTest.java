@@ -102,11 +102,13 @@ public class LLDfaTest {
 
     @Test
     public void mid() throws Exception {
-        DescTester.check2(Builder.tree("lldfa/mid.g").rule("E").
-                input("cx", "E#1{A#2{'c'}, 'x'}").
-                input("acbx", "E#1{A#1{'a', A#2{'c'}, 'b'}, 'x'}").
-                input("aacbbx", "E#1{A#1{'a', A#2{'c'}, 'b'}, 'x'}").
-                input("aay", "E#2{['a', 'a'], 'y'}"));
+        Builder.tree("lldfa/mid2.g").rule("E").input("acedbx", "").check();
+        Builder.tree("lldfa/mid.g").rule("E").
+//                input("cx", "E#1{A#2{'c'}, 'x'}").
+//                input("acbx", "E#1{A#1{'a', A#2{'c'}, 'b'}, 'x'}").
+        input("aacbbx", "").
+                input("aay", "E#2{['a', 'a'], 'y'}").
+                check();
     }
 
     @Test

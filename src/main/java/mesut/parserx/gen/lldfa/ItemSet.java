@@ -36,6 +36,7 @@ public class ItemSet {
         if (!all.contains(item)) {
             kernel.add(item);
             all.add(item);
+            item.itemSet = this;
         }
     }
 
@@ -212,6 +213,7 @@ public class ItemSet {
         if (type.equals("lr0")) return;
         if (!update(item, true, false)) {
             all.add(item);
+            item.itemSet = this;
             closure(item);
         }
     }
@@ -221,7 +223,12 @@ public class ItemSet {
             if (!prev.isSame(item)) continue;
             //merge la
             prev.lookAhead.addAll(item.lookAhead);
-            if (updateIds) prev.ids.addAll(item.ids);
+            if (updateIds) {
+                prev.ids.addAll(item.ids);
+                for (Item sender : prev.senders) {
+                    sender.ids.addAll(item.ids);
+                }
+            }
             prev.senders.addAll(item.senders);
             prev.gotoSet.addAll(item.gotoSet);
             updateChildren(prev);

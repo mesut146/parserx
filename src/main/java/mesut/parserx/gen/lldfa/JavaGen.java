@@ -4,7 +4,6 @@ import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.RecDescent;
-import mesut.parserx.gen.ll.Type;
 import mesut.parserx.gen.targets.JavaRecDescent;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
@@ -429,7 +428,7 @@ public class JavaGen {
 //                }
 //            }
             if (!takeover) {
-                String name = getLocal(prm.item, sym);//local has priority
+                String name = getLocal(prm.item, sym, false);//local has priority
                 if (name == null) name = getParam(prm.item);
                 sb.append(name);
             }
@@ -485,12 +484,15 @@ public class JavaGen {
 //        return null;
 //    }
 
-    String getLocal(Item item, Node sym) {
+    String getLocal(Item item, Node sym, boolean exact) {
         if (!nameMap.containsKey(curSet.stateId)) return null;
         var map = nameMap.get(curSet.stateId);
         if (map.containsKey(sym)) {
             for (Variable v : map.get(sym)) {
-                if (v.item != null && sameItem(v.item, item)) return v.name;
+                if (v.item == null) continue;
+                if (exact && v.item.equals(item) && v.item.ids.equals(item.ids) || !exact && sameItem(v.item, item)) {
+                    return v.name;
+                }
             }
         }
         return null;
@@ -510,22 +512,19 @@ public class JavaGen {
         return null;
     }
 
-    String getParam(Type type) {
-        for (Variable v : paramMap.get(curSet.stateId)) {
-            if (v.type.equals(type)) {
-                return v.name;
-            }
-        }
-        return null;
+    String getExact(Item item, Node sym) {
+        String res = getLocal(item, sym, true);
+        if (res == null) res = getParam(item);
+        if (res == null) throw new RuntimeException();
+        return res;
     }
 
+
     String getBoth(Item item, Node sym) {
-        if (sym == null) return getParam(item);
-        String res = getLocal(item, sym);
+        String res = getLocal(item, sym, false);
         if (res == null) res = getParam(item);
-        if (res == null) {
-            throw new RuntimeException();
-        }
+
+        if (res == null) throw new RuntimeException();
         return res;
     }
 
@@ -580,7 +579,7 @@ public class JavaGen {
             if (item.advanced) continue;
             //no alt
             if (!item.isAlt()) {
-                String name = getLocal(item, sym);
+                String name = getLocal(item, sym, false);
                 for (Item sender : item.senders) {
                     Name node = has(sender, item.rule.ref);
                     String senderName = getBoth(sender, sym);
@@ -593,7 +592,7 @@ public class JavaGen {
                     done.add(item.rule.baseName());
                     for (Item sender : item.senders) {
                         Name node = has(sender, item.rule.ref);
-                        String senderName = getBoth(sender, sym);
+                        String senderName = getExact(sender, sym);
                         String name = holderVar(item, sym);
                         assignStr(w, senderName, name, node);
                     }
@@ -614,6 +613,7 @@ public class JavaGen {
 
 
     String getHolder(Item item, Node sym) {
+        if (sym == null) return getParam(item) + ".holder";
         return getBoth(item, sym) + ".holder";
     }
 

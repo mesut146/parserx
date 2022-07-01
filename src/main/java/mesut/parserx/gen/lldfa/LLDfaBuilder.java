@@ -198,7 +198,6 @@ public class LLDfaBuilder {
 
         while (!queue.isEmpty()) {
             ItemSet curSet = queue.poll();
-            if (curSet.stateId == 8) break;
             //if (log) System.out.println("curSet = " + curSet.stateId);
             logger.log(Level.FINE, "curSet = " + curSet.stateId);
             //closure here because it needs all items
@@ -307,6 +306,9 @@ public class LLDfaBuilder {
                 all.add(targetSet);
                 queue.add(targetSet);
             }
+            /*for (Item item : list) {
+                item.itemSet = targetSet;
+            }*/
             if (targetSet.symbol != null && !targetSet.symbol.equals(sym)) {
                 //throw new RuntimeException("invalid state: multi symbol");
             }

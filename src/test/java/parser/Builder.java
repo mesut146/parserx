@@ -47,4 +47,8 @@ public class Builder {
         cases.add(info);
         return this;
     }
+
+    public void check() throws Exception {
+        DescTester.check2(this);
+    }
 }

@@ -19,6 +19,7 @@ public class Item {
     public Item reduceChild;
     public Set<Integer> ids = new TreeSet<>();
     public boolean advanced = false;//dot star but advanced
+    public ItemSet itemSet;
     public static int lastId = 0;
 
     public Item(RuleDecl rule, int dotPos) {
