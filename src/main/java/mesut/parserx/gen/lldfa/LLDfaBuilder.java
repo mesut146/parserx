@@ -29,27 +29,11 @@ public class LLDfaBuilder {
     public static Name dollar = new Name("$", true);//eof
     Map<String, Set<ItemSet>> rules = new HashMap<>();
     Set<ItemSet> inlined = new HashSet<>();
-    public static Logger logger = Logger.getLogger(LLDfaBuilder.class.getName());
-
+    public static Logger logger = Logger.getLogger("MAIN");
 
     public LLDfaBuilder(Tree tree) {
         this.ebnf = tree;
         ItemSet.lastId = Item.lastId = 0;
-        initLog();
-    }
-
-    private void initLog() {
-        logger.setLevel(Level.ALL);
-        var handler = new ConsoleHandler();
-        handler.setLevel(Level.ALL);
-        handler.setFormatter(new Formatter() {
-            @Override
-            public String format(LogRecord record) {
-                return formatMessage(record) + "\n";
-                //return record.getMessage() + "\n";
-            }
-        });
-        logger.addHandler(handler);
     }
 
     void prepare() {
@@ -141,7 +125,6 @@ public class LLDfaBuilder {
 
                 Node a = seq.get(i).copy();
                 Node b = seq.get(i + 1).copy();
-                if (a.astInfo.isFactored) continue;
                 GreedyNormalizer.TailInfo sym = GreedyNormalizer.hasGreedyTail(a, FirstSet.firstSet(b, tree), tree, new FactorLoop(tree, new Factor(tree)));
                 if (sym != null) {
                     throw new RuntimeException(seq + " has greediness");
@@ -309,9 +292,6 @@ public class LLDfaBuilder {
             /*for (Item item : list) {
                 item.itemSet = targetSet;
             }*/
-            if (targetSet.symbol != null && !targetSet.symbol.equals(sym)) {
-                //throw new RuntimeException("invalid state: multi symbol");
-            }
             targetSet.symbol = sym;
             curSet.addTransition(sym, targetSet);
             logger.log(Level.FINE, String.format("trans %d -> %d with %s", curSet.stateId, targetSet.stateId, sym));
@@ -319,7 +299,12 @@ public class LLDfaBuilder {
     }
 
     void sort(List<Item> list) {
-        list.sort(Comparator.comparingInt(item -> item.rule.index));
+        list.sort((i1, i2) -> {
+            if (i1.rule.index == i2.rule.index) {
+                return Integer.compare(i1.dotPos, i2.dotPos);
+            }
+            return Integer.compare(i1.rule.index, i2.rule.index);
+        });
     }
 
     //find a set that has same kernel
@@ -429,8 +414,9 @@ public class LLDfaBuilder {
 
     public void dot(PrintWriter w) {
         w.println("digraph G{");
-        //w.println("rankdir = TD");
-        w.println("size=\"100,100\";");
+        w.println("rankdir = TD");
+        //w.println("size=\"6,5\";");
+        w.println("ratio=\"fill\";");
         for (var all : rules.values()) {
             for (ItemSet set : all) {
                 StringBuilder sb = new StringBuilder();

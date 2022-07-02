@@ -4,16 +4,16 @@ import mesut.parserx.dfa.Alphabet;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.nodes.Bracket;
 import mesut.parserx.nodes.StringNode;
-import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Files;
 
 public class NfaVisitor {
 
     public static NFA make(File file) throws IOException {
-        return make(Utils.read(file));
+        return make(Files.readString(file.toPath()));
     }
 
     public static NFA make(String string) throws IOException {

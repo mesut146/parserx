@@ -13,6 +13,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LLDfaTest {
 
@@ -39,7 +41,7 @@ public class LLDfaTest {
 
     @Test
     public void all() throws IOException {
-        File dir = new File(Env.dir, "src/test/resources/lldfa");
+        File dir = new File("./src/test/resources/lldfa");
         for (String s : dir.list()) {
             if (s.startsWith("greedy")) continue;
             single("lldfa/" + s);
@@ -53,11 +55,10 @@ public class LLDfaTest {
 
     @Test
     public void parserx() throws Exception {
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g"));
-        //Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
+        Tree tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         //LLDFAGen.gen(tree, "java");
-        DescTester.check2(Builder.tree(tree).rule("tree").input(Utils.read(tree.file), ""));
+        Builder.tree(tree).rule("tree").input(Utils.read(tree.file), "").check();
         LLDfaBuilder builder = new LLDfaBuilder(tree);
         builder.factor();
         dump(builder);
@@ -76,7 +77,7 @@ public class LLDfaTest {
 
     @Test
     public void computeLa() {
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g"));
+        Tree tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
         System.out.println(LaFinder.computeLa(new Name("regex"), tree));
     }
 
@@ -102,7 +103,10 @@ public class LLDfaTest {
 
     @Test
     public void mid() throws Exception {
-        Builder.tree("lldfa/mid2.g").rule("E").input("acedbx", "").check();
+        Utils.initLogger();
+        Logger.getLogger("MAIN").setLevel(Level.OFF);
+        Builder.tree("lldfa/mid2.g").rule("E").
+                input("acedbx", "").check();
         Builder.tree("lldfa/mid.g").rule("E").
 //                input("cx", "E#1{A#2{'c'}, 'x'}").
 //                input("acbx", "E#1{A#1{'a', A#2{'c'}, 'b'}, 'x'}").
@@ -143,7 +147,7 @@ public class LLDfaTest {
 
     @Test
     public void multi() throws Exception {
-        DescTester.check2(Builder.tree("lldfa/multi-sym.g").rule("E").
+        Builder.tree("lldfa/multi-sym.g").rule("E").
                 input("ax", "E#1{'a', 'x'}").
                 input("ay", "E#2{'a', 'y'}").
                 input("zpt", "E#3{A{'z'}, [B#1{'p'}, B#2{'t'}]}").
@@ -151,7 +155,7 @@ public class LLDfaTest {
                 rule("F").
                 input("abx", "F#1{'a', 'b', 'x'}").
                 input("bx", "F#1{'b', 'x'}").
-                input("by", "F#2{'b', 'y'}"));
+                input("by", "F#2{'b', 'y'}").check();
     }
 
     @Test

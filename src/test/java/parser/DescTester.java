@@ -28,8 +28,7 @@ public class DescTester {
 
     public static void check(Builder builder) throws Exception {
         File tester = new File(Env.dotDir(), "DescTester.java");
-        Utils.write(Utils.read(Env.getResFile("DescTester.java.1")), tester);
-
+        Utils.copy(Env.getResFile("DescTester.java.1"), tester);
         String outDir = Env.dotDir().getAbsolutePath();
         Tree tree = builder.tree;
         tree.options.outDir = outDir;
@@ -81,8 +80,7 @@ public class DescTester {
 
     public static void check2(Builder builder) throws Exception {
         File tester = new File(Env.dotDir(), "DescTester.java");
-        Utils.write(Utils.read(Env.getResFile("DescTester.java.2")), tester);
-
+        Utils.copy(Env.getResFile("DescTester.java.2"), tester);
         String outDir = Env.dotDir().getAbsolutePath();
         Tree tree = builder.tree;
         tree.options.outDir = outDir;
@@ -132,8 +130,7 @@ public class DescTester {
 
     public static void check(Tree tree, String rule, String... in) throws Exception {
         File tester = new File(Env.dotDir(), "DescTester.java");
-        Utils.write(Utils.read(Env.getResFile("DescTester.java.1")), tester);
-
+        Utils.copy(Env.getResFile("DescTester.java.1"), tester);
         String outDir = Env.dotDir().getAbsolutePath();
         tree.options.outDir = outDir;
         //RecDescent.gen(tree, "java");
@@ -175,8 +172,7 @@ public class DescTester {
 
     public static List<Object> checkWithUrl(Tree tree, String rule, String... in) throws Exception {
         File tester = new File(Env.dotDir(), "DescTester.java");
-        Utils.write(Utils.read(Env.getResFile("DescTester.java.2")), tester);
-
+        Utils.copy(Env.getResFile("DescTester.java.2"), tester);
         String outDir = Env.dotDir().getAbsolutePath();
         tree.options.outDir = outDir;
         RecDescent.gen(tree, "java");

@@ -5,8 +5,10 @@ import mesut.parserx.parser.AstBuilder;
 import mesut.parserx.regex.parser.RegexVisitor;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.*;
 
 public class Utils {
 
@@ -95,12 +97,33 @@ public class Utils {
         return read(new FileInputStream(file));
     }
 
+    public static void copy(File src, File target) throws IOException {
+        System.out.println("writing " + target);
+        target.getParentFile().mkdirs();
+        Files.deleteIfExists(target.toPath());
+        Files.copy(src.toPath(), target.toPath());
+    }
+
     public static void write(String data, File file) throws IOException {
         System.out.println("writing " + file);
         file.getParentFile().mkdirs();
         FileWriter wr = new FileWriter(file);
         wr.write(data);
         wr.close();
+    }
+
+    public static void initLogger() {
+        Logger logger = Logger.getLogger("MAIN");
+        logger.setLevel(Level.ALL);
+        var handler = new ConsoleHandler();
+        handler.setLevel(Level.ALL);
+        handler.setFormatter(new Formatter() {
+            @Override
+            public String format(LogRecord record) {
+                return formatMessage(record) + "\n";
+            }
+        });
+        logger.addHandler(handler);
     }
 
 }

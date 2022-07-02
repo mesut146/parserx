@@ -13,7 +13,7 @@ public class RealTest {
 
     public static void check(Tree tree, String... in) throws Exception {
         File tester = new File(Env.dotDir(), "LexerTester.java");
-        Utils.write(Utils.read(Env.getResFile("LexerTester.java.1")), tester);
+        Utils.write(Files.readString(Env.getResFile("LexerTester.java.1").toPath()), tester);
 
         String outDir = Env.dotDir().getAbsolutePath();
         tree.options.outDir = outDir;

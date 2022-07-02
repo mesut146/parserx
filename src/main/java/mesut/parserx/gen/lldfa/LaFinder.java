@@ -20,7 +20,6 @@ public class LaFinder extends BaseVisitor<Void, Void> {
     }
 
     public static Set<Name> computeLa(Name ref, Tree tree) {
-        System.out.println("computeLa " + ref);
         LaFinder finder = new LaFinder(tree);
         finder.ref = ref;
         if (done.containsKey(ref)) return done.get(ref);

@@ -5,7 +5,7 @@ import mesut.parserx.gen.ll.Type;
 import java.util.Set;
 
 public class Variable {
-    public Set<Item> children;//this is holder
+    public Set<Item> children;//children of holder
     Type type;
     String name;
     Item item;

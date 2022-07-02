@@ -1,7 +1,6 @@
 package parser;
 
 import common.Env;
-import mesut.parserx.gen.FirstSetNode;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.lr.LrDFAGen;
@@ -87,13 +86,9 @@ public class LLGenTest {
     @Ignore
     public void parserx() throws Exception {
         Factor.debug = true;
-        String file = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g";
-        Tree tree = Tree.makeTree(new File(file));
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-
-        DescTester.check(tree, "tree", Utils.read(Env.getResFile("pred.g")));
+        Tree tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
+        Builder.tree(tree).rule("tree").input(Utils.read(Env.getResFile("pred.g")), "");
     }
-
 
     @Test
     public void recursion() throws Exception {

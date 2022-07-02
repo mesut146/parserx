@@ -23,7 +23,6 @@ public class JavaGen {
     Map<Integer, Map<Node, List<Variable>>> nameMap = new HashMap<>();
     Map<Integer, List<Variable>> paramMap = new HashMap<>();
     ItemSet curSet;
-    static boolean skipHolder = true;
     private Set<Item> preReduced = new HashSet<>();
 
     public JavaGen(Tree tree) {
@@ -206,13 +205,7 @@ public class JavaGen {
                 for (Item item : list) {
                     Name node = has(item, sym);
                     if (node == null) continue;
-                    if (node.astInfo.isInLoop) {
-                        w.append("%s.%s.add(la);", getBoth(item, sym), node.astInfo.varName);
-                    }
-                    else {
-                        //assignStr(w, getBoth(item, sym), "la", node);
-                        w.append("%s.%s = la;", getBoth(item, sym), node.astInfo.varName);
-                    }
+                    assignStr(w, getBoth(item, sym), "la", node);
                 }
                 //preReduce(sym);
                 //get next la
@@ -220,14 +213,6 @@ public class JavaGen {
                 w.append("la = lexer.%s();", options.lexerFunction);
                 //inline target reductions
                 handleTarget(sym, tr.target);
-                if (set.isStart) {
-                    for (Variable v : nameMap.get(set.stateId).get(sym)) {
-                        if (/*v.item == null &&*/ v.type.equals(rule.retType)) {
-                            w.append("return %s;", v.name);
-                            break;
-                        }
-                    }
-                }
                 w.append("}");//if
             }
             else {
@@ -297,14 +282,6 @@ public class JavaGen {
 
                 //inline target reductions
                 handleTarget(sym, tr.target);
-                if (set.isStart) {
-                    for (Variable v : nameMap.get(set.stateId).get(sym)) {
-                        if (/*v.item == null &&*/ v.type.equals(rule.retType)) {
-                            w.append("return %s;", v.name);
-                            break;
-                        }
-                    }
-                }
                 w.append("}");
             }
         }
@@ -313,6 +290,62 @@ public class JavaGen {
         }
         w.append("}");
     }
+
+    void initParams() {
+        for (String ruleName : builder.rules.keySet()) {
+            rule = tree.getRule(ruleName);
+            for (ItemSet set : builder.rules.get(ruleName)) {
+                for (var tr : set.transitions) {
+                    var sym = tr.symbol;
+                    createNodes2(set.all, sym);
+                }
+            }
+        }
+    }
+
+    private void createNodes2(List<Item> list, Node sym) {
+        List<Variable> vars = new ArrayList<>();
+        Set<String> done = new HashSet<>();
+        int cnt = 0;
+        Map<Item, String> holderMap = new HashMap<>();
+        for (Item item : list) {
+            if (item.dotPos != 0) continue;
+            if (item.advanced) continue;
+            if (!item.isAlt()) {
+                String name = "v" + cnt++;
+                vars.add(new Variable(item.rule.retType, name, item));
+                w.append("%s %s = new %s();", item.rule.retType, name, item.rule.retType);
+            }
+            else {
+                //parent
+                if (!done.contains(item.rule.baseName())) {
+                    String pname = "v" + cnt++;
+                    vars.add(new Variable(item.rule.retType, pname, item.siblings));
+                    done.add(item.rule.baseName());
+                    w.append("%s %s = new %s();", item.rule.retType, pname, item.rule.retType);
+                    holderMap.put(item, pname);
+                }
+                //alt
+                String name = "v" + cnt++;
+                String pname = holderMap.get(item);
+                //can use getHolder maybe?
+                if (pname == null) {
+                    for (Item sib : holderMap.keySet()) {
+                        if (item.siblings.contains(sib)) {
+                            pname = holderMap.get(sib);
+                            break;
+                        }
+                    }
+                }
+                vars.add(new Variable(item.rule.rhs.astInfo.nodeType, name, item));
+                w.append("%s %s = new %s();", item.rule.rhs.astInfo.nodeType, name, item.rule.rhs.astInfo.nodeType);
+                w.append("%s.holder = %s;", name, pname);
+            }
+        }
+        Map<Node, List<Variable>> map = nameMap.computeIfAbsent(curSet.stateId, k -> new HashMap<>());
+        map.put(sym, vars);
+    }
+
 
     private void handleTarget(Node sym, ItemSet target) {
         if (target.transitions.isEmpty()) {
@@ -333,6 +366,14 @@ public class JavaGen {
                     for (String line : to.sb.toString().split("\n")) {
                         w.append(line);
                     }
+                }
+            }
+        }
+        if (curSet.isStart) {
+            for (Variable v : nameMap.get(curSet.stateId).get(sym)) {
+                if (v.type.equals(rule.retType)) {
+                    w.append("return %s;", v.name);
+                    break;
                 }
             }
         }
@@ -376,6 +417,45 @@ public class JavaGen {
         return !set.isEmpty();
     }
 
+    //can we reach its reduction, if not don't carry it anymore
+    boolean isReachable(Item item) {
+        Item reducer = new Item(item, item.rhs.size());
+        Queue<ItemSet> queue = new LinkedList<>();
+        queue.add(curSet);
+        Set<ItemSet> done = new HashSet<>();
+        while (!queue.isEmpty()) {
+            ItemSet set = queue.poll();
+            for (var tr : set.transitions) {
+                for (var it : tr.target.all) {
+                    if (it.isSame(reducer)) {
+                        return true;
+                    }
+                }
+                if (done.add(tr.target)) {
+                    queue.add(tr.target);
+                }
+            }
+        }
+        return false;
+    }
+
+    boolean canPreReduce(Item item, Node sym) {
+        //todo just target state enough?
+        for (var tr : curSet.transitions) {
+            if (tr.symbol.equals(sym)) {
+                //does target state has my sibling
+                for (var trg : tr.target.all) {
+                    for (var sib : item.siblings) {
+                        if (!sib.equals(item) && trg.rule.equals(sib.rule)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     String args(List<Variable> targetParams, Node sym) {
         StringBuilder sb = new StringBuilder();
         int param_cnt = 0;
@@ -396,7 +476,7 @@ public class JavaGen {
         if (nameMap.containsKey(curSet.stateId)) {
             boolean first = true;
             for (Variable v : nameMap.get(curSet.stateId).get(sym)) {
-                if (skipHolder && v.item == null) continue;//skip holder, alt already has ref in it
+                if (v.item == null) continue;//skip holder, alt already has ref in it
                 if (!first || hasParams) sb.append(", ");
                 sb.append(v.name);
                 targetParams.add(new Variable(v.type, "p" + param_cnt++, v.item));
@@ -489,7 +569,7 @@ public class JavaGen {
         var map = nameMap.get(curSet.stateId);
         if (map.containsKey(sym)) {
             for (Variable v : map.get(sym)) {
-                if (v.item == null) continue;
+                if (v.item == null || !v.item.rule.equals(item.rule)) continue;
                 if (exact && v.item.equals(item) && v.item.ids.equals(item.ids) || !exact && sameItem(v.item, item)) {
                     return v.name;
                 }
@@ -505,7 +585,7 @@ public class JavaGen {
     String getParam(Item item) {
         if (!paramMap.containsKey(curSet.stateId)) return null;
         for (Variable v : paramMap.get(curSet.stateId)) {
-            if (v.item != null && sameItem(v.item, item)) {
+            if (v.item != null && v.item.rule.equals(item.rule) && sameItem(v.item, item)) {
                 return v.name;
             }
         }
@@ -523,12 +603,14 @@ public class JavaGen {
     String getBoth(Item item, Node sym) {
         String res = getLocal(item, sym, false);
         if (res == null) res = getParam(item);
-
-        if (res == null) throw new RuntimeException();
+        if (res == null) {
+            return "null";
+            //throw new RuntimeException();
+        }
         return res;
     }
 
-    private void createNodes(List<Item> list, Name sym) {
+    private void createNodes(List<Item> list, Node sym) {
         List<Variable> vars = new ArrayList<>();
         Set<String> done = new HashSet<>();
         int cnt = 0;

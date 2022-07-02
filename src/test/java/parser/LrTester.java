@@ -40,7 +40,7 @@ public class LrTester {
     public static void check0(Tree tree, String name, boolean isAst, List<String> args) throws Exception {
         String cls = name + ".java";
         File tester = new File(Env.dotDir(), cls);
-        Utils.write(Utils.read(Env.getResFile(cls + ".1")), tester);
+        Utils.copy(Env.getResFile(cls + ".1"), tester);
         String outDir = Env.dotDir().getAbsolutePath();
 
         File out = new File(outDir, "out");

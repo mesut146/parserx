@@ -73,6 +73,9 @@ public class Item {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(rule.ref);
+        if (rule.which != -1) {
+            sb.append("#").append(rule.which);
+        }
         sb.append(": ");
         Sequence rhs = rule.rhs.asSequence();
         for (int i = 0; i < rhs.size(); i++) {

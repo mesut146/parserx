@@ -31,7 +31,6 @@ public class Env {
         }
     }
 
-
     public static File getResFile(String name) throws IOException {
         if (!name.startsWith("/")) {
             name = "/" + name;
