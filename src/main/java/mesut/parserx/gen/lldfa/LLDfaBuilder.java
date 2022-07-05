@@ -4,17 +4,19 @@ import mesut.parserx.gen.AstInfo;
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.ll.Normalizer;
+import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorHelper;
 import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.gen.transform.GreedyNormalizer;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Debug;
+import mesut.parserx.utils.Utils;
 
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.logging.Formatter;
-import java.util.logging.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LLDfaBuilder {
     public Name rule;
@@ -23,13 +25,10 @@ public class LLDfaBuilder {
     ItemSet firstSet;
     Map<Name, List<Item>> firstItems = new HashMap<>();
     Set<ItemSet> all;
-    Set<ItemSet> all2 = new HashSet<>();
     Queue<ItemSet> queue = new LinkedList<>();
     String type = "lr1";
-    public static Name dollar = new Name("$", true);//eof
     Map<String, Set<ItemSet>> rules = new HashMap<>();
-    Set<ItemSet> inlined = new HashSet<>();
-    public static Logger logger = Logger.getLogger("MAIN");
+    public static Logger logger = Utils.getLogger();
 
     public LLDfaBuilder(Tree tree) {
         this.ebnf = tree;
@@ -151,12 +150,12 @@ public class LLDfaBuilder {
         Set<Name> la;
         if (rule.equals(tree.start)) {
             la = new HashSet<>();
-            la.add(dollar);
+            la.add(LrDFAGen.dollar);
         }
         else {
             la = LaFinder.computeLa(rule, tree);
             if (tree.start == null) {
-                la.add(dollar);
+                la.add(LrDFAGen.dollar);
             }
         }
         if (tree.start != null && !rule.equals(tree.start)) {
@@ -225,8 +224,6 @@ public class LLDfaBuilder {
             }
             makeTrans(curSet, map);
         }
-        findInlined();
-        all2.addAll(all);
         rules.put(rule.name, all);
     }
 
@@ -325,71 +322,6 @@ public class LLDfaBuilder {
             if (same) return set;
         }
         return null;
-    }
-
-    public void findInlined() {
-        for (ItemSet set : all) {
-            if (canBeInlined(set)) {
-                inlined.add(set);
-            }
-        }
-    }
-
-    public boolean canBeInlined(ItemSet set) {
-        if (countOutgoings(set) == 1) return true;
-        //looping through final state
-        Set<Integer> visited = new HashSet<>();
-        Queue<ItemSet> queue = new LinkedList<>();
-        for (Transition tr : set.transitions) {
-            if (tr.target != set) {
-                queue.add(tr.target);
-                visited.add(tr.target.stateId);
-            }
-        }
-        //discover
-        while (!queue.isEmpty()) {
-            ItemSet cur = queue.poll();
-            boolean r = reachFinal(cur, set);
-            for (Transition tr : cur.transitions) {
-                if (tr.target == set && r) return false;
-                if (tr.target != set && visited.add(tr.target.stateId)) queue.add(tr.target);
-            }
-        }
-        return true;
-    }
-
-
-    public static int countOutgoings(ItemSet set) {
-        int cnt = 0;
-        for (Transition tr : set.transitions) {
-            if (tr.target.stateId != set.stateId) cnt++;
-        }
-        return cnt;
-    }
-
-    public boolean reachFinal(ItemSet from, ItemSet except) {
-        //System.out.printf("reachFinal %d -> %d\n", from.stateId, except.stateId);
-        Set<Integer> visited = new HashSet<>();
-        Queue<ItemSet> queue = new LinkedList<>();
-        queue.add(from);
-        visited.add(from.stateId);
-        while (!queue.isEmpty()) {
-            ItemSet cur = queue.poll();
-            if (hasFinal(cur)) return true;
-            for (Transition tr : cur.transitions) {
-                ItemSet trg = tr.target;
-                if (trg == except) continue;
-                if (visited.add(trg.stateId)) queue.add(trg);
-            }
-        }
-        return false;
-    }
-
-    public boolean hasFinal(ItemSet set) {
-        for (Item it : set.all) {
-            if (it.isReduce(tree) && it.lookAhead.contains(dollar)) return true;
-        }
-        return false;
     }
 
     public void dump(PrintWriter w) {

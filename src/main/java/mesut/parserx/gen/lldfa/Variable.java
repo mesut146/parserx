@@ -9,6 +9,7 @@ public class Variable {
     Type type;
     String name;
     Item item;
+    public boolean isArray;
 
     //alt or normal
     public Variable(Type type, String name, Item item) {

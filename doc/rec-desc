@@ -1,6 +1,0 @@
-Normalizer
-AstGen, gen AstInfo
-left direct
-Factor, modify AstInfo
-Left indirect, modify AstInfo
-LLRec

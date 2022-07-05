@@ -4,6 +4,7 @@ import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.gen.targets.JavaRecDescent;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
@@ -11,8 +12,6 @@ import mesut.parserx.utils.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-
-import static mesut.parserx.gen.lldfa.LLDfaBuilder.dollar;
 
 public class JavaGen {
     LLDfaBuilder builder;
@@ -34,6 +33,11 @@ public class JavaGen {
         builder = new LLDfaBuilder(tree);
         builder.factor();
         tree = builder.tree;
+        if (true) {
+            initParams();
+            return;
+        }
+
         w = new CodeWriter(true);
         if (options.packageName != null) {
             w.append("package %s;", options.packageName);
@@ -189,7 +193,7 @@ public class JavaGen {
         boolean first = true;
         Set<Name> allLa = new HashSet<>();
         //collect items by la
-        Map<Name, List<Item>> groups = group();
+        Map<Name, List<Item>> groups = groupByToken();
         for (Transition tr : set.transitions) {
             if (tr.symbol.isName() && tr.symbol.asName().isToken) {
                 Name sym = tr.symbol.asName();
@@ -291,30 +295,66 @@ public class JavaGen {
         w.append("}");
     }
 
+    boolean overlap(Item i1, Item i2) {
+        //has common but not all same
+        if (i1.ids.equals(i2.ids)) return false;
+        return hasCommon(i1.ids, i2.ids);
+    }
+
     void initParams() {
-        for (String ruleName : builder.rules.keySet()) {
-            rule = tree.getRule(ruleName);
-            for (ItemSet set : builder.rules.get(ruleName)) {
+        for (var entry : builder.rules.entrySet()) {
+            rule = tree.getRule(entry.getKey());
+            for (ItemSet set : entry.getValue()) {
+                curSet = set;
                 for (var tr : set.transitions) {
-                    var sym = tr.symbol;
-                    createNodes2(set.all, sym);
+                    var sym = tr.symbol.asName();
+                    var group = groupByToken();
+                    var locals = createNodes2(group.get(sym));
+                    nameMap.computeIfAbsent(set.stateId, k -> new HashMap<>()).put(sym, locals);
+                    handleOverlap(tr.target, locals);//todo what if cur param overlaps
+                    //init target params
+                    List<Variable> params = new ArrayList<>();
+                    //cur params+locals
+                    for (Variable param : paramMap.getOrDefault(set.stateId, new ArrayList<>())) {
+                        if (isReduced(param)) continue;
+                        params.add(param);
+                    }
+                    for (Variable local : locals) {
+                        if (local.item != null) {//non holder
+                            params.add(local);
+                        }
+                    }
+                    paramMap.put(tr.target.stateId, params);
                 }
             }
         }
     }
 
-    private void createNodes2(List<Item> list, Node sym) {
+    void handleOverlap(ItemSet target, List<Variable> locals) {
+        if (!paramMap.containsKey(target.stateId)) return;
+        for (Variable prm : paramMap.get(target.stateId)) {
+            if (prm.item == null) continue;
+            //if two item overlap, convert it to stack
+            for (Variable local : locals) {
+                if (local.item == null) continue;
+                if (overlap(local.item, prm.item)) {
+                    prm.isArray = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    private List<Variable> createNodes2(List<Item> list) {
         List<Variable> vars = new ArrayList<>();
         Set<String> done = new HashSet<>();
         int cnt = 0;
-        Map<Item, String> holderMap = new HashMap<>();
         for (Item item : list) {
             if (item.dotPos != 0) continue;
             if (item.advanced) continue;
             if (!item.isAlt()) {
                 String name = "v" + cnt++;
                 vars.add(new Variable(item.rule.retType, name, item));
-                w.append("%s %s = new %s();", item.rule.retType, name, item.rule.retType);
             }
             else {
                 //parent
@@ -322,28 +362,13 @@ public class JavaGen {
                     String pname = "v" + cnt++;
                     vars.add(new Variable(item.rule.retType, pname, item.siblings));
                     done.add(item.rule.baseName());
-                    w.append("%s %s = new %s();", item.rule.retType, pname, item.rule.retType);
-                    holderMap.put(item, pname);
                 }
                 //alt
                 String name = "v" + cnt++;
-                String pname = holderMap.get(item);
-                //can use getHolder maybe?
-                if (pname == null) {
-                    for (Item sib : holderMap.keySet()) {
-                        if (item.siblings.contains(sib)) {
-                            pname = holderMap.get(sib);
-                            break;
-                        }
-                    }
-                }
                 vars.add(new Variable(item.rule.rhs.astInfo.nodeType, name, item));
-                w.append("%s %s = new %s();", item.rule.rhs.astInfo.nodeType, name, item.rule.rhs.astInfo.nodeType);
-                w.append("%s.holder = %s;", name, pname);
             }
         }
-        Map<Node, List<Variable>> map = nameMap.computeIfAbsent(curSet.stateId, k -> new HashMap<>());
-        map.put(sym, vars);
+        return vars;
     }
 
 
@@ -463,9 +488,8 @@ public class JavaGen {
         boolean hasParams = false;
         if (paramMap.containsKey(curSet.stateId)) {
             boolean first = true;
-            Set<Variable> reduced = getReduced();
             for (Variable v : paramMap.get(curSet.stateId)) {
-                if (reduced.contains(v)) continue;
+                if (isReduced(v)) continue;
                 if (!first) sb.append(", ");
                 sb.append(v.name);
                 targetParams.add(new Variable(v.type, "p" + param_cnt++, v.item));
@@ -523,27 +547,38 @@ public class JavaGen {
         w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getBoth(item, sym));
     }
 
-    Set<Variable> getReduced() {
-        Set<Variable> ignored = new HashSet<>();
+    boolean isReduced(Variable param) {
+        if (param.item == null) {
+            throw new IllegalStateException("prm can never be holder,it has to be an alt or normal item");
+        }
+        for (Item item : curSet.all) {
+            if (!item.isReduce(tree)) continue;
+            if (sameItem(item, param.item)) return true;
+        }
+        return false;
+    }
+
+    Set<Variable> filterReduced() {
+        Set<Variable> res = new HashSet<>();
         for (Item item : curSet.all) {
             if (!item.isReduce(tree)) continue;
             //mark holder
             for (Variable v : paramMap.get(curSet.stateId)) {
                 //remove holder
                 if (v.item == null && v.type.equals(item.rule.retType)) {
-                    ignored.add(v);
+                    res.add(v);
                 }
                 //alt
-                if (v.item != null && item.rule.which != -1 && v.type.equals(item.rule.rhs.astInfo.nodeType)) {
-                    ignored.add(v);
+                if (v.item != null && item.isAlt() && v.type.equals(item.rule.rhs.astInfo.nodeType)) {
+                    res.add(v);
                 }
                 //normal
-                if (v.item != null && item.rule.which == -1 && v.type.equals(item.rule.rhs.astInfo.nodeType)) {
-                    ignored.add(v);
+                if (v.item != null && !item.isAlt() && v.type.equals(item.rule.rhs.astInfo.nodeType)) {
+                    res.add(v);
                 }
             }
         }
-        return ignored;
+        return res;
     }
 
     boolean hasCommon(Set<Integer> s1, Set<Integer> s2) {
@@ -693,7 +728,6 @@ public class JavaGen {
         }
     }
 
-
     String getHolder(Item item, Node sym) {
         if (sym == null) return getParam(item) + ".holder";
         return getBoth(item, sym) + ".holder";
@@ -754,14 +788,14 @@ public class JavaGen {
             String holder = getHolder(item, sym);
             w.append("%s.which = %d;", holder, item.rule.which);
             w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getBoth(item, sym));//todo
-            if (!curSet.isStart && item.lookAhead.contains(dollar)) {
+            if (!curSet.isStart && item.lookAhead.contains(LrDFAGen.dollar)) {
                 //w.append("return;");//todo dollar is enough?
             }
             w.append("}");
         }
     }
 
-    private Map<Name, List<Item>> group() {
+    private Map<Name, List<Item>> groupByToken() {
         Map<Name, List<Item>> groups = new HashMap<>();
         for (Item item : curSet.all) {
             if (item.dotPos == item.rhs.size()) continue;

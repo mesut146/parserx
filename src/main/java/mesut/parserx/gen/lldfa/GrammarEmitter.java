@@ -1,15 +1,15 @@
 package mesut.parserx.gen.lldfa;
 
+import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.nodes.*;
 
 import java.util.*;
-
-import static mesut.parserx.gen.lldfa.LLDfaBuilder.dollar;
 
 public class GrammarEmitter {
     LLDfaBuilder builder;
     Set<ItemSet> all;
     Tree tree;
+    Set<ItemSet> inlined = new HashSet<>();
 
     public GrammarEmitter(LLDfaBuilder builder) {
         this.builder = builder;
@@ -38,7 +38,7 @@ public class GrammarEmitter {
             for (Iterator<Item> it = set.all.iterator(); it.hasNext(); ) {
                 Item item = it.next();
                 if (!item.isReduce(tree)) continue;
-                if (item.lookAhead.contains(dollar)) continue;
+                if (item.lookAhead.contains(LrDFAGen.dollar)) continue;
                 if (!item.reduceParent.isEmpty()) {
                     it.remove();
                     System.out.println("rem sub = " + item);
@@ -47,7 +47,7 @@ public class GrammarEmitter {
             //move parent reductions
             for (Item it : set.all) {
                 if (!it.isReduce(tree)) continue;
-                if (it.lookAhead.contains(dollar)) continue;
+                if (it.lookAhead.contains(LrDFAGen.dollar)) continue;
                 moveReduction(set, it, q);
                 if (it.lookAhead.isEmpty()) toRemove.add(it);
             }
@@ -143,7 +143,7 @@ public class GrammarEmitter {
 
     public boolean canBeRemoved2(ItemSet set) {
         System.out.println("canBeRemoved2 " + set.stateId);
-        if (LLDfaBuilder.countOutgoings(set) != 1) return false;
+        if (countOutgoings(set) != 1) return false;
 
         if (hasFinal(set)) return false;
         //looping through final state
@@ -187,7 +187,7 @@ public class GrammarEmitter {
 
     public boolean hasFinal(ItemSet set) {
         for (Item it : set.all) {
-            if (it.isReduce(tree) && it.lookAhead.contains(dollar)) return true;
+            if (it.isReduce(tree) && it.lookAhead.contains(LrDFAGen.dollar)) return true;
         }
         return false;
     }
@@ -231,7 +231,7 @@ public class GrammarEmitter {
         for (Iterator<ItemSet> it = all.iterator(); it.hasNext(); ) {
             ItemSet set = it.next();
             for (Item item : set.all) {
-                if (item.lookAhead.contains(dollar) && item.isReduce(tree)) {
+                if (item.lookAhead.contains(LrDFAGen.dollar) && item.isReduce(tree)) {
                     ns.addAll(set.all);
                     for (Transition in : set.incomings) {
                         in.target = ns;
@@ -270,4 +270,46 @@ public class GrammarEmitter {
             }
         }
     }
+
+    public void findInlined() {
+        for (ItemSet set : all) {
+            if (canBeInlined(set)) {
+                inlined.add(set);
+            }
+        }
+    }
+
+    public boolean canBeInlined(ItemSet set) {
+        if (countOutgoings(set) == 1) return true;
+        //looping through final state
+        Set<Integer> visited = new HashSet<>();
+        Queue<ItemSet> queue = new LinkedList<>();
+        for (Transition tr : set.transitions) {
+            if (tr.target != set) {
+                queue.add(tr.target);
+                visited.add(tr.target.stateId);
+            }
+        }
+        //discover
+        while (!queue.isEmpty()) {
+            ItemSet cur = queue.poll();
+            boolean r = reachFinal(cur, set);
+            for (Transition tr : cur.transitions) {
+                if (tr.target == set && r) return false;
+                if (tr.target != set && visited.add(tr.target.stateId)) queue.add(tr.target);
+            }
+        }
+        return true;
+    }
+
+
+    public static int countOutgoings(ItemSet set) {
+        int cnt = 0;
+        for (Transition tr : set.transitions) {
+            if (tr.target.stateId != set.stateId) cnt++;
+        }
+        return cnt;
+    }
+
+
 }

@@ -1,6 +1,7 @@
 package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.FirstSet;
+import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.nodes.*;
 
 import java.util.HashMap;
@@ -8,6 +9,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+//make la set for non start rules
 public class LaFinder extends BaseVisitor<Void, Void> {
 
     public Tree tree;
@@ -25,7 +27,7 @@ public class LaFinder extends BaseVisitor<Void, Void> {
         if (done.containsKey(ref)) return done.get(ref);
         done.put(ref, finder.set);
         if (ref.equals(tree.start)) {
-            finder.set.add(LLDfaBuilder.dollar);
+            finder.set.add(LrDFAGen.dollar);
         }
         for (RuleDecl decl : tree.rules) {
             //if (decl.ref.equals(ref)) continue;

@@ -225,9 +225,11 @@ public class ItemSet {
             prev.lookAhead.addAll(item.lookAhead);
             if (updateIds) {
                 prev.ids.addAll(item.ids);
-                for (Item sender : prev.senders) {
-                    sender.ids.addAll(item.ids);
-                }
+//                if (prev.dotPos){
+//                    for (Item sender : prev.senders) {
+//                        sender.ids.addAll(item.ids);
+//                    }
+//                }
             }
             prev.senders.addAll(item.senders);
             prev.gotoSet.addAll(item.gotoSet);

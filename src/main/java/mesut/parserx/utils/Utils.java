@@ -112,9 +112,9 @@ public class Utils {
         wr.close();
     }
 
-    public static void initLogger() {
-        Logger logger = Logger.getLogger("MAIN");
-        logger.setLevel(Level.ALL);
+    public static Logger getLogger() {
+        Logger logger = Logger.getGlobal();
+        logger.setLevel(Level.OFF);
         var handler = new ConsoleHandler();
         handler.setLevel(Level.ALL);
         handler.setFormatter(new Formatter() {
@@ -124,6 +124,7 @@ public class Utils {
             }
         });
         logger.addHandler(handler);
+        return logger;
     }
 
 }

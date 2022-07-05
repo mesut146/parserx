@@ -7,17 +7,17 @@ import mesut.parserx.nodes.*;
 import java.util.*;
 
 public class Item {
-    public Set<Name> lookAhead = new TreeSet<>();
     public RuleDecl rule;
-    public Sequence rhs;
     public int dotPos;
+    public Set<Name> lookAhead = new TreeSet<>();
+    public Set<Integer> ids = new TreeSet<>();
+    public Sequence rhs;
     public Set<ItemSet> gotoSet = new HashSet<>();
     public boolean[] closured;
     public List<Item> senders = new ArrayList<>();//prev item
     public List<Item> reduceParent = new ArrayList<>();
     public Set<Item> siblings = new HashSet<>();
     public Item reduceChild;
-    public Set<Integer> ids = new TreeSet<>();
     public boolean advanced = false;//dot star but advanced
     public ItemSet itemSet;
     public static int lastId = 0;
@@ -179,7 +179,6 @@ public class Item {
 
         Item item = (Item) other;
 
-        //if (hash == item.hash) return true;
         if (dotPos != item.dotPos) return false;
         return Objects.equals(rule, item.rule) && lookAhead.equals(item.lookAhead);
     }
