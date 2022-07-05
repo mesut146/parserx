@@ -12,6 +12,7 @@ import mesut.parserx.utils.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class JavaGen {
     LLDfaBuilder builder;
@@ -295,37 +296,77 @@ public class JavaGen {
         w.append("}");
     }
 
-    boolean overlap(Item i1, Item i2) {
-        //has common but not all same
-        if (i1.ids.equals(i2.ids)) return false;
-        return hasCommon(i1.ids, i2.ids);
-    }
-
-    void initParams() {
+    void initLocals() {
         for (var entry : builder.rules.entrySet()) {
             rule = tree.getRule(entry.getKey());
             for (ItemSet set : entry.getValue()) {
-                curSet = set;
-                for (var tr : set.transitions) {
-                    var sym = tr.symbol.asName();
-                    var group = groupByToken();
-                    var locals = createNodes2(group.get(sym));
-                    nameMap.computeIfAbsent(set.stateId, k -> new HashMap<>()).put(sym, locals);
-                    handleOverlap(tr.target, locals);//todo what if cur param overlaps
+                initLocals(set);
+            }
+        }
+    }
+
+    private void initLocals(ItemSet set) {
+        curSet = set;
+        for (var tr : set.transitions) {
+            if (tr.symbol.isName() && tr.symbol.asName().isToken) {
+                var sym = tr.symbol.asName();
+                var group = groupByToken();
+                var locals = createNodes2(group.get(sym));
+                nameMap.computeIfAbsent(set.stateId, k -> new HashMap<>()).put(sym, locals);
+            }
+            else {
+                //todo multisym
+            }
+        }
+    }
+
+    void initParams() {
+        initLocals();
+        for (var entry : builder.rules.entrySet()) {
+            rule = tree.getRule(entry.getKey());
+            for (ItemSet set : entry.getValue()) {
+                initParam(set);
+            }
+        }
+    }
+
+    void initParam(ItemSet set) {
+        curSet = set;
+        for (var tr : set.transitions) {
+            if (tr.target.transitions.isEmpty()) continue;//inlined no params
+            if (tr.symbol.isName() && tr.symbol.asName().isToken) {
+                var sym = tr.symbol.asName();
+                var locals = nameMap.get(set.stateId).get(sym);
+                locals = locals.stream().filter(v -> !v.isHolder()).collect(Collectors.toList());
+                if (paramMap.containsKey(tr.target.stateId)) {
+                    //check local overlaps param
+                    handleOverlap(tr.target, locals);
+                }
+                else {
+                    //check local overlaps param
+                    //check cur param overlaps param
+                    //transfer
                     //init target params
                     List<Variable> params = new ArrayList<>();
                     //cur params+locals
-                    for (Variable param : paramMap.getOrDefault(set.stateId, new ArrayList<>())) {
-                        if (isReduced(param)) continue;
-                        params.add(param);
+                    if (paramMap.containsKey(set.stateId)) {
+                        for (Variable param : paramMap.get(set.stateId)) {
+                            if (isReduced(param)) continue;
+                            params.add(param);
+                        }
                     }
                     for (Variable local : locals) {
-                        if (local.item != null) {//non holder
-                            params.add(local);
-                        }
+                        //overlap
+                        params.add(local);
                     }
                     paramMap.put(tr.target.stateId, params);
                 }
+                if (paramMap.containsKey(set.stateId)) {
+                    handleOverlap(tr.target, paramMap.get(set.stateId));
+                }
+            }
+            else {
+
             }
         }
     }
@@ -333,16 +374,21 @@ public class JavaGen {
     void handleOverlap(ItemSet target, List<Variable> locals) {
         if (!paramMap.containsKey(target.stateId)) return;
         for (Variable prm : paramMap.get(target.stateId)) {
-            if (prm.item == null) continue;
             //if two item overlap, convert it to stack
             for (Variable local : locals) {
-                if (local.item == null) continue;
                 if (overlap(local.item, prm.item)) {
                     prm.isArray = true;
-                    break;
+                    throw new RuntimeException("overlap");
+                    //break;
                 }
             }
         }
+    }
+
+    boolean overlap(Item i1, Item i2) {
+        //has common but not all same
+        if (i1.ids.equals(i2.ids)) return false;
+        return hasCommon(i1.ids, i2.ids);
     }
 
     private List<Variable> createNodes2(List<Item> list) {
@@ -500,7 +546,7 @@ public class JavaGen {
         if (nameMap.containsKey(curSet.stateId)) {
             boolean first = true;
             for (Variable v : nameMap.get(curSet.stateId).get(sym)) {
-                if (v.item == null) continue;//skip holder, alt already has ref in it
+                if (v.isHolder()) continue;//skip holder, alt already has ref in it
                 if (!first || hasParams) sb.append(", ");
                 sb.append(v.name);
                 targetParams.add(new Variable(v.type, "p" + param_cnt++, v.item));
@@ -515,7 +561,7 @@ public class JavaGen {
         boolean first = true;
         for (Variable prm : targetParams) {
             //locate by item
-            if (prm.item == null) {
+            if (prm.isHolder()) {
                 throw new RuntimeException("not yet");
             }
             if (!first) sb.append(", ");
@@ -548,7 +594,7 @@ public class JavaGen {
     }
 
     boolean isReduced(Variable param) {
-        if (param.item == null) {
+        if (param.isHolder()) {
             throw new IllegalStateException("prm can never be holder,it has to be an alt or normal item");
         }
         for (Item item : curSet.all) {
@@ -604,7 +650,7 @@ public class JavaGen {
         var map = nameMap.get(curSet.stateId);
         if (map.containsKey(sym)) {
             for (Variable v : map.get(sym)) {
-                if (v.item == null || !v.item.rule.equals(item.rule)) continue;
+                if (v.isHolder() || !v.item.rule.equals(item.rule)) continue;
                 if (exact && v.item.equals(item) && v.item.ids.equals(item.ids) || !exact && sameItem(v.item, item)) {
                     return v.name;
                 }
@@ -620,7 +666,7 @@ public class JavaGen {
     String getParam(Item item) {
         if (!paramMap.containsKey(curSet.stateId)) return null;
         for (Variable v : paramMap.get(curSet.stateId)) {
-            if (v.item != null && v.item.rule.equals(item.rule) && sameItem(v.item, item)) {
+            if (v.item.rule.equals(item.rule) && sameItem(v.item, item)) {
                 return v.name;
             }
         }
@@ -736,18 +782,18 @@ public class JavaGen {
     String holderVar(Item item, Node sym) {
         if (nameMap.containsKey(curSet.stateId)) {
             for (Variable v : nameMap.get(curSet.stateId).get(sym)) {
-                if (v.item == null && v.children.contains(item)) {
+                if (v.isHolder() && v.children.contains(item)) {
                     return v.name;
                 }
             }
         }
-        if (paramMap.containsKey(curSet.stateId)) {
-            for (Variable v : paramMap.get(curSet.stateId)) {
-                if (v.item == null && v.children.contains(item)) {
-                    return v.name;
-                }
-            }
-        }
+//        if (paramMap.containsKey(curSet.stateId)) {
+//            for (Variable v : paramMap.get(curSet.stateId)) {
+//                if (v.item == null && v.children.contains(item)) {
+//                    return v.name;
+//                }
+//            }
+//        }
         return null;
     }
 

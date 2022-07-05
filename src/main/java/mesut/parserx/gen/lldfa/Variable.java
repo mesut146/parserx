@@ -29,4 +29,8 @@ public class Variable {
     public String toString() {
         return type + " " + name;
     }
+
+    public boolean isHolder() {
+        return item == null;
+    }
 }

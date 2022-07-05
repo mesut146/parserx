@@ -15,6 +15,7 @@ public class Item {
     public Set<ItemSet> gotoSet = new HashSet<>();
     public boolean[] closured;
     public List<Item> senders = new ArrayList<>();//prev item
+    public Item next;
     public List<Item> reduceParent = new ArrayList<>();
     public Set<Item> siblings = new HashSet<>();
     public Item reduceChild;
@@ -40,6 +41,7 @@ public class Item {
         this.gotoSet = item.gotoSet;
         this.ids = new HashSet<>(item.ids);
         this.senders.add(item);
+        item.next = this;
         this.siblings = item.siblings;
         if (item.getNode(item.dotPos).isStar()) {
             advanced = true;
