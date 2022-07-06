@@ -6,9 +6,10 @@ import java.util.Set;
 
 public class Variable {
     public Set<Item> children;//children of holder
-    Type type;
-    String name;
-    Item item;
+    public Type type;
+    public String name;
+    public Item item;
+    public Variable holder;
     public boolean isArray;
 
     //alt or normal
@@ -16,6 +17,14 @@ public class Variable {
         this.type = type;
         this.name = name;
         this.item = item;
+    }
+
+    //alt
+    public Variable(Type type, String name, Item item, Variable holder) {
+        this.type = type;
+        this.name = name;
+        this.item = item;
+        this.holder = holder;
     }
 
     //holder
