@@ -100,10 +100,10 @@ public class StateCodeGen2 {
 
     private void gen(LrItemSet set) {
         writer.append("case %d:{", set.stateId);
-        if (!dfa.getTrans(set).isEmpty()) {
+        if (!set.transitions.isEmpty()) {
             //shifts
             List<LrTransition> list = new ArrayList<>();
-            for (LrTransition tr : dfa.getTrans(set)) {
+            for (LrTransition tr : set.transitions) {
                 if (tr.symbol.isToken) {
                     list.add(tr);
                 }
@@ -162,7 +162,7 @@ public class StateCodeGen2 {
                     //goto
                     writer.append("switch(states.peek()){");
                     for (LrItemSet s : item.gotoSet) {
-                        writer.append("case %d:", dfa.getId(s));
+                        writer.append("case %d:", s.stateId);
                         writer.up();
                         writer.append("state = %d;", getGoto(s, item.rule.ref).stateId);
                         writer.append("continue loop;");
@@ -189,7 +189,7 @@ public class StateCodeGen2 {
     }
 
     LrItemSet getGoto(LrItemSet from, Name symbol) {
-        for (LrTransition tr : dfa.getTrans(from)) {
+        for (LrTransition tr : from.transitions) {
             if (tr.symbol.equals(symbol)) {
                 return tr.to;
             }

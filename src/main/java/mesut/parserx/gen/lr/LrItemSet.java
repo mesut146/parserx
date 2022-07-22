@@ -16,12 +16,16 @@ public class LrItemSet {
     public int stateId = -1;
     public String type;
     Tree tree;
-
+    public List<LrTransition> transitions = new ArrayList<>();
 
     public LrItemSet(Set<LrItem> kernels, Tree tree, String type) {
         this.kernel.addAll(kernels);
         this.tree = tree;
         this.type = type;
+    }
+
+    public void addTransition(LrTransition tr){
+        transitions.add(tr);
     }
 
     public void addCore(LrItem item) {

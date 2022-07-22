@@ -18,7 +18,6 @@ public class LrDFAGen {
     public static Name dollar = new Name("$", true);//eof
     public static String startName = "%start";
     private final boolean merge;//lalr
-    public int acc = 1;
     public LrDFA table = new LrDFA();
     public RuleDecl start;
     public Tree tree;
@@ -89,6 +88,7 @@ public class LrDFAGen {
         writeGrammar();
 
         LrItemSet firstSet = makeSet(first);
+        table.first = firstSet;
         queue.add(firstSet);
 
         while (!queue.isEmpty()) {
@@ -156,7 +156,7 @@ public class LrDFAGen {
                 }
             }
         }
-        acc = table.getTargetSet(firstSet, start.ref).stateId;
+        table.acc = table.getTargetSet(firstSet, start.ref);
     }
 
     void addQueue(LrItemSet set) {
@@ -250,7 +250,7 @@ public class LrDFAGen {
                     if (lr0) {
                         ConflictInfo info = new ConflictInfo();
                         info.rr = true;
-                        info.state = table.getId(set);
+                        info.state = set.stateId;
                         info.reduce = i1;
                         info.reduce2 = i2;
                         conflicts.add(info);
@@ -262,7 +262,7 @@ public class LrDFAGen {
                         if (!la.isEmpty()) {
                             ConflictInfo info = new ConflictInfo();
                             info.rr = true;
-                            info.state = table.getId(set);
+                            info.state = set.stateId;
                             info.reduce = i1;
                             info.reduce2 = i2;
                             conflicts.add(info);
@@ -342,7 +342,7 @@ public class LrDFAGen {
                     if (!removed) {
                         ConflictInfo info = new ConflictInfo();
                         info.rr = false;
-                        info.state = table.getId(set);
+                        info.state = set.stateId;
                         info.shift = shift;
                         info.reduce = reduce;
                         conflicts.add(info);
@@ -356,18 +356,18 @@ public class LrDFAGen {
     void removeItem(LrItemSet set, LrItem item) {
         //remove incoming and outgoing transitions
         List<LrTransition> out = new ArrayList<>();
-        for (LrTransition tr : table.getTrans(set)) {
+        for (LrTransition tr : set.transitions) {
             if (tr.symbol.equals(item.getDotSym())) {
                 out.add(tr);
             }
         }
         if (out.size() == 1) {
             //remove
-            table.getTrans(set).remove(out.get(0));
+            set.transitions.remove(out.get(0));
         }
         List<LrTransition> in = new ArrayList<>();
         for (LrItemSet from : table.itemSets) {
-            for (LrTransition tr : table.getTrans(from)) {
+            for (LrTransition tr : from.transitions) {
                 if (tr.to == set) {
                     LrItem prev = new LrItem(item, item.dotPos - 1);
                     for (LrItem fromItem : from.all) {

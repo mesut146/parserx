@@ -41,7 +41,7 @@ public class DotWriter {
         String start = generator.start.baseName();
         for (LrItemSet set : table.itemSets) {
             writer.print("<TR>");
-            writer.println("<TD>" + table.getId(set) + "</TD>");
+            writer.println("<TD>" + set.stateId + "</TD>");
             if (writeRules) {
                 String s = set.toString();
                 writer.println("<TD>");
@@ -55,9 +55,9 @@ public class DotWriter {
             for (Name token : tokens) {
                 writer.print("<TD>");
                 //shift
-                for (LrTransition tr : table.getTrans(set)) {
+                for (LrTransition tr : set.transitions) {
                     if (tr.symbol.equals(token)) {
-                        writer.print("S" + table.getId(tr.to));
+                        writer.print("S" + tr.to.stateId);
                     }
                 }
                 //reduce
@@ -103,9 +103,9 @@ public class DotWriter {
                         writer.print(table.getId(item.gotoSet));
                     }
                 }*/
-                for (LrTransition tr : table.getTrans(set)) {
+                for (LrTransition tr : set.transitions) {
                     if (tr.symbol.equals(rule)) {//tr.to.hasReduce()
-                        writer.print(table.getId(tr.to));
+                        writer.print(tr.to.stateId);
                     }
                 }
                 writer.print("</TD>");
@@ -129,15 +129,13 @@ public class DotWriter {
             //labels
             for (LrItemSet set : table.itemSets) {
                 writer.printf("%s [shape=box xlabel=\"%s\" %s label=\"%s\"]\n",
-                        table.getId(set), table.getId(set), set.hasReduce() ? "color=red " : "", set.toString().replace("\n", "\\l") + "\\l");
+                        set.stateId, set.stateId, set.hasReduce() ? "color=red " : "", set.toString().replace("\n", "\\l") + "\\l");
             }
 
-            for (int i = 0; i <= table.lastId; i++) {
-                if (table.map[i] != null)
-                    for (LrTransition t : table.map[i]) {
-                        writer.printf("%s -> %s [label=\"%s\"]\n",
-                                table.getId(t.from), table.getId(t.to), t.symbol.name);
-                    }
+            for (var set : table.itemSets) {
+                for (var tr : set.transitions) {
+                    writer.printf("%s -> %s [label=\"%s\"]\n", set.stateId, tr.to.stateId, tr.symbol.name);
+                }
             }
 
             writer.println("}");

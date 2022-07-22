@@ -98,8 +98,8 @@ public class CodeGen {
         sb.append(pack(idMap.lastId + 1));//symbol count,height
 
         //write accept
-        sb.append(pack(gen.acc));
-        LrItemSet acc = dfa.getSet(gen.acc);
+        LrItemSet acc = dfa.acc;
+        sb.append(pack(acc.stateId));
         if (type.equals("lr0")) {
             //all tokens acc
             sb.append(pack(dfa.tokens.size()));
@@ -118,19 +118,19 @@ public class CodeGen {
         }
 
 
-        for (int state = 0; state <= dfa.lastId; state++) {
+        for (var set : dfa.itemSets) {
             //write shifts
-            List<? extends LrTransition> shifts = dfa.getTrans(state);
+            List<? extends LrTransition> shifts = set.transitions;
             sb.append(pack(shifts.size()));//shift count
             for (LrTransition tr : shifts) {
                 sb.append(pack(idMap.getId(tr.symbol)));
-                int action = dfa.getId(tr.to);
+                int action = tr.to.stateId;
                 sb.append(pack(action));
             }
             //write reduces
-            List<LrItem> list = dfa.getSet(state).getReduce();
+            List<LrItem> list = set.getReduce();
             int count = list.size();//reduce count
-            if (acc == dfa.getSet(state)) {
+            if (acc == set) {
                 count--;
             }
             sb.append(pack(count));

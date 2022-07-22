@@ -29,6 +29,15 @@ public class GrammarEmitter {
         //builder.dot(null);
     }
 
+    Node makeForRule(String name) {
+        all = builder.rules.get(name);
+        //moveReductions();
+        mergeFinals();
+        eliminate();
+        ItemSet start = null;
+        return start.transitions.get(0).symbol;
+    }
+
     public void moveReductions() {
         Queue<ItemSet> q = new LinkedList<>(all);
         while (!q.isEmpty()) {

@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-//no table driven parser gen,each state converted to method
+//no table,each state converted to method
 public class StateCodeGen {
     public static boolean debugState = false;
     public static boolean debugReduce = false;
@@ -72,7 +72,7 @@ public class StateCodeGen {
     }
 
     String getName(LrItemSet set) {
-        int id = dfa.getId(set);
+        int id = set.stateId;
         return "state" + id;
     }
 
@@ -100,11 +100,11 @@ public class StateCodeGen {
         if (debugState) {
             writer.append("System.out.println(\"%s\");", getName(set));
         }
-        writer.append("states.push(%d);", dfa.getId(set));
-        if (!dfa.getTrans(set).isEmpty()) {
+        writer.append("states.push(%d);", set.stateId);
+        if (!set.transitions.isEmpty()) {
             //shifts
             List<LrTransition> list = new ArrayList<>();
-            for (LrTransition tr : dfa.getTrans(set)) {
+            for (LrTransition tr : set.transitions) {
                 if (tr.symbol.isToken) {
                     list.add(tr);
                 }
@@ -163,7 +163,7 @@ public class StateCodeGen {
                     //goto
                     writer.append("switch(states.peek()){");
                     for (LrItemSet s : item.gotoSet) {
-                        writer.append("case %d:{", dfa.getId(s));
+                        writer.append("case %d:{", s.stateId);
                         writer.append("%s();", getName(getGoto(s, item.rule.ref)));
                         writer.append("break;");
                         writer.append("}");
@@ -181,7 +181,7 @@ public class StateCodeGen {
     }
 
     LrItemSet getGoto(LrItemSet from, Name symbol) {
-        for (LrTransition tr : dfa.getTrans(from)) {
+        for (LrTransition tr : from.transitions) {
             if (tr.symbol.equals(symbol)) {
                 return tr.to;
             }

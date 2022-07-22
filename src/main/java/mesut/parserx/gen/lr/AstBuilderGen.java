@@ -11,6 +11,7 @@ import mesut.parserx.utils.Utils;
 import java.io.File;
 import java.io.IOException;
 
+//simple Node to Ast node converter builder
 public class AstBuilderGen {
     Tree tree;
     CodeWriter writer = new CodeWriter(true);

@@ -22,7 +22,6 @@ public class LLDfaBuilder {
     public Name rule;
     public Tree tree;
     public Tree ebnf;
-    ItemSet firstSet;
     Map<Name, List<Item>> firstItems = new HashMap<>();
     Set<ItemSet> all;
     Queue<ItemSet> queue = new LinkedList<>();
@@ -145,7 +144,7 @@ public class LLDfaBuilder {
 
         logger.log(Level.FINE, "building " + rule + " in " + tree.file.getName());
 
-        firstSet = new ItemSet(tree, type);
+        var firstSet = new ItemSet(tree, type);
         firstSet.isStart = true;
         Set<Name> la;
         if (rule.equals(tree.start)) {

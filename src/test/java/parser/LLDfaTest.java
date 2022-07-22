@@ -13,8 +13,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class LLDfaTest {
 
@@ -89,6 +87,13 @@ public class LLDfaTest {
     }
 
     @Test
+    public void leftRec() throws Exception {
+        DescTester.check2(Builder.tree("lldfa/left.g").rule("E")
+                .input("b", "E#2{'b'}")
+                .input("ba", ""));
+    }
+
+    @Test
     public void rightRec() throws Exception {
 //        DescTester.check2(Builder.tree("lldfa/right.g").rule("E").
 //                input("y", "E#3{'y'}").
@@ -98,6 +103,7 @@ public class LLDfaTest {
         DescTester.check2(Builder.tree("lldfa/right-factor.g").rule("A").
                 input("aax", "A#1{['a', 'a'], 'x'}").
                 input("by", "A#2{B#2{'b'}, 'y'}").
+                input("aby", "A#2{B#1{'a', B#2{'b'}}, 'y'}").
                 input("aaby", "A#2{B#1{'a', B#1{'a', B#2{'b'}}}, 'y'}"));
     }
 
