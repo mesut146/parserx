@@ -105,6 +105,7 @@ public class $lexer_class$ {
     $token_class$ getEOF(){
         $token_class$ res =  new $token_class$(EOF, "");
         res.name = "EOF";
+        res.line = yyline;
         return res;
     }
 

@@ -92,24 +92,19 @@ public class LexerGenerator {
         idMap.genSymbolIds(dfa.tree);
 
         idArr = new int[dfa.lastState + 1];//state->id
-        for (int state : dfa.it()) {
+        for (var state : dfa.it()) {
             //make id for token
-            List<String> names = dfa.names[state];
-            if (names != null && dfa.isAccepting(state)) {
+            List<String> names = state.names;
+            if (!names.isEmpty() && state.accepting) {
                 //!dfa.isSkip[state]
                 if (names.size() != 1) {
                     throw new RuntimeException("only one token per state");
                 }
-                idArr[state] = idMap.getId(new Name(names.get(0), true));
+                idArr[state.state] = idMap.getId(new Name(names.get(0), true));
             }
         }
         //sort tokens by id
-        tokens = new TreeSet<>(new Comparator<Map.Entry<Name, Integer>>() {
-            @Override
-            public int compare(Map.Entry<Name, Integer> o1, Map.Entry<Name, Integer> o2) {
-                return o1.getValue().compareTo(o2.getValue());
-            }
-        });
+        tokens = new TreeSet<>(Comparator.comparing(Map.Entry::getValue));
         for (Map.Entry<Name, Integer> entry : idMap.map.entrySet()) {
             if (entry.getKey().isToken) {
                 tokens.add(entry);

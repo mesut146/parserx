@@ -3,6 +3,7 @@ package mesut.parserx.regex;
 
 import mesut.parserx.dfa.Alphabet;
 import mesut.parserx.dfa.NFA;
+import mesut.parserx.dfa.State;
 import mesut.parserx.dfa.Transition;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.UnicodeUtils;
@@ -18,7 +19,7 @@ public class RegexBuilder {
     NFA nfa;
     Alphabet alphabet;
     Alphabet regexAlphabet;
-    List<Integer> stateOrder = new ArrayList<>();
+    List<State> stateOrder = new ArrayList<>();
 
     public RegexBuilder(NFA nfa) {
         this.nfa = nfa;
@@ -33,10 +34,10 @@ public class RegexBuilder {
     public Node buildRegex() {
         Transition.alphabet = alphabet;
         //make initial not incoming
-        if (!nfa.findIncoming(nfa.initial).isEmpty()) {
-            int newInit = nfa.newState();
-            nfa.addEpsilon(newInit, nfa.initial);
-            nfa.initial = newInit;
+        if (!nfa.findIncoming(nfa.initialState).isEmpty()) {
+            var newInit = nfa.newState();
+            newInit.addEpsilon(nfa.initialState);
+            nfa.initialState = newInit;
         }
         mergeFinals();
 
@@ -44,15 +45,15 @@ public class RegexBuilder {
             autoOrder();
         }
 
-        for (int state : stateOrder) {
-            if (!nfa.isAccepting(state) && nfa.initial != state) {
+        for (var state : stateOrder) {
+            if (!state.accepting && nfa.initialState.state != state.state) {
                 //mergeAll(state);
                 eliminate(state);
             }
         }
 
         List<Node> or = new ArrayList<>();
-        for (Transition transition : nfa.get(nfa.initial)) {
+        for (Transition transition : nfa.initialState.transitions) {
             or.add(alphabet.getRegex(transition.input));
         }
         return Or.make(or);
@@ -80,24 +81,24 @@ public class RegexBuilder {
     }
 
     //eliminate state by removing incoming and outgoing transitions
-    void eliminate(int state) {
-        if (!nfa.hasTransitions(state)) return;
-        List<Transition> list = nfa.trans[state];
+    void eliminate(State state) {
+        if (state.transitions.isEmpty()) return;
         mergeAll(state);
         //eliminate state
         List<Transition> incomings = nfa.findIncoming(state);
+        List<Transition> list = state.transitions;
 
         for (Transition in : incomings) {
             for (Transition out : list) {
-                if (out.target == state || in.state == state) {//looping
+                if (out.target.state == state.state || in.state.state == state.state) {//looping
                     continue;
                 }
                 Node node = path(in, out);
                 if (node.isEpsilon()) {
-                    nfa.addEpsilon(in.state, out.target);
+                    in.state.addEpsilon(out.target);
                 }
                 else {
-                    nfa.addTransition(in.state, out.target, alphabet.addRegex(node));
+                    nfa.addTransition(in.state.state, out.target.state, alphabet.addRegex(node));
                 }
             }
         }
@@ -108,17 +109,17 @@ public class RegexBuilder {
     }
 
     //if state loops itself
-    Transition getLooping(int state) {
-        for (Transition transition : nfa.get(state)) {
-            if (transition.target == state) {
+    Transition getLooping(State state) {
+        for (Transition transition : state.transitions) {
+            if (transition.target.state == state.state) {
                 return transition;
             }
         }
         return null;
     }
 
-    void remove(Transition transition) {
-        nfa.trans[transition.state].remove(transition);
+    void remove(Transition tr) {
+        tr.state.transitions.remove(tr);
     }
 
     //actual regex builder
@@ -154,16 +155,16 @@ public class RegexBuilder {
 
 
     //merge same targeted outgoing transitions with OrNode
-    void mergeAll(int state) {
-        if (!nfa.hasTransitions(state)) return;
-        List<Transition> trList = nfa.trans[state];
-        Map<Integer, List<Node>> map = new HashMap<>();//target -> regex
+    void mergeAll(State state) {
+        if (state.transitions.isEmpty()) return;
+        List<Transition> trList = state.transitions;
+        Map<State, List<Node>> map = new HashMap<>();//target -> regex
         for (Transition tr : trList) {
             List<Node> arr = map.computeIfAbsent(tr.target, k -> new ArrayList<>());
             arr.add(idToNode(tr));
         }
         trList.clear();
-        for (int target : map.keySet()) {
+        for (var target : map.keySet()) {
             Node node = Or.make(map.get(target));
             if (node.isOr()) {
                 //trim epsilon
@@ -186,29 +187,29 @@ public class RegexBuilder {
     }
 
     //make sure we have only one final state
-    int mergeFinals() {
-        int newFinal = nfa.newState();
-        for (int state : nfa.it()) {
-            if (nfa.isAccepting(state)) {
-                nfa.addEpsilon(state, newFinal);
-                nfa.setAccepting(state, false);
+    State mergeFinals() {
+        var newFinal = nfa.newState();
+        for (var state : nfa.it()) {
+            if (state.accepting) {
+                state.addEpsilon(newFinal);
+                state.accepting = false;
             }
         }
-        nfa.setAccepting(newFinal, true);
+        newFinal.accepting = true;
         return newFinal;
     }
 
     public void setOrder(int... arr) {
-        for (int state : arr) {
-            stateOrder.add(state);
+        for (var state : arr) {
+            stateOrder.add(nfa.getState(state));
         }
     }
 
     //simple states(non looping,no start,no final) gets eliminated first to get prettier regex
     public void autoOrder() {
-        List<Integer> looping = new ArrayList<>();
-        for (int state : nfa.it()) {
-            if (nfa.isAccepting(state) || nfa.initial == state) continue;
+        List<State> looping = new ArrayList<>();
+        for (var state : nfa.it()) {
+            if (state.accepting || nfa.initialState.state == state.state) continue;
             if (getLooping(state) != null) {
                 looping.add(state);
             }

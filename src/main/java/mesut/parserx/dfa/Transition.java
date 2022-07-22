@@ -7,18 +7,18 @@ import java.util.Objects;
 //a single arrow
 public class Transition {
     public static Alphabet alphabet;
-    public int state;//from
-    public int target;
+    public State state;//from
+    public State target;
     public int input;
     public boolean epsilon;
 
-    public Transition(int state, int target, int input) {
+    public Transition(State state, State target, int input) {
         this.state = state;
         this.target = target;
         this.input = input;
     }
 
-    public Transition(int state, int target) {
+    public Transition(State state, State target) {
         this.state = state;
         this.target = target;
         this.epsilon = true;

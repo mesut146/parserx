@@ -48,7 +48,7 @@ public class CppLexer {
         header.set("token_class", options.tokenClass);
         header.set("next_token", options.lexerFunction);
         header.set("skip_list", NodeList.join(LexerGenerator.makeIntArr(gen.skipList), ","));
-        header.set("final_list", NodeList.join(LexerGenerator.makeIntArr(dfa.accepting), ","));
+        header.set("final_list", NodeList.join(LexerGenerator.makeIntArr(dfa.acc()), ","));
 
         nameAndId();
         writeTrans();
@@ -70,8 +70,8 @@ public class CppLexer {
         StringBuilder transWriter = new StringBuilder();
         String indent = "        ";
         int len = 0;
-        for (int state : dfa.it()) {
-            List<Transition> list = dfa.trans[state];
+        for (var state : dfa.it()) {
+            List<Transition> list = state.transitions;
             transWriter.append("\"");
             if (list == null || list.isEmpty()) {
                 transWriter.append(makeOctal(0));
@@ -82,12 +82,12 @@ public class CppLexer {
                 len++;
                 for (Transition tr : list) {
                     transWriter.append(makeOctal(tr.input));
-                    transWriter.append(makeOctal(tr.target));
+                    transWriter.append(makeOctal(tr.target.state));
                     len += 2;
                 }
             }
             transWriter.append("\"");
-            if (state <= dfa.lastState - 1) {
+            if (state.state <= dfa.lastState - 1) {
                 transWriter.append("\n");
                 transWriter.append(indent);
             }
@@ -100,11 +100,11 @@ public class CppLexer {
     private void nameAndId() {
         //id list
         StringBuilder idWriter = new StringBuilder();
-        for (int state : dfa.it()) {
-            idWriter.append(gen.idArr[state]);
-            if (state <= dfa.lastState - 1) {
+        for (var state : dfa.it()) {
+            idWriter.append(gen.idArr[state.state]);
+            if (state.state <= dfa.lastState - 1) {
                 idWriter.append(",");
-                if (state > 0 && state % 20 == 0) {
+                if (state.state > 0 && state.state % 20 == 0) {
                     idWriter.append("\n            ");
                 }
             }

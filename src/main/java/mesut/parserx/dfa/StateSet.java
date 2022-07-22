@@ -5,11 +5,11 @@ import java.util.Iterator;
 import java.util.Set;
 
 //nfa,dfa state set
-public class StateSet implements Iterable<Integer> {
+public class StateSet implements Iterable<State> {
 
-    public Set<Integer> states = new HashSet<>();
+    public Set<State> states = new HashSet<>();
 
-    public void addState(int state) {
+    public void addState(State state) {
         states.add(state);
     }
 
@@ -17,17 +17,21 @@ public class StateSet implements Iterable<Integer> {
         states.addAll(other.states);
     }
 
-    public boolean contains(int state) {
+    public boolean contains(State state) {
         return states.contains(state);
     }
 
+    public boolean contains(int state) {
+        return states.stream().anyMatch(s -> s.state == state);
+    }
 
-    public void remove(int state) {
+
+    public void remove(State state) {
         states.remove(state);
     }
 
     @Override
-    public Iterator<Integer> iterator() {
+    public Iterator<State> iterator() {
         return states.iterator();
     }
 

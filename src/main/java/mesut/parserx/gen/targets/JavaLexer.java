@@ -39,7 +39,7 @@ public class JavaLexer {
         template.set("token_class", options.tokenClass);
         template.set("next_token", options.lexerFunction);
         template.set("skip_list", NodeList.join(LexerGenerator.makeIntArr(gen.skipList), ","));
-        template.set("final_list", NodeList.join(LexerGenerator.makeIntArr(dfa.accepting), ","));
+        template.set("final_list", NodeList.join(LexerGenerator.makeIntArr(dfa.acc()), ","));
 
         nameAndId();
         writeTrans();
@@ -102,8 +102,8 @@ public class JavaLexer {
         transWriter.append("\"");
         transWriter.append(makeOctal(dfa.getAlphabet().size()));
         transWriter.append("\" +\n");
-        for (int state : dfa.it()) {
-            List<Transition> list = dfa.trans[state];
+        for (var state : dfa.it()) {
+            List<Transition> list = state.transitions;
             transWriter.append(indent);
             transWriter.append("\"");
             if (list == null || list.isEmpty()) {
@@ -113,11 +113,11 @@ public class JavaLexer {
                 transWriter.append(makeOctal(list.size()));
                 for (Transition tr : list) {
                     transWriter.append(makeOctal(tr.input));
-                    transWriter.append(makeOctal(tr.target));
+                    transWriter.append(makeOctal(tr.target.state));
                 }
             }
             transWriter.append("\"");
-            if (state <= dfa.lastState - 1) {
+            if (state.state <= dfa.lastState - 1) {
                 transWriter.append(" +\n");
             }
         }
@@ -127,11 +127,11 @@ public class JavaLexer {
     private void nameAndId() {
         //id list
         StringBuilder idWriter = new StringBuilder();
-        for (int state : dfa.it()) {
-            idWriter.append(gen.idArr[state]);
-            if (state <= dfa.lastState - 1) {
+        for (var state : dfa.it()) {
+            idWriter.append(gen.idArr[state.state]);
+            if (state.state <= dfa.lastState - 1) {
                 idWriter.append(",");
-                if (state > 0 && state % 20 == 0) {
+                if (state.state > 0 && state.state % 20 == 0) {
                     idWriter.append("\n            ");
                 }
             }

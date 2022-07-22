@@ -17,7 +17,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-@Ignore
+//@Ignore
 public class LexerGenTest {
 
     @Test
@@ -35,7 +35,7 @@ public class LexerGenTest {
         Tree tree = Env.tree("lexer/skip.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath() + "/cpp";
         LexerGenerator.gen(tree, "cpp").dfa.dot(Env.dotFile(tree.file.getName() + ".dot"));
-        Runtime.getRuntime().exec("g++ -shared -fPIC -o l.so Lexer.cpp Token.cpp",null, new File(tree.options.outDir));
+        Runtime.getRuntime().exec("g++ -shared -fPIC -o l.so Lexer.cpp Token.cpp", null, new File(tree.options.outDir));
     }
 
     @Test
@@ -56,6 +56,7 @@ public class LexerGenTest {
 
     @Test
     public void skip() throws Exception {
+        //todo broken
         Tree tree = Env.tree("lexer/skip.g");
         RealTest.check(tree, "abc0 cde  aa\nab\rmn");
     }
@@ -87,20 +88,16 @@ public class LexerGenTest {
         Tree tree = Env.tree("str.g");
         tree.options.lexerClass = "Lexer2";
         tree.options.tokenClass = "Token2";
-        tree.options.outDir = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/test/java/lexer/itself";
+        tree.options.outDir = "./src/test/java/lexer/itself";
         tree.options.packageName = "lexer.itself";
         LexerGenerator.gen(tree, "java");
     }
 
     @Test
     public void itself() throws Exception {
-        String path = "/media/mesut/SSD-DATA/IdeaProjects/parserx/src/main/grammar/parserx.g";
-        Lexer lexer = new Lexer(new File(path));
-        while (true) {
-            Token token = lexer.next();
-            System.out.println(token);
-            if (token.type == 0) break;
-        }
+        var path = new File("./src/main/grammar/parserx.g");
+        Tree tree = Tree.makeTree(path);
+        RealTest.check(tree, path.getAbsolutePath());
     }
 
     @Test

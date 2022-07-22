@@ -10,23 +10,19 @@ import mesut.parserx.utils.UnicodeUtils;
 import java.io.*;
 import java.util.*;
 
-@SuppressWarnings("unchecked")
 public class NFA {
     public static boolean debugTransition = false;
     public Tree tree;
-    public List<Transition>[] trans;
-    public boolean[] accepting;
-    public boolean[] isSkip;
-    public List<String>[] names;
-    public int initial = 0;
-    public int lastState = 0;
+    public int lastState = -1;
+    public State initialState;
+    State[] id_to_state;
+    private int capacity;
 
-    public NFA(int maxStates, Tree tree) {
-        trans = new List[maxStates];
-        accepting = new boolean[maxStates];
-        isSkip = new boolean[maxStates];
-        names = new List[maxStates];
+    public NFA(int capacity, Tree tree) {
+        this.capacity = capacity;
         this.tree = tree;
+        id_to_state = new State[capacity];
+        this.initialState = getState(0);
     }
 
     public NFA(int maxStates) {
@@ -54,27 +50,30 @@ public class NFA {
     }
 
     public void expand(int state) {
-        if (state < trans.length) {
+        if (state < capacity) {
             return;
         }
-        int max = state * 2;
-        int len = trans.length;
+        int new_cap = state * 2;
+        var new_arr = new State[new_cap];
+        System.arraycopy(id_to_state, 0, new_arr, 0, capacity);
 
-        accepting = expand(accepting, new boolean[max], len);
-        trans = expand(trans, new List[max], len);
-        isSkip = expand(isSkip, new boolean[max], len);
-        names = expand(names, new List[max], len);
+        id_to_state = new_arr;
+        capacity = new_cap;
     }
 
-    <T> T expand(Object src, Object target, int len) {
-        System.arraycopy(src, 0, target, 0, len);
-        return (T) target;
+
+    public boolean[] acc() {
+        var res = new boolean[lastState+1];
+        for (int i = 0; i <= lastState; i++) {
+            res[i] = getState(i).accepting;
+        }
+        return res;
     }
 
     //epsilon transitions from a state
-    StateSet getEps(int state) {
+    StateSet getEps(State state) {
         StateSet stateSet = new StateSet();
-        for (Transition tr : get(state)) {
+        for (Transition tr : state.transitions) {
             if (tr.epsilon) {
                 stateSet.addState(tr.target);
             }
@@ -82,12 +81,12 @@ public class NFA {
         return stateSet;
     }
 
-    public boolean isDead(int s) {
-        return !hasTransitions(s) && findIncoming(s).isEmpty();
+    public boolean isDead(State state) {
+        return state.transitions.isEmpty() && findIncoming(state).isEmpty();
     }
 
     public boolean hasTransitions(int state) {
-        return trans[state] != null && !trans[state].isEmpty();
+        return !get(state).isEmpty();
     }
 
     public Alphabet getAlphabet() {
@@ -97,23 +96,21 @@ public class NFA {
     //state,input index,target state
     public void addTransition(int state, int target, int input) {
         if (debugTransition) {
-            System.out.printf("st:%d to st:%d with:%s\n", state, target, getAlphabet().getRange(input));
+            System.out.printf("%s -> %s, %s\n", state, target, getAlphabet().getRange(input));
         }
-        Transition transition = new Transition(state, target, input);
-        add(transition);
+        Transition tr = new Transition(getState(state), getState(target), input);
+        getState(state).add(tr);
         lastState = Math.max(lastState, Math.max(state, target));
     }
 
-    private void add(Transition tr) {
-        expand(Math.max(tr.state, tr.target));
-        List<Transition> arr = trans[tr.state];
-        if (arr == null) {
-            arr = new ArrayList<>();
-            trans[tr.state] = arr;
+    public State getState(int id) {
+        expand(id);
+        var res = id_to_state[id];
+        if (res == null) {
+            res = new State(id);
+            id_to_state[id] = res;
         }
-        if (!arr.contains(tr)) {
-            arr.add(tr);
-        }
+        return res;
     }
 
     public void addTransitionRange(int state, int target, int left, int right) {
@@ -123,25 +120,19 @@ public class NFA {
     }
 
     public void setAccepting(int state, boolean val) {
-        expand(state);
-        accepting[state] = val;
+        getState(state).accepting = val;
     }
 
-    public boolean isAccepting(int state) {
-        return accepting[state];
-    }
 
     public void addEpsilon(int state, int target) {
-        if (!getEps(state).contains(target)) {
-            add(new Transition(state, target));
-        }
+        getState(state).add(new Transition(getState(state), getState(target)));
     }
 
-    public List<Transition> findIncoming(int to) {
+    public List<Transition> findIncoming(State to) {
         List<Transition> all = new ArrayList<>();
-        for (int state : it()) {
-            for (Transition transition : get(state)) {
-                if (transition.target == to) {
+        for (var state : it()) {
+            for (Transition transition : state.transitions) {
+                if (transition.target.equals(to)) {
                     all.add(transition);
                 }
             }
@@ -149,13 +140,13 @@ public class NFA {
         return all;
     }
 
-    public int newState() {
-        return ++lastState;
+    public State newState() {
+        return getState(++lastState);
     }
 
     public boolean isAccepting(StateSet set) {
-        for (int state : set) {
-            if (isAccepting(state)) {
+        for (var state : set) {
+            if (state.accepting) {
                 return true;
             }
         }
@@ -163,8 +154,8 @@ public class NFA {
     }
 
     public boolean isSkip(StateSet set) {
-        for (int state : set) {
-            if (isSkip[state]) {
+        for (var state : set) {
+            if (state.isSkip) {
                 return true;
             }
         }
@@ -172,11 +163,7 @@ public class NFA {
     }
 
     public void addName(String name, int state) {
-        List<String> list = names[state];
-        if (list == null) {
-            list = new ArrayList<>();
-            names[state] = list;
-        }
+        List<String> list = getState(state).names;
         if (!list.contains(name)) {
             list.add(name);
         }
@@ -186,9 +173,8 @@ public class NFA {
     String getName(StateSet set) {
         int minIndex = Integer.MAX_VALUE;
         String name = null;
-        for (int state : set) {
-            if (names[state] == null) continue;
-            for (String nm : names[state]) {
+        for (var state : set) {
+            for (String nm : state.names) {
                 int i = tree.indexOf(nm);
                 if (i < minIndex) {
                     name = nm;
@@ -200,43 +186,35 @@ public class NFA {
     }
 
     public List<Transition> get(int state) {
-        if (hasTransitions(state)) {
-            return trans[state];
-        }
-        return new ArrayList<>();
+        return getState(state).transitions;
     }
 
-    public Iterable<Integer> it() {
-        return new Iterable<Integer>() {
+    public Iterable<State> it() {
+        return () -> new Iterator<>() {
+            int cur = 0;
+
             @Override
-            public Iterator<Integer> iterator() {
-                return new Iterator<Integer>() {
-                    int cur = 0;
+            public boolean hasNext() {
+                return cur <= lastState;
+            }
 
-                    @Override
-                    public boolean hasNext() {
-                        return cur <= lastState;
-                    }
+            @Override
+            public State next() {
+                return getState(cur++);
+            }
 
-                    @Override
-                    public Integer next() {
-                        return cur++;
-                    }
-
-                    @Override
-                    public void remove() {
-                    }
-                };
+            @Override
+            public void remove() {
             }
         };
     }
 
     //get target state using state and input
-    public int getTarget(int state, int input) {
-        for (Transition tr : get(state)) {
+    public State getTarget(State state, int input) {
+        for (Transition tr : state.transitions) {
             if (tr.input == input) return tr.target;
         }
-        return -1;
+        return null;
     }
 
     public void dump() {
@@ -244,29 +222,30 @@ public class NFA {
     }
 
     String getName(int i) {
-        if (names[i] == null) return "";
-        if (names[i].size() == 1) return "(" + names[i].get(0) + ")";
-        return "(" + names[i].toString() + ")";
+        var names = getState(i).names;
+        if (names.isEmpty()) return "";
+        if (names.size() == 1) return "(" + names.get(0) + ")";
+        return "(" + names + ")";
     }
 
     public void dump(Writer writer) {
         PrintWriter w = new PrintWriter(writer);
-        w.println("initial = " + initial);
+        w.println("initial = " + initialState);
         w.print("final = ");
         boolean first = true;
-        for (int i : it()) {
-            if (isAccepting(i)) {
+        for (var i : it()) {
+            if (i.accepting) {
                 if (!first) {
                     w.print(", ");
                 }
-                w.print(i + getName(i));
+                w.print(i + getName(i.state));
                 first = false;
             }
         }
         w.println();
-        for (int state : it()) {
-            if (!hasTransitions(state)) continue;
-            List<Transition> arr = trans[state];
+        for (var state : it()) {
+            if (!state.transitions.isEmpty()) continue;
+            List<Transition> arr = state.transitions;
             sort(arr);
             for (Transition tr : arr) {
                 w.print(state + " -> " + tr.target);
@@ -291,16 +270,13 @@ public class NFA {
     }
 
     private void sort(List<Transition> arr) {
-        Collections.sort(arr, new Comparator<Transition>() {
-            @Override
-            public int compare(Transition o1, Transition o2) {
-                Node r1 = getAlphabet().getRegex(o1.input);
-                Node r2 = getAlphabet().getRegex(o2.input);
-                if (r1.isRange() && r2.isRange()) {
-                    return r1.asRange().compareTo(r2.asRange());
-                }
-                return 0;
+        arr.sort((o1, o2) -> {
+            Node r1 = getAlphabet().getRegex(o1.input);
+            Node r2 = getAlphabet().getRegex(o2.input);
+            if (r1.isRange() && r2.isRange()) {
+                return r1.asRange().compareTo(r2.asRange());
             }
+            return 0;
         });
     }
 
@@ -315,27 +291,28 @@ public class NFA {
         PrintWriter w = new PrintWriter(writer);
         w.println("digraph G{");
         w.println("rankdir = LR;");
-        w.printf("%d [color=%s]\n", initial, initialColor);
-        for (int state : it()) {
+        w.printf("%s [color=%s]\n", initialState, initialColor);
+        for (var state : it()) {
             if (isDead(state)) continue;
-            String name = names[state] == null ? "" : names[state].toString();
-            if (names[state] != null && names[state].size() == 1) {
-                name = names[state].get(0);
+            var names = state.names;
+            String name = names.isEmpty() ? "" : names.toString();
+            if (names.size() == 1) {
+                name = names.get(0);
             }
-            if (isAccepting(state)) {
+            if (state.accepting) {
                 //todo write label inside
-                w.printf("%d [shape = doublecircle color=%s xlabel=\"%s\"]\n", state, finalColor, name);
+                w.printf("%d [shape = doublecircle color=%s xlabel=\"%s\"]\n", state.state, finalColor, name);
             }
-            else if (isSkip[state]) {
-                w.printf("%d [color=%s xlabel=\"%s\"]\n", state, skipColor, name);
+            else if (state.isSkip) {
+                w.printf("%d [color=%s xlabel=\"%s\"]\n", state.state, skipColor, name);
             }
             else {
-                w.printf("%d [xlabel=\"%s\"]\n", state, name);
+                w.printf("%d [xlabel=\"%s\"]\n", state.state, name);
             }
         }
 
-        for (int state : it()) {
-            for (Transition tr : get(state)) {
+        for (var state : it()) {
+            for (Transition tr : state.transitions) {
                 String label;
                 if (tr.epsilon) {
                     label = Epsilon.str();
