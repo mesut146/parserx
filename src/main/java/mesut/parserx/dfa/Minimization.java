@@ -91,7 +91,7 @@ public class Minimization {
         }
     }
 
-    //remove dead(non final and no outgoing transitions)
+    //remove dead(non-final and no outgoing transitions)
     public static void removeDead(NFA dfa) {
         for (var state : dfa.it()) {
             if (state.accepting) continue;
@@ -104,7 +104,6 @@ public class Minimization {
                 }
             }
             if (dead) {
-                System.out.println("removed dead state: " + state.state);
                 state.transitions.clear();
             }
         }
@@ -218,7 +217,7 @@ public class Minimization {
             if (dfa.isDead(state)) continue;
             var target = map.get(state);
             for (Transition tr : state.transitions) {
-                res.addTransition(target, map.get(tr.target), tr.input);
+                res.addTransition(res.getState(target.state), res.getState(map.get(tr.target).state), tr.input);
             }
             if (state.accepting) {
                 res.setAccepting(state.state, true);

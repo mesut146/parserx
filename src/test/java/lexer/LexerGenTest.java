@@ -56,7 +56,6 @@ public class LexerGenTest {
 
     @Test
     public void skip() throws Exception {
-        //todo broken
         Tree tree = Env.tree("lexer/skip.g");
         RealTest.check(tree, "abc0 cde  aa\nab\rmn");
     }

@@ -60,8 +60,9 @@ public class DFABuilder {
                     openStates.add(closure(targets));
                 }
                 var target_state = getDfaState(targets);
-                if (debugDFA)
+                if (debugDFA) {
                     System.out.printf("targets=%s dfa=%d\n", targets, target_state.state);
+                }
                 target_state.accepting = nfa.isAccepting(targets);
                 target_state.isSkip = nfa.isSkip(targets);
                 dfa.addTransition(dfaState, target_state, input);
