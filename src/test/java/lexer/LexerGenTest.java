@@ -84,16 +84,6 @@ public class LexerGenTest {
     }
 
     @Test
-    public void itself2() throws Exception {
-        Tree tree = Env.tree("str.g");
-        tree.options.lexerClass = "Lexer2";
-        tree.options.tokenClass = "Token2";
-        tree.options.outDir = "./src/test/java/lexer/itself";
-        tree.options.packageName = "lexer.itself";
-        LexerGenerator.gen(tree, "java");
-    }
-
-    @Test
     public void itself() throws Exception {
         var path = new File("./src/main/grammar/parserx.g");
         Tree tree = Tree.makeTree(path);

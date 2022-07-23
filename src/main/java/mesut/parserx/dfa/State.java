@@ -25,6 +25,12 @@ public class State {
         add(new Transition(this, to));
     }
 
+    public void addName(String name) {
+        if (!names.contains(name)) {
+            names.add(name);
+        }
+    }
+
     @Override
     public String toString() {
         return "" + state;

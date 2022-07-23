@@ -1,5 +1,7 @@
 package mesut.parserx.dfa;
 
+import jdk.nio.Channels;
+
 import java.util.*;
 
 public class DFABuilder {
@@ -21,25 +23,22 @@ public class DFABuilder {
         if (debugDFA) {
             System.out.println("dfa conversion started");
         }
-        dfa = new NFA(nfa.lastState * 2);
+        dfa = new NFA((nfa.lastState + 1) * 2);
         dfa.tree = nfa.tree;
-
 
         Queue<StateSet> openStates = new LinkedList<>();
         Set<StateSet> processed = new HashSet<>();
-        openStates.add(closure(nfa.initialState));
-        dfa.lastState = -1;
+        var cl = closure(nfa.initialState);
+        dfaStateMap.put(cl, dfa.initialState);
+        openStates.add(cl);
 
         while (!openStates.isEmpty()) {
-            StateSet curSet = openStates.poll();//current nfa state set
-            StateSet closure = closure(curSet);//1,2,3
+            var curSet = openStates.poll();//current nfa state set
+            var closure = closure(curSet);
             processed.add(curSet);
 
             //get corresponding dfa state
             var dfaState = getDfaState(closure);
-            if (debugDFA) {
-                System.out.printf("Closure(%s)=%s dfa=%d\n", curSet, closure, dfaState.state);
-            }
             //input -> target state set
             Map<Integer, StateSet> map = new HashMap<>();
             //find transitions from closure
@@ -54,21 +53,19 @@ public class DFABuilder {
                     targets.addAll(closure(tr.target));
                 }
             }
-            if (debugDFA)
-                System.out.printf("map(%s)=%s\n", curSet, map);
             //make transition for each input
             for (int input : map.keySet()) {
                 StateSet targets = map.get(input);
                 if (!openStates.contains(targets) && !processed.contains(targets)) {
-                    openStates.add(targets);
+                    openStates.add(closure(targets));
                 }
                 var target_state = getDfaState(targets);
                 if (debugDFA)
                     System.out.printf("targets=%s dfa=%d\n", targets, target_state.state);
                 target_state.accepting = nfa.isAccepting(targets);
-                dfa.addTransition(dfaState.state, target_state.state, input);
                 target_state.isSkip = nfa.isSkip(targets);
-                dfa.addName(nfa.getName(targets), target_state.state);
+                dfa.addTransition(dfaState, target_state, input);
+                target_state.addName(nfa.getName(targets));
             }
         }
         return dfa;

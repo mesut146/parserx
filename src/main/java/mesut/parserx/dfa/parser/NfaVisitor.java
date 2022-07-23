@@ -55,11 +55,12 @@ public class NfaVisitor {
                     input = input(trLine.g1.trArrow.g1.INPUT, alphabet);
                 }
             }
+            var st = res.getState(Integer.parseInt(state));
             if (input == -1) {
-                res.addEpsilon(Integer.parseInt(state), Integer.parseInt(target));
+                st.addEpsilon(res.getState(Integer.parseInt(target)));
             }
             else {
-                res.addTransition(Integer.parseInt(state), Integer.parseInt(target), input);
+                res.addTransition(st, res.getState(Integer.parseInt(target)), input);
             }
         }
         return res;
@@ -82,7 +83,7 @@ public class NfaVisitor {
         int st = Integer.parseInt(ns.NUM.value);
         res.setAccepting(st, true);
         if (ns.g1 != null) {
-            res.addName(ns.g1.IDENT.value, st);
+            res.getState(st).addName(ns.g1.IDENT.value);
         }
     }
 

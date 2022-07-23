@@ -98,7 +98,7 @@ public class RegexBuilder {
                     in.state.addEpsilon(out.target);
                 }
                 else {
-                    nfa.addTransition(in.state.state, out.target.state, alphabet.addRegex(node));
+                    nfa.addTransition(in.state, out.target, alphabet.addRegex(node));
                 }
             }
         }

@@ -44,9 +44,9 @@ public class NFABuilder extends BaseVisitor<State, State> {
             start = nfa.initialState;
         }
         var end = decl.rhs.accept(this, start);
-        end.accepting=true;
-        nfa.addName(decl.name, end.state);
+        end.accepting = true;
         end.isSkip = decl.isSkip;
+        end.addName(decl.name);
         finalMap.put(decl.ref(), end);
     }
 
@@ -93,12 +93,16 @@ public class NFABuilder extends BaseVisitor<State, State> {
         }
     }
 
+    int getRangeId(int left, int right) {
+        return nfa.getAlphabet().getId(Range.of(left, right));
+    }
+
     @Override
     public State visitString(StringNode string, State start) {
         var end = start;
         for (char ch : string.value.toCharArray()) {
             var newEnd = nfa.newState();
-            nfa.addTransitionRange(end.state, newEnd.state, ch, ch);
+            nfa.addTransition(end, newEnd, getRangeId(ch, ch));
             end = newEnd;
         }
         return end;
@@ -114,8 +118,8 @@ public class NFABuilder extends BaseVisitor<State, State> {
         var end = nfa.newState();
         //in order to have only one end state we add epsilons?
         for (int i = 0; i < bracket.size(); i++) {
-            Range rn = bracket.ranges.get(i);
-            nfa.addTransitionRange(start.state, end.state, rn.start, rn.end);
+            var range = bracket.ranges.get(i);
+            nfa.addTransition(start, end, getRangeId(range.start, range.end));
         }
         return end;
     }
@@ -141,10 +145,10 @@ public class NFABuilder extends BaseVisitor<State, State> {
         int i = 0;
         for (char ch : reg.asString().value.toCharArray()) {
             newEnd = nfa.newState();
-            nfa.addTransitionRange(end.state, newEnd.state, ch, ch);
+            nfa.addTransition(end, newEnd, getRangeId(ch, ch));
             //add negated transitions
-            for (Range r : until.brackets.get(i).getRanges()) {
-                nfa.addTransitionRange(newEnd.state, start.state, r.start, r.end);
+            for (var range : until.brackets.get(i).getRanges()) {
+                nfa.addTransition(newEnd, start, getRangeId(range.start, range.end));
             }
             end = newEnd;
             i++;

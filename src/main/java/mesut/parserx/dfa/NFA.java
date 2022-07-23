@@ -9,24 +9,25 @@ import mesut.parserx.utils.UnicodeUtils;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class NFA {
     public static boolean debugTransition = false;
     public Tree tree;
     public int lastState = -1;
     public State initialState;
-    State[] id_to_state;
-    private int capacity;
+    Map<Integer, State> id_to_state;
 
     public NFA(int capacity, Tree tree) {
-        this.capacity = capacity;
         this.tree = tree;
-        id_to_state = new State[capacity];
-        this.initialState = getState(0);
+        this.id_to_state = new HashMap<>(capacity);
+        this.initialState = newState();
     }
 
-    public NFA(int maxStates) {
-        this(maxStates, new Tree());
+    public NFA(int capacity) {
+        this(capacity, new Tree());
     }
 
     public static NFA read(File file) throws IOException {
@@ -49,30 +50,17 @@ public class NFA {
         return new DFABuilder(this).dfa();
     }
 
-    public void expand(int state) {
-        if (state < capacity) {
-            return;
-        }
-        int new_cap = state * 2;
-        var new_arr = new State[new_cap];
-        System.arraycopy(id_to_state, 0, new_arr, 0, capacity);
-
-        id_to_state = new_arr;
-        capacity = new_cap;
-    }
-
-
     public boolean[] acc() {
-        var res = new boolean[lastState+1];
-        for (int i = 0; i <= lastState; i++) {
-            res[i] = getState(i).accepting;
+        var res = new boolean[lastState + 1];
+        for (var state : it()) {
+            res[state.state] = state.accepting;
         }
         return res;
     }
 
     //epsilon transitions from a state
     StateSet getEps(State state) {
-        StateSet stateSet = new StateSet();
+        var stateSet = new StateSet();
         for (Transition tr : state.transitions) {
             if (tr.epsilon) {
                 stateSet.addState(tr.target);
@@ -85,47 +73,31 @@ public class NFA {
         return state.transitions.isEmpty() && findIncoming(state).isEmpty();
     }
 
-    public boolean hasTransitions(int state) {
-        return !get(state).isEmpty();
-    }
-
     public Alphabet getAlphabet() {
         return tree.alphabet;
     }
 
-    //state,input index,target state
-    public void addTransition(int state, int target, int input) {
+    public void addTransition(State state, State target, int input) {
         if (debugTransition) {
             System.out.printf("%s -> %s, %s\n", state, target, getAlphabet().getRange(input));
         }
-        Transition tr = new Transition(getState(state), getState(target), input);
-        getState(state).add(tr);
-        lastState = Math.max(lastState, Math.max(state, target));
+        Transition tr = new Transition(state, target, input);
+        state.add(tr);
+        lastState = Math.max(lastState, Math.max(state.state, target.state));
     }
 
     public State getState(int id) {
-        expand(id);
-        var res = id_to_state[id];
+        //if (id == 0) return initialState;
+        var res = id_to_state.get(id);
         if (res == null) {
             res = new State(id);
-            id_to_state[id] = res;
+            id_to_state.put(id, res);
         }
         return res;
     }
 
-    public void addTransitionRange(int state, int target, int left, int right) {
-        if (debugTransition)
-            System.out.printf("st:%d (%s-%s) to st:%d\n", state, UnicodeUtils.printChar(left), UnicodeUtils.printChar(right), target);
-        addTransition(state, target, getAlphabet().getId(Range.of(left, right)));
-    }
-
     public void setAccepting(int state, boolean val) {
         getState(state).accepting = val;
-    }
-
-
-    public void addEpsilon(int state, int target) {
-        getState(state).add(new Transition(getState(state), getState(target)));
     }
 
     public List<Transition> findIncoming(State to) {
@@ -145,28 +117,11 @@ public class NFA {
     }
 
     public boolean isAccepting(StateSet set) {
-        for (var state : set) {
-            if (state.accepting) {
-                return true;
-            }
-        }
-        return false;
+        return set.states.stream().anyMatch(s -> s.accepting);
     }
 
     public boolean isSkip(StateSet set) {
-        for (var state : set) {
-            if (state.isSkip) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void addName(String name, int state) {
-        List<String> list = getState(state).names;
-        if (!list.contains(name)) {
-            list.add(name);
-        }
+        return set.states.stream().anyMatch(s -> s.isSkip);
     }
 
     //get token name for state set by defined order
@@ -185,13 +140,9 @@ public class NFA {
         return name;
     }
 
-    public List<Transition> get(int state) {
-        return getState(state).transitions;
-    }
-
     public Iterable<State> it() {
         return () -> new Iterator<>() {
-            int cur = 0;
+            int cur = initialState.state;
 
             @Override
             public boolean hasNext() {
@@ -217,12 +168,19 @@ public class NFA {
         return null;
     }
 
+    public List<State> getTargets(State state, int input) {
+        return state.transitions.stream()
+                .filter(tr -> tr.input == input)
+                .map(tr -> tr.target)
+                .collect(Collectors.toList());
+    }
+
     public void dump() {
         dump(new PrintWriter(System.out));
     }
 
-    String getName(int i) {
-        var names = getState(i).names;
+    String getName(State state) {
+        var names = state.names;
         if (names.isEmpty()) return "";
         if (names.size() == 1) return "(" + names.get(0) + ")";
         return "(" + names + ")";
@@ -233,18 +191,23 @@ public class NFA {
         w.println("initial = " + initialState);
         w.print("final = ");
         boolean first = true;
-        for (var i : it()) {
-            if (i.accepting) {
-                if (!first) {
-                    w.print(", ");
-                }
-                w.print(i + getName(i.state));
-                first = false;
-            }
-        }
+
+        w.println(StreamSupport.stream(it().spliterator(), false)
+                .filter(st -> st.accepting)
+                .map(st -> st.state + getName(st))
+                .collect(Collectors.joining(", ")));
+//        for (var i : it()) {
+//            if (i.accepting) {
+//                if (!first) {
+//                    w.print(", ");
+//                }
+//                w.print(i + getName(i));
+//                first = false;
+//            }
+//        }
         w.println();
         for (var state : it()) {
-            if (!state.transitions.isEmpty()) continue;
+            if (state.transitions.isEmpty()) continue;
             List<Transition> arr = state.transitions;
             sort(arr);
             for (Transition tr : arr) {

@@ -50,7 +50,7 @@ public class Minimization {
                     else {
                         id2 = resAlphabet.addRegex(node);
                     }
-                    res.addTransition(state.state, target.state, id2);
+                    res.addTransition(state, target, id2);
                 }
             }
             if (state.accepting) {
@@ -218,7 +218,7 @@ public class Minimization {
             if (dfa.isDead(state)) continue;
             var target = map.get(state);
             for (Transition tr : state.transitions) {
-                res.addTransition(target.state, map.get(tr.target).state, tr.input);
+                res.addTransition(target, map.get(tr.target), tr.input);
             }
             if (state.accepting) {
                 res.setAccepting(state.state, true);
@@ -232,7 +232,7 @@ public class Minimization {
                 else {
                     for (String nm : names) {
                         if (!names2.contains(nm)) {
-                            res.addName(nm, target.state);
+                            target.addName(nm);
                         }
                     }
                 }
