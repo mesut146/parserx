@@ -1,13 +1,11 @@
 package mesut.parserx.dfa;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 //nfa,dfa state set
 public class StateSet implements Iterable<State> {
 
-    public Set<State> states = new HashSet<>();
+    public Set<State> states = new TreeSet<>(Comparator.comparingInt(o -> o.state));
 
     public void addState(State state) {
         states.add(state);
@@ -20,11 +18,6 @@ public class StateSet implements Iterable<State> {
     public boolean contains(State state) {
         return states.contains(state);
     }
-
-    public boolean contains(int state) {
-        return states.stream().anyMatch(s -> s.state == state);
-    }
-
 
     public void remove(State state) {
         states.remove(state);

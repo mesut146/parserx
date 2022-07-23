@@ -85,10 +85,10 @@ public class RegexBuilder {
         if (state.transitions.isEmpty()) return;
         mergeAll(state);
         //eliminate state
-        List<Transition> incomings = nfa.findIncoming(state);
+        List<Transition> incoming = nfa.findIncoming(state);
         List<Transition> list = state.transitions;
 
-        for (Transition in : incomings) {
+        for (Transition in : incoming) {
             for (Transition out : list) {
                 if (out.target.state == state.state || in.state.state == state.state) {//looping
                     continue;
@@ -102,8 +102,8 @@ public class RegexBuilder {
                 }
             }
         }
-        for (Transition incoming : incomings) {
-            remove(incoming);
+        for (Transition in : incoming) {
+            in.state.transitions.remove(in);
         }
         list.clear();
     }
@@ -116,10 +116,6 @@ public class RegexBuilder {
             }
         }
         return null;
-    }
-
-    void remove(Transition tr) {
-        tr.state.transitions.remove(tr);
     }
 
     //actual regex builder
@@ -205,7 +201,7 @@ public class RegexBuilder {
         }
     }
 
-    //simple states(non looping,no start,no final) gets eliminated first to get prettier regex
+    //simple states(non-looping,non-start,non-final) gets eliminated first to get prettier regex
     public void autoOrder() {
         List<State> looping = new ArrayList<>();
         for (var state : nfa.it()) {

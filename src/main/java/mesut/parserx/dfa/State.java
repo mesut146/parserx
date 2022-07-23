@@ -6,6 +6,7 @@ import java.util.List;
 public class State {
     public int state;
     public List<Transition> transitions = new ArrayList<>();
+    public List<Transition> incoming = new ArrayList<>();
     public boolean isSkip = false;
     public boolean accepting = false;
     public List<String> names = new ArrayList<>();
@@ -19,6 +20,7 @@ public class State {
             return;
         }
         transitions.add(tr);
+        tr.target.incoming.add(tr);
     }
 
     public void addEpsilon(State to) {

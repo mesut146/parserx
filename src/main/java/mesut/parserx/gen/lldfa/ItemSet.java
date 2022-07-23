@@ -1,6 +1,7 @@
 package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.FirstSet;
+import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorHelper;
 import mesut.parserx.nodes.Name;
@@ -21,8 +22,8 @@ public class ItemSet {
     public static int lastId = 0;
     public String type;
     Tree tree;
-    public List<Transition> transitions = new ArrayList<>();
-    public List<Transition> incomings = new ArrayList<>();
+    public List<LLTransition> transitions = new ArrayList<>();
+    public List<LLTransition> incoming = new ArrayList<>();
     public Node symbol;
     boolean alreadyGenReduces = false;
 
@@ -47,13 +48,20 @@ public class ItemSet {
     }
 
     public void addTransition(Node sym, ItemSet target) {
-        for (Transition t : transitions) {
+        for (LLTransition t : transitions) {
             if (t.symbol.equals(sym) && t.target == target) return;
         }
 
-        Transition tr = new Transition(this, sym, target);
+        LLTransition tr = new LLTransition(this, sym, target);
         transitions.add(tr);
-        target.incomings.add(tr);
+        target.incoming.add(tr);
+    }
+
+    public boolean hasFinal() {
+        for (Item it : all) {
+            if (it.isReduce(tree) && it.lookAhead.contains(LrDFAGen.dollar)) return true;
+        }
+        return false;
     }
 
     void gen(Item it, List<Item> list) {

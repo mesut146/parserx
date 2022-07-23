@@ -193,7 +193,7 @@ public class JavaGen {
         Set<Name> allLa = new HashSet<>();
         //collect items by la
         Map<Name, List<Item>> groups = groupByToken();
-        for (Transition tr : set.transitions) {
+        for (LLTransition tr : set.transitions) {
             if (tr.symbol.isName() && tr.symbol.asName().isToken) {
                 Name sym = tr.symbol.asName();
                 allLa.add(sym);

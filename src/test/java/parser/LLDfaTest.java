@@ -1,6 +1,7 @@
 package parser;
 
 import common.Env;
+import mesut.parserx.gen.lldfa.CcGen;
 import mesut.parserx.gen.lldfa.GrammarEmitter;
 import mesut.parserx.gen.lldfa.LLDfaBuilder;
 import mesut.parserx.gen.lldfa.LaFinder;
@@ -253,5 +254,13 @@ public class LLDfaTest {
                 input("y", "F#1{E#2{'y'}}").
                 input("ax", "F#1{E#1{[A#1{'a'}], 'x'}}").
                 input("aby", "F#1{E#2{[B#1{'a'}, B#2{'b'}], 'y'}}"));
+    }
+
+    @Test
+    public void buildRegex() throws IOException {
+        single("lldfa/factor.g");
+        Tree tree = Env.tree("lldfa/rr-loop.g");
+        var cc = new CcGen(tree);
+        cc.build(new Name("E"));
     }
 }

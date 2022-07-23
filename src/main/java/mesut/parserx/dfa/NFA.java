@@ -30,6 +30,21 @@ public class NFA {
         this(capacity, new Tree());
     }
 
+    public State newState() {
+        return getState(++lastState);
+    }
+
+    public State getState(int id) {
+        //if (id == 0) return initialState;
+        var res = id_to_state.get(id);
+        if (res == null) {
+            res = new State(id);
+            id_to_state.put(id, res);
+        }
+        lastState = Math.max(lastState, id);
+        return res;
+    }
+
     public static NFA read(File file) throws IOException {
         return NfaVisitor.make(file);
     }
@@ -86,15 +101,6 @@ public class NFA {
         lastState = Math.max(lastState, Math.max(state.state, target.state));
     }
 
-    public State getState(int id) {
-        //if (id == 0) return initialState;
-        var res = id_to_state.get(id);
-        if (res == null) {
-            res = new State(id);
-            id_to_state.put(id, res);
-        }
-        return res;
-    }
 
     public void setAccepting(int state, boolean val) {
         getState(state).accepting = val;
@@ -112,9 +118,6 @@ public class NFA {
         return all;
     }
 
-    public State newState() {
-        return getState(++lastState);
-    }
 
     public boolean isAccepting(StateSet set) {
         return set.states.stream().anyMatch(s -> s.accepting);

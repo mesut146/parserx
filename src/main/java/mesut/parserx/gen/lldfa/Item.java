@@ -73,7 +73,7 @@ public class Item {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append(rule.ref);
         if (rule.which != -1) {
             sb.append("#").append(rule.which);
@@ -101,10 +101,10 @@ public class Item {
     }
 
     public String toString2(Tree tree) {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append(rule.ref);
         sb.append(" -> ");
-        Sequence rhs = rule.rhs.asSequence();
+        var rhs = rule.rhs.asSequence();
         for (int i = 0; i < rhs.size(); i++) {
             if (i == dotPos) {
                 sb.append(". ");
@@ -119,13 +119,13 @@ public class Item {
         }
         if (!isLr0()) {
             sb.append(" , ");
-            for (Iterator<Name> it = lookAhead.iterator(); it.hasNext(); ) {
-                Name la = it.next();
+            for (var it = lookAhead.iterator(); it.hasNext(); ) {
+                var la = it.next();
                 if (la.name.equals("$")) {
                     sb.append(la);
                 }
                 else {
-                    TokenDecl decl = tree.getToken(la.name);
+                    var decl = tree.getToken(la.name);
                     if (decl.rhs.isString()) {
                         sb.append(decl.rhs.asString().value);
                     }
@@ -142,7 +142,7 @@ public class Item {
 
 
     public Node getNode(int pos) {
-        Sequence s = rule.rhs.asSequence();
+        var s = rule.rhs.asSequence();
         if (pos < s.size())
             return s.get(pos);
         return null;
@@ -150,11 +150,11 @@ public class Item {
 
     //first set of follow of pos node
     public Set<Name> follow(Tree tree, int pos) {
-        HashSet<Name> res = new HashSet<>();
+        var res = new HashSet<Name>();
         if (getNode(pos).isStar()) {
             res.addAll(FirstSet.tokens(getNode(pos), tree));
         }
-        boolean allEmpty = true;
+        var allEmpty = true;
         for (int i = pos + 1; i < rhs.size(); ) {
             Node node = rhs.get(i);
             res.addAll(FirstSet.tokens(node, tree));
@@ -179,7 +179,7 @@ public class Item {
         if (this == other) return true;
         if (other == null || getClass() != other.getClass()) return false;
 
-        Item item = (Item) other;
+        var item = (Item) other;
 
         if (dotPos != item.dotPos) return false;
         return Objects.equals(rule, item.rule) && lookAhead.equals(item.lookAhead);

@@ -198,30 +198,35 @@ public class Minimization {
         return merge(dfa, done);
     }
 
-    static NFA merge(NFA dfa, List<StateSet> list) {
+    static NFA merge(NFA dfa, List<StateSet> groups) {
         NFA res = new NFA(dfa.lastState + 1);
         res.initialState.state = dfa.initialState.state;
         res.tree = dfa.tree;
         //state -> target
         Map<State, State> map = new HashMap<>();
-        for (StateSet set : list) {
-            if (set.states.isEmpty()) continue;
-            var iterator = set.iterator();
+        for (StateSet group : groups) {
+            if (group.states.isEmpty()) continue;
+            var iterator = group.iterator();
             var first = iterator.next();
-            map.put(first, first);
+            var target = res.getState(first.state);
+            map.put(first, target);
             while (iterator.hasNext()) {
-                map.put(iterator.next(), first);
+                map.put(iterator.next(), target);
             }
         }
+        //merge all groups
         for (var state : dfa.it()) {
             if (dfa.isDead(state)) continue;
             var target = map.get(state);
             for (Transition tr : state.transitions) {
-                res.addTransition(res.getState(target.state), res.getState(map.get(tr.target).state), tr.input);
+                var s1 = res.getState(target.state);
+                var s2 = map.containsKey(tr.target) ? res.getState(map.get(tr.target).state) : res.getState(tr.target.state);
+                res.addTransition(s1, s2, tr.input);
             }
             if (state.accepting) {
                 res.setAccepting(state.state, true);
             }
+            //set names
             var names = state.names;
             if (!names.isEmpty()) {
                 var names2 = res.getState(target.state).names;

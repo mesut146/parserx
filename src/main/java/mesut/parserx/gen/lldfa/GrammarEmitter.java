@@ -89,7 +89,7 @@ public class GrammarEmitter {
     //move reduction into transition symbol
     public void moveReduction(ItemSet set, Item it, Queue<ItemSet> q) {
         //System.out.println("trace "+it);
-        for (Transition tr : set.transitions) {
+        for (LLTransition tr : set.transitions) {
             if (tr.target == set) continue;
             //if(!tr.symbol.isName()) continue;
             //System.out.println("sym "+tr.symbol.debug());
@@ -102,7 +102,7 @@ public class GrammarEmitter {
                 it2.senders.addAll(it.senders);
                 it.lookAhead.remove(tr.symbol.asName());
                 it2.lookAhead.clear();
-                for (Transition tr2 : target.transitions) {
+                for (LLTransition tr2 : target.transitions) {
                     //todo not all
                     Name sym = tr2.symbol.isSequence() ? tr2.symbol.asSequence().last().asName() : tr2.symbol.asName();
                     it2.lookAhead.add(sym);
@@ -138,7 +138,6 @@ public class GrammarEmitter {
         while (all.size() > 2) {
             for (ItemSet set : all) {
                 if (set.isStart) continue;
-                if (set.stateId == 4) continue;
                 if (canBeRemoved2(set)) {
                     eliminate(set);
                     toRemove.add(set);
@@ -154,11 +153,11 @@ public class GrammarEmitter {
         System.out.println("canBeRemoved2 " + set.stateId);
         if (countOutgoings(set) != 1) return false;
 
-        if (hasFinal(set)) return false;
+        if (set.hasFinal()) return false;
         //looping through final state
         Set<Integer> visited = new HashSet<>();
         Queue<ItemSet> queue = new LinkedList<>();
-        for (Transition tr : set.transitions) {
+        for (LLTransition tr : set.transitions) {
             if (tr.target != set) {
                 queue.add(tr.target);
                 visited.add(tr.target.stateId);
@@ -168,7 +167,7 @@ public class GrammarEmitter {
         while (!queue.isEmpty()) {
             ItemSet cur = queue.poll();
             boolean r = reachFinal(cur, set);
-            for (Transition tr : cur.transitions) {
+            for (LLTransition tr : cur.transitions) {
                 if (tr.target == set && r) return false;
                 if (tr.target != set && visited.add(tr.target.stateId)) queue.add(tr.target);
             }
@@ -178,15 +177,15 @@ public class GrammarEmitter {
 
     public boolean reachFinal(ItemSet from, ItemSet except) {
         //System.out.printf("reachFinal %d -> %d\n", from.stateId, except.stateId);
-        Set<Integer> visited = new HashSet<>();
+        var visited = new HashSet<Integer>();
         Queue<ItemSet> queue = new LinkedList<>();
         queue.add(from);
         visited.add(from.stateId);
         while (!queue.isEmpty()) {
-            ItemSet cur = queue.poll();
-            if (hasFinal(cur)) return true;
-            for (Transition tr : cur.transitions) {
-                ItemSet trg = tr.target;
+            var cur = queue.poll();
+            if (cur.hasFinal()) return true;
+            for (var tr : cur.transitions) {
+                var trg = tr.target;
                 if (trg == except) continue;
                 if (visited.add(trg.stateId)) queue.add(trg);
             }
@@ -194,24 +193,18 @@ public class GrammarEmitter {
         return false;
     }
 
-    public boolean hasFinal(ItemSet set) {
-        for (Item it : set.all) {
-            if (it.isReduce(tree) && it.lookAhead.contains(LrDFAGen.dollar)) return true;
-        }
-        return false;
-    }
 
     public void eliminate(ItemSet set) {
         System.out.println("eliminate " + set.stateId);
         Node loop = null;
-        Transition out = null;
-        for (Transition tr : set.transitions) {
+        LLTransition out = null;
+        for (var tr : set.transitions) {
             if (tr.target == set) loop = tr.symbol;
             else out = tr;
         }
-        for (Transition in : set.incomings) {
+        for (var in : set.incoming) {
             in.target = out.target;
-            out.target.incomings.remove(out);
+            out.target.incoming.remove(out);
             if (loop == null) {
                 in.symbol = new Sequence(wrapOr(in.symbol), wrapOr(out.symbol));
             }
@@ -229,24 +222,24 @@ public class GrammarEmitter {
     }
 
     Node loopSym(ItemSet set) {
-        for (Transition tr : set.transitions) {
+        for (var tr : set.transitions) {
             if (tr.target == set) return tr.symbol;
         }
         return null;
     }
 
     void mergeFinals() {
-        ItemSet ns = new ItemSet(tree, builder.type);
-        for (Iterator<ItemSet> it = all.iterator(); it.hasNext(); ) {
-            ItemSet set = it.next();
-            for (Item item : set.all) {
+        var ns = new ItemSet(tree, builder.type);
+        for (var it = all.iterator(); it.hasNext(); ) {
+            var set = it.next();
+            for (var item : set.all) {
                 if (item.lookAhead.contains(LrDFAGen.dollar) && item.isReduce(tree)) {
                     ns.addAll(set.all);
-                    for (Transition in : set.incomings) {
+                    for (var in : set.incoming) {
                         in.target = ns;
                         System.out.printf("new1 %d -> %d\n", in.from.stateId, ns.stateId);
                     }
-                    for (Transition tr : set.transitions) {
+                    for (var tr : set.transitions) {
                         tr.from = ns;
                         ns.addTransition(tr.symbol, tr.target);
                         System.out.printf("new2 %d -> %d\n", ns.stateId, tr.target.stateId);
@@ -263,25 +256,25 @@ public class GrammarEmitter {
     }
 
     void combine() {
-        for (ItemSet set : all) {
+        for (var set : all) {
             //target -> ors
             Map<ItemSet, List<Node>> map = new HashMap<>();
-            for (Transition tr : set.transitions) {
-                List<Node> list = map.computeIfAbsent(tr.target, k -> new ArrayList<>());
+            for (var tr : set.transitions) {
+                var list = map.computeIfAbsent(tr.target, k -> new ArrayList<>());
                 list.add(tr.symbol);
-                tr.target.incomings.remove(tr);
+                tr.target.incoming.remove(tr);
             }
             set.transitions.clear();
-            for (ItemSet trg : map.keySet()) {
-                List<Node> list = map.get(trg);
-                Node sym = list.size() == 1 ? list.get(0) : new Or(list);
+            for (var trg : map.keySet()) {
+                var list = map.get(trg);
+                var sym = list.size() == 1 ? list.get(0) : new Or(list);
                 set.addTransition(sym, trg);
             }
         }
     }
 
     public void findInlined() {
-        for (ItemSet set : all) {
+        for (var set : all) {
             if (canBeInlined(set)) {
                 inlined.add(set);
             }
@@ -291,9 +284,9 @@ public class GrammarEmitter {
     public boolean canBeInlined(ItemSet set) {
         if (countOutgoings(set) == 1) return true;
         //looping through final state
-        Set<Integer> visited = new HashSet<>();
+        var visited = new HashSet<Integer>();
         Queue<ItemSet> queue = new LinkedList<>();
-        for (Transition tr : set.transitions) {
+        for (LLTransition tr : set.transitions) {
             if (tr.target != set) {
                 queue.add(tr.target);
                 visited.add(tr.target.stateId);
@@ -301,9 +294,9 @@ public class GrammarEmitter {
         }
         //discover
         while (!queue.isEmpty()) {
-            ItemSet cur = queue.poll();
-            boolean r = reachFinal(cur, set);
-            for (Transition tr : cur.transitions) {
+            var cur = queue.poll();
+            var r = reachFinal(cur, set);
+            for (var tr : cur.transitions) {
                 if (tr.target == set && r) return false;
                 if (tr.target != set && visited.add(tr.target.stateId)) queue.add(tr.target);
             }
@@ -314,7 +307,7 @@ public class GrammarEmitter {
 
     public static int countOutgoings(ItemSet set) {
         int cnt = 0;
-        for (Transition tr : set.transitions) {
+        for (var tr : set.transitions) {
             if (tr.target.stateId != set.stateId) cnt++;
         }
         return cnt;

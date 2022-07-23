@@ -22,7 +22,7 @@ public class LLDfaBuilder {
     public Name rule;
     public Tree tree;
     public Tree ebnf;
-    Map<Name, List<Item>> firstItems = new HashMap<>();
+    Map<Name, ItemSet> firstSets = new HashMap<>();
     Set<ItemSet> all;
     Queue<ItemSet> queue = new LinkedList<>();
     String type = "lr1";
@@ -40,13 +40,13 @@ public class LLDfaBuilder {
 
         tree = new Tree(ebnf);
         tree.checkDup = false;
-        for (RuleDecl rd : ebnf.rules) {
+        for (var rd : ebnf.rules) {
             Node rhs = rd.rhs;
             if (rhs.isOr()) {
                 int id = 1;
                 for (Node ch : rhs.asOr()) {
                     ch = expandPlus(ch);
-                    RuleDecl decl = new RuleDecl(rd.ref, ch);
+                    var decl = new RuleDecl(rd.ref, ch);
                     decl.retType = rd.retType;
                     decl.which = id++;
                     tree.addRule(decl);
@@ -54,7 +54,7 @@ public class LLDfaBuilder {
             }
             else {
                 rhs = expandPlus(rhs);
-                RuleDecl decl = new RuleDecl(rd.ref, rhs);
+                var decl = new RuleDecl(rd.ref, rhs);
                 decl.retType = rd.retType;
                 tree.addRule(decl);
             }
@@ -63,15 +63,15 @@ public class LLDfaBuilder {
 
     //rewrite a+ as a a*
     Sequence expandPlus(Node node) {
-        AstInfo info = node.astInfo;
-        Sequence seq = node.isSequence() ? node.asSequence() : new Sequence(node);
-        List<Node> list = new ArrayList<>();
+        var info = node.astInfo;
+        var seq = node.isSequence() ? node.asSequence() : new Sequence(node);
+        var list = new ArrayList<Node>();
         for (Node ch : seq) {
             if (ch.isPlus()) {
-                Regex rn = ch.asRegex();
-                Node copy = rn.node.copy();
+                var rn = ch.asRegex();
+                var copy = rn.node.copy();
                 list.add(copy);
-                Regex star = new Regex(rn.node.copy(), RegexType.STAR);
+                var star = new Regex(rn.node.copy(), RegexType.STAR);
                 star.astInfo = rn.astInfo.copy();
                 list.add(star);
             }
@@ -79,15 +79,15 @@ public class LLDfaBuilder {
                 list.add(ch);
             }
         }
-        Sequence ret = new Sequence(list);
+        var ret = new Sequence(list);
         ret.astInfo = info;
         return ret;
     }
 
     public void factor() {
         prepare();
-        for (RuleDecl rd : ebnf.rules) {
-            FactorVisitor visitor = new FactorVisitor();
+        for (var rd : ebnf.rules) {
+            var visitor = new FactorVisitor();
             visitor.tree = ebnf;
             if (rd.rhs.accept(visitor, null)) {
                 rule = rd.ref;
@@ -121,9 +121,9 @@ public class LLDfaBuilder {
             for (int i = 0; i < seq.size(); i++) {
                 if (i == seq.size() - 1) break;
 
-                Node a = seq.get(i).copy();
-                Node b = seq.get(i + 1).copy();
-                GreedyNormalizer.TailInfo sym = GreedyNormalizer.hasGreedyTail(a, FirstSet.firstSet(b, tree), tree, new FactorLoop(tree, new Factor(tree)));
+                var a = seq.get(i).copy();
+                var b = seq.get(i + 1).copy();
+                var sym = GreedyNormalizer.hasGreedyTail(a, FirstSet.firstSet(b, tree), tree, new FactorLoop(tree, new Factor(tree)));
                 if (sym != null) {
                     throw new RuntimeException(seq + " has greediness");
                 }
@@ -146,6 +146,7 @@ public class LLDfaBuilder {
 
         var firstSet = new ItemSet(tree, type);
         firstSet.isStart = true;
+        firstSets.put(rule, firstSet);
         Set<Name> la;
         if (rule.equals(tree.start)) {
             la = new HashSet<>();
@@ -167,8 +168,6 @@ public class LLDfaBuilder {
             //first.lookAhead.add(dollar);
             first.lookAhead.addAll(la);
             firstSet.addItem(first);
-            List<Item> list = firstItems.computeIfAbsent(rd.ref, k -> new ArrayList<>());
-            list.add(first);
         }
         for (Item item : firstSet.all) {
             item.siblings.addAll(firstSet.all);
@@ -178,21 +177,21 @@ public class LLDfaBuilder {
         queue.add(firstSet);
 
         while (!queue.isEmpty()) {
-            ItemSet curSet = queue.poll();
+            var curSet = queue.poll();
             //if (log) System.out.println("curSet = " + curSet.stateId);
             logger.log(Level.FINE, "curSet = " + curSet.stateId);
             //closure here because it needs all items
             curSet.closure();
             //curSet.addAll(curSet.genReduces());
             Map<Node, List<Item>> map = new HashMap<>();
-            for (Item item : curSet.all) {
+            for (var item : curSet.all) {
                 //System.out.println("item = " + item);
                 //improve stars as non closured
                 for (int i = item.dotPos; i < item.rhs.size(); i++) {
                     if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
                     if (item.closured[i]) continue;
 
-                    Node node = item.getNode(i);
+                    var node = item.getNode(i);
                     Node sym = node.isName() ? node.asName() : node.asRegex().node.asName();
                     int newPos = node.isStar() ? i : i + 1;
                     Item target;
@@ -228,7 +227,7 @@ public class LLDfaBuilder {
 
     boolean canShrink(ItemSet set, Item item, int i) {
         Node node = item.getNode(i);
-        Name sym = node.isName() ? node.asName() : node.asRegex().node.asName();
+        var sym = node.isName() ? node.asName() : node.asRegex().node.asName();
 
         if (set.isFactor(item, i)) return false;
         if (node.isName() && sym.isToken && !set.isFactor(item, i)) return true;
@@ -372,7 +371,7 @@ public class LLDfaBuilder {
                 }
                 sb.append(">");
                 w.printf("%s [shape=box xlabel=\"%s\" label=%s]\n", set.stateId, set.stateId, sb);
-                for (Transition tr : set.transitions) {
+                for (LLTransition tr : set.transitions) {
                     StringBuilder sb2 = new StringBuilder();
                     if (tr.symbol.astInfo.isFactor) {
                         sb2.append("<<FONT color=\"green\">");
