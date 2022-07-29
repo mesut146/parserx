@@ -12,6 +12,7 @@ import mesut.parserx.utils.CountingMap;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 //the grammar file for both lexer and parser
 public class Tree {
@@ -147,12 +148,7 @@ public class Tree {
 
     //find root of rule
     public String getSender(String name) {
-        if (senderMap.containsKey(name)) {
-            return senderMap.get(name);
-        }
-        else {
-            return name;
-        }
+        return senderMap.getOrDefault(name, name);
     }
 
     public Name getFactorOne(Name old, Name factor) {
@@ -206,18 +202,9 @@ public class Tree {
     }
 
     public void addRuleBelow(RuleDecl rule, RuleDecl prev) {
-        for (RuleDecl old : rules) {
-            if (old.ref.equals(rule.ref)) {
-                throw new RuntimeException("wtf");
-            }
-        }
+        int pos = rules.indexOf(prev);
+        rules.add(pos + 1, rule);
         rule.index = rules.size();
-        for (int i = 0; i < rules.size(); i++) {
-            if (rules.get(i) == prev) {
-                rules.add(i + 1, rule);
-                return;
-            }
-        }
     }
 
     boolean isStr(Node node, String str) {
@@ -305,20 +292,11 @@ public class Tree {
     }
 
     public RuleDecl getRule(Name name) {
-        for (RuleDecl decl : rules) {
-            if (decl.ref.equals(name)) return decl;
-        }
-        return null;
+        return rules.stream().filter(rd -> rd.ref.equals(name)).findFirst().orElse(null);
     }
 
     public List<RuleDecl> getRules(Name name) {
-        List<RuleDecl> list = new ArrayList<>();
-        for (RuleDecl decl : rules) {
-            if (decl.ref.equals(name)) {
-                list.add(decl);
-            }
-        }
-        return list;
+        return rules.stream().filter(rd -> rd.ref.equals(name)).collect(Collectors.toList());
     }
 
     public Tree revert() {

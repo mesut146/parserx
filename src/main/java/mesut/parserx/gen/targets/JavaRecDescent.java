@@ -292,16 +292,20 @@ public class JavaRecDescent {
         }
     }
 
-    public static String loopExpr(Set<Name> set) {
+    public static String loopExpr(Set<Name> set, String expr) {
         StringBuilder sb = new StringBuilder();
         for (Iterator<Name> it = set.iterator(); it.hasNext(); ) {
             Name tok = it.next();
-            sb.append(String.format("%s == %s.%s", peekExpr(), tokens, tok.name.equals("$") ? "EOF" : tok.name));
+            sb.append(String.format("%s == %s.%s", expr, tokens, tok.name.equals("$") ? "EOF" : tok.name));
             if (it.hasNext()) {
                 sb.append(" || ");
             }
         }
         return sb.toString();
+    }
+
+    public static String loopExpr(Set<Name> set) {
+        return loopExpr(set, peekExpr());
     }
 
     String withArgs(Name name) {

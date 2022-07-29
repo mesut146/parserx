@@ -16,6 +16,11 @@ public class Regex extends Node {
         }
     }
 
+    public static Regex wrap(Node rule, RegexType type) {
+        if (rule.isSequence() || rule.isOr()) return new Regex(new Group(rule), type);
+        return new Regex(rule, type);
+    }
+
     public boolean isStar() {
         return type == RegexType.STAR;
     }

@@ -7,19 +7,19 @@ import java.util.Objects;
 //a single arrow
 public class Transition {
     public static Alphabet alphabet;
-    public State state;//from
+    public State from;
     public State target;
     public int input;
     public boolean epsilon;
 
-    public Transition(State state, State target, int input) {
-        this.state = state;
+    public Transition(State from, State target, int input) {
+        this.from = from;
         this.target = target;
         this.input = input;
     }
 
-    public Transition(State state, State target) {
-        this.state = state;
+    public Transition(State from, State target) {
+        this.from = from;
         this.target = target;
         this.epsilon = true;
     }
@@ -31,19 +31,19 @@ public class Transition {
         Transition that = (Transition) o;
         return target == that.target &&
                 input == that.input &&
-                state == that.state &&
+                from == that.from &&
                 epsilon == that.epsilon;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(target, input, state, epsilon);
+        return Objects.hash(target, input, from, epsilon);
     }
 
     @Override
     public String toString() {
         return "Transition{" +
-                "state=" + state +
+                "state=" + from +
                 ", target=" + target +
                 ", symbol=" + (epsilon ? Epsilon.str() : (alphabet != null ? alphabet.getRegex(input) : input)) +
                 '}';

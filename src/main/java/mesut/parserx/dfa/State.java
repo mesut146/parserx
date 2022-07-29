@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class State {
-    public int state;
+    public int id;
     public List<Transition> transitions = new ArrayList<>();
     public List<Transition> incoming = new ArrayList<>();
     public boolean isSkip = false;
     public boolean accepting = false;
     public List<String> names = new ArrayList<>();
 
-    public State(int state) {
-        this.state = state;
+    public State(int id) {
+        this.id = id;
     }
 
     public void add(Transition tr) {
@@ -35,17 +35,17 @@ public class State {
 
     @Override
     public String toString() {
-        return "" + state;
+        return "" + id;
     }
 
     @Override
     public boolean equals(Object obj) {
         State other = (State) obj;
-        return state == other.state;
+        return id == other.id;
     }
 
     @Override
     public int hashCode() {
-        return Integer.hashCode(state);
+        return Integer.hashCode(id);
     }
 }

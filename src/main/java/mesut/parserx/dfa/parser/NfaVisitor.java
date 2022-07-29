@@ -26,7 +26,7 @@ public class NfaVisitor {
         NFA res = new NFA(100);
         Alphabet alphabet = new Alphabet();
         res.tree.alphabet = alphabet;
-        res.initialState.state = Integer.parseInt(nfa.startDecl.NUM.value);
+        res.init(Integer.parseInt(nfa.startDecl.NUM.value));
         if (!nfa.finalDecl.finalList.namedState.isEmpty()) {
             for (Ast.namedState ns : nfa.finalDecl.finalList.namedState) {
                 namedState(ns, res);

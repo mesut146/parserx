@@ -13,7 +13,7 @@ public class Minimization {
         Tree tree = new Tree();
         tree.alphabet = resAlphabet;
         res.tree = tree;
-        res.initialState = dfa.initialState;
+        res.init(dfa.initialState.id);
         for (var state : dfa.it()) {
             //target -> symbol
             Map<State, List<Node>> map = new HashMap<>();
@@ -54,7 +54,7 @@ public class Minimization {
                 }
             }
             if (state.accepting) {
-                res.setAccepting(state.state, true);
+                res.setAccepting(state.id, true);
             }
         }
         return res;
@@ -98,7 +98,7 @@ public class Minimization {
             boolean dead = true;
             for (Transition tr : state.transitions) {
                 //looping is not considered as transition
-                if (tr.target.state != state.state) {
+                if (tr.target.id != state.id) {
                     dead = false;
                     break;
                 }
@@ -200,7 +200,7 @@ public class Minimization {
 
     static NFA merge(NFA dfa, List<StateSet> groups) {
         NFA res = new NFA(dfa.lastState + 1);
-        res.initialState.state = dfa.initialState.state;
+        res.init(dfa.initialState.id);
         res.tree = dfa.tree;
         //state -> target
         Map<State, State> map = new HashMap<>();
@@ -208,7 +208,7 @@ public class Minimization {
             if (group.states.isEmpty()) continue;
             var iterator = group.iterator();
             var first = iterator.next();
-            var target = res.getState(first.state);
+            var target = res.getState(first.id);
             map.put(first, target);
             while (iterator.hasNext()) {
                 map.put(iterator.next(), target);
@@ -219,17 +219,17 @@ public class Minimization {
             if (dfa.isDead(state)) continue;
             var target = map.get(state);
             for (Transition tr : state.transitions) {
-                var s1 = res.getState(target.state);
-                var s2 = map.containsKey(tr.target) ? res.getState(map.get(tr.target).state) : res.getState(tr.target.state);
+                var s1 = res.getState(target.id);
+                var s2 = map.containsKey(tr.target) ? res.getState(map.get(tr.target).id) : res.getState(tr.target.id);
                 res.addTransition(s1, s2, tr.input);
             }
             if (state.accepting) {
-                res.setAccepting(state.state, true);
+                res.setAccepting(state.id, true);
             }
             //set names
             var names = state.names;
             if (!names.isEmpty()) {
-                var names2 = res.getState(target.state).names;
+                var names2 = res.getState(target.id).names;
                 if (names2.isEmpty()) {
                     names2.addAll(names);
                 }
@@ -319,7 +319,7 @@ public class Minimization {
                     StateSet out = out(dfa, tr.target, new StateSet());
                     for (var o : out) {
                         if (target.contains(o)) {
-                            StateSet in = in(dfa, tr.state, new StateSet());
+                            StateSet in = in(dfa, tr.from, new StateSet());
                             x.addAll(in);
                         }
                     }
@@ -333,10 +333,10 @@ public class Minimization {
         if (set.contains(state)) return set;
         set.addState(state);
         for (Transition tr : dfa.findIncoming(state)) {
-            if (tr.state.state == state.state) continue;
-            set.addState(tr.state);
+            if (tr.from.id == state.id) continue;
+            set.addState(tr.from);
             //closure
-            in(dfa, tr.state, set);
+            in(dfa, tr.from, set);
         }
         return set;
     }
@@ -351,7 +351,7 @@ public class Minimization {
             }
         }
         for (var s : set) {
-            if (s.state == state.state) continue;
+            if (s.id == state.id) continue;
             out(dfa, s, set);
             //System.out.println(s + " ," + state);
         }

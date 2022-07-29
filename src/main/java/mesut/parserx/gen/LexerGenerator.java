@@ -100,7 +100,7 @@ public class LexerGenerator {
                 if (names.size() != 1) {
                     throw new RuntimeException("only one token per state");
                 }
-                idArr[state.state] = idMap.getId(new Name(names.get(0), true));
+                idArr[state.id] = idMap.getId(new Name(names.get(0), true));
             }
         }
         //sort tokens by id

@@ -113,11 +113,11 @@ public class JavaLexer {
                 transWriter.append(makeOctal(list.size()));
                 for (Transition tr : list) {
                     transWriter.append(makeOctal(tr.input));
-                    transWriter.append(makeOctal(tr.target.state));
+                    transWriter.append(makeOctal(tr.target.id));
                 }
             }
             transWriter.append("\"");
-            if (state.state <= dfa.lastState - 1) {
+            if (state.id <= dfa.lastState - 1) {
                 transWriter.append(" +\n");
             }
         }
@@ -128,10 +128,10 @@ public class JavaLexer {
         //id list
         StringBuilder idWriter = new StringBuilder();
         for (var state : dfa.it()) {
-            idWriter.append(gen.idArr[state.state]);
-            if (state.state <= dfa.lastState - 1) {
+            idWriter.append(gen.idArr[state.id]);
+            if (state.id <= dfa.lastState - 1) {
                 idWriter.append(",");
-                if (state.state > 0 && state.state % 20 == 0) {
+                if (state.id > 0 && state.id % 20 == 0) {
                     idWriter.append("\n            ");
                 }
             }

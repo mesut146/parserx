@@ -7,10 +7,18 @@ public class LLTransition {
     ItemSet from;
     ItemSet target;
 
-  public LLTransition(ItemSet from, Node symbol, ItemSet target){
-      this.from = from;
-      this.symbol = symbol;
-      this.target = target;
-  }
+    public LLTransition(ItemSet from, Node symbol, ItemSet target) {
+        this.from = from;
+        this.symbol = symbol;
+        this.target = target;
+    }
 
+    @Override
+    public String toString() {
+        return "LLTransition{" +
+                "from=" + from.stateId +
+                ", target=" + target.stateId +
+                ", symbol=" + symbol +
+                '}';
+    }
 }

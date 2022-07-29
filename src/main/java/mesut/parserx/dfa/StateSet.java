@@ -5,7 +5,7 @@ import java.util.*;
 //nfa,dfa state set
 public class StateSet implements Iterable<State> {
 
-    public Set<State> states = new TreeSet<>(Comparator.comparingInt(o -> o.state));
+    public Set<State> states = new TreeSet<>(Comparator.comparingInt(o -> o.id));
 
     public void addState(State state) {
         states.add(state);

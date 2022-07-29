@@ -46,7 +46,7 @@ public class RegexBuilder {
         }
 
         for (var state : stateOrder) {
-            if (!state.accepting && nfa.initialState.state != state.state) {
+            if (!state.accepting && nfa.initialState.id != state.id) {
                 //mergeAll(state);
                 eliminate(state);
             }
@@ -90,20 +90,20 @@ public class RegexBuilder {
 
         for (Transition in : incoming) {
             for (Transition out : list) {
-                if (out.target.state == state.state || in.state.state == state.state) {//looping
+                if (out.target.id == state.id || in.from.id == state.id) {//looping
                     continue;
                 }
                 Node node = path(in, out);
                 if (node.isEpsilon()) {
-                    in.state.addEpsilon(out.target);
+                    in.from.addEpsilon(out.target);
                 }
                 else {
-                    nfa.addTransition(in.state, out.target, alphabet.addRegex(node));
+                    nfa.addTransition(in.from, out.target, alphabet.addRegex(node));
                 }
             }
         }
         for (Transition in : incoming) {
-            in.state.transitions.remove(in);
+            in.from.transitions.remove(in);
         }
         list.clear();
     }
@@ -111,7 +111,7 @@ public class RegexBuilder {
     //if state loops itself
     Transition getLooping(State state) {
         for (Transition transition : state.transitions) {
-            if (transition.target.state == state.state) {
+            if (transition.target.id == state.id) {
                 return transition;
             }
         }
@@ -205,7 +205,7 @@ public class RegexBuilder {
     public void autoOrder() {
         List<State> looping = new ArrayList<>();
         for (var state : nfa.it()) {
-            if (state.accepting || nfa.initialState.state == state.state) continue;
+            if (state.accepting || nfa.initialState.id == state.id) continue;
             if (getLooping(state) != null) {
                 looping.add(state);
             }

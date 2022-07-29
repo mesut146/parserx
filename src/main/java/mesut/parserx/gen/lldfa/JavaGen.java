@@ -106,11 +106,6 @@ public class JavaGen {
         }
 
         @Override
-        public Void visitSequence(Sequence seq, Void arg) {
-            return super.visitSequence(seq, arg);
-        }
-
-        @Override
         public Void visitName(Name name, Void arg) {
             consumer(name, name.astInfo.outerVar);
             return null;
@@ -119,13 +114,14 @@ public class JavaGen {
         @Override
         public Void visitRegex(Regex regex, Void arg) {
             Node ch = regex.node;
+            var la = JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree));
             if (regex.isOptional()) {
-                w.append("if(%s){", JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree)));
+                w.append("if(%s){", la);
                 ch.accept(this, null);
                 w.append("}");
             }
             else if (regex.isStar()) {
-                w.append("while(%s){", JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree)));
+                w.append("while(%s){", la);
                 ch.accept(this, null);
                 w.append("}");
             }
@@ -133,7 +129,7 @@ public class JavaGen {
                 w.append("do{");
                 ch.accept(this, null);
                 w.down();
-                w.append("}while(%s);", JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree)));
+                w.append("}while(%s);", la);
             }
             return null;
         }

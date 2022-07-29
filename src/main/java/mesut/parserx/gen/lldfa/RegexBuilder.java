@@ -10,42 +10,37 @@ import mesut.parserx.nodes.*;
 
 import java.util.*;
 
-public class CcGen {
-    CodeWriter w;
-    RuleDecl rule;
+public class RegexBuilder {
     Tree tree;
-    Options options;
-    ItemSet curSet;
     LLDfaBuilder builder;
-    GrammarEmitter emitter;
     NFA dfa;
+    String curRule;
 
-    public CcGen(Tree tree) {
-        this.tree = tree;
-        builder = new LLDfaBuilder(tree);
-        builder.factor();
-        //lldfa is bad bc building regex is too hard
+    public RegexBuilder(LLDfaBuilder builder) {
+        this.builder = builder;
+        this.tree = builder.tree;
     }
 
-    public void build(Name rule) {
-        buildNfa(rule);
+    public Node build(String rule) {
+        this.curRule = rule;
+        buildNfa();
         var regex = buildRegex();
-        dfa.dump();
+        return regex;
     }
 
-    public void buildNfa(Name rule) {
-        var all = builder.rules.get(rule.name);
+    public void buildNfa() {
+        var all = builder.rules.get(curRule);
         dfa = new NFA(all.size(), tree);
         Queue<ItemSet> queue = new LinkedList<>();
         var done = new HashSet<>();
-        var first = builder.firstSets.get(rule);
+        var first = builder.firstSets.get(curRule);
         var alphabet = dfa.getAlphabet();
-        dfa.initialState = dfa.getState(first.stateId);
+        dfa.init(first.stateId);
         queue.add(first);
         while (!queue.isEmpty()) {
             var set = queue.poll();
             var state = dfa.getState(set.stateId);
-            cut(set);
+            trim(set);
             state.accepting = set.hasFinal();
             done.add(set);
             for (var tr : set.transitions) {
@@ -60,10 +55,24 @@ public class CcGen {
     }
 
     //remove non-factor symbols to speed up
-    void cut(ItemSet set) {
+    void trim(ItemSet set) {
         for (var tr : set.transitions) {
             if (tr.symbol.astInfo.isFactor) continue;
             var sym = tr.symbol;
+            if (sym.isName() && sym.asName().isToken) {
+                int which = -1;
+                var target = tr.target;
+                for (var item : target.all) {
+                    if (!item.isReduce(tree)) continue;
+                    if (item.rule.getName().equals(curRule)) {
+                        which = item.rule.which;
+                    }
+                }
+                if (which == -1) {
+                    throw new RuntimeException("internal error: which not found");
+                }
+                sym.astInfo.which = which;
+            }
             if (!sym.isSequence()) continue;
             var seq = sym.asSequence();
             List<Node> list = new ArrayList<>();
@@ -83,14 +92,46 @@ public class CcGen {
         mergeFinals();
         for (var state : dfa.it()) {
             if (canBeRemoved(state)) {
-                System.out.println("rem=" + state.state);
                 eliminate(state);
+            }
+        }
+        combine();
+        List<Node> ors = new ArrayList<>();
+        Node loop = remLoop(dfa.initialState);
+        State target = dfa.initialState.transitions.get(0).target;
+        Node loop2 = remLoop(target);
+        List<Node> list = new ArrayList<>();
+        for (var tr : dfa.initialState.transitions) {
+            ors.add(dfa.getAlphabet().getRegex(tr.input));
+        }
+        if (loop != null) {
+            list.add(loop);
+        }
+        if (loop != null || loop2 != null) {
+            list.add(new Group(Or.make(ors)));
+        }
+        else {
+            list.add(Or.make(ors));
+
+        }
+        if (loop2 != null) {
+            list.add(loop2);
+        }
+        return Sequence.make(list);
+    }
+
+    Node remLoop(State state) {
+        for (var tr : state.transitions) {
+            if (tr.target == tr.from) {
+                state.transitions.remove(tr);
+                return Regex.wrap(dfa.getAlphabet().getRegex(tr.input), RegexType.STAR);
             }
         }
         return null;
     }
 
     void eliminate(State state) {
+        combine();
         Node loop = null;
         Transition out = null;
         for (var tr : state.transitions) {
@@ -99,37 +140,55 @@ public class CcGen {
             }
             else out = tr;
         }
+        state.transitions.remove(out);
+        out.target.incoming.remove(out);
         for (var in : state.incoming) {
             in.target = out.target;
-            out.target.incoming.remove(out);
-            Node newSym;
-            var s1 = wrapOr(dfa.getAlphabet().getRegex(in.input));
-            var s2 = wrapOr(dfa.getAlphabet().getRegex(out.input));
-            if (loop == null) {
-                newSym = new Sequence(s1, s2);
+            var s1 = in.epsilon ? null : wrapOr(dfa.getAlphabet().getRegex(in.input));
+            var s2 = out.epsilon ? null : wrapOr(dfa.getAlphabet().getRegex(out.input));
+            List<Node> list = new ArrayList<>();
+            if (s1 != null) list.add(s1);
+            if (loop != null) {
+                list.add(new Regex(new Group(wrapOr(loop)), RegexType.STAR));
+            }
+            if (s2 != null) list.add(s2);
+            if (list.isEmpty()) {
+                in.epsilon = true;
             }
             else {
-                newSym = new Sequence(s1, new Regex(new Group(wrapOr(loop)), RegexType.STAR), s2);
+                in.input = dfa.getAlphabet().addRegex(Sequence.make(list));
             }
-            in.input = dfa.getAlphabet().addRegex(newSym);
         }
-        combine();
     }
 
     void combine() {
         for (var set : dfa.it()) {
             //target -> ors
             Map<State, List<Node>> map = new HashMap<>();
+            Set<State> epsilons = new HashSet<>();
             for (var tr : set.transitions) {
-                var list = map.computeIfAbsent(tr.target, k -> new ArrayList<>());
-                list.add(dfa.getAlphabet().getRegex(tr.input));
                 tr.target.incoming.remove(tr);
+                var list = map.computeIfAbsent(tr.target, k -> new ArrayList<>());
+                if (tr.epsilon) {
+                    epsilons.add(tr.target);
+                }
+                else {
+                    list.add(dfa.getAlphabet().getRegex(tr.input));
+                }
             }
             set.transitions.clear();
             for (var trg : map.keySet()) {
                 var list = map.get(trg);
-                var sym = list.size() == 1 ? list.get(0) : new Or(list);
-                set.add(new Transition(set, trg, dfa.getAlphabet().addRegex(sym)));
+                if (list.isEmpty()) {
+                    set.addEpsilon(trg);
+                }
+                else {
+                    var sym = Or.make(list);
+                    if (epsilons.contains(trg)) {
+                        sym = new Regex(sym, RegexType.OPTIONAL);
+                    }
+                    set.add(new Transition(set, trg, dfa.getAlphabet().addRegex(sym)));
+                }
             }
         }
     }
@@ -149,7 +208,7 @@ public class CcGen {
         for (var tr : state.transitions) {
             if (!tr.target.equals(state)) {
                 queue.add(tr.target);
-                visited.add(tr.target.state);
+                visited.add(tr.target.id);
             }
         }
         //discover
@@ -158,7 +217,7 @@ public class CcGen {
             var r = reachFinal(cur, state);
             for (var tr : cur.transitions) {
                 if (tr.target.equals(state) && r) return false;
-                if (!tr.target.equals(state) && visited.add(tr.target.state)) queue.add(tr.target);
+                if (!tr.target.equals(state) && visited.add(tr.target.id)) queue.add(tr.target);
             }
         }
         return true;
@@ -169,14 +228,14 @@ public class CcGen {
         Set<Integer> visited = new HashSet<>();
         Queue<State> queue = new LinkedList<>();
         queue.add(from);
-        visited.add(from.state);
+        visited.add(from.id);
         while (!queue.isEmpty()) {
             var cur = queue.poll();
             if (cur.accepting) return true;
             for (var tr : cur.transitions) {
                 var trg = tr.target;
                 if (trg.equals(except)) continue;
-                if (visited.add(trg.state)) queue.add(trg);
+                if (visited.add(trg.id)) queue.add(trg);
             }
         }
         return false;

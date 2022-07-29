@@ -1,0 +1,56 @@
+$package$
+import java.util.*;
+import java.io.*;
+
+public class TokenStream{
+ $lexer_class$ lexer;
+ LinkedList<$token_class$> tokens = new LinkedList<>();
+ int pos = 0;
+ boolean marked = false;
+ public $token_class$ la;
+
+ public TokenStream($lexer_class$ lexer) throws IOException{
+   this.lexer = lexer;
+   this.la = lexer.$lexer_function$();
+   this.tokens.add(this.la);
+ }
+
+
+ public $token_class$ consume(int type, String name) throws IOException{
+   $token_class$ next;
+   tokens.removeFirst();//la
+   if(marked){
+     this.pos++;
+     if(pos < tokens.size()){
+       next = tokens.get(pos);
+     }else{
+       next = lexer.$lexer_function$();
+       tokens.add(next);
+     }
+   }else{
+     if(tokens.isEmpty()){
+       next = lexer.$lexer_function$();
+       tokens.add(next);
+     }else{
+       next = tokens.getFirst();
+     }
+   }
+   if(la.type != type){
+     throw new RuntimeException("unexpected token: " + la + " expecting: " + name);
+   }
+   $token_class$ res = la;
+   la = next;
+   return res;
+ }
+
+ public void mark(){
+   this.marked = true;
+   this.pos = 0;
+ }
+
+ public void unmark(){
+   this.marked = false;
+   this.pos = 0;
+   this.la = tokens.getFirst();
+ }
+}

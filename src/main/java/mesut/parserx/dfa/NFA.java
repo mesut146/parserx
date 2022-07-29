@@ -10,7 +10,6 @@ import mesut.parserx.utils.UnicodeUtils;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class NFA {
@@ -23,11 +22,14 @@ public class NFA {
     public NFA(int capacity, Tree tree) {
         this.tree = tree;
         this.id_to_state = new HashMap<>(capacity);
-        this.initialState = newState();
     }
 
     public NFA(int capacity) {
         this(capacity, new Tree());
+    }
+
+    public void init(int initial) {
+        initialState = getState(initial);
     }
 
     public State newState() {
@@ -35,7 +37,6 @@ public class NFA {
     }
 
     public State getState(int id) {
-        //if (id == 0) return initialState;
         var res = id_to_state.get(id);
         if (res == null) {
             res = new State(id);
@@ -68,7 +69,7 @@ public class NFA {
     public boolean[] acc() {
         var res = new boolean[lastState + 1];
         for (var state : it()) {
-            res[state.state] = state.accepting;
+            res[state.id] = state.accepting;
         }
         return res;
     }
@@ -93,12 +94,13 @@ public class NFA {
     }
 
     public void addTransition(State state, State target, int input) {
+        if (initialState == null) throw new RuntimeException("nfa must be initialized");
         if (debugTransition) {
             System.out.printf("%s -> %s, %s\n", state, target, getAlphabet().getRange(input));
         }
         Transition tr = new Transition(state, target, input);
         state.add(tr);
-        lastState = Math.max(lastState, Math.max(state.state, target.state));
+        lastState = Math.max(lastState, Math.max(state.id, target.id));
     }
 
 
@@ -117,7 +119,6 @@ public class NFA {
         }
         return all;
     }
-
 
     public boolean isAccepting(StateSet set) {
         return set.states.stream().anyMatch(s -> s.accepting);
@@ -145,7 +146,7 @@ public class NFA {
 
     public Iterable<State> it() {
         return () -> new Iterator<>() {
-            int cur = initialState.state;
+            int cur = initialState.id;
 
             @Override
             public boolean hasNext() {
@@ -197,7 +198,7 @@ public class NFA {
 
         w.println(StreamSupport.stream(it().spliterator(), false)
                 .filter(st -> st.accepting)
-                .map(st -> st.state + getName(st))
+                .map(st -> st.id + getName(st))
                 .collect(Collectors.joining(", ")));
 //        for (var i : it()) {
 //            if (i.accepting) {
@@ -267,13 +268,13 @@ public class NFA {
             }
             if (state.accepting) {
                 //todo write label inside
-                w.printf("%d [shape = doublecircle color=%s xlabel=\"%s\"]\n", state.state, finalColor, name);
+                w.printf("%d [shape = doublecircle color=%s xlabel=\"%s\"]\n", state.id, finalColor, name);
             }
             else if (state.isSkip) {
-                w.printf("%d [color=%s xlabel=\"%s\"]\n", state.state, skipColor, name);
+                w.printf("%d [color=%s xlabel=\"%s\"]\n", state.id, skipColor, name);
             }
             else {
-                w.printf("%d [xlabel=\"%s\"]\n", state.state, name);
+                w.printf("%d [xlabel=\"%s\"]\n", state.id, name);
             }
         }
 

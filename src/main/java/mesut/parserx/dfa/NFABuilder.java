@@ -22,6 +22,7 @@ public class NFABuilder extends BaseVisitor<State, State> {
     public NFA build() {
         new AlphabetBuilder(tree).build();
         nfa = new NFA(100);
+        nfa.init(0);
         nfa.tree = tree;
         for (TokenDecl decl : tree.tokens) {
             if (decl.fragment) continue;

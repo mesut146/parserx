@@ -3,6 +3,7 @@ package parser;
 import common.Env;
 import mesut.parserx.gen.ll.DotBuilder;
 import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.lldfa.CcGenJava;
 import mesut.parserx.gen.lldfa.LLDFAGen;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
@@ -88,7 +89,9 @@ public class DescTester {
         if (dump) {
             tree.options.dump = true;
         }
-        LLDFAGen.gen(tree, "java");
+        var cc = new CcGenJava(tree);
+        cc.gen();
+        //LLDFAGen.gen(tree, "java");
 
         File out = new File(outDir, "out");
         if (out.exists()) {

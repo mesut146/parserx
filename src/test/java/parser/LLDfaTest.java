@@ -1,19 +1,17 @@
 package parser;
 
 import common.Env;
-import mesut.parserx.gen.lldfa.CcGen;
-import mesut.parserx.gen.lldfa.GrammarEmitter;
-import mesut.parserx.gen.lldfa.LLDfaBuilder;
-import mesut.parserx.gen.lldfa.LaFinder;
+import mesut.parserx.gen.LexerGenerator;
+import mesut.parserx.gen.lldfa.*;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 
 public class LLDfaTest {
 
@@ -185,16 +183,37 @@ public class LLDfaTest {
     }
 
     @Test
+    public void test_token_stream() throws Exception {
+        var tree = Env.tree("lexer/skip.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        LexerGenerator.gen(tree, "java");
+        CcGenJava.writeTS(tree.options);
+        URLClassLoader cl = new URLClassLoader(new URL[]{Env.dotDir().toURI().toURL()});
+        Class<?> lexerCls = cl.loadClass("Lexer");
+        var lexerCons = lexerCls.getDeclaredConstructor(Reader.class);
+        var lexer = lexerCons.newInstance(new StringReader("abc"));
+
+        Class<?> tsCls = cl.loadClass("TokenStream");
+        var tsCons = tsCls.getDeclaredConstructor(lexerCls);
+        var ts = tsCons.newInstance(lexer);
+        var mark = tsCls.getDeclaredMethod("mark");
+        var unmark = tsCls.getDeclaredMethod("unmark");
+        Method method = tsCls.getDeclaredMethod("consume", int.class, String.class);
+        var res = method.invoke(ts, 0, "");
+        cl.close();
+    }
+
+    @Test
     public void rr_loop() throws Exception {
-        DescTester.check2(Builder.tree("lldfa/simple.g").rule("E").
-                input("acx", "E#1{A#1{'a'}, B#1{'c'}, 'x'}").
-                input("adx", "E#1{A#1{'a'}, B#2{'d'}, 'x'}").
-                input("bcx", "E#1{A#2{'b'}, B#1{'c'}, 'x'}").
-                input("bdx", "E#1{A#2{'b'}, B#2{'d'}, 'x'}").
-                input("acy", "E#2{A#1{'a'}, D#1{'c'}, 'y'}").
-                input("ady", "E#2{A#1{'a'}, D#2{'d'}, 'y'}").
-                input("bcy", "E#2{A#2{'b'}, D#1{'c'}, 'y'}").
-                input("bdy", "E#2{A#2{'b'}, D#2{'d'}, 'y'}"));
+//        DescTester.check2(Builder.tree("lldfa/simple.g").rule("E").
+//                input("acx", "E#1{A#1{'a'}, B#1{'c'}, 'x'}").
+//                input("adx", "E#1{A#1{'a'}, B#2{'d'}, 'x'}").
+//                input("bcx", "E#1{A#2{'b'}, B#1{'c'}, 'x'}").
+//                input("bdx", "E#1{A#2{'b'}, B#2{'d'}, 'x'}").
+//                input("acy", "E#2{A#1{'a'}, D#1{'c'}, 'y'}").
+//                input("ady", "E#2{A#1{'a'}, D#2{'d'}, 'y'}").
+//                input("bcy", "E#2{A#2{'b'}, D#1{'c'}, 'y'}").
+//                input("bdy", "E#2{A#2{'b'}, D#2{'d'}, 'y'}"));
         DescTester.check2(Builder.tree("lldfa/rr-loop.g").rule("E").
                 input("x", "E#1{'x'}").
                 input("y", "E#2{'y'}").
@@ -260,7 +279,8 @@ public class LLDfaTest {
     public void buildRegex() throws IOException {
         single("lldfa/factor.g");
         Tree tree = Env.tree("lldfa/rr-loop.g");
-        var cc = new CcGen(tree);
-        cc.build(new Name("E"));
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        var cc = new CcGenJava(tree);
+        cc.gen();
     }
 }

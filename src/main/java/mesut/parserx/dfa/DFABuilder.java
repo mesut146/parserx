@@ -1,7 +1,5 @@
 package mesut.parserx.dfa;
 
-import jdk.nio.Channels;
-
 import java.util.*;
 
 public class DFABuilder {
@@ -24,6 +22,7 @@ public class DFABuilder {
             System.out.println("dfa conversion started");
         }
         dfa = new NFA((nfa.lastState + 1) * 2);
+        dfa.init(0);
         dfa.tree = nfa.tree;
 
         Queue<StateSet> openStates = new LinkedList<>();
@@ -61,7 +60,7 @@ public class DFABuilder {
                 }
                 var target_state = getDfaState(targets);
                 if (debugDFA) {
-                    System.out.printf("targets=%s dfa=%d\n", targets, target_state.state);
+                    System.out.printf("targets=%s dfa=%d\n", targets, target_state.id);
                 }
                 target_state.accepting = nfa.isAccepting(targets);
                 target_state.isSkip = nfa.isSkip(targets);
