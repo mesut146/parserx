@@ -164,6 +164,7 @@ public class LLDfaBuilder {
 
         for (RuleDecl rd : tree.getRules(rule)) {
             Item first = new Item(rd, 0);
+            first.first = true;
             first.gotoSet.add(firstSet);
             //first.lookAhead.add(dollar);
             first.lookAhead.addAll(la);
@@ -350,6 +351,7 @@ public class LLDfaBuilder {
         for (var all : rules.values()) {
             for (ItemSet set : all) {
                 StringBuilder sb = new StringBuilder();
+                //items
                 sb.append("<");
                 for (Item it : set.all) {
                     String line = it.toString();
@@ -370,18 +372,21 @@ public class LLDfaBuilder {
                     sb.append("<BR ALIGN=\"LEFT\"/>");
                 }
                 sb.append(">");
-                w.printf("%s [shape=box xlabel=\"%s\" label=%s]\n", set.stateId, set.stateId, sb);
+                w.printf("%s [shape=box xlabel=\"%s\" label=%s];\n", set.stateId, set.stateId, sb);
+                if (set.hasFinal()) {
+                    w.printf("%d [style=filled fillcolor=gray];\n", set.stateId);
+                }
                 for (LLTransition tr : set.transitions) {
-                    StringBuilder sb2 = new StringBuilder();
+                    StringBuilder labelBuf = new StringBuilder();
                     if (tr.symbol.astInfo.isFactor) {
-                        sb2.append("<<FONT color=\"green\">");
-                        sb2.append(tr.symbol);
-                        sb2.append("</FONT>>");
+                        labelBuf.append("<<FONT color=\"green\">");
+                        labelBuf.append(tr.symbol);
+                        labelBuf.append("</FONT>>");
                     }
                     else {
-                        sb2.append("\"").append(tr.symbol).append("\"");
+                        labelBuf.append("\"").append(tr.symbol).append("\"");
                     }
-                    w.printf("%s -> %s [label=%s]\n", set.stateId, tr.target.stateId, sb2);
+                    w.printf("%s -> %s [label=%s];\n", set.stateId, tr.target.stateId, labelBuf);
                 }
             }
         }

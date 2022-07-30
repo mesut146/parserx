@@ -2,14 +2,19 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.nodes.*;
+import mesut.parserx.utils.Utils;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 public class GrammarEmitter {
     LLDfaBuilder builder;
     Set<ItemSet> all;
     Tree tree;
+    Tree res;
     Set<ItemSet> inlined = new HashSet<>();
+    public static boolean debug = true;
+    static Logger logger = Utils.getLogger();
 
     public GrammarEmitter(LLDfaBuilder builder) {
         this.builder = builder;
@@ -18,45 +23,60 @@ public class GrammarEmitter {
 
     public void emit() {
         for (var e : builder.rules.entrySet()) {
-            if (!e.getKey().equals("E")) continue;
-            all = e.getValue();
-            moveReductions();
-            //mergeFinals();
-            //eliminate();
-            e.setValue(all);
+            emitFor(e.getKey());
         }
         //File file = new File(tree.options.outDir, Utils.newName(tree.file.getName(), "-emit.g"));
         //builder.dot(null);
     }
 
-    Node makeForRule(String name) {
+    String getStateName(ItemSet set, String start) {
+        if (set.isStart) {
+            return start;
+        }
+        else {
+            return "S" + set.stateId;
+        }
+    }
+
+    public Node emitFor(String name) {
+        res = new Tree();
         all = builder.rules.get(name);
-        //moveReductions();
+        moveReductions();
         mergeFinals();
         eliminate();
-        ItemSet start = null;
-        return start.transitions.get(0).symbol;
+        for (var set : all) {
+            if (set.transitions.isEmpty()) continue;
+            List<Node> ors = new ArrayList<>();
+            for (var tr : set.transitions) {
+                ors.add(Sequence.make(tr.symbol, new Name(getStateName(tr.target, name))));
+            }
+            Node rhs = Or.make(ors);
+            var decl = new RuleDecl(getStateName(set, name), rhs);
+            res.addRule(decl);
+        }
+        res.printRules();
+        return null;
     }
 
     public void moveReductions() {
         Queue<ItemSet> q = new LinkedList<>(all);
         while (!q.isEmpty()) {
-            Set<Item> toRemove = new HashSet<>();
             ItemSet set = q.poll();
             //clear sub reductions, they only needed for reducers
             for (Iterator<Item> it = set.all.iterator(); it.hasNext(); ) {
                 Item item = it.next();
                 if (!item.isReduce(tree)) continue;
-                if (item.lookAhead.contains(LrDFAGen.dollar)) continue;
+                if (item.isFinalReduce(tree)) continue;
                 if (!item.reduceParent.isEmpty()) {
                     it.remove();
                     System.out.println("rem sub = " + item);
                 }
             }
             //move parent reductions
+            Set<Item> toRemove = new HashSet<>();
             for (Item it : set.all) {
                 if (!it.isReduce(tree)) continue;
-                if (it.lookAhead.contains(LrDFAGen.dollar)) continue;
+                if (it.isFinalReduce(tree)) continue;
                 moveReduction(set, it, q);
                 if (it.lookAhead.isEmpty()) toRemove.add(it);
             }
@@ -70,7 +90,6 @@ public class GrammarEmitter {
                     }
                 }
             }
-
         }
     }
 
@@ -229,30 +248,29 @@ public class GrammarEmitter {
     }
 
     void mergeFinals() {
-        var ns = new ItemSet(tree, builder.type);
+        var newset = new ItemSet(tree, builder.type);
         for (var it = all.iterator(); it.hasNext(); ) {
             var set = it.next();
             for (var item : set.all) {
-                if (item.lookAhead.contains(LrDFAGen.dollar) && item.isReduce(tree)) {
-                    ns.addAll(set.all);
-                    for (var in : set.incoming) {
-                        in.target = ns;
-                        System.out.printf("new1 %d -> %d\n", in.from.stateId, ns.stateId);
-                    }
-                    for (var tr : set.transitions) {
-                        tr.from = ns;
-                        ns.addTransition(tr.symbol, tr.target);
-                        System.out.printf("new2 %d -> %d\n", ns.stateId, tr.target.stateId);
-                    }
-                    it.remove();
-                    System.out.printf("final %d\n", set.stateId);
-                    break;
+                if (!item.isFinalReduce(tree)) continue;
+                newset.addAll(set.all);
+                for (var in : set.incoming) {
+                    in.target = newset;
+                    System.out.printf("new1 %d -> %d\n", in.from.stateId, newset.stateId);
                 }
+                for (var tr : set.transitions) {
+                    tr.from = newset;
+                    newset.addTransition(tr.symbol, tr.target);
+                    System.out.printf("new2 %d -> %d\n", newset.stateId, tr.target.stateId);
+                }
+                it.remove();
+                System.out.printf("final %d\n", set.stateId);
+                break;
             }
         }
         combine();
-        System.out.printf("new final = %d\n", ns.stateId);
-        all.add(ns);
+        System.out.printf("new final = %d\n", newset.stateId);
+        all.add(newset);
     }
 
     void combine() {

@@ -209,6 +209,7 @@ public class DescTester {
         for (String s : in) {
             res.add(method.invoke(null, rule, s));
         }
+        cl.close();
         return res;
     }
 

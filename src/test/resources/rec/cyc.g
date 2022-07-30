@@ -1,25 +1,18 @@
 include "../common.g"
 
-%start = E;
 
-E: A a | B c c;
-A: B b | C c;
-B: A | E e | x;
-C: B b | y;
+A: B a | C b | x;
+B: A c | C d | y;
+C: A e | B f | z;
 
 /*
-A: (A | E e | x) b | C c;
-
+A: A_no_A A_A(A)*;
+A_no_A: B_no_A a | C_no_A b | x;
+B_no_A: C_no_A d | y;
+C_no_A: B_no_A f | z;
 */
 
-/*
-E(E): A(E) a | B(E) c c;
-E_no_E: A_no_E a | B_no_E c c;
-A(E): B(E) b | C(E) c;
-A_no_E: B_no_E b | C_no_E c;
-B(E): A(E) | E[E] e;
-B_no_E: A_no_E | x;
-C(E): B(E) b;
-C_no_E: y;
-
+A_A(A): B_A(A) a | C_A(A) b;
+B_A(A): A() c | C(A) d;
+C_A(A): A() e | B(A) f;
 */

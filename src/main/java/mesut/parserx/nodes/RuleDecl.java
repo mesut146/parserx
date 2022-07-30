@@ -53,7 +53,7 @@ public class RuleDecl {
         if (!ref.args.isEmpty()) {
             s += "(" + NodeList.join(ref.args, ", ") + ")";
         }
-        if (rhs.isOr()) {
+        if (false && rhs.isOr()) {
             s += ":\n" + rhs.asOr().withNewline() + ";";
         }
         else {

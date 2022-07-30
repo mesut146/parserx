@@ -16,6 +16,19 @@ import java.util.List;
 
 public class TransformTest {
 
+    void trimRest(Tree tree, String rule) {
+        var usages = Optimizer.UsageCollector.collect(tree.getRule(rule).rhs, tree);
+        tree.rules.removeIf(name -> !usages.contains(name.ref));
+    }
+
+    @Test
+    public void recursion() throws IOException {
+        Tree tree = Env.tree("rec/cyc.g");
+        Recursion.debug = true;
+        new Recursion(tree).all();
+        trimRest(tree, "A");
+        tree.printRules();
+    }
 
     @Test
     public void ebnf() throws Exception {

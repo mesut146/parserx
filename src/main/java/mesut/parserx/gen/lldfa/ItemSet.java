@@ -59,7 +59,7 @@ public class ItemSet {
 
     public boolean hasFinal() {
         for (Item it : all) {
-            if (it.isReduce(tree) && it.lookAhead.contains(LrDFAGen.dollar)) return true;
+            if (it.isFinalReduce(tree)) return true;
         }
         return false;
     }

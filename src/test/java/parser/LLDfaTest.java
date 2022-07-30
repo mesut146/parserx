@@ -38,11 +38,12 @@ public class LLDfaTest {
 
     @Test
     public void all() throws IOException {
-        File dir = new File("./src/test/resources/lldfa");
-        for (String s : dir.list()) {
-            if (s.startsWith("greedy")) continue;
-            single("lldfa/" + s);
-        }
+        single("rec/cyc.g");
+//        File dir = new File("./src/test/resources/lldfa");
+//        for (String s : dir.list()) {
+//            if (s.startsWith("greedy")) continue;
+//            single("lldfa/" + s);
+//        }
     }
 
     void dump(LLDfaBuilder b) throws IOException {
@@ -171,15 +172,17 @@ public class LLDfaTest {
 
     @Test
     public void emitter() throws IOException {
-        Tree tree = Env.tree("lldfa/factor.g");
+        //Tree tree = Env.tree("lldfa/factor.g");
+        Tree tree = Env.tree("rec/cyc.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         LLDfaBuilder builder = new LLDfaBuilder(tree);
         builder.factor();
+
         GrammarEmitter emitter = new GrammarEmitter(builder);
-        emitter.emit();
+        emitter.emitFor("A");
         tree.file = new File(tree.file.getParent(), Utils.newName(tree.file.getName(), "-emit.g"));
         builder.tree = tree;
-        dot(builder);
+        //dot(builder);
     }
 
     @Test

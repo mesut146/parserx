@@ -786,7 +786,7 @@ public class JavaGen {
             String holder = getHolder(item, sym);
             w.append("%s.which = %d;", holder, item.rule.which);
             w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getBoth(item, sym));//todo
-            if (!curSet.isStart && item.lookAhead.contains(LrDFAGen.dollar)) {
+            if (!curSet.isStart && item.isFinalReduce(tree)) {
                 //w.append("return;");//todo dollar is enough?
             }
             w.append("}");

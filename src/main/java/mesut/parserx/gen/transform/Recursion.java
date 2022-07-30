@@ -33,11 +33,7 @@ public class Recursion {
 
     public void handle(RuleDecl decl, boolean cycle) {
         List<Name> set = new ArrayList<>(FirstSet.firstSetNoRec(decl.rhs, tree));
-        for (Iterator<Name> it = set.iterator(); it.hasNext(); ) {
-            if (it.next().isToken) {
-                it.remove();
-            }
-        }
+        set.removeIf(name -> name.isToken);
         Tree backup = Copier.copyTree(tree);
 
         //A= A A(A) | A_no_A
@@ -59,18 +55,15 @@ public class Recursion {
 
         if (!cycle) return;
         //solve other refs as well to get rif of greedy loops
-        Collections.sort(set, new Comparator<Name>() {
-            @Override
-            public int compare(Name o1, Name o2) {
-                if (FirstSet.firstSetNoRec(tree.getRule(o1).rhs, tree).contains(o1)) {
-                    //direct recursion has higher priority
-                    return -1;
-                }
-                if (FirstSet.firstSetNoRec(tree.getRule(o2).rhs, tree).contains(o2)) {
-                    return 1;
-                }
-                return 0;
+        set.sort((o1, o2) -> {
+            if (FirstSet.firstSetNoRec(tree.getRule(o1).rhs, tree).contains(o1)) {
+                //direct recursion has higher priority
+                return -1;
             }
+            if (FirstSet.firstSetNoRec(tree.getRule(o2).rhs, tree).contains(o2)) {
+                return 1;
+            }
+            return 0;
         });
         for (Name other : set) {
             if (other.isToken || other.equals(decl.ref)) continue;

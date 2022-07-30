@@ -21,6 +21,7 @@ public class Item {
     public Item reduceChild;
     public boolean advanced = false;//dot star but advanced
     public ItemSet itemSet;
+    public boolean first = false;
     public static int lastId = 0;
 
     public Item(RuleDecl rule, int dotPos) {
@@ -41,6 +42,7 @@ public class Item {
         this.gotoSet = item.gotoSet;
         this.ids = new HashSet<>(item.ids);
         this.senders.add(item);
+        this.first = item.first;
         item.next = this;
         this.siblings = item.siblings;
         if (item.getNode(item.dotPos).isStar()) {
@@ -61,10 +63,13 @@ public class Item {
     //dot end or rest is empty
     public boolean isReduce(Tree tree) {
         for (int i = dotPos; i < rhs.size(); i++) {
-            Node node = rhs.get(i);
-            if (!Helper.canBeEmpty(node, tree)) return false;
+            if (!Helper.canBeEmpty(rhs.get(i), tree)) return false;
         }
         return true;
+    }
+
+    public boolean isFinalReduce(Tree tree) {
+        return first && isReduce(tree);
     }
 
     boolean isLr0() {
