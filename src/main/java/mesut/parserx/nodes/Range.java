@@ -42,7 +42,7 @@ public class Range extends Node implements Comparable<Range> {
             }
             return UnicodeUtils.printChar(start);
         }
-        if (UnicodeUtils.isPrintableChar((char) start) && UnicodeUtils.isPrintableChar((char) end)) {
+        if (UnicodeUtils.isPrintableChar( start) && UnicodeUtils.isPrintableChar( end)) {
             return (char) start + "-" + (char) end;
         }
         return UnicodeUtils.escapeUnicode(start) + "-" + UnicodeUtils.escapeUnicode(end);

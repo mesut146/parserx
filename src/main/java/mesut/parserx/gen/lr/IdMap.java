@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 //common for lexer and parser
 public class IdMap {
@@ -63,19 +64,27 @@ public class IdMap {
         writer.all("public class %s {\n", className);
 
         writer.append("//tokens");
-        for (Map.Entry<Name, Integer> entry : map.entrySet()) {
-            if (entry.getKey().isToken) {
-                if (entry.getKey().name.equals("$")) continue;
-                writer.append(field(entry.getKey().name, entry.getValue()));
-            }
+        var tokens = map.entrySet()
+                .stream()
+                .filter(e -> e.getKey().isToken)
+                .sorted(Map.Entry.comparingByValue())
+                .collect(Collectors.toList());
+        for (var entry : tokens) {
+            if (entry.getKey().name.equals("$")) continue;
+            writer.append(field(entry.getKey().name, entry.getValue()));
+
         }
         writer.append("//rules");
 
-        for (Map.Entry<Name, Integer> entry : map.entrySet()) {
-            if (entry.getKey().isRule()) {
-                if (entry.getKey().name.equals(LrDFAGen.startName)) continue;
-                writer.append(field(entry.getKey().name, entry.getValue()));
-            }
+        var rules = map.entrySet()
+                .stream()
+                .filter(e -> e.getKey().isRule())
+                .sorted(Map.Entry.comparingByValue())
+                .collect(Collectors.toList());
+
+        for (var entry : rules) {
+            if (entry.getKey().name.equals(LrDFAGen.startName)) continue;
+            writer.append(field(entry.getKey().name, entry.getValue()));
         }
         writer.all("\n}");
 

@@ -27,7 +27,7 @@ import java.util.List;
 public class Main {
 
     static List<String> cmds = Arrays.asList("-left", "-factor", "-epsilon",
-            "-optimize", "-dfa", "-nfa", "-nfa2dfa", "-regex", "-lr0", "-desc", "-lldfa", "-lexer", "-lalr", "-lr1", "-lr0");
+            "-optimize", "-dfa", "-nfa", "-nfa2dfa", "-regex", "-lr0", "-desc", "-lldfa", "-lexer", "-lalr", "-lr1");
 
     static String usageStr = "usage:\n" +
             "java -jar <jarfile> <command>\n" +
@@ -45,7 +45,6 @@ public class Main {
             "-lldfa [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates LL(1) recursive descent parser\n" +
             "-lalr [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lalr parser" +
             "-lr1 [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lr(1) parser" +
-            "-lr0 [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lr(0) parser" +
             "\ninput is given by '-in <path>' or as last argument" +
             "\noutput language is given by '-lang [java,cpp]'";
 
@@ -283,7 +282,7 @@ public class Main {
                     RecDescent.gen(tree, lang);
                 }
             }
-            else if (cmd.contains("-lalr") || cmd.contains("-lr1") || cmd.contains("-lr0")) {
+            else if (cmd.contains("-lalr") || cmd.contains("-lr1")) {
                 Tree tree = Tree.makeTree(input);
                 if (output == null) {
                     tree.options.outDir = input.getParent();
@@ -313,12 +312,10 @@ public class Main {
                 if (cmd.contains("-lr1")) {
                     type = "lr1";
                 }
-                else if (cmd.contains("-lalr")) {
+                else {
                     type = "lalr";
                 }
-                else {
-                    type = "lr0";
-                }
+
                 CodeGen gen = new CodeGen(tree, type);
                 gen.gen();
                 AstBuilderGen builderGen = new AstBuilderGen(tree);

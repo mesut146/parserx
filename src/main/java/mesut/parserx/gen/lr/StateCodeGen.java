@@ -91,7 +91,7 @@ public class StateCodeGen {
     void writeShift(LrTransition tr) {
         writer.append("stack.push(la);");
         writer.append("la = next();");
-        writer.append(getName(tr.to) + "();");
+        writer.append(getName(tr.target) + "();");
         writer.append("return;");
     }
 
@@ -183,7 +183,7 @@ public class StateCodeGen {
     LrItemSet getGoto(LrItemSet from, Name symbol) {
         for (LrTransition tr : from.transitions) {
             if (tr.symbol.equals(symbol)) {
-                return tr.to;
+                return tr.target;
             }
         }
         return null;

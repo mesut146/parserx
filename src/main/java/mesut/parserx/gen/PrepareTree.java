@@ -18,11 +18,6 @@ public class PrepareTree extends Transformer {
             throw new RuntimeException("start rule declared but not defined");
         }
         transformAll();
-        for (TokenDecl decl : tree.tokens) {
-            if (decl.after != null && tree.getToken(decl.after.name) == null) {
-                throw new RuntimeException("invalid after reference: " + decl.after + " in " + getDecl());
-            }
-        }
     }
 
     @Override

@@ -81,7 +81,7 @@ regex: name "=" simple type=("*" | "+" | "?")?
 simple: group
      | name
      | stringNode
-     | bracketNod
+     | bracketNode
      | untilNode
      | dotNode
      | EPSILON

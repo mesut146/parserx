@@ -63,9 +63,6 @@ public class AstBuilder {
 
     public TokenDecl visitTokendecl(Ast.tokenDecl node) {
         TokenDecl decl = new TokenDecl(node.name.IDENT.value);
-        if (node.g1 != null) {
-            decl.after = new Name(str(node.g1.name), true);
-        }
         if (node.HASH != null) {
             decl.fragment = true;
         }

@@ -35,15 +35,7 @@ public class NFABuilder extends BaseVisitor<State, State> {
 
     public void addRegex(TokenDecl decl) {
         State start;
-        if (decl.after != null) {
-            if (!finalMap.containsKey(decl.after)) {
-                addRegex(tree.getToken(decl.after.name));
-            }
-            start = finalMap.get(decl.after);
-        }
-        else {
-            start = nfa.initialState;
-        }
+        start = nfa.initialState;
         var end = decl.rhs.accept(this, start);
         end.accepting = true;
         end.isSkip = decl.isSkip;

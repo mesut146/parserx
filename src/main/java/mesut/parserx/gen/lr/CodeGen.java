@@ -11,7 +11,7 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -20,12 +20,11 @@ public class CodeGen {
     public Options options;
     public LrDFA dfa;
     public LrDFAGen gen;
-    List<RuleDecl> all;
     String type;
     IdMap idMap;
 
     public CodeGen(Tree tree, String type) {
-        if (type.equals("lalr") || type.equals("lr1") | type.equals("lr0")) {
+        if (type.equals("lalr") || type.equals("lr1")) {
             LrDFAGen generator = new LrDFAGen(tree, type);
             generator.generate();
             generator.checkAndReport();
@@ -59,19 +58,24 @@ public class CodeGen {
         File file = new File(options.outDir, options.parserClass + ".java");
         Utils.write(template.toString(), file);
         idMap.writeSym(options);
+
+        var symbolTemplate = new Template("Symbol.java.template");
+        symbolTemplate.set("package", options.packageName == null ? "" : "package " + options.packageName + ";\n");
+        symbolTemplate.set("token_class", options.tokenClass);
+        Utils.write(symbolTemplate.toString(), new File(options.outDir, "Symbol.java"));
     }
 
     //map rule ids to symbol ids
     void ruleId(Template template) {
         StringBuilder ruleIds = new StringBuilder();
         StringBuilder sizes = new StringBuilder();
-        all = gen.tree.rules;
-        Collections.sort(all, new Comparator<RuleDecl>() {
-            @Override
-            public int compare(RuleDecl o1, RuleDecl o2) {
-                return Integer.compare(o1.index, o2.index);
-            }
-        });
+
+        var all = new ArrayList<RuleDecl>();
+        for (var rd : gen.treeInfo.ruleMap.values()) {
+            all.addAll(rd);
+        }
+
+        all.sort(Comparator.comparingInt(o -> o.index));
         for (int i = 0; i < all.size(); i++) {
             RuleDecl decl = all.get(i);
             ruleIds.append(idMap.getId(decl.ref));
@@ -100,23 +104,13 @@ public class CodeGen {
         //write accept
         LrItemSet acc = dfa.acc;
         sb.append(pack(acc.stateId));
-        if (type.equals("lr0")) {
-            //all tokens acc
-            sb.append(pack(dfa.tokens.size()));
-            for (Name tok : dfa.tokens) {
-                sb.append(pack(idMap.getId(tok)));
+        sb.append(pack(1));
+        for (LrItem item : acc.kernel) {
+            if (item.isReduce(gen.tree) && item.rule.ref.equals(gen.start.ref) && item.lookAhead.contains(LrDFAGen.dollar)) {
+                sb.append(pack(idMap.getId(IdMap.EOF)));
+                break;
             }
         }
-        else {
-            sb.append(pack(1));
-            for (LrItem item : acc.kernel) {
-                if (item.hasReduce() && item.rule.ref.equals(gen.start.ref) && item.lookAhead.contains(LrDFAGen.dollar)) {
-                    sb.append(pack(idMap.getId(IdMap.EOF)));
-                    break;
-                }
-            }
-        }
-
 
         for (var set : dfa.itemSets) {
             //write shifts
@@ -124,7 +118,7 @@ public class CodeGen {
             sb.append(pack(shifts.size()));//shift count
             for (LrTransition tr : shifts) {
                 sb.append(pack(idMap.getId(tr.symbol)));
-                int action = tr.to.stateId;
+                int action = tr.target.stateId;
                 sb.append(pack(action));
             }
             //write reduces

@@ -6,7 +6,7 @@ public class TokenDecl {
     public boolean fragment = false;
     public boolean isSkip = false;
     public Node rhs;
-    public Name after;
+    public String mode;//->mode;
 
     public TokenDecl(String name) {
         this(name, null);
@@ -31,9 +31,6 @@ public class TokenDecl {
             sb.append("#");
         }
         sb.append(name);
-        if (after != null) {
-            sb.append("-").append(after);
-        }
         sb.append(": ");
         sb.append(rhs);
         return sb.toString();

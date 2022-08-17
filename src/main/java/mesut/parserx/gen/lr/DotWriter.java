@@ -57,7 +57,7 @@ public class DotWriter {
                 //shift
                 for (LrTransition tr : set.transitions) {
                     if (tr.symbol.equals(token)) {
-                        writer.print("S" + tr.to.stateId);
+                        writer.print("S" + tr.target.stateId);
                     }
                 }
                 //reduce
@@ -105,7 +105,7 @@ public class DotWriter {
                 }*/
                 for (LrTransition tr : set.transitions) {
                     if (tr.symbol.equals(rule)) {//tr.to.hasReduce()
-                        writer.print(tr.to.stateId);
+                        writer.print(tr.target.stateId);
                     }
                 }
                 writer.print("</TD>");
@@ -134,7 +134,7 @@ public class DotWriter {
 
             for (var set : table.itemSets) {
                 for (var tr : set.transitions) {
-                    writer.printf("%s -> %s [label=\"%s\"]\n", set.stateId, tr.to.stateId, tr.symbol.name);
+                    writer.printf("%s -> %s [label=\"%s\"]\n", set.stateId, tr.target.stateId, tr.symbol.name);
                 }
             }
 

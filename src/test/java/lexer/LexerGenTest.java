@@ -84,9 +84,9 @@ public class LexerGenTest {
 
     @Test
     public void itself() throws Exception {
-        var path = new File("./src/main/grammar/parserx.g");
-        Tree tree = Tree.makeTree(path);
-        RealTest.check(tree, path.getAbsolutePath());
+        var grammar = new File("./src/main/grammar/parserx2.g");
+        Tree tree = Tree.makeTree(grammar);
+        RealTest.check(tree, grammar.getAbsolutePath());
     }
 
     @Test

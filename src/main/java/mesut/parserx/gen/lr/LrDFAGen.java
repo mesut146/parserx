@@ -1,10 +1,10 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.gen.transform.EbnfToBnf;
-import mesut.parserx.nodes.Name;
-import mesut.parserx.nodes.RuleDecl;
-import mesut.parserx.nodes.Sequence;
-import mesut.parserx.nodes.Tree;
+import mesut.parserx.gen.FirstSet;
+import mesut.parserx.gen.ll.Normalizer;
+import mesut.parserx.gen.lldfa.ItemSet;
+import mesut.parserx.gen.lldfa.LLDfaBuilder;
+import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
 import java.io.File;
@@ -14,23 +14,22 @@ import java.util.*;
 
 //lr table generator
 public class LrDFAGen {
-    public static boolean debug = false;
-    public static Name dollar = new Name("$", true);//eof
-    public static String startName = "%start";
-    private final boolean merge;//lalr
-    public LrDFA table = new LrDFA();
-    public RuleDecl start;
     public Tree tree;
+    public RuleDecl start;
+    public LrDFA table = new LrDFA();
+    public TreeInfo treeInfo;
     public String type;
     public List<ConflictInfo> conflicts = new ArrayList<>();
     LrItem first;
     boolean isResolved;//is conflicts checked
     Queue<LrItemSet> queue = new LinkedList<>();//itemsets
+    public static boolean debug = false;
+    public static Name dollar = new Name("$", true);//eof
+    public static String startName = "%start";
 
     public LrDFAGen(Tree tree, String type) {
         this.tree = tree;
         this.type = type;
-        merge = type.equals("lalr");
     }
 
     public void makeStart() {
@@ -50,16 +49,29 @@ public class LrDFAGen {
     }
 
     void prepare() {
-        EbnfToBnf.expand_or = true;
-        EbnfToBnf.combine_or = false;
-        tree = EbnfToBnf.transform(tree);
         tree.prepare();
+        new Normalizer(tree).normalize();
+
+        for (var rd : tree.rules) {
+            if (rd.rhs.isOr()) {
+                List<Node> list = new ArrayList<>();
+                for (var ch : rd.rhs.asOr()) {
+                    list.add(LLDfaBuilder.expandPlus(ch));
+                }
+                rd.rhs = new Or(list);
+            }
+            else {
+                rd.rhs = LLDfaBuilder.expandPlus(rd.rhs);
+            }
+        }
+
+        treeInfo = TreeInfo.make(tree);
 
         makeStart();
         first = new LrItem(start, 0);
-        if (!type.equals("lr0")) {
-            first.lookAhead.add(dollar);
-        }
+
+        first.lookAhead.add(dollar);
+
     }
 
     public void writeGrammar() {
@@ -77,8 +89,8 @@ public class LrDFAGen {
     }
 
     public LrItemSet makeSet(LrItem item) {
-        LrItemSet set = new LrItemSet(Collections.singleton(item), tree, type);
-        set.closure();
+        LrItemSet set = new LrItemSet(treeInfo, type);
+        set.addItem(item);
         table.addSet(set);
         return set;
     }
@@ -94,69 +106,74 @@ public class LrDFAGen {
         while (!queue.isEmpty()) {
             LrItemSet curSet = queue.poll();
             if (debug) System.out.println("set=" + curSet.stateId);
+            curSet.closure();
+            Map<Name, List<LrItem>> map = new HashMap<>();
             //iterate items
-            while (true) {
-                LrItem curItem = curSet.getItem();
-                if (curItem == null) break;//already done
+            for (var item : curSet.all) {
+                for (int i = item.dotPos; i < item.rhs.size(); i++) {
+                    if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
+                    Node node = item.getNode(i);
+                    Name symbol = ItemSet.sym(node);
 
-                Name symbol = curItem.getDotSym();
-                if (symbol == null) continue;//dot end
-
-                LrItem toFirst = new LrItem(curItem, curItem.dotPos + 1);
-                LrItemSet targetSet = table.getTargetSet(curSet, symbol);
-
-                if (targetSet == null) {
-                    //find another set that has same core
-                    HashSet<LrItemSet> similars = new HashSet<>();
-                    for (LrItemSet set : table.itemSets) {
-                        for (LrItem item : set.kernel) {
-                            if (item.equals(toFirst)) {
-                                targetSet = set;
-                                break;
-                            }
-                            else if (item.isSame(toFirst)) {
-                                similars.add(set);
-                            }
-                        }
-                        if (targetSet != null) break;
-                    }
-                    //or another set that has similar core(merge-able)
-                    if (targetSet == null) {
-                        if (merge && !similars.isEmpty()) {
-                            targetSet = similars.iterator().next();
-                            doMerge(toFirst, targetSet);
-                        }
-                        if (targetSet == null) {
-                            //create new set
-                            targetSet = makeSet(toFirst);
-                        }
-                    }
-                    table.addTransition(curSet, targetSet, symbol);
-                    addQueue(targetSet);
-                }
-                else {
-                    //has same symbol transition
-                    //check if item there
-                    boolean has = false;
-                    for (LrItem item : targetSet.kernel) {
-                        if (item.isSame(toFirst)) {
-                            if (!item.equals(toFirst)) {
-                                //has similar so merge
-                                doMerge(toFirst, targetSet);
-                            }
-                            has = true;
-                            break;
-                        }
-                    }
-                    if (!has) {
-                        //doesn't have so add
-                        targetSet.addCore(toFirst);
-                        addQueue(targetSet);
-                    }
+                    var targetItem = new LrItem(item, i + 1);
+                    map.computeIfAbsent(symbol, s -> new ArrayList<>()).add(targetItem);
                 }
             }
+            makeTrans(curSet, map);
         }
-        table.acc = table.getTargetSet(firstSet, start.ref);
+        table.acc = table.getTargetSet(firstSet, tree.start);
+    }
+
+    void makeTrans(LrItemSet curSet, Map<Name, List<LrItem>> map) {
+        for (var e : map.entrySet()) {
+            var sym = e.getKey();
+            var list = e.getValue();
+            LrItemSet targetSet;
+
+            var sim = findSimilar(new ArrayList<>(list));
+            if (sim != null) {
+                //merge lookaheads
+                for (var it : list) {
+                    sim.update(it);
+                }
+                targetSet = sim;
+            }
+            else {
+                targetSet = new LrItemSet(treeInfo, type);
+                targetSet.addAll(list);
+                table.addSet(targetSet);
+                addQueue(targetSet);
+            }
+            curSet.addTransition(sym, targetSet);
+        }
+    }
+
+
+    void sort(List<LrItem> list) {
+        list.sort((i1, i2) -> {
+            if (i1.rule.index == i2.rule.index) {
+                return Integer.compare(i1.dotPos, i2.dotPos);
+            }
+            return Integer.compare(i1.rule.index, i2.rule.index);
+        });
+    }
+
+    LrItemSet findSimilar(List<LrItem> target) {
+        sort(target);
+        for (var set : table.itemSets) {
+            if (target.size() != set.kernel.size()) continue;
+            var l2 = new ArrayList<>(set.kernel);
+            sort(l2);
+            var same = true;
+            for (int i = 0; i < target.size(); i++) {
+                if (!target.get(i).isSame(l2.get(i))) {
+                    same = false;
+                    break;
+                }
+            }
+            if (same) return set;
+        }
+        return null;
     }
 
     void addQueue(LrItemSet set) {
@@ -225,29 +242,31 @@ public class LrDFAGen {
     }
 
     private void report() {
-        if (!conflicts.isEmpty()) {
-            StringBuilder sb = new StringBuilder();
-            for (ConflictInfo info : conflicts) {
-                if (info.rr) {
-                    sb.append("reduce/reduce conflict in ").append(info.state).append("\n");
-                }
-                else {
-                    sb.append(String.format("shift/reduce conflict in %d sym=%s", info.state, info.shift.getDotSym())).append("\n");
-                }
+        if (conflicts.isEmpty()) return;
+        StringBuilder sb = new StringBuilder();
+        for (ConflictInfo info : conflicts) {
+            if (info.rr) {
+                sb.append("reduce/reduce conflict in ").append(info.state).append("\n");
             }
-            throw new RuntimeException(sb.toString());
+            else {
+                sb.append(String.format("shift/reduce conflict in %d sym=%s", info.state, info.shift.getDotSym())).append("\n");
+            }
         }
+        throw new RuntimeException(sb.toString());
+
     }
 
     //check if two item has conflict
     void check(LrItemSet set) {
-        boolean lr0 = type.equals("lr0");
         for (int i = 0; i < set.all.size(); i++) {
             LrItem i1 = set.all.get(i);
             for (int j = i + 1; j < set.all.size(); j++) {
                 LrItem i2 = set.all.get(j);
-                if (i1.hasReduce() && i2.hasReduce()) {
-                    if (lr0) {
+                if (i1.isReduce(tree) && i2.isReduce(tree)) {
+                    //if any lookahead conflict
+                    HashSet<Name> la = new HashSet<>(i1.lookAhead);
+                    la.retainAll(i2.lookAhead);
+                    if (!la.isEmpty()) {
                         ConflictInfo info = new ConflictInfo();
                         info.rr = true;
                         info.state = set.stateId;
@@ -255,28 +274,16 @@ public class LrDFAGen {
                         info.reduce2 = i2;
                         conflicts.add(info);
                     }
-                    else {
-                        //if any lookahead conflict
-                        HashSet<Name> la = new HashSet<>(i1.lookAhead);
-                        la.retainAll(i2.lookAhead);
-                        if (!la.isEmpty()) {
-                            ConflictInfo info = new ConflictInfo();
-                            info.rr = true;
-                            info.state = set.stateId;
-                            info.reduce = i1;
-                            info.reduce2 = i2;
-                            conflicts.add(info);
-                        }
-                    }
+
                 }
                 else {
                     LrItem shift;
                     LrItem reduce;
-                    if (i1.hasReduce() && !i2.hasReduce() && (lr0 || i1.lookAhead.contains(i2.getDotSym()))) {
+                    if (i1.isReduce(tree) && !i2.isReduce(tree) && (i1.lookAhead.contains(i2.getDotSym()))) {
                         shift = i2;
                         reduce = i1;
                     }
-                    else if (!i1.hasReduce() && i2.hasReduce() && i2.lookAhead.contains(i1.getDotSym())) {
+                    else if (!i1.isReduce(tree) && i2.isReduce(tree) && i2.lookAhead.contains(i1.getDotSym())) {
                         shift = i1;
                         reduce = i2;
                     }
@@ -368,7 +375,7 @@ public class LrDFAGen {
         List<LrTransition> in = new ArrayList<>();
         for (LrItemSet from : table.itemSets) {
             for (LrTransition tr : from.transitions) {
-                if (tr.to == set) {
+                if (tr.target == set) {
                     LrItem prev = new LrItem(item, item.dotPos - 1);
                     for (LrItem fromItem : from.all) {
                         if (fromItem.isSame(prev)) {
@@ -386,7 +393,7 @@ public class LrDFAGen {
     public void genGoto() {
         for (LrItemSet set : table.itemSets) {
             for (LrItem item : set.all) {
-                if (item.dotPos != 0 || item.hasReduce()) continue;
+                if (item.dotPos != 0 || item.isReduce(tree)) continue;
                 //walk to reduce state of item and set goto
                 LrItemSet curSet = set;
                 LrItem curItem = item;
@@ -400,7 +407,7 @@ public class LrDFAGen {
                             break;
                         }
                     }
-                    if (curItem.hasReduce()) {
+                    if (curItem.isReduce(tree)) {
                         //set goto
                         curItem.gotoSet.add(set);
                         if (debug) System.out.println("set goto");

@@ -62,7 +62,7 @@ public class LLDfaBuilder {
     }
 
     //rewrite a+ as a a*
-    Sequence expandPlus(Node node) {
+    public static Sequence expandPlus(Node node) {
         var info = node.astInfo;
         var seq = node.isSequence() ? node.asSequence() : new Sequence(node);
         var list = new ArrayList<Node>();

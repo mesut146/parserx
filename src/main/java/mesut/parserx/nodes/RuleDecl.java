@@ -70,8 +70,8 @@ public class RuleDecl {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        RuleDecl decl = (RuleDecl) o;
-        return index == decl.index && Objects.equals(ref, decl.ref);
+        RuleDecl other = (RuleDecl) o;
+        return index == other.index && Objects.equals(ref, other.ref) && which==other.which;
     }
 
     @Override

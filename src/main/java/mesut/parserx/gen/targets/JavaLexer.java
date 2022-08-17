@@ -58,14 +58,9 @@ public class JavaLexer {
         int column = 20;
         int i = 0;
         //sorted ranges for error report
-        TreeSet<Map.Entry<Node, Integer>> entries = new TreeSet<>(new Comparator<Map.Entry<Node, Integer>>() {
-            @Override
-            public int compare(Map.Entry<Node, Integer> o1, Map.Entry<Node, Integer> o2) {
-                return o1.getValue().compareTo(o2.getValue());
-            }
-        });
+        TreeSet<Map.Entry<Node, Integer>> entries = new TreeSet<>(Map.Entry.comparingByValue());
         for (Iterator<Map.Entry<Node, Integer>> it = dfa.getAlphabet().map.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry<Node, Integer> entry = it.next();
+            var entry = it.next();
             Range range = entry.getKey().asRange();
             entries.add(entry);
             cmapWriter.append(makeOctal(range.start));
@@ -84,8 +79,8 @@ public class JavaLexer {
         template.set("cMap", cmapWriter.toString());
 
         StringBuilder regexWriter = new StringBuilder();
-        for (Iterator<Map.Entry<Node, Integer>> it = entries.iterator(); it.hasNext(); ) {
-            Map.Entry<Node, Integer> entry = it.next();
+        for (var it = entries.iterator(); it.hasNext(); ) {
+            var entry = it.next();
             regexWriter.append("\"");
             regexWriter.append(UnicodeUtils.escapeString(entry.getKey().toString()));
             regexWriter.append("\"");

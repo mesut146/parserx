@@ -68,4 +68,9 @@ public class BaseVisitor<R, A> implements Visitor<R, A> {
     public R visitShortcut(Shortcut shortcut, A arg) {
         return null;
     }
+
+    @Override
+    public R visitModeBlock(ModeBlock modeBlock, A arg) {
+        return null;
+    }
 }

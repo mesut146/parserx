@@ -11,7 +11,7 @@ import java.net.URL;
 
 public class Env {
     public static String dir = new File(".").getAbsolutePath();
-    
+
     public static File dotDir() {
         return new File(dir, "dots");
     }
@@ -25,7 +25,8 @@ public class Env {
 
     public static void dot(File name) {
         try {
-            Runtime.getRuntime().exec("dot -Tpng -O " + name);
+            Runtime.getRuntime().exec(("dot -Tpng -O " + name).split(" "));
+            System.out.println("writing " + name);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -43,7 +44,9 @@ public class Env {
     }
 
     public static Tree tree(String res) throws IOException {
-        return Tree.makeTree(getResFile(res));
+        var tree = Tree.makeTree(getResFile(res));
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        return tree;
     }
 
     @Test

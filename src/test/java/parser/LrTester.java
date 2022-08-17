@@ -30,8 +30,7 @@ public class LrTester {
     }
 
     public static void check(Tree tree, String... in) throws Exception {
-        String outDir = Env.dotDir().getAbsolutePath();
-        tree.options.outDir = outDir;
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
         CodeGen gen = new CodeGen(tree, "lr1");
         gen.gen();
         check0(tree, "LrTester", false, Arrays.asList(in));

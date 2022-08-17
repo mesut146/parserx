@@ -42,7 +42,7 @@ public class ItemSet {
     }
 
     public void addAll(List<Item> list) {
-        for (Item it : list) {
+        for (var it : list) {
             addItem(it);
         }
     }
@@ -110,8 +110,9 @@ public class ItemSet {
     }
 
     public void closure() {
-        if (!alreadyGenReduces)
+        if (!alreadyGenReduces){
             addAll(genReduces());
+        }
         alreadyGenReduces = true;
         for (Item item : kernel) {
             closure(item);
@@ -218,7 +219,6 @@ public class ItemSet {
     }
 
     void addOrUpdate(Item item) {
-        if (type.equals("lr0")) return;
         if (!update(item, true, false)) {
             all.add(item);
             item.itemSet = this;

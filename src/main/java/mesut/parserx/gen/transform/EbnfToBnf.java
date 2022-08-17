@@ -15,7 +15,6 @@ public class EbnfToBnf extends Transformer {
     public static boolean leftRecursive = true;//prefer left recursion on regex expansions
     public static boolean expand_or = false;//separate rule for each 'or' content
     public static boolean combine_or = true;//exclusive expand_or
-    public static boolean rhsSequence = true;//make sure rhs always sequence
     Tree tree;//input ebnf
     Tree out;//output bnf
     CountingMap<String> countMap = new CountingMap<>();
@@ -45,11 +44,7 @@ public class EbnfToBnf extends Transformer {
         //LinkedHashMap preserves rule order
         LinkedHashMap<Name, List<Node>> map = new LinkedHashMap<>();
         for (RuleDecl decl : input.rules) {
-            List<Node> or = map.get(decl.ref);
-            if (or == null) {
-                or = new ArrayList<>();
-                map.put(decl.ref, or);
-            }
+            List<Node> or = map.computeIfAbsent(decl.ref, k -> new ArrayList<>());
             or.add(decl.rhs);
         }
         LinkedHashMap<Name, Node> res = new LinkedHashMap<>();
@@ -57,6 +52,21 @@ public class EbnfToBnf extends Transformer {
             res.put(entry.getKey(), Or.make(entry.getValue()));
         }
         return res;
+    }
+
+    public static LinkedHashMap<String, List<Node>> makeMap(Tree input) {
+        //LinkedHashMap preserves rule order
+        LinkedHashMap<String, List<Node>> map = new LinkedHashMap<>();
+        for (RuleDecl decl : input.rules) {
+            List<Node> or = map.computeIfAbsent(decl.ref.name, k -> new ArrayList<>());
+            if (decl.rhs.isOr()) {
+                or.addAll(decl.rhs.asOr().list);
+            }
+            else {
+                or.add(decl.rhs);
+            }
+        }
+        return map;
     }
 
     private void addRule(RuleDecl decl) {

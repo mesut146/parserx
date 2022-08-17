@@ -12,34 +12,26 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public class LrTest {
-
-    static void dot(File dotFile) {
-        try {
-            Runtime.getRuntime().exec("dot -Tpng -O " + dotFile).waitFor();
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
 
     public static void dots(LrDFAGen gen, String name) throws IOException {
         File dot = Env.dotFile(Utils.newName(name, ".dot"));
         gen.writeDot(new PrintWriter(dot));
-        dot(dot);
-        //dot.delete();
+        Env.dot(dot);
 
         File table = Env.dotFile(Utils.newName(name, "-table.dot"));
         gen.writeTableDot(new PrintWriter(table));
-        dot(table);
-        table.delete();
+        Env.dot(table);
     }
 
-    void checkLr(String grammar, String type) throws Exception {
+    LrDFAGen checkLr(String grammar, String type) throws Exception {
         Tree tree = Env.tree(grammar);
         LrDFAGen generator = new LrDFAGen(tree, type);
         generator.generate();
         generator.checkAndReport();
+        return generator;
     }
 
     @Ignore
@@ -137,6 +129,16 @@ public class LrTest {
         dfaGen.generate();
         dfaGen.checkAndReport();
         dots(dfaGen, tree.file.getName());
+    }
+
+    @Test
+    public void testStar() throws Exception {
+        //LrTester.check(Env.tree("lr1/regex.g"), "ax");
+        LrTester.check(Env.tree("lr1/lalr.g"), "bb");
+        LrDFAGen.debug = true;
+        //var gen = checkLr("lr1/regex.g", "lr1");
+//        var gen = checkLr("lr1/lalr.g", "lr1");
+//        dots(gen, gen.tree.file.getName());
     }
 
     @Test

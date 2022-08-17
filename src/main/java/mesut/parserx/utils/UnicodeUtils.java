@@ -1,5 +1,8 @@
 package mesut.parserx.utils;
 
+import mesut.parserx.nodes.Range;
+
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -104,17 +107,21 @@ public class UnicodeUtils {
     }
 
     public static String printChar(int chr) {
-        if (Character.isAlphabetic(chr) || Character.isDigit(chr) || isPrintableChar((char) chr)) {
+        if (isPrintableChar(chr)) {
             return Character.toString((char) chr);
         }
         return String.format("\\u%04x", chr);//unicode style
     }
 
-    public static boolean isPrintableChar(char c) {
-        if (Character.isWhitespace(c)) return false;
+    public static boolean isPrintableChar(int c) {
+        if (Character.isWhitespace(c) || Character.isISOControl(c)) return false;
+        if (Character.isDigit(c)) return true;
+        if (c >= 0 && c <= 127) return true;
+        if (String.valueOf(c).getBytes(StandardCharsets.UTF_8).length > 1) {
+            return false;
+        }
         Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
-        return (!Character.isISOControl(c)) &&
-                block != null &&
+        return block != null &&
                 block != Character.UnicodeBlock.SPECIALS;
     }
 }

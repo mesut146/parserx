@@ -5,7 +5,6 @@ import mesut.parserx.nodes.Name;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("unchecked")
 public class LrDFA {
     public List<LrItemSet> itemSets = new ArrayList<>();
     public LrItemSet first;
@@ -37,7 +36,7 @@ public class LrDFA {
     public LrItemSet getTargetSet(LrItemSet from, Name symbol) {
         for (LrTransition tr : from.transitions) {
             if (tr.symbol.equals(symbol)) {
-                return tr.to;
+                return tr.target;
             }
         }
         return null;

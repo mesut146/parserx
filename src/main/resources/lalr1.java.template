@@ -12,7 +12,7 @@ public class $parser_class${
     static int[] ruleIds = {$ruleIds$};
     static String table_packed = $table_packed$;
     static int[][] table = unpackTable(table_packed);
-    public static boolean debug = false;
+    public static boolean debug = true;
 
     public $parser_class$($lexer_class$ lexer){
         this.lexer = lexer;
@@ -85,6 +85,7 @@ public class $parser_class${
             }
             Symbol tmp = new Symbol(ruleIds[action]);
             tmp.index = action;
+            tmp.name = "";
             tmp.children = Arrays.asList(rhs);;
             stack.push(tmp);
             state = states.peek();
@@ -102,47 +103,4 @@ public class $parser_class${
           }
         }
     }
-}
-
-//a token or a rule
-class Symbol{
-    $token_class$ token;
-    public String name;
-    public int id;
-    public int index;//rule index
-    public List<Symbol> children = new ArrayList<>();
-
-    public Symbol(int id){
-        this.id = id;
-    }
-    public Symbol($token_class$ token){
-        this.token = token;
-        this.id = token.type;
-        this.name = token.name;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        if(token != null){
-          sb.append(token.value);
-        }
-        else{
-          for(Symbol ch : children){
-            sb.append(ch);
-          }
-        }
-        return sb.toString();
-    }
-
-    /*@Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("Symbol{");
-        sb.append("id=").append(id);
-        sb.append(", token=").append(token);
-        sb.append(", name='").append(name).append('\'');
-        sb.append('}');
-        return sb.toString();
-    }*/
-
 }
