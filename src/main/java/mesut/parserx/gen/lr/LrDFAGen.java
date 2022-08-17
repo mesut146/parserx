@@ -37,7 +37,7 @@ public class LrDFAGen {
             throw new RuntimeException("no start rule is declared");
         }
         start = new RuleDecl(startName, new Sequence(tree.start));
-        tree.addRule(start);
+        //tree.addRule(start);
     }
 
     public void writeTableDot(PrintWriter writer) {
@@ -65,13 +65,11 @@ public class LrDFAGen {
             }
         }
 
+        makeStart();
         treeInfo = TreeInfo.make(tree);
 
-        makeStart();
         first = new LrItem(start, 0);
-
         first.lookAhead.add(dollar);
-
     }
 
     public void writeGrammar() {

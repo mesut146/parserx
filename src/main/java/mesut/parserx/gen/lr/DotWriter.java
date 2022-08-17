@@ -5,12 +5,16 @@ import mesut.parserx.nodes.TokenDecl;
 
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DotWriter {
 
     public static void table(PrintWriter writer, LrDFAGen generator, boolean writeRules) {
         LrDFA table = generator.table;
-        List<Name> tokens = table.tokens;
+        var tokens = generator.tree.tokens.stream()
+                .filter(td->!td.fragment)
+                .map(TokenDecl::ref)
+                .collect(Collectors.toList());
         tokens.add(LrDFAGen.dollar);
 
         writer.println("digraph G{");
@@ -21,8 +25,9 @@ public class DotWriter {
         writer.println("<<TABLE>");
         writer.println("<TR>");
         writer.println("<TD>States</TD>");
-        if (writeRules)
+        if (writeRules){
             writer.println("<TD>Rules</TD>");
+        }
         //tokens
         for (Name token : tokens) {
             TokenDecl decl = generator.tree.getToken(token.name);
@@ -34,7 +39,10 @@ public class DotWriter {
             }
         }
         //rules
-        for (Name rule : table.rules) {
+        var rules = generator.tree.rules.stream()
+                .map(rd->rd.ref)
+                .collect(Collectors.toList());
+        for (Name rule : rules) {
             writer.println("<TD>" + rule.name + "</TD>");
         }
         writer.println("</TR>");
@@ -96,7 +104,7 @@ public class DotWriter {
                 writer.print("</TD>");
             }
             //goto
-            for (Name rule : table.rules) {
+            for (Name rule : rules) {
                 writer.print("<TD>");
                 /*for (LrItem item : set.getReduce()) {
                     if (item.ruleDecl.name.equals(rule.name)) {

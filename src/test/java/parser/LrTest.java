@@ -133,12 +133,13 @@ public class LrTest {
 
     @Test
     public void testStar() throws Exception {
-        //LrTester.check(Env.tree("lr1/regex.g"), "ax");
-        LrTester.check(Env.tree("lr1/lalr.g"), "bb");
         LrDFAGen.debug = true;
+        //LrTester.check(Env.tree("lr1/regex.g"), "ax");
+
+        //LrTester.check(Env.tree("lr1/lalr.g"), "bb");
         //var gen = checkLr("lr1/regex.g", "lr1");
-//        var gen = checkLr("lr1/lalr.g", "lr1");
-//        dots(gen, gen.tree.file.getName());
+        var gen = checkLr("lr1/lalr.g", "lr1");
+        dots(gen, gen.tree.file.getName());
     }
 
     @Test
