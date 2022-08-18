@@ -12,25 +12,7 @@ public class LrDFA {
     public int lastId = -1;
     public List<Name> tokens = new ArrayList<>();
     public List<Name> rules = new ArrayList<>();
-    public static boolean debugTransition = false;
 
-    public void addTransition(LrItemSet from, LrItemSet to, Name symbol) {
-        LrTransition t = new LrTransition(from, to, symbol);
-        List<LrTransition> list = from.transitions;
-        if (list.contains(t)) {
-            return;
-        }
-        list.add(t);
-        if (symbol.isToken && !tokens.contains(symbol)) {
-            tokens.add(symbol);
-        }
-        if (symbol.isRule() && !rules.contains(symbol)) {
-            rules.add(symbol);
-        }
-        if (debugTransition) {
-            System.out.printf("%s -> %s by %s\n", from.stateId, to.stateId, symbol.name);
-        }
-    }
 
     //if there exist another transition from this
     public LrItemSet getTargetSet(LrItemSet from, Name symbol) {

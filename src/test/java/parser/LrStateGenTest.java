@@ -21,7 +21,6 @@ public class LrStateGenTest {
         Tree tree = Env.tree("lr1/calc.g");
         //tree.options.outDir = Env.dotDir().getAbsolutePath();
         tree.options.packageName = "lr";
-        LrDFA.debugTransition = true;
         LrDFAGen dfaGen = new LrDFAGen(tree, "lalr");
         dfaGen.generate();
         dfaGen.checkAndReport();
@@ -47,7 +46,6 @@ public class LrStateGenTest {
         //Tree tree = Env.tree("lr1/prec3.g");
         Tree tree = Env.tree("lr1/calc.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        LrDFA.debugTransition = true;
         LrDFAGen dfaGen = new LrDFAGen(tree, "lalr");
         dfaGen.generate();
         dfaGen.checkAndReport();
