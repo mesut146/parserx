@@ -1,5 +1,6 @@
 package mesut.parserx.gen.lr;
 
+import mesut.parserx.gen.lldfa.ItemSet;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
 
@@ -19,12 +20,13 @@ public class ConflictResolver {
         public LrItem shift;
         public LrItem reduce;
         public LrItem reduce2;
+        public Name sym;
         int state;
     }
-    
+
     public ConflictResolver(LrDFAGen gen) {
-        this.gen=gen;
-        tree=gen.tree;
+        this.gen = gen;
+        tree = gen.tree;
     }
 
 
@@ -51,14 +53,14 @@ public class ConflictResolver {
                 sb.append("reduce/reduce conflict in ").append(info.state).append("\n");
             }
             else {
-                sb.append(String.format("shift/reduce conflict in %d sym=%s", info.state, info.shift.getDotSym())).append("\n");
+                sb.append(String.format("shift/reduce conflict in %d sym=%s", info.state, info.sym)).append("\n");
             }
         }
         throw new RuntimeException(sb.toString());
 
     }
 
-    //check if two item has conflict
+    //check if two items has conflict
     void check(LrItemSet set) {
         for (int i = 0; i < set.all.size(); i++) {
             LrItem i1 = set.all.get(i);
@@ -76,88 +78,85 @@ public class ConflictResolver {
                         info.reduce2 = i2;
                         conflicts.add(info);
                     }
-
                 }
                 else {
-                    LrItem shift;
-                    LrItem reduce;
-                    if (i1.isReduce(tree) && !i2.isReduce(tree) && (i1.lookAhead.contains(i2.getDotSym()))) {
-                        shift = i2;
-                        reduce = i1;
-                    }
-                    else if (!i1.isReduce(tree) && i2.isReduce(tree) && i2.lookAhead.contains(i1.getDotSym())) {
-                        shift = i1;
-                        reduce = i2;
-                    }
-                    else {
-                        continue;
-                    }
-                    boolean removed = false;
-                    //if same rule,check assoc
-                    if (shift.rule.equals(reduce.rule)) {//todo isSame?
-                        LrItemSet target = gen.table.getTargetSet(set, shift.getDotSym());
-                        LrItem newItem = new LrItem(shift, shift.dotPos + 1);
-                        for (LrItem targetItem : target.all) {
-                            if (targetItem.isSame(newItem)) {
-                                boolean l = shift.rule.rhs.asSequence().assocLeft;
-                                boolean r = shift.rule.rhs.asSequence().assocRight;
-                                if (l) {
-                                    //keep reduce,remove shift
-                                    removeItem(set, shift);
-                                    removed = true;
-                                }
-                                else if (r) {
-                                    //keep shift,remove reduce
-                                    reduce.lookAhead.remove(shift.getDotSym());
-                                    if (reduce.lookAhead.isEmpty()) {
-                                        removeItem(set, reduce);
-                                    }
-                                    removed = true;
-                                }
-                                else {
-                                    //no assoc
-                                    //prefer shift
-                                }
-                                break;
+                    if (i2.isReduce(tree)) {
+                        for (var e1 : i1.getSyms(tree)) {
+                            var sym = ItemSet.sym(e1.getKey());
+                            if (i2.lookAhead.contains(sym)) {
+                                handleSR(i1, sym, i2, set);
                             }
                         }
-                        if (removed) {
-                            if (LrDFAGen.debug) System.out.println("assoc is used on " + set.stateId);
-                            this.isResolved = true;
-                        }
                     }
-                    else {
-                        //check prec
-                        if (shift.rule.ref.equals(reduce.rule.ref)) {
-                            if (reduce.rule.index < shift.rule.index) {
-                                //prefer reduce
-                                removeItem(set, shift);
-                                removed = true;
-                            }
-                            else {
-                                //prefer shift
-                                reduce.lookAhead.remove(shift.getDotSym());
-                                if (reduce.lookAhead.isEmpty()) {
-                                    removeItem(set, reduce);
-                                }
-                                removed = true;
+                    if (i1.isReduce(tree)) {
+                        for (var e2 : i2.getSyms(tree)) {
+                            var sym = ItemSet.sym(e2.getKey());
+                            if (i1.lookAhead.contains(sym)) {
+                                handleSR(i2, sym, i1, set);
                             }
                         }
-                        if (removed) {
-                            if (LrDFAGen.debug) System.out.println("prec used in " + set.stateId);
-                            this.isResolved = true;
-                        }
-                    }
-                    if (!removed) {
-                        ConflictInfo info = new ConflictInfo();
-                        info.rr = false;
-                        info.state = set.stateId;
-                        info.shift = shift;
-                        info.reduce = reduce;
-                        conflicts.add(info);
                     }
                 }
             }
+        }
+    }
+
+    void handleSR(LrItem shift, Name sym, LrItem reduce, LrItemSet set) {
+        boolean removed = false;
+        //if same rule,check assoc
+        if (shift.rule.equals(reduce.rule)) {
+            boolean l = shift.rule.rhs.asSequence().assocLeft;
+            boolean r = shift.rule.rhs.asSequence().assocRight;
+            if (l) {
+                //keep reduce,remove shift
+                removeItem(set, shift);
+                removed = true;
+            }
+            else if (r) {
+                //keep shift,remove reduce
+                reduce.lookAhead.remove(sym);
+                if (reduce.lookAhead.isEmpty()) {
+                    removeItem(set, reduce);
+                }
+                removed = true;
+            }
+            //no assoc
+            //prefer shift
+            if (removed) {
+                if (LrDFAGen.debug) System.out.println("assoc is used on " + set.stateId + " sym=" + sym);
+                this.isResolved = true;
+            }
+        }
+        else {
+            //check prec
+            if (shift.rule.ref.equals(reduce.rule.ref)) {
+                if (reduce.rule.index < shift.rule.index) {
+                    //prefer reduce
+                    removeItem(set, shift);
+                    removed = true;
+                }
+                else {
+                    //prefer shift
+                    reduce.lookAhead.remove(sym);
+                    if (reduce.lookAhead.isEmpty()) {
+                        removeItem(set, reduce);
+                    }
+                    removed = true;
+                }
+            }
+            if (removed) {
+                if (LrDFAGen.debug) System.out.println("prec used in " + set.stateId + " sym=" + sym);
+                this.isResolved = true;
+            }
+        }
+        if (!removed) {
+            ConflictInfo info = new ConflictInfo();
+            info.rr = false;
+            info.state = set.stateId;
+            info.shift = shift;
+            info.reduce = reduce;
+            info.sym = sym;
+            conflicts.add(info);
         }
     }
 
@@ -166,8 +165,11 @@ public class ConflictResolver {
         //remove incoming and outgoing transitions
         List<LrTransition> out = new ArrayList<>();
         for (LrTransition tr : set.transitions) {
-            if (tr.symbol.equals(item.getDotSym())) {
-                out.add(tr);
+            for (var e : item.getSyms(tree)) {
+                var sym = ItemSet.sym(e.getKey());
+                if (sym.equals(tr.symbol)) {
+                    out.add(tr);
+                }
             }
         }
         if (out.size() == 1) {

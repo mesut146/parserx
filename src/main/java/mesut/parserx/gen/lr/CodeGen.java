@@ -11,9 +11,7 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 //table driven parser gen
 public class CodeGen {
@@ -22,19 +20,17 @@ public class CodeGen {
     public LrDFAGen gen;
     String type;
     IdMap idMap;
+    Template template;
 
     public CodeGen(Tree tree, String type) {
-        if (type.equals("lalr") || type.equals("lr1")) {
-            LrDFAGen generator = new LrDFAGen(tree, type);
-            generator.generate();
-            generator.checkAndReport();
-            this.gen = generator;
-        }
-        else {
+        if (!type.equals("lalr") && !type.equals("lr1")) {
             throw new RuntimeException("invalid type: " + type);
         }
+        this.gen = new LrDFAGen(tree, type);
         this.options = tree.options;
         this.type = type;
+        gen.generate();
+        gen.checkAndReport();
     }
 
     public CodeGen(LrDFAGen gen, String type) {
@@ -47,14 +43,15 @@ public class CodeGen {
         idMap = LexerGenerator.gen(gen.tree, "java").idMap;
 
         this.dfa = gen.table;
-        Template template = new Template("lalr1.java.template");
+        template = new Template("lalr1.java.template");
         template.set("package", options.packageName == null ? "" : "package " + options.packageName + ";\n");
         template.set("parser_class", options.parserClass);
         template.set("lexer_class", options.lexerClass);
         template.set("lexer_method", options.lexerFunction);
         template.set("token_class", options.tokenClass);
-        ruleId(template);
-        writeTable(template);
+        ruleId();
+        writeTable();
+        names();
         File file = new File(options.outDir, options.parserClass + ".java");
         Utils.write(template.toString(), file);
         idMap.writeSym(options);
@@ -65,8 +62,25 @@ public class CodeGen {
         Utils.write(symbolTemplate.toString(), new File(options.outDir, "Symbol.java"));
     }
 
+    void names() {
+        Set<RuleDecl> all = new TreeSet<>(Comparator.comparingInt(rd -> rd.index));
+        for (var list : gen.treeInfo.ruleMap.values()) {
+            all.addAll(list);
+        }
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        for (var rd : all) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append('"').append(rd.getName()).append('"');
+            i++;
+        }
+        template.set("names", sb.toString());
+    }
+
     //map rule ids to symbol ids
-    void ruleId(Template template) {
+    void ruleId() {
         StringBuilder ruleIds = new StringBuilder();
         StringBuilder sizes = new StringBuilder();
 
@@ -77,7 +91,7 @@ public class CodeGen {
 
         all.sort(Comparator.comparingInt(o -> o.index));
         for (int i = 0; i < all.size(); i++) {
-            RuleDecl decl = all.get(i);
+            var decl = all.get(i);
             ruleIds.append(idMap.getId(decl.ref));
             if (LrItem.isEpsilon(decl)) {
                 sizes.append(0);
@@ -94,7 +108,7 @@ public class CodeGen {
         template.set("rhs_sizes", sizes.toString());
     }
 
-    void writeTable(Template template) {
+    void writeTable() {
         StringBuilder sb = new StringBuilder();
         sb.append("\"");
 
@@ -105,7 +119,7 @@ public class CodeGen {
         LrItemSet acc = dfa.acc;
         sb.append(pack(acc.stateId));
         sb.append(pack(1));
-        for (LrItem item : acc.kernel) {
+        for (var item : acc.kernel) {
             if (item.isReduce(gen.tree) && item.rule.ref.equals(gen.start.ref) && item.lookAhead.contains(LrDFAGen.dollar)) {
                 sb.append(pack(idMap.getId(IdMap.EOF)));
                 break;
@@ -128,14 +142,14 @@ public class CodeGen {
                 count--;
             }
             sb.append(pack(count));
-            for (LrItem reduce : list) {
+            for (var reduce : list) {
                 if (reduce.rule.ref.equals(gen.start.ref)) {
                     continue;
                 }
                 int action = reduce.rule.index;
                 sb.append(pack(action));
                 sb.append(pack(reduce.lookAhead.size()));
-                for (Name sym : reduce.lookAhead) {
+                for (var sym : reduce.lookAhead) {
                     sb.append(pack(idMap.getId(sym)));
                 }
             }

@@ -94,10 +94,7 @@ public class LrItemSet {
             throw new RuntimeException("closure error on node: " + node + ", was expecting rule");
         }
         Set<Name> laList = sender.follow(treeInfo.tree, pos);
-        int id = 1;
-        for (var rhs : treeInfo.nodeMap.get(node.name)) {
-            var rd = new RuleDecl(node, rhs);
-            rd.which = id++;
+        for (var rd : treeInfo.ruleMap.get(node.name)) {
             LrItem newItem = new LrItem(rd, 0);
             newItem.lookAhead = new HashSet<>(laList);
             newItem.sender = sender;
@@ -114,7 +111,11 @@ public class LrItemSet {
     }
 
     boolean update(LrItem item) {
-        if (!item.isDotNonTerminal()) return false;
+//        for (var entry : item.getSyms(treeInfo.tree)) {
+//            if (entry.getKey().isName() && entry.getKey().asName().isToken) {
+//                return false;
+//            }
+//        }
         var prev = all.stream().filter(prv -> prv.isSame(item)).findFirst();
         if (prev.isPresent()) {
             //merge la

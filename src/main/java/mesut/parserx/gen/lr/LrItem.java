@@ -6,7 +6,6 @@ import mesut.parserx.nodes.*;
 
 import java.util.*;
 
-//lr0,lr1
 public class LrItem {
     public Set<Name> lookAhead = new HashSet<>();
     public RuleDecl rule;
@@ -14,6 +13,7 @@ public class LrItem {
     public int dotPos;
     public Set<LrItemSet> gotoSet = new HashSet<>();
     public LrItem sender;
+    public List<LrItem> next = new ArrayList<>();
     public Set<Integer> ids = new HashSet<>();
     int hash = -1;
     public static int lastId = 0;
@@ -34,6 +34,7 @@ public class LrItem {
         this.lookAhead = new HashSet<>(item.lookAhead);
         this.ids = new HashSet<>(item.ids);
         this.sender = item;
+        item.next.add(this);
         lastId--;
     }
 
@@ -113,12 +114,6 @@ public class LrItem {
         return sb.toString();
     }
 
-    //if dot follows a terminal
-    public boolean isDotNonTerminal() {
-        Name name = getDotSym();
-        return name != null && !name.isToken;
-    }
-
     public boolean isEpsilon() {
         return isEpsilon(rule);
     }
@@ -131,22 +126,18 @@ public class LrItem {
         return null;
     }
 
-    @Deprecated
-    //node after dot
-    public Name getDotSym() {
-        Node node = getDotNode();
-        return node == null ? null : (node.isName() ? node.asName() : node.asRegex().node.asName());
-    }
-
-    //node after dot
-    public Node getDotNode() {
-        if (isEpsilon()) return null;
-        if (dotPos < rhs.size()) {
-            return rhs.get(dotPos);
+    //usable symbols after dot
+    public List<Map.Entry<Node, Integer>> getSyms(Tree tree) {
+        List<Map.Entry<Node, Integer>> list = new ArrayList<>();
+        for (int i = dotPos; i < rhs.size(); i++) {
+            var node = getNode(i);
+            list.add(new AbstractMap.SimpleEntry<>(node, i));
+            if (!FirstSet.canBeEmpty(node, tree)) {
+                break;
+            }
         }
-        return null;
+        return list;
     }
-
     //first set of follow of dot node
     public Set<Name> follow(Tree tree, int pos) {
         HashSet<Name> res = new HashSet<>();
@@ -188,6 +179,10 @@ public class LrItem {
     //without lookahead
     public boolean isSame(LrItem other) {
         return dotPos == other.dotPos && Objects.equals(rule, other.rule) && rule.which == other.rule.which;
+    }
+
+    public boolean isSameNoDot(LrItem other) {
+        return Objects.equals(rule, other.rule) && rule.which == other.rule.which;
     }
 
     @Override

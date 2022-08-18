@@ -3,6 +3,7 @@ package mesut.parserx.gen.lr;
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.ll.Normalizer;
 import mesut.parserx.gen.lldfa.ItemSet;
+import mesut.parserx.gen.lldfa.LLDFAGen;
 import mesut.parserx.gen.lldfa.LLDfaBuilder;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
@@ -101,20 +102,20 @@ public class LrDFAGen {
         prepare();
         writeGrammar();
 
-        LrItemSet firstSet = makeSet(first);
+        var firstSet = makeSet(first);
         table.first = firstSet;
         queue.add(firstSet);
 
         while (!queue.isEmpty()) {
-            LrItemSet curSet = queue.poll();
-            if (debug) System.out.println("set=" + curSet.stateId);
+            var curSet = queue.poll();
+            //if (debug) System.out.println("set=" + curSet.stateId);
             curSet.closure();
             Map<Name, List<LrItem>> map = new HashMap<>();
             for (var item : curSet.all) {
                 for (int i = item.dotPos; i < item.rhs.size(); i++) {
                     if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
-                    Node node = item.getNode(i);
-                    Name symbol = ItemSet.sym(node);
+                    var node = item.getNode(i);
+                    var symbol = ItemSet.sym(node);
 
                     var targetItem = new LrItem(item, i + 1);
                     map.computeIfAbsent(symbol, s -> new ArrayList<>()).add(targetItem);
@@ -205,47 +206,47 @@ public class LrDFAGen {
         if (done.contains(set)) return;
         done.add(set);
         for (int i = 0; i < set.all.size(); i++) {
-            LrItem item = set.all.get(i);
-            if (item.getDotSym() == null) continue;
-            LrItemSet target = table.getTargetSet(set, item.getDotSym());
-            if (target == null) continue;
-            LrItem newItem = new LrItem(item, item.dotPos + 1);
-            for (LrItem kernel : target.kernel) {
-                if (kernel.isSame(newItem)) {
-                    kernel.lookAhead.addAll(item.lookAhead);
-                    target.all.clear();
-                    target.closure();
-                    doTrans(target, done);
-                    break;
+            var item = set.all.get(i);
+            for (var e : item.getSyms(tree)) {
+                var target = table.getTargetSet(set, ItemSet.sym(e.getKey()));
+                if (target == null) continue;
+                var newItem = new LrItem(item, e.getValue() + 1);
+                for (var kernel : target.kernel) {
+                    if (kernel.isSame(newItem)) {
+                        kernel.lookAhead.addAll(item.lookAhead);
+                        target.all.clear();
+                        target.closure();
+                        doTrans(target, done);
+                        break;
+                    }
                 }
+                //doMerge(newItem, target);
             }
-            //doMerge(newItem, target);
         }
     }
 
 
     public void genGoto() {
-        for (LrItemSet set : table.itemSets) {
-            for (LrItem item : set.all) {
+        for (var set : table.itemSets) {
+            for (var item : set.all) {
                 if (item.dotPos != 0 || item.isReduce(tree)) continue;
                 //walk to reduce state of item and set goto
-                LrItemSet curSet = set;
-                LrItem curItem = item;
-                while (true) {
-                    curSet = table.getTargetSet(curSet, curItem.getDotSym());
-                    LrItem tmpItem = new LrItem(curItem.rule, curItem.dotPos + 1);
-                    //use tmp to get original item
-                    for (LrItem tmp : curSet.all) {
-                        if (tmp.isSame(tmpItem)) {
-                            curItem = tmp;
-                            break;
+
+                var curItem = item;
+                var any = true;
+                while (any) {
+                    any = false;
+                    //transitions of item
+                    for (var next : curItem.next) {
+                        if (next.isReduce(tree)) {
+                            //set goto
+                            next.gotoSet.add(set);
+                            if (debug) System.out.println("set goto");
                         }
-                    }
-                    if (curItem.isReduce(tree)) {
-                        //set goto
-                        curItem.gotoSet.add(set);
-                        if (debug) System.out.println("set goto");
-                        break;
+                        else {
+                            curItem = next;
+                            any = true;
+                        }
                     }
                 }
             }

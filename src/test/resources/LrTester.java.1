@@ -3,14 +3,21 @@ import java.lang.reflect.*;
 
 public class LrTester{
 
-  public static void main(String[] a) throws Exception{
-    String in=a[0];
-
-    Lexer l = new Lexer(new StringReader(in));
+  public static Object test(String input) throws Exception{
+    Lexer lexer = new Lexer(new StringReader(input));
     //Parser.debug=true;
-    Parser p = new Parser(l);
-    System.out.println(p.parse());
+    Parser parser = new Parser(lexer);
+    return parser.parse();
   }
 
+  public static Object testAst(String start, String input) throws Exception{
+    Lexer lexer = new Lexer(new StringReader(input));
+    //Parser.debug=true;
+    Parser parser = new Parser(lexer);
+    Symbol s = parser.parse();
+    Method m = Class.forName("AstBuilder").getDeclaredMethod("make" + start, Symbol.class);
+    System.out.println(s);
+    return m.invoke(null, s);
+  }
 
 }

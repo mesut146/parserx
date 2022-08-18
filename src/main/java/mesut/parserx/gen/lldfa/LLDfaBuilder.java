@@ -80,6 +80,8 @@ public class LLDfaBuilder {
             }
         }
         var ret = new Sequence(list);
+        ret.assocLeft = seq.assocLeft;
+        ret.assocRight = seq.assocRight;
         ret.astInfo = info;
         return ret;
     }

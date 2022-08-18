@@ -6,9 +6,7 @@ token{
 }
 
 %start = E;
-%left plus;
-
 
 E: N
  | "-" E
- | E "+" E;
+ | E "+" E %left;

@@ -87,7 +87,7 @@ public class LLGenTest {
     public void parserx() throws Exception {
         Factor.debug = true;
         Tree tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
-        Builder.tree(tree).rule("tree").input(Utils.read(Env.getResFile("pred.g")), "");
+        Builder.tree(tree).rule("tree").input(Utils.read(Env.getResFile("lr1/pred.g")), "");
     }
 
     @Test

@@ -1,6 +1,6 @@
 include "calc-tokens.g"
 
-%start = E;
+%start: E;
 
 E: "-" E | "(" E ")" | NUM
  | E "^" E %left

@@ -61,7 +61,7 @@ public class TransformTest {
 
     @Test
     public void precReal() throws Exception {
-        Tree tree = Env.tree("pred.g");
+        Tree tree = Env.tree("lr1/pred.g");
         List<String> list = new ArrayList<>();
         list.add("1+2+3+4");
         list.add("1-2*-3");

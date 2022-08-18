@@ -34,13 +34,6 @@ public class LrTest {
         return generator;
     }
 
-    @Ignore
-    @Test
-    public void lr0() throws Exception {
-        checkLr("lr0/left.g", "lr0");
-        checkLr("lr0/simple.g", "lr0");
-    }
-
     @Test
     public void lr1() throws Exception {
         checkLr("lr1/lr1.g", "lr1");
@@ -87,9 +80,11 @@ public class LrTest {
 
     @Test
     public void assoc() throws Exception {
-        Tree tree = Env.tree("lr1/assoc.g");
+        //Tree tree = Env.tree("lr1/assoc.g");
+        Tree tree = Env.tree("lr1/calc.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         LrDFAGen generator = new LrDFAGen(tree, "lalr");
+        LrDFAGen.debug=true;
         generator.generate();
         generator.checkAndReport();
         dots(generator, tree.file.getName());
@@ -136,22 +131,22 @@ public class LrTest {
         LrDFAGen.debug = true;
         //LrTester.check(Env.tree("lr1/regex.g"), "ax");
 
-        //LrTester.check(Env.tree("lr1/lalr.g"), "bb");
+        LrTester.check(Env.tree("lr1/lalr.g"), "baaaab");
         //var gen = checkLr("lr1/regex.g", "lr1");
-        var gen = checkLr("lr1/lalr.g", "lr1");
-        dots(gen, gen.tree.file.getName());
+//        var gen = checkLr("lr1/lalr.g", "lr1");
+//        dots(gen, gen.tree.file.getName());
     }
 
     @Test
     public void all() throws Exception {
-        LrTester.check(Env.tree("lr0/simple.g"), "bb", "bab", "abab");
-        LrTester.check(Env.tree("lr0/left.g"), "cb", "cab", "caab");
-        LrTester.check(Env.tree("lr1/la.g"), "bb", "abab", "aabaaab");
-        LrTester.check(Env.tree("lr1/lr1.g"), "aea", "beb", "aeb", "bea");
-        LrTester.check(Env.tree("lr1/assoc.g"), "1+2", "1+2+3");
-        LrTester.check(Env.tree("lr1/assoc2.g"), "1?2:3", "1?2:3?4:5");
-        LrTester.check(Env.tree("lr1/prec.g"), "1.5+2*3.9440", "2*3+1", "2^3*5+1");
-        LrTester.check(Env.tree("lr1/prec-unary.g"), "-1+3", "1+-6");
+//        LrTester.check(Env.tree("lr0/simple.g"), "bb", "bab", "abab");
+//        LrTester.check(Env.tree("lr0/left.g"), "cb", "cab", "caab");
+//        LrTester.check(Env.tree("lr1/la.g"), "bb", "abab", "aabaaab");
+        //LrTester.check(Env.tree("lr1/lr1.g"), "aea", "beb", "aeb", "bea");
+//        LrTester.check(Env.tree("lr1/assoc.g"), "1+2", "1+2+3");
+//        LrTester.check(Env.tree("lr1/assoc2.g"), "1?2:3", "1?2:3?4:5");
+        //LrTester.check(Env.tree("lr1/pred.g"), "1.5+2*3.9440", "2*3+1", "2^3*5+1");//todo
+        //LrTester.check(Env.tree("lr1/prec-unary.g"), "-1+3", "1+-6");
         LrTester.check(Env.tree("lr1/calc.g"), "1+2", "1*2", "1+2*3", "2*3+1", "1+2^3", "2*2^-3");
         LrTester.check(Env.tree("lr1/factor-loop-right.g"), "ac", "ab", "aac", "aab");
         LrTester.check(Env.tree("lr1/eps.g"), "c", "ac", "xc", "axc", "de");

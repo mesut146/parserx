@@ -51,6 +51,8 @@ token{
  GTGTGTEQ: ">>>=";
 }
 
+%start: E;
+
 /*E:
    E "^" E %left
  | "-" E
@@ -62,7 +64,6 @@ token{
 */
 
 //E: E "++" | "-" E | E "+" E %right | NUM;
-
 
 
 methodCall: IDENT "(" ")";

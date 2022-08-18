@@ -3,16 +3,18 @@ import java.util.*;
 import java.io.*;
 
 public class $parser_class${
+    $lexer_class$ lexer;
     Stack<Symbol> stack = new Stack<>();
     Stack<Integer> states = new Stack<>();
-    $lexer_class$ lexer;
     //rule index -> rhs size
     static int[] rhs_sizes = {$rhs_sizes$};
     //rule index -> symbol id
     static int[] ruleIds = {$ruleIds$};
     static String table_packed = $table_packed$;
     static int[][] table = unpackTable(table_packed);
-    public static boolean debug = true;
+    //rule index -> rule name
+    static String[] names = {$names$};
+    public static boolean debug = false;
 
     public $parser_class$($lexer_class$ lexer){
         this.lexer = lexer;
@@ -85,7 +87,7 @@ public class $parser_class${
             }
             Symbol tmp = new Symbol(ruleIds[action]);
             tmp.index = action;
-            tmp.name = "";
+            tmp.name = names[action];
             tmp.children = Arrays.asList(rhs);;
             stack.push(tmp);
             state = states.peek();

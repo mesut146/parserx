@@ -39,7 +39,14 @@ public class Sequence extends NodeList {
 
     @Override
     public String toString() {
-        return NodeList.join(list, " ");
+        var res = NodeList.join(list, " ");
+        if (assocLeft) {
+            res = res + " %left";
+        }
+        else if (assocRight) {
+            res = res + " %right";
+        }
+        return res;
     }
 
     public Node unwrap() {

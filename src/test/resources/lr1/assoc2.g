@@ -5,9 +5,7 @@ token{
   N: [0-9]+;
 }
 
-%start = E;
+%start: E;
 
-%right ques;
-//todo
 
 E: N | E "?" E ":" E %right;
