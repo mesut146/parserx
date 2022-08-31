@@ -19,7 +19,7 @@ public class TreeInfo {
         int index = 0;
         for (var entry : res.nodeMap.entrySet()) {
             var name = entry.getKey();
-            int id = entry.getValue().size() == 1 ? -1 : 1;
+            int id = entry.getValue().size() == 1 ? 0 : 1;
             var rules = new ArrayList<RuleDecl>();
             for (var rhs : entry.getValue()) {
                 var rd = new RuleDecl(name, rhs);

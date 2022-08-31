@@ -52,6 +52,7 @@ public class CodeGen {
         writeTable();
         names();
         alt();
+        isLoop();
         File file = new File(options.outDir, options.parserClass + ".java");
         Utils.write(template.toString(), file);
         idMap.writeSym(options);
@@ -106,7 +107,7 @@ public class CodeGen {
             if (i > 0) {
                 sb.append(", ");
             }
-            if (rd.which == -1) {
+            if (!rd.isAlt() || rd.getName().endsWith("+")) {
                 sb.append(0);
             }
             else {
@@ -115,6 +116,25 @@ public class CodeGen {
             i++;
         }
         template.set("alt_map", sb.toString());
+    }
+
+
+    void isLoop() {
+        var sb = new StringBuilder();
+        int i = 0;
+        for (var rd : ruleSet) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            if (rd.getName().endsWith("+") && rd.rhs.isSequence() && rd.rhs.asSequence().size() == 2) {
+                sb.append("true");
+            }
+            else {
+                sb.append("false");
+            }
+            i++;
+        }
+        template.set("isLoop", sb.toString());
     }
 
     void writeTable() {

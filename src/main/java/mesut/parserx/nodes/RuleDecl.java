@@ -12,7 +12,7 @@ public class RuleDecl {
     public Node rhs;
     public Name ref;
     public int index;
-    public int which = -1;//no alt or alt number
+    public int which = 0;//no alt or alt number
     public Type retType;//ast type in case it is modified
 
     public RuleDecl() {
@@ -45,6 +45,10 @@ public class RuleDecl {
 
     public String baseName() {
         return ref.name;
+    }
+
+    public boolean isAlt() {
+        return which != -1;
     }
 
     @Override

@@ -5,6 +5,7 @@ import mesut.parserx.gen.ll.Normalizer;
 import mesut.parserx.gen.lldfa.ItemSet;
 import mesut.parserx.gen.lldfa.LLDFAGen;
 import mesut.parserx.gen.lldfa.LLDfaBuilder;
+import mesut.parserx.gen.transform.PlusExpander;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
@@ -58,19 +59,20 @@ public class LrDFAGen {
     void prepare() {
         tree.prepare();
         new Normalizer(tree).normalize();
+        new PlusExpander(tree, true).transformRules();
 
-        for (var rd : tree.rules) {
-            if (rd.rhs.isOr()) {
-                List<Node> list = new ArrayList<>();
-                for (var ch : rd.rhs.asOr()) {
-                    list.add(LLDfaBuilder.expandPlus(ch));
-                }
-                rd.rhs = new Or(list);
-            }
-            else {
-                rd.rhs = LLDfaBuilder.expandPlus(rd.rhs);
-            }
-        }
+//        for (var rd : tree.rules) {
+//            if (rd.rhs.isOr()) {
+//                List<Node> list = new ArrayList<>();
+//                for (var ch : rd.rhs.asOr()) {
+//                    list.add(LLDfaBuilder.expandPlus(ch));
+//                }
+//                rd.rhs = new Or(list);
+//            }
+//            else {
+//                rd.rhs = LLDfaBuilder.expandPlus(rd.rhs);
+//            }
+//        }
 
         makeStart();
         treeInfo = TreeInfo.make(tree);
@@ -118,14 +120,21 @@ public class LrDFAGen {
             curSet.closure();
             Map<Name, List<LrItem>> map = new HashMap<>();
             for (var item : curSet.all) {
-                for (int i = item.dotPos; i < item.rhs.size(); i++) {
-                    if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
-                    var node = item.getNode(i);
-                    var symbol = ItemSet.sym(node);
-
-                    var targetItem = new LrItem(item, i + 1);
-                    map.computeIfAbsent(symbol, s -> new ArrayList<>()).add(targetItem);
+                if (item.isEpsilon() || item.dotPos == item.rhs.size()) {
+                    continue;
                 }
+                var node = item.getNode(item.dotPos);
+                var symbol = ItemSet.sym(node);
+                var targetItem = new LrItem(item, item.dotPos + 1);
+                map.computeIfAbsent(symbol, s -> new ArrayList<>()).add(targetItem);
+                //below without epsilon
+//                for (int i = item.dotPos; i < item.rhs.size(); i++) {
+//                    if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
+//                    var node = item.getNode(i);
+//                    var symbol = ItemSet.sym(node);
+//                    var targetItem = new LrItem(item, i + 1);
+//                    map.computeIfAbsent(symbol, s -> new ArrayList<>()).add(targetItem);
+//                }
             }
             makeTrans(curSet, map);
         }

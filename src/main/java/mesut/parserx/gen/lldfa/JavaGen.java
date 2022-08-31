@@ -753,7 +753,7 @@ public class JavaGen {
         //todo goto item reduce too
         if (sym.astInfo.isFactor) return;
         for (Item item : curSet.all) {
-            if (item.rule.which == -1) continue;
+            if (!item.rule.isAlt()) continue;
             var node = has(item, sym);
             if (node == null) continue;
             String holder = getHolder(item, sym);

@@ -16,6 +16,7 @@ public class $parser_class${
     static String[] names = {$names$};
     //rule index -> alt number
     static int[] alt_map = {$alt_map$};
+    static boolean[] isLoop = {$isLoop$};
     public static boolean debug = false;
 
     public $parser_class$($lexer_class$ lexer){
@@ -81,9 +82,7 @@ public class $parser_class${
             action >>= 2;
             if(debug)System.out.println("reduced " + names[action]+" index="+action);
             //action is rule index
-            Node tmp = new Node(ruleIds[action]);
-            tmp.alt = alt_map[action];
-            tmp.name = names[action];
+            Node tmp = null;
             int size = rhs_sizes[action];
             Node[] rhs = new Node[size];
             while(size-- > 0){
@@ -92,7 +91,16 @@ public class $parser_class${
               rhs[size] = ch;
               states.pop();
             }
-            tmp.children = Arrays.asList(rhs);;
+            if(isLoop[action]){
+              tmp = rhs[0];
+              tmp.children.add(rhs[1]);
+              rhs[1].parent = tmp;
+            }else{
+              tmp = new Node(ruleIds[action]);
+              tmp.alt = alt_map[action];
+              tmp.name = names[action];
+              tmp.children = new ArrayList<>(Arrays.asList(rhs));
+            }
             stack.push(tmp);
             state = states.peek();
             if(debug)System.out.println("state = " + state);

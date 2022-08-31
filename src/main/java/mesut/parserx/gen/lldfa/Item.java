@@ -52,7 +52,7 @@ public class Item {
     }
 
     public boolean isAlt() {
-        return rule.which != -1;
+        return rule.which != 0;
     }
 
     public boolean isEpsilon() {
@@ -80,7 +80,7 @@ public class Item {
     public String toString() {
         var sb = new StringBuilder();
         sb.append(rule.ref);
-        if (rule.which != -1) {
+        if (rule.isAlt()) {
             sb.append("#").append(rule.which);
         }
         sb.append(": ");
