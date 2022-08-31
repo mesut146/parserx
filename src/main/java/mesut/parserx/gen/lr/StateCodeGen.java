@@ -16,13 +16,11 @@ public class StateCodeGen {
     public static boolean debugState = false;
     public static boolean debugReduce = false;
     public Options options;
-    LrDFA dfa;
     LrDFAGen gen;
     CodeWriter writer = new CodeWriter(true);
     IdMap idMap;
 
-    public StateCodeGen(LrDFA dfa, LrDFAGen tableGen, IdMap idMap) {
-        this.dfa = dfa;
+    public StateCodeGen( LrDFAGen tableGen, IdMap idMap) {
         this.gen = tableGen;
         this.idMap = idMap;
         options = tableGen.tree.options;
@@ -55,7 +53,7 @@ public class StateCodeGen {
                 "return stack.pop();\n" +
                 "}\n\n");
 
-        for (LrItemSet set : dfa.itemSets) {
+        for (LrItemSet set : gen.itemSets) {
             gen(set);
         }
         writer.append("}");

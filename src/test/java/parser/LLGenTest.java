@@ -4,6 +4,7 @@ import common.Env;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.lr.LrDFAGen;
+import mesut.parserx.gen.lr.LrType;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.GreedyNormalizer;
 import mesut.parserx.nodes.Tree;
@@ -120,7 +121,7 @@ public class LLGenTest {
         //EbnfToBnf.leftRecursive = false;
         Tree tree = Env.tree("rec/cyc1-lr.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        LrDFAGen gen = new LrDFAGen(tree, "lr");
+        LrDFAGen gen = new LrDFAGen(tree, LrType.LR1);
         gen.generate();
         gen.checkAndReport();
         LrTest.dots(gen, tree.file.getName());

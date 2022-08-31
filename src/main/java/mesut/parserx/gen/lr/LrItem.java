@@ -55,29 +55,11 @@ public class LrItem {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(rule.ref);
-        sb.append(": ");
-        Sequence rhs = rule.rhs.asSequence();
-        for (int i = 0; i < rhs.size(); i++) {
-            if (i == dotPos) {
-                sb.append(". ");
-            }
-            sb.append(rhs.get(i));
-            if (i < rhs.size() - 1) {
-                sb.append(" ");
-            }
-        }
-        if (rhs.size() == dotPos) {
-            sb.append(".");
-        }
-        sb.append(" , ");
-        sb.append(NodeList.join(new ArrayList<>(lookAhead), "/"));
-        return sb.toString();
+        return toString2(null);
     }
 
     public String toString2(Tree tree) {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append(rule.ref);
         sb.append(": ");
         Sequence rhs = rule.rhs.asSequence();
@@ -94,23 +76,36 @@ public class LrItem {
             sb.append(".");
         }
         sb.append(" , ");
-        for (Iterator<Name> it = lookAhead.iterator(); it.hasNext(); ) {
-            Name la = it.next();
-            if (la.name.equals("$")) {
-                sb.append(la);
-            }
-            else {
-                TokenDecl decl = tree.getToken(la.name);
-                if (decl.rhs.isString()) {
-                    sb.append(decl.rhs.asString().value);
-                }
-                else {
+        if (tree == null) {
+            sb.append(NodeList.join(new ArrayList<>(lookAhead), "/"));
+        }
+        else {
+            for (var it = lookAhead.iterator(); it.hasNext(); ) {
+                var la = it.next();
+                if (la.name.equals("$")) {
                     sb.append(la);
                 }
+                else {
+                    var decl = tree.getToken(la.name);
+                    if (decl.rhs.isString()) {
+                        sb.append(decl.rhs.asString().value);
+                    }
+                    else if (decl.rhs.isSequence()) {
+                        var seq = decl.rhs.asSequence();
+                        if (seq.size() == 1 && seq.get(0).isString()) {
+                            sb.append(seq.get(0).asString().value);
+                        }
+                        else {
+                            sb.append(la);
+                        }
+                    }
+                    else {
+                        sb.append(la);
+                    }
+                }
+                if (it.hasNext()) sb.append("/");
             }
-            if (it.hasNext()) sb.append("/");
         }
-
         return sb.toString();
     }
 
@@ -119,7 +114,7 @@ public class LrItem {
     }
 
     public Node getNode(int pos) {
-        Sequence s = rule.rhs.asSequence();
+        var s = rule.rhs.asSequence();
         if (pos < s.size()) {
             return s.get(pos);
         }
@@ -138,6 +133,7 @@ public class LrItem {
         }
         return list;
     }
+
     //first set of follow of dot node
     public Set<Name> follow(Tree tree, int pos) {
         HashSet<Name> res = new HashSet<>();
@@ -168,17 +164,14 @@ public class LrItem {
     public boolean equals(Object other) {
         if (this == other) return true;
         if (other == null || getClass() != other.getClass()) return false;
-
         LrItem item = (LrItem) other;
-
-        //if (hash == item.hash) return true;
         if (dotPos != item.dotPos) return false;
-        return Objects.equals(rule, item.rule) && lookAhead.equals(item.lookAhead);
+        return isSame(item) && lookAhead.equals(item.lookAhead);
     }
 
     //without lookahead
     public boolean isSame(LrItem other) {
-        return dotPos == other.dotPos && Objects.equals(rule, other.rule) && rule.which == other.rule.which;
+        return dotPos == other.dotPos && Objects.equals(rule, other.rule);
     }
 
     public boolean isSameNoDot(LrItem other) {

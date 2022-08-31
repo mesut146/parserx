@@ -11,7 +11,7 @@ token
 }
 
 %start: E;
-
 E: E "+" E %left | N;
+
 
 

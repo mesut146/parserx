@@ -21,7 +21,7 @@ public class LrStateGenTest {
         Tree tree = Env.tree("lr1/calc.g");
         //tree.options.outDir = Env.dotDir().getAbsolutePath();
         tree.options.packageName = "lr";
-        LrDFAGen dfaGen = new LrDFAGen(tree, "lalr");
+        LrDFAGen dfaGen = new LrDFAGen(tree, LrType.LALR1);
         dfaGen.generate();
         dfaGen.checkAndReport();
         dfaGen.genGoto();
@@ -29,7 +29,7 @@ public class LrStateGenTest {
         LexerGenerator lexerGenerator = LexerGenerator.gen(tree, "java");
         StateCodeGen.debugState = true;
         StateCodeGen.debugReduce = true;
-        StateCodeGen gen = new StateCodeGen(dfaGen.table, dfaGen, lexerGenerator.idMap);
+        StateCodeGen gen = new StateCodeGen( dfaGen, lexerGenerator.idMap);
         gen.gen();
 
         AstBuilderGen astBuilderGen = new AstBuilderGen(tree);
@@ -46,7 +46,7 @@ public class LrStateGenTest {
         //Tree tree = Env.tree("lr1/prec3.g");
         Tree tree = Env.tree("lr1/calc.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        LrDFAGen dfaGen = new LrDFAGen(tree, "lalr");
+        LrDFAGen dfaGen = new LrDFAGen(tree, LrType.LALR1);
         dfaGen.generate();
         dfaGen.checkAndReport();
         dfaGen.genGoto();
@@ -54,7 +54,7 @@ public class LrStateGenTest {
         LexerGenerator lexerGenerator = LexerGenerator.gen(tree, "java");
         StateCodeGen2.debugState = true;
         StateCodeGen2.debugReduce = true;
-        StateCodeGen2 gen = new StateCodeGen2(dfaGen.table, dfaGen, lexerGenerator.idMap);
+        StateCodeGen2 gen = new StateCodeGen2( dfaGen, lexerGenerator.idMap);
         gen.gen();
 
         /*AstBuilderGen astBuilderGen = new AstBuilderGen(tree);

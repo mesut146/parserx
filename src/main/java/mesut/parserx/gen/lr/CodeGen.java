@@ -16,16 +16,13 @@ import java.util.*;
 //table driven parser gen
 public class CodeGen {
     public Options options;
-    public LrDFA dfa;
     public LrDFAGen gen;
-    String type;
+    LrType type;
     IdMap idMap;
     Template template;
+    TreeSet<RuleDecl> ruleSet = new TreeSet<>(Comparator.comparingInt(rd -> rd.index));
 
-    public CodeGen(Tree tree, String type) {
-        if (!type.equals("lalr") && !type.equals("lr1")) {
-            throw new RuntimeException("invalid type: " + type);
-        }
+    public CodeGen(Tree tree, LrType type) {
         this.gen = new LrDFAGen(tree, type);
         this.options = tree.options;
         this.type = type;
@@ -33,7 +30,7 @@ public class CodeGen {
         gen.checkAndReport();
     }
 
-    public CodeGen(LrDFAGen gen, String type) {
+    public CodeGen(LrDFAGen gen, LrType type) {
         this.gen = gen;
         this.options = gen.tree.options;
         this.type = type;
@@ -42,34 +39,33 @@ public class CodeGen {
     public void gen() throws IOException {
         idMap = LexerGenerator.gen(gen.tree, "java").idMap;
 
-        this.dfa = gen.table;
         template = new Template("lalr1.java.template");
         template.set("package", options.packageName == null ? "" : "package " + options.packageName + ";\n");
         template.set("parser_class", options.parserClass);
         template.set("lexer_class", options.lexerClass);
         template.set("lexer_method", options.lexerFunction);
         template.set("token_class", options.tokenClass);
+        for (var list : gen.treeInfo.ruleMap.values()) {
+            ruleSet.addAll(list);
+        }
         ruleId();
         writeTable();
         names();
+        alt();
         File file = new File(options.outDir, options.parserClass + ".java");
         Utils.write(template.toString(), file);
         idMap.writeSym(options);
 
-        var symbolTemplate = new Template("Symbol.java.template");
+        var symbolTemplate = new Template("Node.java.template");
         symbolTemplate.set("package", options.packageName == null ? "" : "package " + options.packageName + ";\n");
         symbolTemplate.set("token_class", options.tokenClass);
-        Utils.write(symbolTemplate.toString(), new File(options.outDir, "Symbol.java"));
+        Utils.write(symbolTemplate.toString(), new File(options.outDir, "Node.java"));
     }
 
     void names() {
-        Set<RuleDecl> all = new TreeSet<>(Comparator.comparingInt(rd -> rd.index));
-        for (var list : gen.treeInfo.ruleMap.values()) {
-            all.addAll(list);
-        }
         StringBuilder sb = new StringBuilder();
         int i = 0;
-        for (var rd : all) {
+        for (var rd : ruleSet) {
             if (i > 0) {
                 sb.append(", ");
             }
@@ -81,17 +77,11 @@ public class CodeGen {
 
     //map rule ids to symbol ids
     void ruleId() {
-        StringBuilder ruleIds = new StringBuilder();
-        StringBuilder sizes = new StringBuilder();
+        var ruleIds = new StringBuilder();
+        var sizes = new StringBuilder();
 
-        var all = new ArrayList<RuleDecl>();
-        for (var rd : gen.treeInfo.ruleMap.values()) {
-            all.addAll(rd);
-        }
-
-        all.sort(Comparator.comparingInt(o -> o.index));
-        for (int i = 0; i < all.size(); i++) {
-            var decl = all.get(i);
+        int i = 0;
+        for (var decl : ruleSet) {
             ruleIds.append(idMap.getId(decl.ref));
             if (LrItem.isEpsilon(decl)) {
                 sizes.append(0);
@@ -99,38 +89,56 @@ public class CodeGen {
             else {
                 sizes.append(decl.rhs.asSequence().size());
             }
-            if (i < all.size() - 1) {
+            if (i < ruleSet.size() - 1) {
                 ruleIds.append(", ");
                 sizes.append(", ");
             }
+            i++;
         }
         template.set("ruleIds", ruleIds.toString());
         template.set("rhs_sizes", sizes.toString());
+    }
+
+    void alt() {
+        var sb = new StringBuilder();
+        int i = 0;
+        for (var rd : ruleSet) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            if (rd.which == -1) {
+                sb.append(0);
+            }
+            else {
+                sb.append(rd.which);
+            }
+            i++;
+        }
+        template.set("alt_map", sb.toString());
     }
 
     void writeTable() {
         StringBuilder sb = new StringBuilder();
         sb.append("\"");
 
-        sb.append(pack(dfa.lastId + 1));//state count,width
+        sb.append(pack(gen.lastId + 1));//state count,width
         sb.append(pack(idMap.lastId + 1));//symbol count,height
 
         //write accept
-        LrItemSet acc = dfa.acc;
-        sb.append(pack(acc.stateId));
+        sb.append(pack(gen.acc.stateId));
         sb.append(pack(1));
-        for (var item : acc.kernel) {
+        for (var item : gen.acc.kernel) {
             if (item.isReduce(gen.tree) && item.rule.ref.equals(gen.start.ref) && item.lookAhead.contains(LrDFAGen.dollar)) {
                 sb.append(pack(idMap.getId(IdMap.EOF)));
                 break;
             }
         }
 
-        for (var set : dfa.itemSets) {
+        for (var set : gen.itemSets) {
             //write shifts
             List<? extends LrTransition> shifts = set.transitions;
             sb.append(pack(shifts.size()));//shift count
-            for (LrTransition tr : shifts) {
+            for (var tr : shifts) {
                 sb.append(pack(idMap.getId(tr.symbol)));
                 int action = tr.target.stateId;
                 sb.append(pack(action));
@@ -138,7 +146,7 @@ public class CodeGen {
             //write reduces
             List<LrItem> list = set.getReduce();
             int count = list.size();//reduce count
-            if (acc == set) {
+            if (gen.acc == set) {
                 count--;
             }
             sb.append(pack(count));

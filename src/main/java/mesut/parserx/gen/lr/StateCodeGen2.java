@@ -16,13 +16,11 @@ public class StateCodeGen2 {
     public static boolean debugState = false;
     public static boolean debugReduce = false;
     public Options options;
-    LrDFA dfa;
     LrDFAGen gen;
     CodeWriter writer = new CodeWriter(true);
     IdMap idMap;
 
-    public StateCodeGen2(LrDFA dfa, LrDFAGen tableGen, IdMap idMap) {
-        this.dfa = dfa;
+    public StateCodeGen2( LrDFAGen tableGen, IdMap idMap) {
         this.gen = tableGen;
         this.idMap = idMap;
         options = tableGen.tree.options;
@@ -59,7 +57,7 @@ public class StateCodeGen2 {
             writer.append("System.out.println(\"state\" + state);");
         }
         writer.append("switch(state){");
-        for (LrItemSet set : dfa.itemSets) {
+        for (LrItemSet set : gen.itemSets) {
             gen(set);
         }
         writer.append("}");//switch

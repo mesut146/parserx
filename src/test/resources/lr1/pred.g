@@ -53,22 +53,17 @@ token{
 
 %start: E;
 
-/*E:
+E:
    E "^" E %left
  | "-" E
  | E ("*" | "/") E %left
- | E ("+" | "-") E %right
+ | E ("+" | "-") E %left
  | E "?" E ":" E %right
  | "(" E ")"
  | NUM;
-*/
-
-//E: E "++" | "-" E | E "+" E %right | NUM;
 
 
-methodCall: IDENT "(" ")";
-
-E:
+/*E:
   E ("." IDENT ("(" ")")? | "[" E "]")
 | E ("++" | "--") #post
 | ("+" | "-" | "++" | "--" | "!" | "~" | "(" IDENT ")") E #unary
@@ -88,3 +83,5 @@ E:
 | "(" E ")"
 | methodCall
 ;
+methodCall: IDENT "(" ")";
+*/

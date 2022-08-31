@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 public class DotWriter {
 
     public static void table(PrintWriter writer, LrDFAGen generator, boolean writeRules) {
-        LrDFA table = generator.table;
         var tokens = generator.tree.tokens.stream()
                 .filter(td->!td.fragment)
                 .map(TokenDecl::ref)
@@ -47,7 +46,7 @@ public class DotWriter {
         }
         writer.println("</TR>");
         String start = generator.start.baseName();
-        for (LrItemSet set : table.itemSets) {
+        for (LrItemSet set : generator.itemSets) {
             writer.print("<TR>");
             writer.println("<TD>" + set.stateId + "</TD>");
             if (writeRules) {
@@ -126,7 +125,7 @@ public class DotWriter {
         writer.close();
     }
 
-    public static void writeDot(LrDFA table, PrintWriter writer) {
+    public static void writeDot(LrDFAGen gen, PrintWriter writer) {
         try {
             writer.println("digraph G{");
             //dotWriter.println("rankdir = LR");
@@ -135,12 +134,12 @@ public class DotWriter {
             //dotWriter.println("ratio=\"fill\";");
 
             //labels
-            for (LrItemSet set : table.itemSets) {
+            for (LrItemSet set : gen.itemSets) {
                 writer.printf("%s [shape=box xlabel=\"%s\" %s label=\"%s\"]\n",
-                        set.stateId, set.stateId, set.hasReduce() ? "color=red " : "", set.toString().replace("\n", "\\l") + "\\l");
+                        set.stateId, set.stateId, set.hasReduce() ? "color=red " : "", set.toString().replace("\n", "\\l").replace("\"","\\\"") + "\\l");
             }
 
-            for (var set : table.itemSets) {
+            for (var set : gen.itemSets) {
                 for (var tr : set.transitions) {
                     writer.printf("%s -> %s [label=\"%s\"]\n", set.stateId, tr.target.stateId, tr.symbol.name);
                 }

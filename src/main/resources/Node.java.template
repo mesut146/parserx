@@ -3,17 +3,18 @@ import java.util.*;
 import java.io.*;
 
 //a token or a rule
-public class Symbol{
+public class Node{
     $token_class$ token;
     public String name;
     public int id;
-    public int index;
-    public List<Symbol> children = new ArrayList<>();
+    public int alt;
+    public List<Node> children = new ArrayList<>();
+    public Node parent;
 
-    public Symbol(int id){
+    public Node(int id){
         this.id = id;
     }
-    public Symbol($token_class$ token){
+    public Node($token_class$ token){
         this.token = token;
         this.id = token.type;
         this.name = token.name;
@@ -27,6 +28,9 @@ public class Symbol{
         }
         else{
           sb.append(name);
+          if(alt != 0){
+            sb.append(alt);
+          }
           sb.append("{");
           for(int i = 0;i < children.size();i++){
             if(i > 0){

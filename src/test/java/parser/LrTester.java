@@ -3,6 +3,7 @@ package parser;
 import common.Env;
 import mesut.parserx.gen.lr.AstBuilderGen;
 import mesut.parserx.gen.lr.CodeGen;
+import mesut.parserx.gen.lr.LrType;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 
@@ -24,7 +25,7 @@ public class LrTester {
 
     public static void checkAst(Tree tree, String... in) throws Exception {
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        CodeGen gen = new CodeGen(tree, "lr1");
+        CodeGen gen = new CodeGen(tree, LrType.LR1);
         gen.gen();
         AstBuilderGen astBuilderGen = new AstBuilderGen(tree);
         astBuilderGen.gen();
@@ -32,8 +33,12 @@ public class LrTester {
     }
 
     public static void check(Tree tree, String... in) throws Exception {
+        check(tree, LrType.LALR1, in);
+    }
+
+    public static void check(Tree tree, LrType type, String... in) throws Exception {
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        CodeGen gen = new CodeGen(tree, "lr1");
+        CodeGen gen = new CodeGen(tree, type);
         gen.gen();
         check0(tree, false, Arrays.asList(in));
     }

@@ -4,7 +4,7 @@ import java.io.*;
 
 public class $parser_class${
     $lexer_class$ lexer;
-    Stack<Symbol> stack = new Stack<>();
+    Stack<Node> stack = new Stack<>();
     Stack<Integer> states = new Stack<>();
     //rule index -> rhs size
     static int[] rhs_sizes = {$rhs_sizes$};
@@ -14,6 +14,8 @@ public class $parser_class${
     static int[][] table = unpackTable(table_packed);
     //rule index -> rule name
     static String[] names = {$names$};
+    //rule index -> alt number
+    static int[] alt_map = {$alt_map$};
     public static boolean debug = false;
 
     public $parser_class$($lexer_class$ lexer){
@@ -51,19 +53,19 @@ public class $parser_class${
       return table;
     }
 
-    Symbol next() throws IOException{
-        return new Symbol(lexer.$lexer_method$());
+    Node next() throws IOException{
+        return new Node(lexer.$lexer_method$());
     }
 
-    public Symbol parse() throws IOException{
-        Symbol symbol = next();
+    public Node parse() throws IOException{
+        Node symbol = next();
         states.push(0);//initial state
         int state = 0;
 
         while(true){
           int action = table[state][symbol.id];
           if(action == 0){
-            throw new RuntimeException("error");
+            throw new RuntimeException("error in "+state+" sym="+symbol);
           }
           if((action & 3) == 1){
             //shift
@@ -77,17 +79,19 @@ public class $parser_class${
           else if((action & 3) == 2){
             //reduce
             action >>= 2;
-            if(debug)System.out.println("reduced " + action);
+            if(debug)System.out.println("reduced " + names[action]+" index="+action);
             //action is rule index
+            Node tmp = new Node(ruleIds[action]);
+            tmp.alt = alt_map[action];
+            tmp.name = names[action];
             int size = rhs_sizes[action];
-            Symbol[] rhs = new Symbol[size];
+            Node[] rhs = new Node[size];
             while(size-- > 0){
-              rhs[size] = stack.pop();
+              Node ch = stack.pop();
+              ch.parent = tmp;
+              rhs[size] = ch;
               states.pop();
             }
-            Symbol tmp = new Symbol(ruleIds[action]);
-            tmp.index = action;
-            tmp.name = names[action];
             tmp.children = Arrays.asList(rhs);;
             stack.push(tmp);
             state = states.peek();

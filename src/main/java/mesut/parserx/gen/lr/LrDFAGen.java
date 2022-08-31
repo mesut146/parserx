@@ -17,17 +17,19 @@ import java.util.*;
 public class LrDFAGen {
     public Tree tree;
     public RuleDecl start;
-    public LrDFA table = new LrDFA();
     public TreeInfo treeInfo;
-    public String type;
+    public LrType type;
     LrItem first;
+    public LrItemSet acc;
     ConflictResolver conflictResolver;
     Queue<LrItemSet> queue = new LinkedList<>();//itemsets
+    public int lastId = -1;
+    public List<LrItemSet> itemSets = new ArrayList<>();
     public static boolean debug = false;
     public static Name dollar = new Name("$", true);//eof
     public static String startName = "%start";
 
-    public LrDFAGen(Tree tree, String type) {
+    public LrDFAGen(Tree tree, LrType type) {
         this.tree = tree;
         this.type = type;
     }
@@ -45,7 +47,7 @@ public class LrDFAGen {
     }
 
     public void writeDot(PrintWriter dotWriter) {
-        DotWriter.writeDot(table, dotWriter);
+        DotWriter.writeDot(this, dotWriter);
     }
 
     public void checkAndReport() {
@@ -94,8 +96,13 @@ public class LrDFAGen {
     public LrItemSet makeSet(LrItem item) {
         LrItemSet set = new LrItemSet(treeInfo, type);
         set.addItem(item);
-        table.addSet(set);
+        addSet(set);
         return set;
+    }
+
+    public void addSet(LrItemSet set) {
+        set.stateId = ++lastId;
+        itemSets.add(set);
     }
 
     public void generate() {
@@ -103,7 +110,6 @@ public class LrDFAGen {
         writeGrammar();
 
         var firstSet = makeSet(first);
-        table.first = firstSet;
         queue.add(firstSet);
 
         while (!queue.isEmpty()) {
@@ -123,7 +129,16 @@ public class LrDFAGen {
             }
             makeTrans(curSet, map);
         }
-        table.acc = table.getTargetSet(firstSet, tree.start);
+        acc = getTargetSet(firstSet, tree.start);
+    }
+
+    public LrItemSet getTargetSet(LrItemSet from, Name symbol) {
+        for (LrTransition tr : from.transitions) {
+            if (tr.symbol.equals(symbol)) {
+                return tr.target;
+            }
+        }
+        return null;
     }
 
     void makeTrans(LrItemSet curSet, Map<Name, List<LrItem>> map) {
@@ -143,7 +158,7 @@ public class LrDFAGen {
             else {
                 targetSet = new LrItemSet(treeInfo, type);
                 targetSet.addAll(list);
-                table.addSet(targetSet);
+                addSet(targetSet);
                 if (!queue.contains(targetSet)) {
                     queue.add(targetSet);
                 }
@@ -164,13 +179,15 @@ public class LrDFAGen {
 
     LrItemSet findSimilar(List<LrItem> target) {
         sort(target);
-        for (var set : table.itemSets) {
+        for (var set : itemSets) {
             if (target.size() != set.kernel.size()) continue;
             var l2 = new ArrayList<>(set.kernel);
             sort(l2);
             var same = true;
             for (int i = 0; i < target.size(); i++) {
-                if (!target.get(i).isSame(l2.get(i))) {
+                var c = type == LrType.LR1 && target.get(i).equals(l2.get(i)) ||
+                        type == LrType.LALR1 && target.get(i).isSame(l2.get(i));
+                if (!c) {
                     same = false;
                     break;
                 }
@@ -208,7 +225,7 @@ public class LrDFAGen {
         for (int i = 0; i < set.all.size(); i++) {
             var item = set.all.get(i);
             for (var e : item.getSyms(tree)) {
-                var target = table.getTargetSet(set, ItemSet.sym(e.getKey()));
+                var target = getTargetSet(set, ItemSet.sym(e.getKey()));
                 if (target == null) continue;
                 var newItem = new LrItem(item, e.getValue() + 1);
                 for (var kernel : target.kernel) {
@@ -227,7 +244,7 @@ public class LrDFAGen {
 
 
     public void genGoto() {
-        for (var set : table.itemSets) {
+        for (var set : itemSets) {
             for (var item : set.all) {
                 if (item.dotPos != 0 || item.isReduce(tree)) continue;
                 //walk to reduce state of item and set goto
