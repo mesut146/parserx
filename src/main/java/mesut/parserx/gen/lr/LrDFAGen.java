@@ -5,7 +5,7 @@ import mesut.parserx.gen.ll.Normalizer;
 import mesut.parserx.gen.lldfa.ItemSet;
 import mesut.parserx.gen.lldfa.LLDFAGen;
 import mesut.parserx.gen.lldfa.LLDfaBuilder;
-import mesut.parserx.gen.transform.PlusExpander;
+import mesut.parserx.gen.transform.LrUtils;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
@@ -59,7 +59,8 @@ public class LrDFAGen {
     void prepare() {
         tree.prepare();
         new Normalizer(tree).normalize();
-        new PlusExpander(tree, true).transformRules();
+        LrUtils.epsilon(tree);
+        LrUtils.plus(tree, true);
 
 //        for (var rd : tree.rules) {
 //            if (rd.rhs.isOr()) {

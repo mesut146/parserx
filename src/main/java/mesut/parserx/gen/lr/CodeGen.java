@@ -53,6 +53,7 @@ public class CodeGen {
         names();
         alt();
         isLoop();
+        isStar();
         File file = new File(options.outDir, options.parserClass + ".java");
         Utils.write(template.toString(), file);
         idMap.writeSym(options);
@@ -70,7 +71,14 @@ public class CodeGen {
             if (i > 0) {
                 sb.append(", ");
             }
-            sb.append('"').append(rd.getName()).append('"');
+            sb.append('"');
+            if (rd.transformInfo!=null){
+               sb.append(rd.transformInfo.orgName);
+
+            }else{
+                sb.append(rd.getName());
+            }
+            sb.append('"');
             i++;
         }
         template.set("names", sb.toString());
@@ -107,7 +115,7 @@ public class CodeGen {
             if (i > 0) {
                 sb.append(", ");
             }
-            if (!rd.isAlt() || rd.getName().endsWith("+")) {
+            if (!rd.isAlt() || (rd.transformInfo != null && (rd.transformInfo.isOpt || rd.transformInfo.isStar || rd.transformInfo.isPlus))) {
                 sb.append(0);
             }
             else {
@@ -126,7 +134,7 @@ public class CodeGen {
             if (i > 0) {
                 sb.append(", ");
             }
-            if (rd.getName().endsWith("+") && rd.rhs.isSequence() && rd.rhs.asSequence().size() == 2) {
+            if (rd.transformInfo != null && rd.transformInfo.isPlus && rd.rhs.isSequence() && rd.rhs.asSequence().size() == 2) {
                 sb.append("true");
             }
             else {
@@ -134,7 +142,25 @@ public class CodeGen {
             }
             i++;
         }
-        template.set("isLoop", sb.toString());
+        template.set("isPlus", sb.toString());
+    }
+
+    void isStar() {
+        var sb = new StringBuilder();
+        int i = 0;
+        for (var rd : ruleSet) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            if (rd.transformInfo != null &&rd.transformInfo.isStar && rd.rhs.asSequence().get(0).isName()) {
+                sb.append("true");
+            }
+            else {
+                sb.append("false");
+            }
+            i++;
+        }
+        template.set("isStar", sb.toString());
     }
 
     void writeTable() {

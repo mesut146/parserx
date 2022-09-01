@@ -79,14 +79,20 @@ public class LrItemSet {
     }
 
     public void closure(LrItem item) {
-        for (int i = item.dotPos; i < item.rhs.size(); i++) {
-            if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), treeInfo.tree)) break;
-            Node node = item.getNode(i);
-            Name sym = ItemSet.sym(node);
-            if (sym.isRule()) {
-                closure(sym, i, item);
-            }
+        if (item.dotPos == item.rhs.size()) return;
+        Node node = item.getNode(item.dotPos);
+        Name sym = ItemSet.sym(node);
+        if (sym.isRule()) {
+            closure(sym, item.dotPos, item);
         }
+//        for (int i = item.dotPos; i < item.rhs.size(); i++) {
+//            if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), treeInfo.tree)) break;
+//            Node node = item.getNode(i);
+//            Name sym = ItemSet.sym(node);
+//            if (sym.isRule()) {
+//                closure(sym, i, item);
+//            }
+//        }
     }
 
     private void closure(Name node, int pos, LrItem sender) {
@@ -124,6 +130,9 @@ public class LrItemSet {
             //update other items too
             for (LrItem cl : all) {
                 if (cl.sender == prevItem) {
+                    if (true) {
+                        throw new RuntimeException("sender logic changed");
+                    }
                     cl.lookAhead.addAll(prevItem.lookAhead);
                     update(cl);
                 }

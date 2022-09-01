@@ -1,6 +1,7 @@
 package mesut.parserx.nodes;
 
 import mesut.parserx.gen.ll.Type;
+import mesut.parserx.gen.lr.TreeInfo;
 
 import java.util.Objects;
 
@@ -14,6 +15,7 @@ public class RuleDecl {
     public int index;
     public int which = 0;//no alt or alt number
     public Type retType;//ast type in case it is modified
+    public TreeInfo.TransformInfo transformInfo;
 
     public RuleDecl() {
     }

@@ -103,18 +103,28 @@ public class ConflictResolver {
     }
 
     boolean checkSR(LrItem shift, LrItem reduce, LrItemSet set) {
-        var removed = false;
-        for (var e1 : shift.getSyms(tree)) {
-            var sym = ItemSet.sym(e1.getKey());
-            if (reduce.lookAhead.contains(sym)) {
-                removed |= handleSR(shift, sym, reduce, set);
-            }
-            else if (sym.isRule()) {
-                //expansion may conflict
-                var firstSet = FirstSet.firstSet(sym, tree);
-                if (hasCommon(firstSet, reduce.lookAhead)) {
-                    removed |= handleSR(shift, sym, reduce, set);
-                }
+        var node = shift.getNode(shift.dotPos);
+        var sym = ItemSet.sym(node);
+        return checkSR(shift, reduce, set, sym);
+        //below is for epsilon
+//        var removed = false;
+//        for (var e1 : shift.getSyms(tree)) {
+//            var sym = ItemSet.sym(e1.getKey());
+//            removed = checkSR(shift, reduce, set, sym);
+//        }
+//        return removed;
+    }
+
+    private boolean checkSR(LrItem shift, LrItem reduce, LrItemSet set, Name sym) {
+        boolean removed = false;
+        if (reduce.lookAhead.contains(sym)) {
+            removed = handleSR(shift, sym, reduce, set);
+        }
+        else if (sym.isRule()) {
+            //expansion may conflict
+            var firstSet = FirstSet.firstSet(sym, tree, true);
+            if (hasCommon(firstSet, reduce.lookAhead)) {
+                removed = handleSR(shift, sym, reduce, set);
             }
         }
         return removed;

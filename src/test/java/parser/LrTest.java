@@ -31,6 +31,7 @@ public class LrTest {
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         LrDFAGen generator = new LrDFAGen(tree, LrType.LR1);
         generator.generate();
+        generator.checkAndReport();
         dots(generator, tree.file.getName());
     }
 
@@ -83,8 +84,9 @@ public class LrTest {
     @Test
     public void testStar() throws Exception {
         LrDFAGen.debug = true;
-        dots("lr1/regex.g");
-        LrTester.check(Env.tree("lr1/regex.g"), "ax","aaax");
+        //dots("lr1/regex.g");
+        LrTester.check(Env.tree("lr1/regex.g"), "ccc","bbbccc","accc","abbbccc");
+        //LrTester.check(Env.tree("lr1/regex.g"), "x","aaax");
     }
 
 
@@ -100,7 +102,7 @@ public class LrTest {
         LrTester.check(Env.tree("lr1/calc.g"), "1+2", "1*2", "1+2*3", "2*3+1", "1+2^3", "2*2^-3");
         LrTester.check(Env.tree("lr1/factor-loop-right.g"), "ac", "ab", "aac", "aab");
         LrTester.check(Env.tree("lr1/rec.g"), "abc", "abd", "ababc");
-        LrTester.check(Env.tree("lr1/regex.g"), "ax","aaax");
+        //LrTester.check(Env.tree("lr1/regex.g"), "ax","aaax");
         //LrTester.check(Env.tree("lr1/eps.g"), "c", "ac", "xc", "axc", "de");//todo
         //LrTester.check(Env.tree("lr1/eps.g"), "x","ax");//todo
     }

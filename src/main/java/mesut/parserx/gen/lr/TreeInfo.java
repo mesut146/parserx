@@ -12,6 +12,13 @@ public class TreeInfo {
     public Tree tree;
     public HashMap<String, List<RuleDecl>> ruleMap = new HashMap<>();
 
+    public static class TransformInfo {
+        public boolean isPlus;
+        public boolean isStar;
+        public boolean isOpt;
+        public String orgName;
+    }
+
     public static TreeInfo make(Tree tree) {
         var res = new TreeInfo();
         res.tree = tree;
@@ -23,6 +30,7 @@ public class TreeInfo {
             var rules = new ArrayList<RuleDecl>();
             for (var rhs : entry.getValue()) {
                 var rd = new RuleDecl(name, rhs);
+                rd.transformInfo = tree.getRule(name).transformInfo;
                 rd.which = id++;
                 rd.index = index++;
                 rules.add(rd);

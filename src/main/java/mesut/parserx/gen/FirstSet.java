@@ -12,6 +12,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     Set<Name> rules = new HashSet<>();
     boolean recurse = true;
     boolean allowEpsilon = true;
+    boolean lrEpsilon = false;
 
     public FirstSet(Tree tree) {
         this.tree = tree;
@@ -46,8 +47,13 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     }
 
     public static Set<Name> firstSet(Node node, Tree tree) {
+        return firstSet(node, tree, false);
+    }
+
+    public static Set<Name> firstSet(Node node, Tree tree, boolean lrEpsilon) {
         FirstSet firstSet = new FirstSet(tree);
         firstSet.recurse = true;
+        firstSet.lrEpsilon = lrEpsilon;
         node.accept(firstSet, null);
         return firstSet.res;
     }
@@ -94,7 +100,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     public Void visitSequence(Sequence seq, Void arg) {
         for (Node ch : seq) {
             ch.accept(this, arg);
-            if (!canBeEmpty(ch, tree)) {
+            if (lrEpsilon || !canBeEmpty(ch, tree)) {
                 break;
             }
         }

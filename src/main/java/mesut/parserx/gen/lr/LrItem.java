@@ -13,6 +13,7 @@ public class LrItem {
     public int dotPos;
     public Set<LrItemSet> gotoSet = new HashSet<>();
     public LrItem sender;
+    public LrItem prev;
     public List<LrItem> next = new ArrayList<>();
     public Set<Integer> ids = new HashSet<>();
     int hash = -1;
@@ -34,6 +35,7 @@ public class LrItem {
         this.lookAhead = new HashSet<>(item.lookAhead);
         this.ids = new HashSet<>(item.ids);
         this.sender = item;
+        this.prev = item;
         item.next.add(this);
         lastId--;
     }
@@ -47,10 +49,11 @@ public class LrItem {
     }
 
     public boolean isReduce(Tree tree) {
-        for (int i = dotPos; i < rhs.size(); i++) {
-            if (!Helper.canBeEmpty(rhs.get(i), tree)) return false;
-        }
-        return true;
+        return dotPos == rhs.size() || isEpsilon();
+//        for (int i = dotPos; i < rhs.size(); i++) {
+//            if (!Helper.canBeEmpty(rhs.get(i), tree)) return false;
+//        }
+//        return true;
     }
 
     @Override
