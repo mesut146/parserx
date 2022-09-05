@@ -37,9 +37,9 @@ public class LexerGenerator {
     }
 
     public static LexerGenerator gen(Tree tree, String target) throws IOException {
-        LexerGenerator lexerGenerator = new LexerGenerator(tree, target);
-        lexerGenerator.generate();
-        return lexerGenerator;
+        var gen = new LexerGenerator(tree, target);
+        gen.generate();
+        return gen;
     }
 
     //compress boolean bits to integers
@@ -94,7 +94,7 @@ public class LexerGenerator {
         idArr = new int[dfa.lastState + 1];//state->id
         for (var state : dfa.it()) {
             //make id for token
-            List<String> names = state.names;
+            var names = state.names;
             if (!names.isEmpty() && state.accepting) {
                 //!dfa.isSkip[state]
                 if (names.size() != 1) {
@@ -105,7 +105,7 @@ public class LexerGenerator {
         }
         //sort tokens by id
         tokens = new TreeSet<>(Comparator.comparing(Map.Entry::getValue));
-        for (Map.Entry<Name, Integer> entry : idMap.map.entrySet()) {
+        for (var entry : idMap.map.entrySet()) {
             if (entry.getKey().isToken) {
                 tokens.add(entry);
             }

@@ -9,3 +9,11 @@ trans: maps current state & range id to target state
 
 
 
+parsers
+ rd(1), simple 1 la check
+ rd(k), javacc style
+ lldfa, multinode O(n) parser
+ LALR(1)
+ LR(1)
+
+

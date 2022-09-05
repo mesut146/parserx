@@ -61,10 +61,10 @@ public class ConflictResolver {
         if (conflicts.isEmpty()) return;
         var sb = new StringBuilder();
         for (var info : conflicts) {
-            sb.append(info.toString());
+            sb.append(info.toString()).append("\n");
         }
-        //throw new RuntimeException(sb.toString());
-        System.err.println(sb);
+        throw new RuntimeException(sb.toString());
+        //System.err.println(sb);
     }
 
     //check if two items has conflict
@@ -116,7 +116,7 @@ public class ConflictResolver {
     }
 
     private boolean checkSR(LrItem shift, LrItem reduce, LrItemSet set, Name sym) {
-        boolean removed = false;
+        var removed = false;
         if (reduce.lookAhead.contains(sym)) {
             removed = handleSR(shift, sym, reduce, set);
         }
@@ -137,7 +137,7 @@ public class ConflictResolver {
     }
 
     boolean handleSR(LrItem shift, Name sym, LrItem reduce, LrItemSet set) {
-        boolean removed = false;
+        var removed = false;
         //if same rule,check assoc
         if (shift.rule.equals(reduce.rule)) {
             removed = tryAssoc(shift, reduce, sym, set);
@@ -158,7 +158,7 @@ public class ConflictResolver {
     }
 
     boolean tryAssoc(LrItem shift, LrItem reduce, Name sym, LrItemSet set) {
-        boolean removed = false;
+        var removed = false;
         if (shift.rule.rhs.asSequence().assocLeft) {
             //keep reduce,remove shift
             removeItem(set, shift);

@@ -2,11 +2,8 @@ include "../common.g"
 
 %start: E;
 
-/*E: A C c | d B e;
+E: A B x | c C y;
 A: a | %epsilon;
-B: %epsilon;
-C: x | %epsilon;*/
-
-E: A x;
-A: a | %epsilon;
+B: b | %epsilon;
+C: %epsilon;
 

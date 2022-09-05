@@ -77,15 +77,23 @@ public class LrTester {
             if (isAst) {
                 var method = c.getDeclaredMethod("testAst", String.class, String.class);
                 for (String in : args) {
-                    var res = method.invoke(null, tree.start.name, in);
-                    System.out.println(res);
+                    try {
+                        var res = method.invoke(null, tree.start.name, in);
+                        System.out.println(res);
+                    } catch (Exception e) {
+                        System.err.println("failed for input " + in);
+                    }
                 }
             }
             else {
                 var method = c.getDeclaredMethod("test", String.class);
                 for (var in : args) {
-                    var res = method.invoke(null, in);
-                    System.out.println(res);
+                    try {
+                        var res = method.invoke(null, in);
+                        System.out.println(res);
+                    } catch (Exception e) {
+                        System.err.println("failed for input " + in);
+                    }
                 }
             }
         }

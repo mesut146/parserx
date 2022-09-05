@@ -62,19 +62,6 @@ public class LrDFAGen {
         LrUtils.epsilon(tree);
         LrUtils.plus(tree, true);
 
-//        for (var rd : tree.rules) {
-//            if (rd.rhs.isOr()) {
-//                List<Node> list = new ArrayList<>();
-//                for (var ch : rd.rhs.asOr()) {
-//                    list.add(LLDfaBuilder.expandPlus(ch));
-//                }
-//                rd.rhs = new Or(list);
-//            }
-//            else {
-//                rd.rhs = LLDfaBuilder.expandPlus(rd.rhs);
-//            }
-//        }
-
         makeStart();
         treeInfo = TreeInfo.make(tree);
 
@@ -117,7 +104,7 @@ public class LrDFAGen {
 
         while (!queue.isEmpty()) {
             var curSet = queue.poll();
-            //if (debug) System.out.println("set=" + curSet.stateId);
+            if (debug) System.out.println("set=" + curSet.stateId);
             curSet.closure();
             Map<Name, List<LrItem>> map = new HashMap<>();
             for (var item : curSet.all) {

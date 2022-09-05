@@ -12,7 +12,7 @@ public class LrItem {
     public Sequence rhs;
     public int dotPos;
     public Set<LrItemSet> gotoSet = new HashSet<>();
-    public LrItem sender;
+    public LrItem parent;
     public LrItem prev;
     public List<LrItem> next = new ArrayList<>();
     public Set<Integer> ids = new HashSet<>();
@@ -34,7 +34,6 @@ public class LrItem {
         this(item.rule, dotPos);
         this.lookAhead = new HashSet<>(item.lookAhead);
         this.ids = new HashSet<>(item.ids);
-        this.sender = item;
         this.prev = item;
         item.next.add(this);
         lastId--;
@@ -139,24 +138,13 @@ public class LrItem {
 
     //first set of follow of dot node
     public Set<Name> follow(Tree tree, int pos) {
-        HashSet<Name> res = new HashSet<>();
-        if (getNode(pos).isStar()) {
-            res.addAll(FirstSet.tokens(getNode(pos), tree));
+        if (pos + 1 == rhs.size()) {
+            //last pos
+            return lookAhead;
         }
-        var allEmpty = true;
-        for (int i = pos + 1; i < rhs.size(); ) {
-            Node node = rhs.get(i);
-            res.addAll(FirstSet.tokens(node, tree));
-            if (Helper.canBeEmpty(node, tree)) {
-                i++;
-                //look next node
-            }
-            else {
-                allEmpty = false;
-                break;
-            }
-        }
-        if (allEmpty) {
+        var rest = new Sequence(rhs.list.subList(pos + 1, rhs.size()));
+        var res = FirstSet.tokens(rest, tree);
+        if (Helper.canBeEmpty(rest, tree)) {
             //no end,la is carried
             res.addAll(lookAhead);
         }
@@ -167,8 +155,7 @@ public class LrItem {
     public boolean equals(Object other) {
         if (this == other) return true;
         if (other == null || getClass() != other.getClass()) return false;
-        LrItem item = (LrItem) other;
-        if (dotPos != item.dotPos) return false;
+        var item = (LrItem) other;
         return isSame(item) && lookAhead.equals(item.lookAhead);
     }
 

@@ -20,7 +20,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
 
     //first set graph
     public static void dot(Name ref, Tree tree, Writer writer) {
-        PrintWriter w = new PrintWriter(writer);
+        var w = new PrintWriter(writer);
         w.println("digraph G{");
         w.println("rankdir = TB;");
         HashSet<Name> set = new HashSet<>();
@@ -31,8 +31,8 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     }
 
     static void dot(Name ref, Tree tree, PrintWriter w, Set<Name> done) {
-        Set<Name> set = firstSetNoRec(ref, tree);
-        for (Name name : set) {
+        var set = firstSetNoRec(ref, tree);
+        for (var name : set) {
             if (name.isRule()) {
                 w.printf("%s -> %s;", ref, name);
                 if (done.add(ref)) {
@@ -51,7 +51,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     }
 
     public static Set<Name> firstSet(Node node, Tree tree, boolean lrEpsilon) {
-        FirstSet firstSet = new FirstSet(tree);
+        var firstSet = new FirstSet(tree);
         firstSet.recurse = true;
         firstSet.lrEpsilon = lrEpsilon;
         node.accept(firstSet, null);
@@ -59,7 +59,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     }
 
     public static Set<Name> firstSetNoRec(Node node, Tree tree) {
-        FirstSet firstSet = new FirstSet(tree);
+        var firstSet = new FirstSet(tree);
         firstSet.recurse = false;
         node.accept(firstSet, null);
         return firstSet.res;
@@ -90,7 +90,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
 
     @Override
     public Void visitOr(Or or, Void arg) {
-        for (Node ch : or) {
+        for (var ch : or) {
             ch.accept(this, arg);
         }
         return null;
@@ -98,7 +98,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
 
     @Override
     public Void visitSequence(Sequence seq, Void arg) {
-        for (Node ch : seq) {
+        for (var ch : seq) {
             ch.accept(this, arg);
             if (lrEpsilon || !canBeEmpty(ch, tree)) {
                 break;
@@ -121,7 +121,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
         }
         res.add(name);
         if (rules.add(name) && name.isRule() && recurse) {
-            List<RuleDecl> list = tree.getRules(name);
+            var list = tree.getRules(name);
             if (list.isEmpty()) {
                 throw new RuntimeException("rule not found: " + name);
             }
@@ -153,7 +153,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
 
         @Override
         public Boolean visitOr(Or or, Void arg) {
-            for (Node ch : or) {
+            for (var ch : or) {
                 if (ch.accept(this, arg)) return true;
             }
             return false;
@@ -162,7 +162,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
         @Override
         public Boolean visitSequence(Sequence seq, Void arg) {
             //all have to be empty
-            for (Node ch : seq) {
+            for (var ch : seq) {
                 if (!ch.accept(this, arg)) {
                     return false;
                 }
@@ -184,7 +184,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
         public Boolean visitName(Name name, Void arg) {
             if (name.astInfo.isFactored) return true;
             if (name.isRule() && rules.add(name)) {
-                for (RuleDecl decl : tree.getRules(name)) {
+                for (var decl : tree.getRules(name)) {
                     if (decl.rhs.accept(this, arg)) {
                         return true;
                     }

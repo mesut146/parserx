@@ -28,7 +28,7 @@ public class RecDescent {
     }
 
     public static RecDescent gen(Tree tree, String target) throws IOException {
-        RecDescent recDescent = new RecDescent(tree);
+        var recDescent = new RecDescent(tree);
         recDescent.target = target;
         recDescent.gen();
         return recDescent;
@@ -36,7 +36,7 @@ public class RecDescent {
 
     public static boolean isSimple(Node node) {
         if (node.isRegex()) {
-            Regex regex = node.asRegex();
+            var regex = node.asRegex();
             return regex.node.isName();
         }
         return node.isName();

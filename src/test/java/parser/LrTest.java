@@ -29,8 +29,10 @@ public class LrTest {
     private void dots(String res) throws IOException {
         Tree tree = Env.tree(res);
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        LrDFAGen generator = new LrDFAGen(tree, LrType.LR1);
+        //LrDFAGen.debug = true;
+        LrDFAGen generator = new LrDFAGen(tree, LrType.LALR1);
         generator.generate();
+        dots(generator, tree.file.getName());
         generator.checkAndReport();
         dots(generator, tree.file.getName());
     }
@@ -82,13 +84,23 @@ public class LrTest {
 
 
     @Test
-    public void testStar() throws Exception {
-        LrDFAGen.debug = true;
-        //dots("lr1/regex.g");
-        LrTester.check(Env.tree("lr1/regex.g"), "ccc","bbbccc","accc","abbbccc");
-        //LrTester.check(Env.tree("lr1/regex.g"), "x","aaax");
+    public void itself() throws Exception {
+        var path = new File("./src/main/grammar/parserx.g");
+        LrTester.check(Tree.makeTree(path),LrType.LR1, Utils.read(path));
     }
 
+    @Test
+    public void regex() throws Exception {
+        dots("lr1/regex.g");
+        LrTester.check(Env.tree("lr1/regex.g"), "x", "aax");
+    }
+
+    @Test
+    public void la() throws Exception {
+        //dots("lr1/la2.g");
+        //LrTester.check(Env.tree("lr1/la2.g"),LrType.LALR1, "aacx","baacy");
+        //LrTester.check(Env.tree("lr1/la2.g"),LrType.LALR1, "aax","baay");
+    }
 
     @Test
     public void all() throws Exception {
@@ -102,18 +114,20 @@ public class LrTest {
         LrTester.check(Env.tree("lr1/calc.g"), "1+2", "1*2", "1+2*3", "2*3+1", "1+2^3", "2*2^-3");
         LrTester.check(Env.tree("lr1/factor-loop-right.g"), "ac", "ab", "aac", "aab");
         LrTester.check(Env.tree("lr1/rec.g"), "abc", "abd", "ababc");
-        //LrTester.check(Env.tree("lr1/regex.g"), "ax","aaax");
-        //LrTester.check(Env.tree("lr1/eps.g"), "c", "ac", "xc", "axc", "de");//todo
-        //LrTester.check(Env.tree("lr1/eps.g"), "x","ax");//todo
+        LrTester.check(Env.tree("lr1/regex.g"), "ccc", "bbbccc", "accc", "abbbccc");
+        LrTester.check(Env.tree("lr1/eps.g"), "x", "ax", "bx", "abx", "cy");
+        LrTester.check(Env.tree("lr1/la2.g"), "aax", "baay");
     }
 
     @Test
     public void epsilon() throws Exception {
-        Tree tree = Env.tree("lr1/eps.g");
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        LrDFAGen dfaGen = new LrDFAGen(tree, LrType.LR1);
-        dfaGen.generate();
-        dfaGen.checkAndReport();
-        dots(dfaGen, tree.file.getName());
+//        Tree tree = Env.tree("lr1/eps.g");
+//        tree.options.outDir = Env.dotDir().getAbsolutePath();
+//        LrDFAGen gen = new LrDFAGen(tree, LrType.LR1);
+//        gen.generate();
+//        gen.checkAndReport();
+//        dots(gen, tree.file.getName());
+
+
     }
 }

@@ -113,7 +113,7 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
     public Void visitOr(Or or, Info arg) {
         w.append("public int which;");
         int id = 1;
-        for (Node ch : or) {
+        for (var ch : or) {
             if (ch.isEpsilon()) continue;
             //in case of factorization pre-write some code
             ch.astInfo.which = id;
@@ -123,8 +123,8 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
             else {
                 //sequence
                 //complex choice point inits holder
-                Type clsName = new Type(arg.outerCls, Utils.camel(arg.outerCls.name) + id);
-                String v = arg.outerCls.name.toLowerCase() + id;
+                var clsName = new Type(arg.outerCls, Utils.camel(arg.outerCls.name) + id);
+                var v = arg.outerCls.name.toLowerCase() + id;
                 ch.astInfo.nodeType = clsName;
                 ch.astInfo.varName = v;
                 ch.astInfo.outerVar = arg.outerVar;
@@ -137,14 +137,14 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
     }
 
     void orInit(Or or) {
-        for (Node ch : or) {
+        for (var ch : or) {
             if (ch.isEpsilon()) continue;
             if (options.useSimple && RecDescent.isSimple(ch)) {
             }
             else {
                 //sequence
                 //complex choice point inits holder
-                Type clsName = ch.astInfo.nodeType;
+                var clsName = ch.astInfo.nodeType;
 
                 w.append("public static class %s{", clsName.name);
                 //holder ref
@@ -233,8 +233,8 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
 
         @Override
         public Void visitRegex(Regex regex, Void arg) {
-            Name name = regex.node.asName();
-            String v = name.astInfo.varName;
+            var name = regex.node.asName();
+            var v = name.astInfo.varName;
             if (regex.isOptional()) {
                 w.append("if(%s != null){", v);
                 name.accept(this, null);

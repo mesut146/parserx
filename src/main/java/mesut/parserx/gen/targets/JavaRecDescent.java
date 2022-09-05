@@ -55,14 +55,14 @@ public class JavaRecDescent {
 
         writeConsume();
 
-        for (RuleDecl decl : tree.rules) {
+        for (var decl : tree.rules) {
             curRule = decl;
             gen(decl);
             code.append("");
         }
         code.append("}");
 
-        File file = new File(options.outDir, options.parserClass + ".java");
+        var file = new File(options.outDir, options.parserClass + ".java");
 
         Utils.write(code.get(), file);
         genTokenType();
@@ -84,7 +84,7 @@ public class JavaRecDescent {
     }
 
     public void genTokenType() throws IOException {
-        CodeWriter c = new CodeWriter(true);
+        var c = new CodeWriter(true);
         if (options.packageName != null) {
             c.append("package %s;", options.packageName);
             c.append("");
@@ -92,14 +92,14 @@ public class JavaRecDescent {
         c.append("public class %s{", tokens);
         c.append("public static final int EOF = 0;");
         int id = 1;
-        for (TokenDecl decl : tree.tokens) {
+        for (var decl : tree.tokens) {
             if (decl.fragment) continue;
             //if (decl.isSkip) continue;
             c.append("public static final int %s = %d;", decl.name, id);
             id++;
         }
         c.append("}");
-        File file = new File(options.outDir, tokens + ".java");
+        var file = new File(options.outDir, tokens + ".java");
         Utils.write(c.get(), file);
     }
 
@@ -108,22 +108,22 @@ public class JavaRecDescent {
     }
 
     void gen(RuleDecl decl) {
-        StringBuilder params = new StringBuilder();
+        var params = new StringBuilder();
         int i = 0;
-        for (Node arg : decl.ref.args) {
+        for (var arg : decl.ref.args) {
             if (i > 0) params.append(", ");
             if (arg.isName()) {
-                Name name = arg.asName();
+                var name = arg.asName();
                 params.append(String.format("%s %s", getType(name), name.astInfo.varName));
             }
             else {
-                Regex regex = arg.asRegex();
-                Name name = regex.node.asName();
+                var regex = arg.asRegex();
+                var name = regex.node.asName();
                 params.append(String.format("List<%s> %s", getType(name), regex.astInfo.varName));
             }
             i++;
         }
-        Type type = decl.retType;
+        var type = decl.retType;
         code.append("public %s %s(%s){", type, decl.baseName(), params);
         code.append("%s res = new %s();", type, type);
         flagCount = 0;

@@ -1,11 +1,8 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.gen.FirstSet;
-import mesut.parserx.gen.lldfa.Item;
 import mesut.parserx.gen.lldfa.ItemSet;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Node;
-import mesut.parserx.nodes.RuleDecl;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -20,7 +17,7 @@ public class LrItemSet {
     public LrType type;
     TreeInfo treeInfo;
     public List<LrTransition> transitions = new ArrayList<>();
-    private List<LrTransition> incoming = new ArrayList<>();
+    private final List<LrTransition> incoming = new ArrayList<>();
 
     public LrItemSet(TreeInfo tree, LrType type) {
         this.treeInfo = tree;
@@ -103,7 +100,7 @@ public class LrItemSet {
         for (var rd : treeInfo.ruleMap.get(node.name)) {
             LrItem newItem = new LrItem(rd, 0);
             newItem.lookAhead = new HashSet<>(laList);
-            newItem.sender = sender;
+            newItem.parent = sender;
             addOrUpdate(newItem);
         }
     }
@@ -117,30 +114,43 @@ public class LrItemSet {
     }
 
     boolean update(LrItem item) {
-//        for (var entry : item.getSyms(treeInfo.tree)) {
-//            if (entry.getKey().isName() && entry.getKey().asName().isToken) {
-//                return false;
-//            }
-//        }
         var prev = all.stream().filter(prv -> prv.isSame(item)).findFirst();
-        if (prev.isPresent()) {
-            //merge la
-            var prevItem = prev.get();
-            prevItem.lookAhead.addAll(item.lookAhead);
-            //update other items too
-            for (LrItem cl : all) {
-                if (cl.sender == prevItem) {
-                    if (true) {
-                        throw new RuntimeException("sender logic changed");
-                    }
-                    cl.lookAhead.addAll(prevItem.lookAhead);
-                    update(cl);
-                }
-            }
-            return true;
-        }
-        else {
+        if (prev.isEmpty()) {
             return false;
         }
+        //merge la
+        var prevItem = prev.get();
+        //todo next items
+        //update closure items too
+        var la = prevItem.lookAhead;
+        la.addAll(item.lookAhead);
+        updateLa(prevItem, la, new HashSet<>());
+        return true;
+    }
+
+    LrItem findChild(LrItem item) {
+        for (var ch : all) {
+            if (ch.parent == item) {
+                return ch;
+            }
+        }
+        return null;
+    }
+
+    void updateLa(LrItem item, Set<Name> la, Set<LrItem> done) {
+        if (done.contains(item)) return;
+        done.add(item);
+        item.lookAhead = la;
+        if (item.parent != null) {
+            //updateLa(item.parent, la, done);
+        }
+        var ch = findChild(item);
+        if (ch != null) {
+            updateLa(ch, la, done);
+        }
+        for (var next : item.next) {
+            updateLa(next, la, done);
+        }
+        //todo transitions
     }
 }

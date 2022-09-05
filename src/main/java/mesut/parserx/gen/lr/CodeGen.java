@@ -54,7 +54,7 @@ public class CodeGen {
         alt();
         isLoop();
         isStar();
-        File file = new File(options.outDir, options.parserClass + ".java");
+        var file = new File(options.outDir, options.parserClass + ".java");
         Utils.write(template.toString(), file);
         idMap.writeSym(options);
 
@@ -65,7 +65,7 @@ public class CodeGen {
     }
 
     void names() {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         int i = 0;
         for (var rd : ruleSet) {
             if (i > 0) {
@@ -164,7 +164,7 @@ public class CodeGen {
     }
 
     void writeTable() {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append("\"");
 
         sb.append(pack(gen.lastId + 1));//state count,width
@@ -190,7 +190,7 @@ public class CodeGen {
                 sb.append(pack(action));
             }
             //write reduces
-            List<LrItem> list = set.getReduce();
+            var list = set.getReduce();
             int count = list.size();//reduce count
             if (gen.acc == set) {
                 count--;
