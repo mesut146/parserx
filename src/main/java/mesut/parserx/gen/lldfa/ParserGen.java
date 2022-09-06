@@ -2,12 +2,11 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.ll.AstGen;
-import mesut.parserx.gen.targets.JavaRecDescent;
 import mesut.parserx.nodes.Tree;
 
 import java.io.IOException;
 
-public class LLDFAGen {
+public class ParserGen {
 
     public static void gen(Tree tree, String target) throws IOException {
         tree.options.useSimple = false;

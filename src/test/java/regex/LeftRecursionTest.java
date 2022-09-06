@@ -2,7 +2,7 @@ package regex;
 
 import common.Env;
 import mesut.parserx.gen.Helper;
-import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.LeftRecursive;
@@ -76,14 +76,14 @@ public class LeftRecursionTest {
         l.normalizeIndirects();
         tree.printRules();*/
         //l.process();
-        RecDescent.gen(tree, "java");
+        RDParserGen.gen(tree, "java");
     }
 
     @Test
     public void indirectFactor() throws IOException {
         Tree tree = Env.tree("rec/cyc0.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        RecDescent.gen(tree, "java");
+        RDParserGen.gen(tree, "java");
     }
 
     @Test
@@ -97,7 +97,7 @@ public class LeftRecursionTest {
         Tree tree = Env.tree("ll/substitude.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         //l.process();
-        RecDescent.gen(tree, "java");
+        RDParserGen.gen(tree, "java");
     }
 
     @Test
@@ -106,7 +106,7 @@ public class LeftRecursionTest {
         Recursion.debug = true;
         Tree tree = Env.tree("rec/a.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        RecDescent.gen(tree, "java");
+        RDParserGen.gen(tree, "java");
     }
 
     @Test

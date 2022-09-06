@@ -148,9 +148,22 @@ public class Item {
 
     public Node getNode(int pos) {
         var s = rule.rhs.asSequence();
-        if (pos < s.size())
+        if (pos < s.size()) {
             return s.get(pos);
+        }
         return null;
+    }
+
+    public List<Map.Entry<Node, Integer>> getSyms(Tree tree) {
+        List<Map.Entry<Node, Integer>> list = new ArrayList<>();
+        for (int i = dotPos; i < rhs.size(); i++) {
+            var node = getNode(i);
+            list.add(new AbstractMap.SimpleEntry<>(node, i));
+            if (!FirstSet.canBeEmpty(node, tree)) {
+                break;
+            }
+        }
+        return list;
     }
 
     //first set of follow of pos node
@@ -185,9 +198,7 @@ public class Item {
         if (other == null || getClass() != other.getClass()) return false;
 
         var item = (Item) other;
-
-        if (dotPos != item.dotPos) return false;
-        return Objects.equals(rule, item.rule) && lookAhead.equals(item.lookAhead);
+        return isSame(item) && lookAhead.equals(item.lookAhead);
     }
 
     //without lookahead

@@ -22,14 +22,14 @@ public class LaFinder extends BaseVisitor<Void, Void> {
     }
 
     public static Set<Name> computeLa(Name ref, Tree tree) {
-        LaFinder finder = new LaFinder(tree);
+        var finder = new LaFinder(tree);
         finder.ref = ref;
         if (done.containsKey(ref)) return done.get(ref);
         done.put(ref, finder.set);
         if (ref.equals(tree.start)) {
             finder.set.add(LrDFAGen.dollar);
         }
-        for (RuleDecl decl : tree.rules) {
+        for (var decl : tree.rules) {
             //if (decl.ref.equals(ref)) continue;
             finder.curRule = decl;
             decl.rhs.accept(finder, null);
@@ -40,8 +40,8 @@ public class LaFinder extends BaseVisitor<Void, Void> {
     @Override
     public Void visitSequence(Sequence seq, Void arg) {
         for (int i = 0; i < seq.size(); i++) {
-            Node ch = seq.get(i);
-            boolean match = false;
+            var ch = seq.get(i);
+            var match = false;
             if (ch.equals(ref)) {
                 if (i < seq.size() - 1) {
                     Sequence rest = new Sequence(seq.list.subList(i + 1, seq.size()));
@@ -54,12 +54,12 @@ public class LaFinder extends BaseVisitor<Void, Void> {
             }
             else if (ch.isRegex() && ch.asRegex().node.equals(ref)) {
                 match = true;
-                Regex regex = ch.asRegex();
+                var regex = ch.asRegex();
                 if (!regex.isOptional()) {
                     set.addAll(FirstSet.tokens(regex.node, tree));
                 }
                 if (i < seq.size() - 1) {
-                    Sequence rest = new Sequence(seq.list.subList(i + 1, seq.size()));
+                    var rest = new Sequence(seq.list.subList(i + 1, seq.size()));
                     if (FirstSet.canBeEmpty(rest, tree)) {
                         set.addAll(computeLa(curRule.ref, tree));
                     }

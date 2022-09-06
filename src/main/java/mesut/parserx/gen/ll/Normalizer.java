@@ -20,7 +20,7 @@ public class Normalizer extends Transformer {
         for (int i = 0; i < tree.rules.size(); i++) {
             groupCount = 1;
             //todo restart
-            RuleDecl decl = tree.rules.get(i);
+            var decl = tree.rules.get(i);
             decl.retType = new Type(tree.options.astClass, decl.baseName());
             transformRule(decl);
         }
@@ -28,12 +28,12 @@ public class Normalizer extends Transformer {
 
     @Override
     public Node visitGroup(Group node, Void parent) {
-        String cls = curRule.baseName() + "g" + groupCount;
-        RuleDecl tmp = new RuleDecl(cls, node.node);
+        var cls = curRule.baseName() + "g" + groupCount;
+        var tmp = new RuleDecl(cls, node.node);
         tmp.retType = new Type(tree.options.astClass, cls);
         tree.addRuleBelow(tmp, curRule);
 
-        Name ref = tmp.ref.copy();
+        var ref = tmp.ref.copy();
         if (node.astInfo.varName != null) {
             ref.astInfo.varName = node.astInfo.varName;
         }
@@ -47,12 +47,12 @@ public class Normalizer extends Transformer {
 
     @Override
     public Node visitOr(Or node, Void parent) {
-        Node tmp = super.visitOr(node, parent);
+        var tmp = super.visitOr(node, parent);
         if (!tmp.isOr()) {
             return tmp;
         }
-        List<Node> list = new ArrayList<>();
-        for (Node ch : node) {
+        var list = new ArrayList<Node>();
+        for (var ch : node) {
             if (!list.contains(ch)) {
                 list.add(ch);
             }

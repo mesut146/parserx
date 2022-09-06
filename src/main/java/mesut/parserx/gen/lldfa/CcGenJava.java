@@ -2,15 +2,13 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.*;
 import mesut.parserx.gen.ll.AstGen;
-import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.targets.JavaRecDescent;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.LinkedList;
 
 public class CcGenJava {
     Tree tree;
@@ -62,8 +60,7 @@ public class CcGenJava {
         builder.factor();
         AstGen.gen(tree, "java");
         LexerGenerator.gen(tree, "java");
-        JavaRecDescent recDescent = new JavaRecDescent(tree);
-        recDescent.genTokenType();
+        JavaRecDescent.genTokenType(tree);
         writeTS(options);
         prep();
         for (var entry : builder.rules.entrySet()) {
@@ -103,13 +100,13 @@ public class CcGenJava {
 
         }
         w.append("}");
-        File file = new File(options.outDir, options.parserClass + ".java");
+        var file = new File(options.outDir, options.parserClass + ".java");
         Utils.write(w.get(), file);
     }
 
 
     void writeDecider(String rule) {
-        RegexBuilder regexBuilder = new RegexBuilder(builder);
+        var regexBuilder = new RegexBuilder(builder);
         var regex = regexBuilder.build(rule);
         w.append("public int %s_decide() throws IOException{", rule);
         var decider = new Decider();
@@ -128,7 +125,7 @@ public class CcGenJava {
         @Override
         public Void visitOr(Or or, Void arg) {
             int id = 1;
-            for (Node ch : or) {
+            for (var ch : or) {
                 w.append("%sif(%s){", id > 1 ? "else " : "", JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type"));
                 w.append("%s %s = new %s();", ch.astInfo.nodeType, ch.astInfo.varName, ch.astInfo.nodeType);
                 w.append("%s.holder = res;", ch.astInfo.varName);
@@ -149,7 +146,7 @@ public class CcGenJava {
 
         @Override
         public Void visitRegex(Regex regex, Void arg) {
-            Node ch = regex.node;
+            var ch = regex.node;
             var la = JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type");
             if (regex.isOptional()) {
                 w.append("if(%s){", la);
@@ -174,7 +171,7 @@ public class CcGenJava {
     private void consumer(Name name, String vname) {
         String rhs;
         if (name.isToken) {
-            rhs = String.format("ts.consume(%s.%s, \"%s\")", RecDescent.tokens, name.name, name.name);
+            rhs = String.format("ts.consume(%s.%s, \"%s\")", RDParserGen.tokens, name.name, name.name);
         }
         else {
             rhs = name.name + "()";

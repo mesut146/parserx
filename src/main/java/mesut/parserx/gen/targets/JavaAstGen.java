@@ -3,7 +3,7 @@ package mesut.parserx.gen.targets;
 import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.Normalizer;
-import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.ll.Type;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
@@ -210,7 +210,7 @@ public class JavaAstGen{
 
                 //in case of factorization pre-write some code
                 ch.astInfo.which = id;
-                if (options.useSimple && RecDescent.isSimple(ch)) {
+                if (options.useSimple && RDParserGen.isSimple(ch)) {
                     model(ch, outerCls, outerVar, parent);
                 }
                 else {

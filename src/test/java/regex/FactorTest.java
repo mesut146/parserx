@@ -1,7 +1,7 @@
 package regex;
 
 import common.Env;
-import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.transform.Epsilons;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorLoop;
@@ -65,7 +65,7 @@ public class FactorTest {
         //Tree tree = Env.tree("java/factor-eps.g");
         Factor.debug = true;
         Recursion.debug = true;
-        RecDescent.gen(tree, "java");
+        RDParserGen.gen(tree, "java");
     }
 
     @Test
@@ -87,7 +87,7 @@ public class FactorTest {
         Factor.debug = true;
         Tree tree = Env.tree("factor/loop.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        RecDescent.gen(tree, "java");
+        RDParserGen.gen(tree, "java");
     }
 
     @Test

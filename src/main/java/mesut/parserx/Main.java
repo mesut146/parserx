@@ -4,8 +4,8 @@ import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Validator;
 import mesut.parserx.gen.LexerGenerator;
-import mesut.parserx.gen.ll.RecDescent;
-import mesut.parserx.gen.lldfa.LLDFAGen;
+import mesut.parserx.gen.ll.RDParserGen;
+import mesut.parserx.gen.lldfa.ParserGen;
 import mesut.parserx.gen.lr.AstBuilderGen;
 import mesut.parserx.gen.lr.CodeGen;
 import mesut.parserx.gen.lr.LrType;
@@ -277,10 +277,10 @@ public class Main {
                 }
                 checkLang(lang);
                 if (cmd.contains("-lldfa")) {
-                    LLDFAGen.gen(tree, lang);
+                    ParserGen.gen(tree, lang);
                 }
                 else {
-                    RecDescent.gen(tree, lang);
+                    RDParserGen.gen(tree, lang);
                 }
             }
             else if (cmd.contains("-lalr1") || cmd.contains("-lr1")) {

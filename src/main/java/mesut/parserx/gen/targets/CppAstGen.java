@@ -3,7 +3,7 @@ package mesut.parserx.gen.targets;
 import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.Normalizer;
-import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.ll.Type;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
@@ -39,7 +39,7 @@ public class CppAstGen {
             if (decl.rhs.isOr()) {
                 int id = 1;
                 for (Node ch : decl.rhs.asOr()) {
-                    if (!options.useSimple || !RecDescent.isSimple(ch)) {
+                    if (!options.useSimple || !RDParserGen.isSimple(ch)) {
                         String alt = decl.baseName() + id;
                         sourceWriter.append("%s::%s::%s::%s() = default;", options.astClass, decl.baseName(), alt, alt);
                         writePrinter(alt, ch, sourceWriter, true);
@@ -95,7 +95,7 @@ public class CppAstGen {
             //forward alts
             int id = 1;
             for (Node ch : decl.rhs.asOr()) {
-                if (!options.useSimple || !RecDescent.isSimple(ch)) {
+                if (!options.useSimple || !RDParserGen.isSimple(ch)) {
                     astWriter.append("class %s;", decl.baseName() + id);
                 }
                 id++;
@@ -258,7 +258,7 @@ public class CppAstGen {
 
                 //in case of factorization pre-write some code
                 ch.astInfo.which = num;
-                if (options.useSimple && RecDescent.isSimple(ch)) {
+                if (options.useSimple && RDParserGen.isSimple(ch)) {
                     //todo vname
                     //ch.astInfo.varName = parentClass.toLowerCase() + num;
                     model(ch, outerCls, outerVar, parent);

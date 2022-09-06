@@ -41,10 +41,10 @@ public class LLDfaBuilder {
         tree = new Tree(ebnf);
         tree.checkDup = false;
         for (var rd : ebnf.rules) {
-            Node rhs = rd.rhs;
+            var rhs = rd.rhs;
             if (rhs.isOr()) {
                 int id = 1;
-                for (Node ch : rhs.asOr()) {
+                for (var ch : rhs.asOr()) {
                     ch = expandPlus(ch);
                     var decl = new RuleDecl(rd.ref, ch);
                     decl.retType = rd.retType;
@@ -66,7 +66,7 @@ public class LLDfaBuilder {
         var info = node.astInfo;
         var seq = node.isSequence() ? node.asSequence() : new Sequence(node);
         var list = new ArrayList<Node>();
-        for (Node ch : seq) {
+        for (var ch : seq) {
             if (ch.isPlus()) {
                 var rn = ch.asRegex();
                 var copy = rn.node.copy();
@@ -164,15 +164,15 @@ public class LLDfaBuilder {
             //throw new RuntimeException("la need to be computed");
         }
 
-        for (RuleDecl rd : tree.getRules(rule)) {
-            Item first = new Item(rd, 0);
+        for (var rd : tree.getRules(rule)) {
+            var first = new Item(rd, 0);
             first.first = true;
             first.gotoSet.add(firstSet);
             //first.lookAhead.add(dollar);
             first.lookAhead.addAll(la);
             firstSet.addItem(first);
         }
-        for (Item item : firstSet.all) {
+        for (var item : firstSet.all) {
             item.siblings.addAll(firstSet.all);
         }
 
@@ -195,12 +195,12 @@ public class LLDfaBuilder {
                     if (item.closured[i]) continue;
 
                     var node = item.getNode(i);
-                    Node sym = node.isName() ? node.asName() : node.asRegex().node.asName();
+                    Node sym = ItemSet.sym(node);
                     int newPos = node.isStar() ? i : i + 1;
                     Item target;
                     if (node.isOptional() && sym.asName().isToken && !curSet.isFactor(item, i)) {
                         //.a? b c | b d -> a b c
-                        List<Node> rhs = new ArrayList<>(item.rhs.list.subList(i, item.rhs.size()));
+                        var rhs = new ArrayList<>(item.rhs.list.subList(i, item.rhs.size()));
                         rhs.set(0, sym);
                         sym = Sequence.make(rhs);
                         target = new Item(item, item.rhs.size());
@@ -208,7 +208,7 @@ public class LLDfaBuilder {
                     }
                     //if sym is not factor shrink transition
                     else if (canShrink(curSet, item, i) && item.rhs.size() - i > 1) {
-                        List<Node> rhs = new ArrayList<>(item.rhs.list.subList(i, item.rhs.size()));
+                        var rhs = new ArrayList<>(item.rhs.list.subList(i, item.rhs.size()));
                         sym = Sequence.make(rhs);
                         target = new Item(item, item.rhs.size());
                         logger.log(Level.FINE, "shrink=" + sym);
@@ -229,7 +229,7 @@ public class LLDfaBuilder {
     }
 
     boolean canShrink(ItemSet set, Item item, int i) {
-        Node node = item.getNode(i);
+        var node = item.getNode(i);
         var sym = node.isName() ? node.asName() : node.asRegex().node.asName();
 
         if (set.isFactor(item, i)) return false;
@@ -248,14 +248,14 @@ public class LLDfaBuilder {
     }
 
     void addMap(Map<Node, List<Item>> map, Node sym, Item target) {
-        List<Item> list = map.get(sym);
+        var list = map.get(sym);
         if (list == null) {
             list = new ArrayList<>();
             map.put(sym, list);
         }
         else {
             //factor
-            Node f = sym.copy();
+            var f = sym.copy();
             f.astInfo.isFactor = true;
             map.remove(sym);
             map.put(f, list);
@@ -266,19 +266,19 @@ public class LLDfaBuilder {
 
     void makeTrans(ItemSet curSet, Map<Node, List<Item>> map) {
         logger.log(Level.FINE, "makeTrans " + curSet.stateId + " " + map);
-        for (Map.Entry<Node, List<Item>> e : map.entrySet()) {
-            Node sym = e.getKey();
-            List<Item> list = e.getValue();
-            ItemSet targetSet = new ItemSet(tree, type);
+        for (var e : map.entrySet()) {
+            var sym = e.getKey();
+            var list = e.getValue();
+            var targetSet = new ItemSet(tree, type);
             targetSet.addAll(list);
             targetSet.addAll(targetSet.genReduces());
             targetSet.alreadyGenReduces = true;
 
-            ItemSet sim = findSimilar(new ArrayList<>(targetSet.kernel));
+            var sim = findSimilar(new ArrayList<>(targetSet.kernel));
             if (sim != null) {
                 ItemSet.lastId--;
                 //merge lookaheads
-                for (Item it : targetSet.all) {
+                for (var it : targetSet.all) {
                     sim.update(it, true, true);
                 }
                 targetSet = sim;
@@ -309,9 +309,9 @@ public class LLDfaBuilder {
     ItemSet findSimilar(List<Item> target) {
         //System.out.println("similar " + target);
         sort(target);
-        for (ItemSet set : all) {
+        for (var set : all) {
             if (target.size() != set.kernel.size()) continue;
-            List<Item> l2 = new ArrayList<>(set.kernel);
+            var l2 = new ArrayList<>(set.kernel);
             sort(l2);
             boolean same = true;
             for (int i = 0; i < target.size(); i++) {
@@ -351,12 +351,12 @@ public class LLDfaBuilder {
         //w.println("size=\"6,5\";");
         w.println("ratio=\"fill\";");
         for (var all : rules.values()) {
-            for (ItemSet set : all) {
-                StringBuilder sb = new StringBuilder();
+            for (var set : all) {
+                var sb = new StringBuilder();
                 //items
                 sb.append("<");
-                for (Item it : set.all) {
-                    String line = it.toString();
+                for (var it : set.all) {
+                    var line = it.toString();
                     line = line.replace(">", "&gt;");
                     if (it.isReduce(tree)) {
                         sb.append("<FONT color=\"blue\">");
@@ -378,8 +378,8 @@ public class LLDfaBuilder {
                 if (set.hasFinal()) {
                     w.printf("%d [style=filled fillcolor=gray];\n", set.stateId);
                 }
-                for (LLTransition tr : set.transitions) {
-                    StringBuilder labelBuf = new StringBuilder();
+                for (var tr : set.transitions) {
+                    var labelBuf = new StringBuilder();
                     if (tr.symbol.astInfo.isFactor) {
                         labelBuf.append("<<FONT color=\"green\">");
                         labelBuf.append(tr.symbol);

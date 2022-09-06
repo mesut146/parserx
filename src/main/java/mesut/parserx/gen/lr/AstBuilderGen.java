@@ -35,10 +35,10 @@ public class AstBuilderGen {
 
         writer.append("public class AstBuilder{");
 
-        for (RuleDecl decl : tree.rules) {
+        for (var decl : tree.rules) {
             writer.append("public static %s make%s(Symbol node){", decl.retType, decl.baseName());
             writer.append("%s res = new %s();", decl.retType, decl.retType);
-            Or or = decl.rhs.asOr();
+            var or = decl.rhs.asOr();
 
             for (int i = 0; i < or.size(); i++) {
                 if (i == 0) {
@@ -49,14 +49,14 @@ public class AstBuilderGen {
                 }
 
                 writer.append("res.which = %d;", i + 1);
-                Node ch = or.get(i);
+                var ch = or.get(i);
                 if (ch.isSequence()) {
-                    Sequence s = ch.asSequence();
-                    Type type = new Type(new Type(options.astClass, decl.baseName()), Utils.camel(decl.baseName()) + (i + 1));
-                    String v = decl.baseName().toLowerCase() + (i + 1);
+                    var s = ch.asSequence();
+                    var type = new Type(new Type(options.astClass, decl.baseName()), Utils.camel(decl.baseName()) + (i + 1));
+                    var v = decl.baseName().toLowerCase() + (i + 1);
                     writer.append("%s %s = res.%s = new %s();", type, v, v, type);
                     for (int j = 0; j < s.size(); j++) {
-                        Name name = s.get(j).asName();
+                        var name = s.get(j).asName();
                         if (name.isToken) {
                             writer.append("%s.%s = node.children.get(%d).token;", v, name.astInfo.varName, j);
                         }
@@ -66,7 +66,7 @@ public class AstBuilderGen {
                     }
                 }
                 else {
-                    Name name = ch.asName();
+                    var name = ch.asName();
                     if (name.isToken) {
                         writer.append("res.%s = node.children.get(0).token;", name.astInfo.varName);
                     }
@@ -83,7 +83,7 @@ public class AstBuilderGen {
 
         writer.append("}");
 
-        File file = new File(options.outDir, "AstBuilder.java");
+        var file = new File(options.outDir, "AstBuilder.java");
         Utils.write(writer.get(), file);
     }
 }

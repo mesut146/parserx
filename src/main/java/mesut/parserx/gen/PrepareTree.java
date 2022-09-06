@@ -27,21 +27,19 @@ public class PrepareTree extends Transformer {
             name.isToken = false;
         }
         else {
-            TokenDecl decl = tree.getToken(name.name);
+            var decl = tree.getToken(name.name);
             if (decl == null) {
                 throw new RuntimeException("invalid reference: " + name.name + " in " + getDecl());
             }
-            else {
-                if (decl == curToken) {
-                    throw new RuntimeException("recursive token reference is not allowed: " + decl);
-                }
-                if (decl.isSkip && curRule != null) {
-                    throw new RuntimeException("skip token inside production is not allowed");
-                }
-                name.isToken = true;
-                if (curToken != null) {
-                    return decl.rhs;
-                }
+            if (decl == curToken) {
+                throw new RuntimeException("recursive token reference is not allowed: " + decl);
+            }
+            if (decl.isSkip && curRule != null) {
+                throw new RuntimeException("skip token inside production is not allowed");
+            }
+            name.isToken = true;
+            if (curToken != null) {
+                return decl.rhs;
             }
         }
         return name;
@@ -58,8 +56,8 @@ public class PrepareTree extends Transformer {
             return new Epsilon();
         }
         if (curRule != null) {
-            String val = node.value;
-            TokenDecl decl = tree.getTokenByValue(val);
+            var val = node.value;
+            var decl = tree.getTokenByValue(val);
             if (decl == null) {
                 throw new RuntimeException("unknown string token: " + val + " in " + getDecl());
             }

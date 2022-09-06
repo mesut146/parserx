@@ -13,8 +13,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
 
-import static mesut.parserx.gen.ll.RecDescent.loopLimit;
-import static mesut.parserx.gen.ll.RecDescent.tokens;
+import static mesut.parserx.gen.ll.RDParserGen.loopLimit;
+import static mesut.parserx.gen.ll.RDParserGen.tokens;
 
 public class JavaRecDescent {
 
@@ -65,7 +65,7 @@ public class JavaRecDescent {
         var file = new File(options.outDir, options.parserClass + ".java");
 
         Utils.write(code.get(), file);
-        genTokenType();
+        genTokenType(tree);
     }
 
     void writeConsume() {
@@ -83,7 +83,8 @@ public class JavaRecDescent {
         code.append("}");
     }
 
-    public void genTokenType() throws IOException {
+    public static void genTokenType(Tree tree) throws IOException {
+        var options=tree.options;
         var c = new CodeWriter(true);
         if (options.packageName != null) {
             c.append("package %s;", options.packageName);

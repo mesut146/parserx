@@ -2,7 +2,7 @@ package parser;
 
 import common.Env;
 import mesut.parserx.gen.Options;
-import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.gen.lr.LrType;
 import mesut.parserx.gen.transform.Factor;
@@ -25,14 +25,14 @@ public class LLGenTest {
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         Factor.debug = true;
         Factor.debugPull = false;
-        RecDescent.gen(tree, "java");
+        RDParserGen.gen(tree, "java");
     }
 
     @Test
     public void cppTarget() throws IOException {
         Tree tree = Env.tree("ll/norm.g");
         tree.options.outDir = Env.dotDir() + "/cpp";
-        RecDescent.gen(tree, "cpp");
+        RDParserGen.gen(tree, "cpp");
     }
 
     @Test
@@ -44,7 +44,7 @@ public class LLGenTest {
         //new Normalizer(tree).normalize();
         //new Factor(tree).factorize();
         //System.out.println(tree);
-        RecDescent.gen(tree, "java");
+        RDParserGen.gen(tree, "java");
     }
 
     @Test
@@ -102,7 +102,7 @@ public class LLGenTest {
         Tree tree = Env.tree("rec/cyc1.g");
         //new Recursion(tree).all();
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        RecDescent.gen(tree, "java");
+        RDParserGen.gen(tree, "java");
     }
 
     @Test

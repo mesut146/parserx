@@ -16,7 +16,7 @@ import java.net.URLClassLoader;
 public class LLDfaTest {
 
     void dot(LLDfaBuilder b) throws IOException {
-        File file = Env.dotFile(Utils.newName(b.tree.file.getName(), ".dot"));
+        var file = Env.dotFile(Utils.newName(b.tree.file.getName(), ".dot"));
         b.dot(new PrintWriter(new FileWriter(file)));
         try {
             Runtime.getRuntime().exec("dot -Tpng -O " + file).waitFor();
@@ -29,8 +29,8 @@ public class LLDfaTest {
 
     void single(String path) throws IOException {
         System.out.println("------------------------------------");
-        Tree tree = Env.tree(path);
-        LLDfaBuilder builder = new LLDfaBuilder(tree);
+        var tree = Env.tree(path);
+        var builder = new LLDfaBuilder(tree);
         builder.factor();
         dot(builder);
         dump(builder);
@@ -47,35 +47,35 @@ public class LLDfaTest {
     }
 
     void dump(LLDfaBuilder b) throws IOException {
-        File file = Env.dotFile(Utils.newName(b.tree.file.getName(), ".dump"));
+        var file = Env.dotFile(Utils.newName(b.tree.file.getName(), ".dump"));
         b.dump(new PrintWriter(new FileWriter(file)));
     }
 
     @Test
     public void parserx() throws Exception {
-        Tree tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
+        var tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         //LLDFAGen.gen(tree, "java");
         Builder.tree(tree).rule("tree").input(Utils.read(tree.file), "").check();
-        LLDfaBuilder builder = new LLDfaBuilder(tree);
+        var builder = new LLDfaBuilder(tree);
         builder.factor();
         dump(builder);
     }
 
     @Test
     public void math() throws Exception {
-        Tree tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
+        var tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
 
         DescTester.check2(Builder.tree(tree).rule("line").input("a+b*c", ""));
-        LLDfaBuilder builder = new LLDfaBuilder(tree);
+        var builder = new LLDfaBuilder(tree);
         //builder.factor();
         dump(builder);
     }
 
     @Test
     public void computeLa() {
-        Tree tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
+        var tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
         System.out.println(LaFinder.computeLa(new Name("regex"), tree));
     }
 
@@ -88,9 +88,29 @@ public class LLDfaTest {
 
     @Test
     public void leftRec() throws Exception {
-        DescTester.check2(Builder.tree("lldfa/left.g").rule("E")
-                .input("b", "E#2{'b'}")
-                .input("ba", ""));
+        //single("lldfa/left.g");
+        single("lldfa/left-indirect2.g");
+//        Builder.tree("lldfa/left.g").rule("E")
+//                .input("b", "E#2{'b'}")
+//                .input("ba", "")
+//                .check();
+//        Builder.tree("lldfa/left.g").rule("A")
+//                .input("c", "A#3{'c'}")
+//                .input("ca", "")
+//                .input("cb", "")
+//                .input("caa", "")
+//                .input("cab", "")
+//                .check();
+//        Builder.tree("lldfa/left-indirect.g").rule("A")
+//                .input("b", "A#2{'b'}")
+//                .input("da", "A#1{B#2{'d'}, 'a'}")
+//                //.input("bca","")
+//                //.input("daca","")
+//                //.input("bcaca","")
+//                .check();
+        Builder.tree("lldfa/left-indirect2.g").rule("A")
+                .input("xdbdb", "")
+                .check();
     }
 
     @Test
@@ -129,20 +149,23 @@ public class LLDfaTest {
 
     @Test
     public void sr() throws Exception {
-        DescTester.check(Builder.tree("lldfa/sr.g").rule("E").
-                input("abcdx", "E#1{A{'a'}, C#1{'b'}, 'c', 'd', 'x'}").
-                input("aecdx", "E#1{A{'a'}, C#2{'e'}, 'c', 'd', 'x'}").
-                input("abcdy", "E#2{'a', B{'b'}, 'c', 'd', 'y'}"));
+        Builder.tree("lldfa/sr.g").rule("E")
+                .input("abcdx", "E#1{A{'a'}, C#1{'b'}, 'c', 'd', 'x'}")
+                .input("aecdx", "E#1{A{'a'}, C#2{'e'}, 'c', 'd', 'x'}")
+                .input("abcdy", "E#2{'a', B{'b'}, 'c', 'd', 'y'}")
+                .check();
 
-        DescTester.check(Builder.tree("lldfa/sr2.g").rule("E").
-                input("abcx", "E#1{A{'a', 'b'}, 'c', 'x'}").
-                input("abcy", "E#2{B{'a', 'b', 'c'}, 'y'}"));
+        Builder.tree("lldfa/sr2.g").rule("E")
+                .input("abcx", "E#1{A{'a', 'b'}, 'c', 'x'}")
+                .input("abcy", "E#2{B{'a', 'b', 'c'}, 'y'}")
+                .check();
 
-        DescTester.check(Builder.tree("lldfa/sr-loop.g").rule("E").
-                input("abcx", "E#1{[A{C{'a', 'b'}, 'c'}], 'x'}").
-                input("abcabcx", "E#1{[A{C{'a', 'b'}, 'c'}, A{C{'a', 'b'}, 'c'}], 'x'}").
-                input("abcy", "E#2{[B{'a', 'b', 'c'}], 'y'}").
-                input("abcabcy", "E#2{[B{'a', 'b', 'c'}, B{'a', 'b', 'c'}], 'y'}"));
+        Builder.tree("lldfa/sr-loop.g").rule("E")
+                .input("abcx", "E#1{[A{C{'a', 'b'}, 'c'}], 'x'}")
+                .input("abcabcx", "E#1{[A{C{'a', 'b'}, 'c'}, A{C{'a', 'b'}, 'c'}], 'x'}")
+                .input("abcy", "E#2{[B{'a', 'b', 'c'}], 'y'}")
+                .input("abcabcy", "E#2{[B{'a', 'b', 'c'}, B{'a', 'b', 'c'}], 'y'}")
+                .check();
     }
 
     @Test
@@ -159,26 +182,26 @@ public class LLDfaTest {
 
     @Test
     public void multi() throws Exception {
-        Builder.tree("lldfa/multi-sym.g").rule("E").
-                input("ax", "E#1{'a', 'x'}").
-                input("ay", "E#2{'a', 'y'}").
-                input("zpt", "E#3{A{'z'}, [B#1{'p'}, B#2{'t'}]}").
-                input("zptc", "E#3{A{'z'}, [B#1{'p'}, B#2{'t'}], 'c'}").
-                rule("F").
-                input("abx", "F#1{'a', 'b', 'x'}").
-                input("bx", "F#1{'b', 'x'}").
-                input("by", "F#2{'b', 'y'}").check();
+        Builder.tree("lldfa/multi-sym.g").rule("E")
+                .input("ax", "E#1{'a', 'x'}")
+                .input("ay", "E#2{'a', 'y'}")
+                .input("zpt", "E#3{A{'z'}, [B#1{'p'}, B#2{'t'}]}")
+                .input("zptc", "E#3{A{'z'}, [B#1{'p'}, B#2{'t'}], 'c'}")
+                .rule("F")
+                .input("abx", "F#1{'a', 'b', 'x'}")
+                .input("bx", "F#1{'b', 'x'}")
+                .input("by", "F#2{'b', 'y'}").check();
     }
 
     @Test
     public void emitter() throws IOException {
         //Tree tree = Env.tree("lldfa/factor.g");
-        Tree tree = Env.tree("rec/cyc.g");
+        var tree = Env.tree("rec/cyc.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         LLDfaBuilder builder = new LLDfaBuilder(tree);
         builder.factor();
 
-        GrammarEmitter emitter = new GrammarEmitter(builder);
+        var emitter = new GrammarEmitter(builder);
         emitter.emitFor("A");
         tree.file = new File(tree.file.getParent(), Utils.newName(tree.file.getName(), "-emit.g"));
         builder.tree = tree;
@@ -191,17 +214,17 @@ public class LLDfaTest {
         tree.options.outDir = Env.dotDir().getAbsolutePath();
         LexerGenerator.gen(tree, "java");
         CcGenJava.writeTS(tree.options);
-        URLClassLoader cl = new URLClassLoader(new URL[]{Env.dotDir().toURI().toURL()});
-        Class<?> lexerCls = cl.loadClass("Lexer");
+        var cl = new URLClassLoader(new URL[]{Env.dotDir().toURI().toURL()});
+        var lexerCls = cl.loadClass("Lexer");
         var lexerCons = lexerCls.getDeclaredConstructor(Reader.class);
         var lexer = lexerCons.newInstance(new StringReader("abc"));
 
-        Class<?> tsCls = cl.loadClass("TokenStream");
+        var tsCls = cl.loadClass("TokenStream");
         var tsCons = tsCls.getDeclaredConstructor(lexerCls);
         var ts = tsCons.newInstance(lexer);
         var mark = tsCls.getDeclaredMethod("mark");
         var unmark = tsCls.getDeclaredMethod("unmark");
-        Method method = tsCls.getDeclaredMethod("consume", int.class, String.class);
+        var method = tsCls.getDeclaredMethod("consume", int.class, String.class);
         var res = method.invoke(ts, 0, "");
         cl.close();
     }
@@ -217,13 +240,14 @@ public class LLDfaTest {
 //                input("ady", "E#2{A#1{'a'}, D#2{'d'}, 'y'}").
 //                input("bcy", "E#2{A#2{'b'}, D#1{'c'}, 'y'}").
 //                input("bdy", "E#2{A#2{'b'}, D#2{'d'}, 'y'}"));
-        DescTester.check2(Builder.tree("lldfa/rr-loop.g").rule("E").
-                input("x", "E#1{'x'}").
-                input("y", "E#2{'y'}").
-                input("ax", "E#1{[A#1{'a'}], 'x'}").
-                input("ababx", "E#1{[A#1{'a'}, A#2{'b'}, A#1{'a'}, A#2{'b'}], 'x'}").
-                input("ay", "E#2{[B#1{'a'}], 'y'}").
-                input("bbaay", "E#2{[B#2{'b'}, B#2{'b'}, B#1{'a'}, B#1{'a'}], 'y'}"));
+        Builder.tree("lldfa/rr-loop.g").rule("E")
+                .input("x", "E#1{'x'}")
+                .input("y", "E#2{'y'}")
+                .input("ax", "E#1{[A#1{'a'}], 'x'}")
+                .input("ababx", "E#1{[A#1{'a'}, A#2{'b'}, A#1{'a'}, A#2{'b'}], 'x'}")
+                .input("ay", "E#2{[B#1{'a'}], 'y'}")
+                .input("bbaay", "E#2{[B#2{'b'}, B#2{'b'}, B#1{'a'}, B#1{'a'}], 'y'}")
+                .check();
         DescTester.check2(Builder.tree("lldfa/rr-loop.g").rule("F").
                 input("x", "F#1{X{'x'}}").
                 input("y", "F#2{Y{'y'}}").

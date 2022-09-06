@@ -44,12 +44,12 @@ public class LrTester {
     }
 
     public static void check0(Tree tree, boolean isAst, List<String> args) throws Exception {
-        String cls = "LrTester.java";
-        File tester = new File(Env.dotDir(), cls);
+        var cls = "LrTester.java";
+        var tester = new File(Env.dotDir(), cls);
         Utils.copy(Env.getResFile(cls + ".1"), tester);
-        String outDir = Env.dotDir().getAbsolutePath();
+        var outDir = Env.dotDir().getAbsolutePath();
 
-        File out = new File(outDir, "out");
+        var out = new File(outDir, "out");
         if (out.exists()) {
             Files.walkFileTree(out.toPath(), new SimpleFileVisitor<Path>() {
                 @Override
@@ -62,10 +62,10 @@ public class LrTester {
         }
         out.mkdir();
 
-        ProcessBuilder builder = new ProcessBuilder("javac", "-d", "./out", cls);
+        var builder = new ProcessBuilder("javac", "-d", "./out", cls);
         builder.directory(new File(outDir));
         builder.redirectErrorStream(true);
-        Process p = builder.start();
+        var p = builder.start();
         if (p.waitFor() != 0) {
             System.out.println(Utils.read(p.getInputStream()));
             throw new RuntimeException("cant compile " + tree.file.getName());

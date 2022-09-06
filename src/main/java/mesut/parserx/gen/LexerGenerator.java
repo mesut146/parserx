@@ -14,6 +14,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public class LexerGenerator {
     public IdMap idMap = new IdMap();
@@ -104,7 +105,7 @@ public class LexerGenerator {
             }
         }
         //sort tokens by id
-        tokens = new TreeSet<>(Comparator.comparing(Map.Entry::getValue));
+        tokens = new TreeSet<>(Map.Entry.comparingByValue());
         for (var entry : idMap.map.entrySet()) {
             if (entry.getKey().isToken) {
                 tokens.add(entry);

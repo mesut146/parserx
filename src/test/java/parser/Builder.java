@@ -19,7 +19,7 @@ public class Builder {
     }
 
     public static Builder tree(String name) {
-        Builder res = new Builder();
+        var res = new Builder();
         try {
             res.tree = Env.tree(name);
         } catch (IOException e) {
@@ -29,7 +29,7 @@ public class Builder {
     }
 
     public static Builder tree(Tree tree) {
-        Builder res = new Builder();
+        var res = new Builder();
         res.tree = tree;
         return res;
     }
@@ -40,7 +40,7 @@ public class Builder {
     }
 
     public Builder input(String input, String expected) {
-        RuleInfo info = new RuleInfo();
+        var info = new RuleInfo();
         info.input = input;
         info.expected = expected;
         info.rule = curRule;

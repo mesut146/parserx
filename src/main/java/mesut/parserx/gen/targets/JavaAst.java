@@ -3,7 +3,7 @@ package mesut.parserx.gen.targets;
 import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.Normalizer;
-import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.ll.Type;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
@@ -117,7 +117,7 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
             if (ch.isEpsilon()) continue;
             //in case of factorization pre-write some code
             ch.astInfo.which = id;
-            if (options.useSimple && RecDescent.isSimple(ch)) {
+            if (options.useSimple && RDParserGen.isSimple(ch)) {
                 ch.accept(this, arg);
             }
             else {
@@ -139,7 +139,7 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
     void orInit(Or or) {
         for (var ch : or) {
             if (ch.isEpsilon()) continue;
-            if (options.useSimple && RecDescent.isSimple(ch)) {
+            if (options.useSimple && RDParserGen.isSimple(ch)) {
             }
             else {
                 //sequence

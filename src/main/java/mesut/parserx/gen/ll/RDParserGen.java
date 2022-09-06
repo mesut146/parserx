@@ -6,7 +6,6 @@ import mesut.parserx.gen.targets.CppRecDescent;
 import mesut.parserx.gen.targets.JavaRecDescent;
 import mesut.parserx.gen.transform.*;
 import mesut.parserx.nodes.Node;
-import mesut.parserx.nodes.Regex;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 
@@ -14,7 +13,7 @@ import java.io.File;
 import java.io.IOException;
 
 // ll(1) recursive descent parser generator
-public class RecDescent {
+public class RDParserGen {
     public static boolean debug = false;
     public static int loopLimit = 10;
     public static String tokens = "Tokens";
@@ -22,13 +21,13 @@ public class RecDescent {
     Tree tree;
     String target;
 
-    public RecDescent(Tree tree) {
+    public RDParserGen(Tree tree) {
         this.tree = tree;
         this.options = tree.options;
     }
 
-    public static RecDescent gen(Tree tree, String target) throws IOException {
-        var recDescent = new RecDescent(tree);
+    public static RDParserGen gen(Tree tree, String target) throws IOException {
+        var recDescent = new RDParserGen(tree);
         recDescent.target = target;
         recDescent.gen();
         return recDescent;

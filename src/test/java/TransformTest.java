@@ -1,6 +1,6 @@
 import common.Env;
 import mesut.parserx.gen.ll.DotBuilder;
-import mesut.parserx.gen.ll.RecDescent;
+import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.transform.*;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.Tree;
@@ -96,7 +96,7 @@ public class TransformTest {
         Factor.debug = true;
         Tree tree = Env.tree("greedy/rec.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        RecDescent.gen(tree, "java");
+        RDParserGen.gen(tree, "java");
     }
 
     @Test

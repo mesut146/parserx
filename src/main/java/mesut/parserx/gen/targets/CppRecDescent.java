@@ -13,8 +13,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
 
-import static mesut.parserx.gen.ll.RecDescent.loopLimit;
-import static mesut.parserx.gen.ll.RecDescent.tokens;
+import static mesut.parserx.gen.ll.RDParserGen.loopLimit;
+import static mesut.parserx.gen.ll.RDParserGen.tokens;
 
 public class CppRecDescent {
     public Options options;
