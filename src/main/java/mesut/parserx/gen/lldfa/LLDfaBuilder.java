@@ -325,6 +325,27 @@ public class LLDfaBuilder {
         return null;
     }
 
+    public void dump2(PrintWriter w) {
+        for (var e : rules.entrySet()) {
+            w.println("//" + e.getKey());
+            for (var set : e.getValue()) {
+                w.printf("S%d: ", set.stateId);
+                int i = 0;
+                for (var tr : set.transitions) {
+                    if (i>0){
+                        w.print(" | ");
+                    }
+                    w.printf("%s S%d", tr.symbol.toString(), tr.target.stateId);
+                    i++;
+                }
+                w.println(";");
+            }
+            w.println();
+        }
+        w.flush();
+        w.close();
+    }
+
     public void dump(PrintWriter w) {
         for (var e : this.rules.entrySet()) {
             w.println("----------------------------------");

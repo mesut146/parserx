@@ -48,7 +48,9 @@ public class LLDfaTest {
 
     void dump(LLDfaBuilder b) throws IOException {
         var file = Env.dotFile(Utils.newName(b.tree.file.getName(), ".dump"));
+        var file2 = Env.dotFile(Utils.newName(b.tree.file.getName(), ".dump2"));
         b.dump(new PrintWriter(new FileWriter(file)));
+        b.dump2(new PrintWriter(new FileWriter(file2)));
     }
 
     @Test
@@ -90,6 +92,7 @@ public class LLDfaTest {
     public void leftRec() throws Exception {
         //single("lldfa/left.g");
         single("lldfa/left-indirect2.g");
+        single("lldfa/left-indirect3.g");
 //        Builder.tree("lldfa/left.g").rule("E")
 //                .input("b", "E#2{'b'}")
 //                .input("ba", "")
@@ -108,9 +111,9 @@ public class LLDfaTest {
 //                //.input("daca","")
 //                //.input("bcaca","")
 //                .check();
-        Builder.tree("lldfa/left-indirect2.g").rule("A")
-                .input("xdbdb", "")
-                .check();
+//        Builder.tree("lldfa/left-indirect2.g").rule("A")
+//                .input("xdbdb", "")
+//                .check();
     }
 
     @Test
