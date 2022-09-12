@@ -11,17 +11,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 //cst to ast
-public class AstBuilder {
+public class AstVisitor {
 
     public static Tree makeTree(String data) throws IOException {
         Parser parser = new Parser(new Lexer(new StringReader(data)));
-        return new AstBuilder().visitTree(parser.tree());
+        return new AstVisitor().visitTree(parser.tree());
     }
 
     public static Tree makeTree(File path) throws IOException {
         Lexer.bufSize = (int) path.length() + 1;
         Parser parser = new Parser(new Lexer(new FileReader(path)));
-        Tree tree = new AstBuilder().visitTree(parser.tree());
+        Tree tree = new AstVisitor().visitTree(parser.tree());
         tree.file = path;
         tree.resolveIncludes();
         return tree;

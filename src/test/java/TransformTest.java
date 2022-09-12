@@ -6,6 +6,7 @@ import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.Tree;
 import org.junit.Ignore;
 import org.junit.Test;
+import parser.Builder;
 import parser.DescTester;
 
 import java.io.FileWriter;
@@ -101,8 +102,16 @@ public class TransformTest {
 
     @Test
     public void greedy() throws Exception {
-        DescTester.check(Env.tree("greedy/b.g"), "E", "ca", "caba");
-        DescTester.check(Env.tree("greedy/a.g"), "E", "cya", "cydda", "cyfa", "cyfdda", "cyaeba");
-        //DescTester.check(Env.tree("greedy/rec.g"), "E", "ba", "baa");
+        Builder.tree("greedy/b.g").rule("E")
+                .input("ca", "")
+                .input("caba", "")
+                .check();
+        Builder.tree("greedy/a.g").rule("E")
+                .input("cya", "")
+                .input("cydda", "")
+                .input("cyfa", "")
+                .input("cyfdda", "")
+                .input("cyaeba", "")
+                .check();
     }
 }

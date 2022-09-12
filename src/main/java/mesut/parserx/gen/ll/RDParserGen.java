@@ -38,6 +38,10 @@ public class RDParserGen {
             var regex = node.asRegex();
             return regex.node.isName();
         }
+        else if (node.isSequence()) {
+            var seq = node.asSequence();
+            return seq.size() == 1 && isSimple(seq.get(0));
+        }
         return node.isName();
     }
 

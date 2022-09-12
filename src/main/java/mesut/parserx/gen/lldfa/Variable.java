@@ -2,10 +2,11 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.ll.Type;
 
+import java.util.List;
 import java.util.Set;
 
 public class Variable {
-    public Set<Item> children;//children of holder
+    public List<Item> children;//children of holder
     public Type type;
     public String name;
     public Item item;
@@ -28,7 +29,7 @@ public class Variable {
     }
 
     //holder
-    public Variable(Type type, String name, Set<Item> children) {
+    public Variable(Type type, String name, List<Item> children) {
         this.type = type;
         this.name = name;
         this.children = children;

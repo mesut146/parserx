@@ -7,6 +7,7 @@ import mesut.parserx.nodes.*;
 import java.util.*;
 
 public class Item {
+    public static boolean printLa = true;
     public RuleDecl rule;
     public int dotPos;
     public Set<Name> lookAhead = new TreeSet<>();
@@ -17,7 +18,7 @@ public class Item {
     public List<Item> senders = new ArrayList<>();//prev item
     public Item next;
     public List<Item> reduceParent = new ArrayList<>();
-    public Set<Item> siblings = new HashSet<>();
+    public List<Item> siblings = new ArrayList<>();
     public Item reduceChild;
     public boolean advanced = false;//dot star but advanced
     public ItemSet itemSet;
@@ -76,6 +77,7 @@ public class Item {
         return lookAhead.isEmpty();
     }
 
+
     @Override
     public String toString() {
         var sb = new StringBuilder();
@@ -97,7 +99,7 @@ public class Item {
         if (rhs.size() == dotPos) {
             sb.append(".");
         }
-        if (!isLr0()) {
+        if (!isLr0() && printLa) {
             sb.append(" , ");
             sb.append(NodeList.join(new ArrayList<>(lookAhead), "/"));
         }
@@ -122,7 +124,7 @@ public class Item {
         if (rhs.size() == dotPos) {
             sb.append(".");
         }
-        if (!isLr0()) {
+        if (!isLr0() && printLa) {
             sb.append(" , ");
             for (var it = lookAhead.iterator(); it.hasNext(); ) {
                 var la = it.next();
@@ -130,19 +132,28 @@ public class Item {
                     sb.append(la);
                 }
                 else {
-                    var decl = tree.getToken(la.name);
-                    if (decl.rhs.isString()) {
-                        sb.append(decl.rhs.asString().value);
-                    }
-                    else {
-                        sb.append(la);
-                    }
+                    sb.append(printLa(la, tree));
                 }
                 if (it.hasNext()) sb.append("/");
             }
         }
         sb.append(" ").append(ids);
         return sb.toString();
+    }
+
+    //return shortest repr
+    String printLa(Name la, Tree tree) {
+        if (la.isRule()) return la.name;
+        var token = tree.getToken(la.name);
+        var rhs = token.rhs.isSequence() ? token.rhs.asSequence().get(0) : token.rhs;
+        if (!rhs.isString()) return la.name;
+        var str = rhs.asString().value;
+        if (str.length() < la.name.length()) {
+            return str;
+        }
+        else {
+            return la.name;
+        }
     }
 
 
@@ -203,12 +214,13 @@ public class Item {
 
     //without lookahead
     public boolean isSame(Item other) {
-        return dotPos == other.dotPos && Objects.equals(rule, other.rule);
+        return dotPos == other.dotPos && rule.equals(other.rule);
     }
 
     @Override
     public int hashCode() {
         //lookahead may change later so consider initial set
-        return Objects.hash(rule, dotPos, lookAhead);
+        //return Objects.hash(rule, dotPos, lookAhead);
+        return Objects.hash(rule, dotPos, ids);
     }
 }

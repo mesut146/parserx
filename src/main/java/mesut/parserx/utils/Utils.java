@@ -1,7 +1,7 @@
 package mesut.parserx.utils;
 
 import mesut.parserx.nodes.*;
-import mesut.parserx.parser.AstBuilder;
+import mesut.parserx.parser.AstVisitor;
 import mesut.parserx.regex.parser.RegexVisitor;
 
 import java.io.*;
@@ -21,14 +21,14 @@ public class Utils {
     }
 
     public static Tree fromGrammar(String grammar) throws IOException {
-        Tree tree = AstBuilder.makeTree(grammar);
+        Tree tree = AstVisitor.makeTree(grammar);
         makeTokens(tree, false);
         return tree;
     }
 
     public static Tree makeTokenLessTree(String grammar, boolean fromRegex) {
         try {
-            Tree tree = AstBuilder.makeTree(grammar);
+            Tree tree = AstVisitor.makeTree(grammar);
             makeTokens(tree, fromRegex);
             return tree;
         } catch (Exception e) {

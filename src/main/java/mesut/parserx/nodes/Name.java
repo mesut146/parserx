@@ -26,7 +26,7 @@ public class Name extends Node implements Comparable<Name> {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         //sb.append(varString());
         sb.append(name);
         if (!args.isEmpty()) {
@@ -53,7 +53,7 @@ public class Name extends Node implements Comparable<Name> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Name name = (Name) o;
+        var name = (Name) o;
         return isToken == name.isToken &&
                 Objects.equals(this.name, name.name);
     }

@@ -366,6 +366,7 @@ public class LLDfaBuilder {
         w.close();
     }
 
+
     public void dot(PrintWriter w) {
         w.println("digraph G{");
         w.println("rankdir = TD");
@@ -377,7 +378,7 @@ public class LLDfaBuilder {
                 //items
                 sb.append("<");
                 for (var it : set.all) {
-                    var line = it.toString();
+                    var line = it.toString2(tree);
                     line = line.replace(">", "&gt;");
                     if (it.isReduce(tree)) {
                         sb.append("<FONT color=\"blue\">");

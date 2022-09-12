@@ -17,17 +17,6 @@ import java.io.IOException;
 
 public class LLGenTest {
 
-    //todo
-    @Test
-    public void name() throws IOException {
-        String path = "/home/mesut/Desktop/lang/grammar/Parser.g";
-        Tree tree = Tree.makeTree(new File(path));
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        Factor.debug = true;
-        Factor.debugPull = false;
-        RDParserGen.gen(tree, "java");
-    }
-
     @Test
     public void cppTarget() throws IOException {
         Tree tree = Env.tree("ll/norm.g");

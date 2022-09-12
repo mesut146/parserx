@@ -1,6 +1,7 @@
 package parser;
 
 import common.Env;
+import lexer.RealTest;
 import mesut.parserx.gen.ll.DotBuilder;
 import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.lldfa.CcGenJava;
@@ -24,9 +25,81 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 
 public class DescTester {
     public static boolean dump = true;
+
+
+    public static void checkTokens(Builder builder) throws Exception {
+        var tester = new File(Env.dotDir(), "DescTester.java");
+        Utils.copy(Env.getResFile("DescTester.java.2"), tester);
+        var outDir = Env.dotDir().getAbsolutePath();
+        var tree = builder.tree;
+        tree.options.outDir = outDir;
+        if (dump) {
+            tree.options.dump = true;
+        }
+        //RecDescent.gen(tree, "java");
+        //new CcGenJava(tree).gen();
+        ParserGen.gen(tree, "java");
+
+        File out = new File(outDir, "out");
+        if (out.exists()) {
+            Files.walkFileTree(out.toPath(), new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return super.visitFile(file, attrs);
+                }
+            });
+            out.delete();
+        }
+        out.mkdir();
+
+        var javac = new ProcessBuilder("javac", "-d", "./out", tester.getName());
+        javac.directory(new File(outDir));
+        javac.redirectErrorStream(true);
+        Process p = javac.start();
+        if (p.waitFor() != 0) {
+            System.out.println(Utils.read(p.getInputStream()));
+            throw new RuntimeException("cant compile " + tree.file.getName());
+        }
+        var cl = new URLClassLoader(new URL[]{out.toURI().toURL()});
+        var cls = cl.loadClass("DescTester");
+        var method = cls.getDeclaredMethod("test", String.class, String.class);
+        for (var info : builder.cases) {
+            try {
+                String res = method.invoke(null, info.rule, Utils.read(new File(info.input))).toString();
+                //RealTest.check(tree, true, info.input);
+                System.out.println(res);
+                System.out.println(extractTokens(res));
+            } catch (Throwable e) {
+                System.err.println("in tree " + tree.file.getName());
+                System.err.println("err for input: " + info.input);
+                throw e;
+            }
+        }
+        cl.close();
+    }
+
+    static List<String> extractTokens(String out) {
+        int pos = 0;
+        var list = new ArrayList<String>();
+        while (true) {
+            int quote = out.indexOf("'", pos);
+            if (quote == -1) break;
+            if (out.charAt(quote - 1) == '\\') break;
+            var end = out.indexOf("'", quote + 1);
+            while (out.charAt(end - 1) == '\\') {
+                end = out.indexOf("'", end + 1);
+            }
+            list.add(out.substring(quote + 1, end));
+            System.out.println(list.get(list.size() - 1));
+            pos = end + 1;
+        }
+        return list;
+    }
 
     public static void check(Builder builder) throws Exception {
         var tester = new File(Env.dotDir(), "DescTester.java");

@@ -277,10 +277,6 @@ public class JavaGen {
         w.append("}");
     }
 
-    boolean isLeft(Item item) {
-        var set = FirstSet.firstSet(item.rhs, tree);
-        return set.contains(item.rule.ref);
-    }
 
     void initLocals() {
         for (var entry : builder.rules.entrySet()) {
@@ -340,40 +336,56 @@ public class JavaGen {
         curSet = set;
         for (var tr : set.transitions) {
             if (tr.target.transitions.isEmpty()) continue;//inlined no params
-            if (tr.symbol.isName() && tr.symbol.asName().isToken) {
-                var sym = tr.symbol.asName();
-                var locals = nameMap.get(set.stateId).get(sym);
-                locals = locals.stream().filter(v -> !v.isHolder()).collect(Collectors.toList());
-                if (paramMap.containsKey(tr.target.stateId)) {
-                    //check local overlaps param
-                    handleOverlap(tr.target, locals);
-                }
-                else {
-                    //check local overlaps param
-                    //check cur param overlaps param
-                    //transfer
-                    //init target params
-                    List<Variable> params = new ArrayList<>();
-                    //cur params+locals
-                    int cnt = 0;
-                    if (paramMap.containsKey(set.stateId)) {
-                        for (var param : paramMap.get(set.stateId)) {
-                            if (isReduced(param)) continue;
-                            params.add(makeParam(param, "p" + cnt++));
-                        }
-                    }
-                    for (var local : locals) {
-                        //overlap
-                        params.add(makeParam(local, "p" + cnt++));
-                    }
-                    paramMap.put(tr.target.stateId, params);
-                }
+            if (!tr.symbol.isName() || !tr.symbol.asName().isToken) {
+                //multisym
+                //redirect params
+                List<Variable> params = new ArrayList<>();
+                //cur params+locals
+                int cnt = 0;
                 if (paramMap.containsKey(set.stateId)) {
-                    handleOverlap(tr.target, paramMap.get(set.stateId));
+                    for (var param : paramMap.get(set.stateId)) {
+                        if (isReduced(param)) continue;
+                        params.add(makeParam(param, "p" + cnt++));
+                    }
                 }
+                paramMap.put(tr.target.stateId, params);
+                if (nameMap.containsKey(set.stateId) && !nameMap.get(set.stateId).isEmpty()) {
+                    throw new RuntimeException("multisym has locals");
+                }
+                continue;
+            }
+            var sym = tr.symbol.asName();
+            var locals = nameMap.get(set.stateId).get(sym);
+            if (!options.useSimple) {
+                locals = locals.stream().filter(v -> !v.isHolder()).collect(Collectors.toList());
+            }
+
+            if (paramMap.containsKey(tr.target.stateId)) {
+                //check local overlaps param
+                handleOverlap(tr.target, locals);
             }
             else {
-                //multisym
+                //check local overlaps param
+                //check cur param overlaps param
+                //transfer
+                //init target params
+                List<Variable> params = new ArrayList<>();
+                //cur params+locals
+                int cnt = 0;
+                if (paramMap.containsKey(set.stateId)) {
+                    for (var param : paramMap.get(set.stateId)) {
+                        if (isReduced(param)) continue;
+                        params.add(makeParam(param, "p" + cnt++));
+                    }
+                }
+                for (var local : locals) {
+                    //overlap
+                    params.add(makeParam(local, "p" + cnt++));
+                }
+                paramMap.put(tr.target.stateId, params);
+            }
+            if (paramMap.containsKey(set.stateId)) {
+                handleOverlap(tr.target, paramMap.get(set.stateId));
             }
         }
     }
@@ -383,12 +395,7 @@ public class JavaGen {
             return new Variable(v.type, name, v.children);
         }
         else {
-            if (v.holder == null) {
-                return new Variable(v.type, name, v.item);
-            }
-            else {
-                return new Variable(v.type, name, v.item, v.holder);
-            }
+            return new Variable(v.type, name, v.item, v.holder);
         }
     }
 
@@ -406,6 +413,7 @@ public class JavaGen {
         for (var prm : paramMap.get(target.stateId)) {
             //if two item overlap, convert it to stack
             for (var local : locals) {
+                if (local.isHolder() || prm.isHolder()) continue;
                 if (overlap(local.item, prm.item)) {
                     prm.isArray = true;
                     throw new RuntimeException("overlap");
@@ -441,6 +449,9 @@ public class JavaGen {
                     vars.add(holder);
                     done.add(item.rule.baseName());
                     holderMap.put(holder.type, holder);
+                }
+                if (options.useSimple && RDParserGen.isSimple(item.rhs)) {
+                    continue;
                 }
                 //alt
                 String name = "v" + cnt++;
@@ -550,20 +561,10 @@ public class JavaGen {
         var sb = new StringBuilder();
         var first = true;
         for (var prm : targetParams) {
+            if (prm.isHolder()) continue;
             //locate by item
             if (!first) sb.append(", ");
             var takeover = false;
-//            for (Variable local : nameMap.get(curSet.stateId).get(sym)) {
-//                if (local.item == null || prm.item == null) continue;
-//                if (sameItem(local.item, prm.item)) {
-//                    sb.append(getBoth(local.item, sym));
-//                    //local var(local.item) takeover param(prm.item)
-//                    takeover = true;
-//                    //reduce old item, since we'll lose it and no way to reduce it later
-//                    writeAs(prm.item, sym, to);
-//                    break;
-//                }
-//            }
             if (!takeover) {
                 String name = getLocal(prm.item, sym, false);//local has priority
                 if (name == null) name = getParam(prm.item);
@@ -572,12 +573,6 @@ public class JavaGen {
             first = false;
         }
         return sb.toString();
-    }
-
-    void writeAs(Item item, Node sym, CodeWriter w) {
-        String holder = getHolder(item, sym);
-        w.append("%s.which = %d;", holder, item.rule.which);
-        w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getBoth(item, sym));
     }
 
     boolean isReduced(Variable param) {
@@ -589,29 +584,6 @@ public class JavaGen {
             if (sameItem(item, param.item)) return true;
         }
         return false;
-    }
-
-    Set<Variable> filterReduced() {
-        Set<Variable> res = new HashSet<>();
-        for (var item : curSet.all) {
-            if (!item.isReduce(tree)) continue;
-            //mark holder
-            for (Variable v : paramMap.get(curSet.stateId)) {
-                //remove holder
-                if (v.item == null && v.type.equals(item.rule.retType)) {
-                    res.add(v);
-                }
-                //alt
-                if (v.item != null && item.isAlt() && v.type.equals(item.rule.rhs.astInfo.nodeType)) {
-                    res.add(v);
-                }
-                //normal
-                if (v.item != null && !item.isAlt() && v.type.equals(item.rule.rhs.astInfo.nodeType)) {
-                    res.add(v);
-                }
-            }
-        }
-        return res;
     }
 
     boolean hasCommon(Set<Integer> s1, Set<Integer> s2) {
@@ -653,6 +625,7 @@ public class JavaGen {
     String getParam(Item item) {
         if (!paramMap.containsKey(curSet.stateId)) return null;
         for (var v : paramMap.get(curSet.stateId)) {
+            if (v.isHolder()) continue;
             if (v.item.rule.equals(item.rule) && sameItem(v.item, item)) {
                 return v.name;
             }
@@ -669,6 +642,10 @@ public class JavaGen {
 
 
     String getBoth(Item item, Node sym) {
+        if (item.isAlt() && options.useSimple && RDParserGen.isSimple(item.rhs)) {
+            //throw new RuntimeException("simple");
+            return holderVar(item, sym).name;
+        }
         var res = getLocal(item, sym, false);
         if (res == null) res = getParam(item);
         if (res == null) {
@@ -711,7 +688,7 @@ public class JavaGen {
                     for (var sender : item.senders) {
                         var node = has(sender, item.rule.ref);
                         var senderName = getExact(sender, sym);
-                        var name = holderVar(item, sym);
+                        var name = holderVar(item, sym).name;
                         assignStr(w, senderName, name, node);
                     }
                 }
@@ -734,21 +711,21 @@ public class JavaGen {
         return getBoth(item, sym) + ".holder";
     }
 
-    String holderVar(Item item, Node sym) {
+    Variable holderVar(Item item, Node sym) {
         if (nameMap.containsKey(curSet.stateId)) {
             for (var v : nameMap.get(curSet.stateId).get(sym)) {
                 if (v.isHolder() && v.children.contains(item)) {
-                    return v.name;
+                    return v;
                 }
             }
         }
-//        if (paramMap.containsKey(curSet.stateId)) {
-//            for (Variable v : paramMap.get(curSet.stateId)) {
-//                if (v.item == null && v.children.contains(item)) {
-//                    return v.name;
-//                }
-//            }
-//        }
+        if (paramMap.containsKey(curSet.stateId)) {
+            for (var v : paramMap.get(curSet.stateId)) {
+                if (v.isHolder() && v.children.contains(item)) {
+                    return v;
+                }
+            }
+        }
         return null;
     }
 
@@ -772,38 +749,6 @@ public class JavaGen {
             w.append("if(%s){", JavaRecDescent.loopExpr(la));
             for (var item : e.getValue()) {
                 if (!item.isAlt()) continue;//only alts have assign
-                w.append("//red");
-                if (isLeft(item)) {
-                    boolean direct = false;
-                    for (var es : item.getSyms(tree)) {
-                        var sym = ItemSet.sym(es.getKey());
-                        if (sym.equals(item.rule.ref)) {
-                            direct = true;
-                            break;
-                        }
-                    }
-                    w.append("//left");
-                    //save primary
-                    var name = getParam(item);
-                    if (!direct){
-
-                    }
-                    w.append("%s tmp = new %s();", item.rule.retType, item.rule.retType);
-                    w.append("tmp.which = %s.holder.which;", name);
-                    w.append("switch(%s.holder.which){", name);
-                    int i = 1;
-                    for (var ch : item.siblings) {
-                        w.append("case %s:{", i);
-                        w.append("tmp.%s = %s.holder.%s;", ch.rhs.astInfo.varName, name, ch.rhs.astInfo.varName);
-                        //w.append("%s.%s = tmp;",name,);
-                        w.append("}");
-                        i++;
-                    }
-                    w.append("}");
-                }
-                else {
-
-                }
                 String holder = getHolder(item, null);
                 w.append("%s.which = %d;", holder, item.rule.which);
                 w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getParam(item));
@@ -819,7 +764,10 @@ public class JavaGen {
             if (!item.isReduce(tree)) continue;
             if (!item.isAlt()) continue;//only alts have assign
             w.append("if(%s){", JavaRecDescent.loopExpr(item.lookAhead));
+            var backup = curSet;
+            curSet = set;
             var holder = getHolder(item, sym);
+            curSet = backup;
             w.append("%s.which = %d;", holder, item.rule.which);
             w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getBoth(item, sym));//todo
             if (!curSet.isStart && item.isFinalReduce(tree)) {

@@ -84,9 +84,9 @@ public class LexerGenTest {
 
     @Test
     public void itself() throws Exception {
-        var grammar = new File("./src/main/grammar/parserx2.g");
+        var grammar = new File("./src/main/grammar/parserx.g");
         Tree tree = Tree.makeTree(grammar);
-        RealTest.check(tree, grammar.getAbsolutePath());
+        RealTest.check(tree, true, grammar.getAbsolutePath());
     }
 
     @Test
@@ -108,7 +108,6 @@ public class LexerGenTest {
     }
 
     @Test
-    @Ignore
     public void escapeTest() {
         char[] chars = {'\n', '\r', '\t', ' ', '\0'};
         String[] strArr = {"\\n", "\\r", "\\t", "\\u0020", "\\u0000"};

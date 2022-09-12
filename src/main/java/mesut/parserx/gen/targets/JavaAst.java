@@ -9,6 +9,7 @@ import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
 import mesut.parserx.utils.Utils;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -47,7 +48,7 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
         }
         w.append("}");
 
-        Files.write(Paths.get(options.outDir, options.astClass + ".java"), w.get().getBytes());
+        Utils.write(w.get(), new File(options.outDir, options.astClass + ".java"));
         varCount.clear();
     }
 
@@ -55,10 +56,6 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
         w.append("public static class %s{", decl.baseName() + options.nodeSuffix);
         decl.rhs.accept(this, new Info(decl.retType, "res"));
 
-        if (tree.isOriginal(decl.ref) && options.genVisitor) {
-            w.append("public <R,P> R accept(%sVisitor<R, P> visitor, P arg){", options.parserClass);
-            w.all("return visitor.visit%s(this, arg);\n}", Utils.camel(decl.baseName()));
-        }
         //todo create parent
         p.writePrinter(decl.rhs, false);
         if (decl.rhs.isOr()) {
@@ -190,13 +187,15 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
             w.append("}");//toString
         }
 
-        String printer(String expr, boolean isToken) {
+        void printer(String expr, boolean isToken) {
+            String res;
             if (isToken) {
-                return String.format("\"'\" + %s.value + \"'\"", expr);
+                res = String.format("sb.append(\"'\").append(%s.value).append(\"'\");", expr);
             }
             else {
-                return String.format("%s.toString()", expr);
+                res = String.format("sb.append(%s.toString());", expr);
             }
+            w.append("%s", res);
         }
 
         @Override
@@ -206,7 +205,7 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
                 w.append("sb.append(\"%s\");", options.sequenceDelimiter);
                 w.append("}");
             }
-            w.append("sb.append(%s);", printer(name.astInfo.varName, name.isToken));
+            printer(name.astInfo.varName, name.isToken);
             return null;
         }
 
@@ -250,7 +249,7 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
                 }
                 w.append("sb.append('[');");
                 w.append("for(int i = 0;i < %s.size();i++){", v);
-                w.append("sb.append(%s);", printer(String.format("%s.get(i)", v), name.isToken));
+                printer(String.format("%s.get(i)", v), name.isToken);
                 w.append("if(i < %s.size() - 1) sb.append(\"%s\");", v, options.arrayDelimiter);
                 w.append("}");
                 w.append("sb.append(']');");
@@ -272,6 +271,9 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
                 Node ch = or.get(i);
                 if (ch.isName()) {
                     ch.accept(this, null);
+                }
+                else if (ch.isSequence() && RDParserGen.isSimple(ch)) {
+                    ch.asSequence().get(0).accept(this, null);
                 }
                 else {
                     w.append("sb.append(%s);", ch.astInfo.varName);

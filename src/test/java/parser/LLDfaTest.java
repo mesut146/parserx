@@ -5,11 +5,12 @@ import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.lldfa.*;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
+import mesut.parserx.parser.AstVisitor;
+import mesut.parserx.parser.Parser;
 import mesut.parserx.utils.Utils;
 import org.junit.Test;
 
 import java.io.*;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 
@@ -79,6 +80,26 @@ public class LLDfaTest {
     public void computeLa() {
         var tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
         System.out.println(LaFinder.computeLa(new Name("regex"), tree));
+    }
+
+    @Test
+    public void itself() throws Exception {
+        //Item.printLa = false;
+        Tree tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        tree.options.packageName = "mesut.parserx.parser";
+//        var builder = new LLDfaBuilder(tree);
+//        builder.factor();
+//        dot(builder);
+//        dump(builder);
+        ParserGen.gen(tree, "java");
+    }
+
+    @Test
+    public void astSimple() throws IOException {
+        Tree tree = Env.tree("lldfa/rr-loop.g");
+        tree.options.useSimple = true;
+        ParserGen.gen(tree, "java");
     }
 
     @Test

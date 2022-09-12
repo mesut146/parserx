@@ -7,7 +7,7 @@ import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.StringNode;
 import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
-import mesut.parserx.parser.AstBuilder;
+import mesut.parserx.parser.AstVisitor;
 import mesut.parserx.parser.Lexer;
 import mesut.parserx.parser.Parser;
 import mesut.parserx.regex.RegexBuilder;
@@ -19,7 +19,7 @@ import java.io.*;
 public class NfaTest {
 
     static Node makeRegex(String regex) throws IOException {
-        return new AstBuilder().visitRhs(new Parser(new Lexer(new StringReader(regex))).rhs());
+        return new AstVisitor().visitRhs(new Parser(new Lexer(new StringReader(regex))).rhs());
     }
 
     @Test

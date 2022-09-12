@@ -77,12 +77,12 @@ public class RuleDecl {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RuleDecl other = (RuleDecl) o;
-        return index == other.index && Objects.equals(ref, other.ref) && which == other.which;
+        return Objects.equals(ref, other.ref) && which == other.which;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ref, index);
+        return Objects.hash(ref, which);
     }
 
 }
