@@ -138,6 +138,11 @@ public class LLDfaBuilder {
         return new FactorHelper(tree, new Factor(tree)).common(a, b) != null;
     }
 
+    static class TrInfo {
+        List<Item> origins = new ArrayList<>();
+        List<Item> targets = new ArrayList<>();
+    }
+
     public void build() {
         queue.clear();
         all = new TreeSet<>(Comparator.comparingInt(set -> set.stateId));
@@ -186,7 +191,7 @@ public class LLDfaBuilder {
             //closure here because it needs all items
             curSet.closure();
             //curSet.addAll(curSet.genReduces());
-            Map<Node, List<Item>> map = new HashMap<>();
+            Map<Node, TrInfo> map = new HashMap<>();
             for (var item : curSet.all) {
                 //System.out.println("item = " + item);
                 //improve stars as non closured
@@ -195,7 +200,7 @@ public class LLDfaBuilder {
                     if (item.closured[i]) continue;
 
                     var node = item.getNode(i);
-                    Node sym = ItemSet.sym(node);
+                    var sym = (Node) ItemSet.sym(node);
                     int newPos = node.isStar() ? i : i + 1;
                     Item target;
                     if (node.isOptional() && sym.asName().isToken && !curSet.isFactor(item, i)) {
@@ -212,15 +217,13 @@ public class LLDfaBuilder {
                         sym = Sequence.make(rhs);
                         target = new Item(item, item.rhs.size());
                         logger.log(Level.FINE, "shrink=" + sym);
-                        //target.gotoSet.add(curSet);
-                        addMap(map, sym, target);
+                        addMap(map, sym, target, item);
                         break;
                     }
                     else {
                         target = new Item(item, newPos);
                     }
-                    //target.gotoSet.add(curSet);
-                    addMap(map, sym, target);
+                    addMap(map, sym, target, item);
                 }
             }
             makeTrans(curSet, map);
@@ -247,30 +250,31 @@ public class LLDfaBuilder {
         return false;
     }
 
-    void addMap(Map<Node, List<Item>> map, Node sym, Item target) {
-        var list = map.get(sym);
-        if (list == null) {
-            list = new ArrayList<>();
-            map.put(sym, list);
+    void addMap(Map<Node, TrInfo> map, Node sym, Item target, Item origin) {
+        var info = map.get(sym);
+        if (info == null) {
+            info = new TrInfo();
+            map.put(sym, info);
         }
         else {
             //factor
             var f = sym.copy();
             f.astInfo.isFactor = true;
             map.remove(sym);
-            map.put(f, list);
+            map.put(f, info);
             logger.log(Level.FINE, "factor " + f);
         }
-        list.add(target);
+        info.origins.add(origin);
+        info.targets.add(target);
     }
 
-    void makeTrans(ItemSet curSet, Map<Node, List<Item>> map) {
+    void makeTrans(ItemSet curSet, Map<Node, TrInfo> map) {
         logger.log(Level.FINE, "makeTrans " + curSet.stateId + " " + map);
         for (var e : map.entrySet()) {
             var sym = e.getKey();
-            var list = e.getValue();
+            var info = e.getValue();
             var targetSet = new ItemSet(tree, type);
-            targetSet.addAll(list);
+            targetSet.addAll(info.targets);
             targetSet.addAll(targetSet.genReduces());
             targetSet.alreadyGenReduces = true;
 
@@ -287,11 +291,8 @@ public class LLDfaBuilder {
                 all.add(targetSet);
                 queue.add(targetSet);
             }
-            /*for (Item item : list) {
-                item.itemSet = targetSet;
-            }*/
             targetSet.symbol = sym;
-            curSet.addTransition(sym, targetSet);
+            curSet.addTransition(sym, targetSet, info.origins);
             logger.log(Level.FINE, String.format("trans %d -> %d with %s", curSet.stateId, targetSet.stateId, sym));
         }
     }
@@ -332,7 +333,7 @@ public class LLDfaBuilder {
                 w.printf("S%d: ", set.stateId);
                 int i = 0;
                 for (var tr : set.transitions) {
-                    if (i>0){
+                    if (i > 0) {
                         w.print(" | ");
                     }
                     w.printf("%s S%d", tr.symbol.toString(), tr.target.stateId);

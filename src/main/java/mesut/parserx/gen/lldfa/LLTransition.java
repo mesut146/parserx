@@ -2,10 +2,13 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.nodes.*;
 
+import java.util.List;
+
 public class LLTransition {
     Node symbol;
     ItemSet from;
     ItemSet target;
+    List<Item> items;
 
     public LLTransition(ItemSet from, Node symbol, ItemSet target) {
         this.from = from;

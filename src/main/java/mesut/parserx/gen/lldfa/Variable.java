@@ -2,6 +2,8 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.ll.Type;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -11,6 +13,7 @@ public class Variable {
     public String name;
     public Item item;
     public Variable holder;
+    public List<Variable> prevs = new ArrayList<>();//this is param
     public boolean isArray;
 
     //alt or normal
@@ -33,6 +36,7 @@ public class Variable {
         this.type = type;
         this.name = name;
         this.children = children;
+        this.children.sort(Comparator.comparingInt(it -> it.rule.which));
     }
 
     @Override

@@ -48,17 +48,22 @@ public class ItemSet {
     }
 
     public void addTransition(Node sym, ItemSet target) {
-        for (LLTransition t : transitions) {
+        addTransition(sym, target, null);
+    }
+
+    public void addTransition(Node sym, ItemSet target, List<Item> origins) {
+        for (var t : transitions) {
             if (t.symbol.equals(sym) && t.target == target) return;
         }
 
-        LLTransition tr = new LLTransition(this, sym, target);
+        var tr = new LLTransition(this, sym, target);
+        tr.items = origins;
         transitions.add(tr);
         target.incoming.add(tr);
     }
 
     public boolean hasFinal() {
-        for (Item it : all) {
+        for (var it : all) {
             if (it.isFinalReduce(tree)) return true;
         }
         return false;
@@ -67,14 +72,14 @@ public class ItemSet {
     void gen(Item it, List<Item> list) {
         if (!it.isReduce(tree)) return;
         //is there any transition with my reduce symbol
-        for (ItemSet gt : it.gotoSet) {
-            for (Item gti : gt.all) {
+        for (var gt : it.gotoSet) {
+            for (var gti : gt.all) {
                 for (int i = gti.dotPos; i < gti.rhs.size(); i++) {
                     if (i > gti.dotPos && !FirstSet.canBeEmpty(gti.getNode(i - 1), tree)) break;
-                    Name sym = sym(gti.getNode(i));
+                    var sym = sym(gti.getNode(i));
                     if (sym.equals(it.rule.ref)) {
                         int newPos = gti.getNode(i).isStar() ? i : i + 1;
-                        Item target = new Item(gti, newPos);
+                        var target = new Item(gti, newPos);
                         //target.advanced = gti.getNode(i).isStar();
                         if (target.isReduce(tree)) {
                             it.reduceParent.add(target);
@@ -93,7 +98,7 @@ public class ItemSet {
 
     public List<Item> genReduces() {
         List<Item> res = new ArrayList<>();
-        for (Item it : kernel) {
+        for (var it : kernel) {
             gen(it, res);
         }
         return res;
@@ -101,7 +106,7 @@ public class ItemSet {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         for (int i = 0; i < all.size(); i++) {
             sb.append(all.get(i).toString2(tree));
             if (i < all.size() - 1) sb.append("\n");
@@ -110,14 +115,14 @@ public class ItemSet {
     }
 
     public void closure() {
-        if (!alreadyGenReduces){
+        if (!alreadyGenReduces) {
             addAll(genReduces());
         }
         alreadyGenReduces = true;
         for (Item item : kernel) {
             closure(item);
         }
-        for (Item it : all) {
+        for (var it : all) {
             if (it.dotPos == 0) {
                 it.gotoSet.add(this);
             }
@@ -134,17 +139,17 @@ public class ItemSet {
 
     public void closure(Item item) {
         //if dot sym have common factor ,closure is forced to reveal factor
-        List<Name> syms = symbols();
+        var syms = symbols();
         for (int i = item.dotPos; i < item.rhs.size(); i++) {
             if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
-            Node node = item.getNode(i);
-            Name sym = sym(node);
+            var node = item.getNode(i);
+            var sym = sym(node);
             if (sym.isToken) continue;
             //check two consecutive syms have common
             for (int j = item.dotPos; j < item.rhs.size(); j++) {
                 if (i == j) continue;
                 if (j > item.dotPos && !FirstSet.canBeEmpty(item.getNode(j - 1), tree)) break;
-                Node next = item.getNode(j);
+                var next = item.getNode(j);
                 if (common(node, next)) {
                     item.closured[i] = true;
                     closure(sym, i, item);
@@ -153,7 +158,7 @@ public class ItemSet {
             }
             if (item.closured[i]) continue;
             //check dot sym and any other sym have common
-            for (Name s2 : syms) {
+            for (var s2 : syms) {
                 if (s2 == sym) continue;
                 if (common(sym, s2)) {
                     item.closured[i] = true;
@@ -165,20 +170,20 @@ public class ItemSet {
     }
 
     boolean isFactor(Item item, int i) {
-        List<Name> syms = symbols();
-        Node node = item.getNode(i);
-        Name sym = sym(node);
+        var syms = symbols();
+        var node = item.getNode(i);
+        var sym = sym(node);
         //check two consecutive syms have common
         for (int j = item.dotPos; j < item.rhs.size(); j++) {
             if (i == j) continue;
             if (j > item.dotPos && !FirstSet.canBeEmpty(item.getNode(j - 1), tree)) break;
-            Node next = item.getNode(j);
+            var next = item.getNode(j);
             if (common(node, next)) {
                 return true;
             }
         }
         //check dot sym and any other sym have common
-        for (Name s2 : syms) {
+        for (var s2 : syms) {
             if (s2 == sym) continue;
             if (common(sym, s2)) {
                 return true;
@@ -189,10 +194,10 @@ public class ItemSet {
 
     List<Name> symbols() {
         List<Name> res = new ArrayList<>();
-        for (Item item : all) {
+        for (var item : all) {
             for (int i = item.dotPos; i < item.rhs.size(); i++) {
                 if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
-                Node node = item.getNode(i);
+                var node = item.getNode(i);
                 res.add(sym(node));
             }
         }
