@@ -8,13 +8,12 @@ import java.util.List;
 import java.util.Set;
 
 public class Variable {
-    public List<Item> children;//children of holder
+    public List<Item> children;
     public Type type;
     public String name;
     public Item item;
     public Variable holder;
     public List<Variable> prevs = new ArrayList<>();//this is param
-    public boolean isArray;
 
     //alt or normal
     public Variable(Type type, String name, Item item) {

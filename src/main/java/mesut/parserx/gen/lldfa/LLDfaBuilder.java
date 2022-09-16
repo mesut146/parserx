@@ -1,10 +1,10 @@
 package mesut.parserx.gen.lldfa;
 
-import mesut.parserx.gen.AstInfo;
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.ll.Normalizer;
 import mesut.parserx.gen.lr.LrDFAGen;
+import mesut.parserx.gen.lr.LrType;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorHelper;
 import mesut.parserx.gen.transform.FactorLoop;
@@ -17,6 +17,7 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class LLDfaBuilder {
     public Name rule;
@@ -25,7 +26,8 @@ public class LLDfaBuilder {
     Map<String, ItemSet> firstSets = new HashMap<>();
     Set<ItemSet> all;
     Queue<ItemSet> queue = new LinkedList<>();
-    String type = "lr1";
+    //String type = "lr1";
+    LrType type = LrType.LR1;
     Map<String, Set<ItemSet>> rules = new HashMap<>();
     public static Logger logger = Utils.getLogger();
 
@@ -138,11 +140,6 @@ public class LLDfaBuilder {
         return new FactorHelper(tree, new Factor(tree)).common(a, b) != null;
     }
 
-    static class TrInfo {
-        List<Item> origins = new ArrayList<>();
-        List<Item> targets = new ArrayList<>();
-    }
-
     public void build() {
         queue.clear();
         all = new TreeSet<>(Comparator.comparingInt(set -> set.stateId));
@@ -191,7 +188,7 @@ public class LLDfaBuilder {
             //closure here because it needs all items
             curSet.closure();
             //curSet.addAll(curSet.genReduces());
-            Map<Node, TrInfo> map = new HashMap<>();
+            Map<Node, LLTransition> map = new HashMap<>();
             for (var item : curSet.all) {
                 //System.out.println("item = " + item);
                 //improve stars as non closured
@@ -217,13 +214,13 @@ public class LLDfaBuilder {
                         sym = Sequence.make(rhs);
                         target = new Item(item, item.rhs.size());
                         logger.log(Level.FINE, "shrink=" + sym);
-                        addMap(map, sym, target, item);
+                        addMap(map, sym, new LLTransition.ItemPair(item, target), curSet);
                         break;
                     }
                     else {
                         target = new Item(item, newPos);
                     }
-                    addMap(map, sym, target, item);
+                    addMap(map, sym, new LLTransition.ItemPair(item, target), curSet);
                 }
             }
             makeTrans(curSet, map);
@@ -250,31 +247,28 @@ public class LLDfaBuilder {
         return false;
     }
 
-    void addMap(Map<Node, TrInfo> map, Node sym, Item target, Item origin) {
-        var info = map.get(sym);
-        if (info == null) {
-            info = new TrInfo();
-            map.put(sym, info);
+    void addMap(Map<Node, LLTransition> map, Node sym, LLTransition.ItemPair pair, ItemSet from) {
+        var tr = map.get(sym);
+        if (tr == null) {
+            tr = new LLTransition(from, null, sym);
+            map.put(sym, tr);
         }
         else {
             //factor
             var f = sym.copy();
             f.astInfo.isFactor = true;
             map.remove(sym);
-            map.put(f, info);
-            logger.log(Level.FINE, "factor " + f);
+            map.put(f, tr);
         }
-        info.origins.add(origin);
-        info.targets.add(target);
+        tr.pairs.add(pair);
     }
 
-    void makeTrans(ItemSet curSet, Map<Node, TrInfo> map) {
-        logger.log(Level.FINE, "makeTrans " + curSet.stateId + " " + map);
+    void makeTrans(ItemSet curSet, Map<Node, LLTransition> map) {
         for (var e : map.entrySet()) {
             var sym = e.getKey();
-            var info = e.getValue();
+            var tr = e.getValue();
             var targetSet = new ItemSet(tree, type);
-            targetSet.addAll(info.targets);
+            targetSet.addAll(tr.pairs.stream().map(pair -> pair.target).collect(Collectors.toList()));
             targetSet.addAll(targetSet.genReduces());
             targetSet.alreadyGenReduces = true;
 
@@ -291,8 +285,9 @@ public class LLDfaBuilder {
                 all.add(targetSet);
                 queue.add(targetSet);
             }
+            tr.target = targetSet;
             targetSet.symbol = sym;
-            curSet.addTransition(sym, targetSet, info.origins);
+            curSet.addTransition(tr);
             logger.log(Level.FINE, String.format("trans %d -> %d with %s", curSet.stateId, targetSet.stateId, sym));
         }
     }

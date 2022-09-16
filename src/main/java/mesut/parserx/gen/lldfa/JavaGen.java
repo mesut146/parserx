@@ -20,7 +20,7 @@ public class JavaGen {
     RuleDecl rule;
     Tree tree;
     Options options;
-    Map<Integer, Map<Node, List<Variable>>> nameMap = new HashMap<>();
+    Map<Integer, Map<Node, List<Variable>>> localMap = new HashMap<>();
     Map<Integer, List<Variable>> paramMap = new HashMap<>();
     ItemSet curSet;
     private Set<Item> preReduced = new HashSet<>();
@@ -186,7 +186,7 @@ public class JavaGen {
                 for (var item : items) {
                     var node = has(item, sym);
                     if (node == null) continue;
-                    assignStr(w, getBoth(item, sym), "la", node);
+                    assignStr(getBoth(item, sym), node, "la");
                 }
                 //preReduce(sym);
                 //get next la
@@ -205,8 +205,8 @@ public class JavaGen {
 
                 //create and assign nodes
                 String vname = null;
-                if (nameMap.containsKey(curSet.stateId) && nameMap.get(curSet.stateId).containsKey(sym) && !nameMap.get(curSet.stateId).get(sym).isEmpty()) {
-                    var locals = nameMap.get(curSet.stateId).get(sym);
+                if (localMap.containsKey(curSet.stateId) && localMap.get(curSet.stateId).containsKey(sym) && !localMap.get(curSet.stateId).get(sym).isEmpty()) {
+                    var locals = localMap.get(curSet.stateId).get(sym);
                     for (var local : locals) {
                         w.append("%s %s = new %s();", local.type, local.name, local.type);
                         if (!local.isHolder()) {
@@ -227,7 +227,7 @@ public class JavaGen {
                             item = it;
                         }
                     }
-                    vname = getParam(item);
+                    vname = getParamName(item);
                 }
 
                 //consume all
@@ -292,11 +292,11 @@ public class JavaGen {
         for (var tr : set.transitions) {
             if (tr.symbol.isName() && tr.symbol.asName().isToken) {
                 var sym = tr.symbol.asName();
-                var items = tr.items;
+                var items = tr.pairs.stream().map(pair -> pair.origin).collect(Collectors.toList());
                 var group = groupByToken();
                 var locals = genLocals(group.get(sym));
                 //var locals = genLocals(items);
-                nameMap.computeIfAbsent(set.stateId, k -> new HashMap<>()).put(sym, locals);
+                localMap.computeIfAbsent(set.stateId, k -> new HashMap<>()).put(sym, locals);
             }
             else {
                 //multi
@@ -321,7 +321,7 @@ public class JavaGen {
                     //alt
                     locals.add(new Variable(item.rule.rhs.astInfo.nodeType, "v1", item, holder));
                 }
-                nameMap.computeIfAbsent(set.stateId, k -> new HashMap<>()).put(tr.symbol, locals);
+                localMap.computeIfAbsent(set.stateId, k -> new HashMap<>()).put(tr.symbol, locals);
             }
         }
     }
@@ -371,7 +371,7 @@ public class JavaGen {
         curSet = set;
         for (var tr : set.transitions) {
             if (tr.target.transitions.isEmpty()) continue;//inlined no params
-            if (paramMap.containsKey(tr.target.stateId)) continue;//already ...
+            //if (paramMap.containsKey(tr.target.stateId)) continue;//already done
             if (tr.symbol.isName() && tr.symbol.asName().isToken) {
                 initParamNormal(set, tr);
             }
@@ -383,7 +383,7 @@ public class JavaGen {
 
     private void initParamNormal(ItemSet set, LLTransition tr) {
         var sym = tr.symbol.asName();
-        var locals = nameMap.get(set.stateId).get(sym);
+        var locals = localMap.get(set.stateId).get(sym);
         //locals = locals.stream().filter(v -> !v.isHolder()).collect(Collectors.toList());
         if (options.useSimple) {
             //keep normals + alts + bound holders
@@ -451,7 +451,6 @@ public class JavaGen {
             for (var local : locals) {
                 if (local.isHolder() || prm.isHolder()) continue;
                 if (overlap(local.item, prm.item)) {
-                    prm.isArray = true;
                     throw new RuntimeException("overlap");
                     //break;
                 }
@@ -483,7 +482,7 @@ public class JavaGen {
             w.print("S%d(%s);\n", target.stateId, args2(paramMap.get(target.stateId), sym, target));
         }
         if (curSet.isStart) {
-            for (Variable v : nameMap.get(curSet.stateId).get(sym)) {
+            for (Variable v : localMap.get(curSet.stateId).get(sym)) {
                 if (v.type.equals(rule.retType)) {
                     w.append("return %s;", v.name);
                     break;
@@ -595,13 +594,13 @@ public class JavaGen {
             if (!first) sb.append(", ");
             var takeover = false;
             if (!takeover) {
-                String name = null;
+                Variable name = null;
                 if (prm.isHolder()) {
                     //find correct local
-                    for (var local : nameMap.get(curSet.stateId).get(sym)) {
+                    for (var local : localMap.get(curSet.stateId).get(sym)) {
                         if (!local.isHolder()) continue;
                         if (sameHolder(prm, local)) {
-                            name = local.name;
+                            name = local;
                             break;
                         }
                     }
@@ -609,7 +608,7 @@ public class JavaGen {
                         for (var localPrm : paramMap.get(target.stateId)) {
                             if (!localPrm.isHolder()) continue;
                             if (sameHolder(prm, localPrm)) {
-                                name = localPrm.name;
+                                name = localPrm;
                                 break;
                             }
                         }
@@ -619,10 +618,10 @@ public class JavaGen {
                     }
                 }
                 else {
-                    name = getLocal(prm.item, sym, false);//local has priority
+                    name = getLocalVar(prm.item, sym, false);//local has priority
                     if (name == null) name = getParam(prm.item);
                 }
-                sb.append(name);
+                sb.append(name.name);
             }
             first = false;
         }
@@ -664,14 +663,18 @@ public class JavaGen {
 //        return null;
 //    }
 
-    String getLocal(Item item, Node sym, boolean exact) {
-        if (!nameMap.containsKey(curSet.stateId)) return null;
-        var map = nameMap.get(curSet.stateId);
+    String getLocalName(Item item, Node sym, boolean exact) {
+        return getLocalVar(item, sym, exact).name;
+    }
+
+    Variable getLocalVar(Item item, Node sym, boolean exact) {
+        if (!localMap.containsKey(curSet.stateId)) return null;
+        var map = localMap.get(curSet.stateId);
         if (map.containsKey(sym)) {
             for (var v : map.get(sym)) {
                 if (v.isHolder() || !v.item.rule.equals(item.rule)) continue;
                 if (exact && v.item.equals(item) && v.item.ids.equals(item.ids) || !exact && sameItem(v.item, item)) {
-                    return v.name;
+                    return v;
                 }
             }
         }
@@ -682,52 +685,53 @@ public class JavaGen {
         return i1.equals(i2) || hasCommon(i1.ids, i2.ids);
     }
 
-    String getParam(Item item) {
-        return getParam(item, false);
+    String getParamName(Item item) {
+        return getParam(item).name;
     }
 
-    String getParam(Item item, boolean exact) {
+    Variable getParam(Item item) {
         if (!paramMap.containsKey(curSet.stateId)) return null;
         for (var v : paramMap.get(curSet.stateId)) {
             if (v.isHolder()) {
                 for (var ch : v.children) {
                     if (sameItem(ch, item)) {
-                        return v.name;
+                        return v;
                     }
                 }
             }
             else if (v.item.rule.equals(item.rule) && sameItem(v.item, item)) {
-                return v.name;
+                return v;
             }
         }
         return null;
     }
 
     String getExact(Item item, Node sym) {
-        var res = getLocal(item, sym, true);
+        var res = getLocalVar(item, sym, true);
         if (res == null) res = getParam(item);
         if (res == null) throw new RuntimeException();
-        return res;
+        return res.name;
     }
 
-
     String getBoth(Item item, Node sym) {
+        return getBothVar(item, sym).name;
+    }
+
+    Variable getBothVar(Item item, Node sym) {
         if (item.isAlt() && options.useSimple && RDParserGen.isSimple(item.rhs)) {
-            //throw new RuntimeException("simple");
-            return holderVar(item, sym).name;
+            return holderVar(item, sym);
         }
-        var res = getLocal(item, sym, false);
+        var res = getLocalVar(item, sym, false);
         if (res == null) res = getParam(item);
         if (res == null) {
-            //return "null";
             throw new RuntimeException();
         }
         return res;
     }
 
     private void createNodes(Node sym) {
-        if (!nameMap.containsKey(curSet.stateId)) return;
-        var vars = nameMap.get(curSet.stateId).get(sym);
+        if (!localMap.containsKey(curSet.stateId)) return;
+        var vars = localMap.get(curSet.stateId).get(sym);
         for (var v : vars) {
             w.append("%s %s = new %s();", v.type, v.name, v.type);
             if (!v.isHolder() && v.item.isAlt()) {
@@ -736,54 +740,66 @@ public class JavaGen {
         }
     }
 
+    //assign created nodes
     private void assign(List<Item> list, Name sym) {
         Set<String> done = new HashSet<>();
-        //assign created nodes
         for (var item : list) {
             if (item.dotPos != 0) continue;
             if (item.advanced) continue;
             //no alt
             if (!item.isAlt()) {
-                var name = getLocal(item, sym, false);
-                for (var sender : item.senders) {
-                    var node = has(sender, item.rule.ref);
-                    var senderName = getBoth(sender, sym);
-                    assignStr(w, senderName, name, node);
+                if (item.parent != null) {
+                    var name = getLocalName(item, sym, false);
+                    var node = has(item.parent, item.rule.ref);
+                    var senderName = getBoth(item.parent, sym);
+                    assignStr(senderName, node, name);
                 }
+//                for (var sender : item.senders) {
+//                    var node = has(sender, item.rule.ref);
+//                    var senderName = getBoth(sender, sym);
+//                    assignStr(w, senderName, name, node);
+//                }
             }
             else {
                 //alt holder
                 if (!done.contains(item.rule.baseName())) {
                     done.add(item.rule.baseName());
-                    for (var sender : item.senders) {
-                        var node = has(sender, item.rule.ref);
-                        var senderName = getExact(sender, sym);
+//                    for (var sender : item.senders) {
+//                        var node = has(sender, item.rule.ref);
+//                        var senderName = getExact(sender, sym);
+//                        var name = holderVar(item, sym).name;
+//                        assignStr(w, senderName, name, node);
+//                    }
+                    if (item.parent != null) {
+                        var node = has(item.parent, item.rule.ref);
+                        var senderName = getExact(item.parent, sym);
                         var name = holderVar(item, sym).name;
-                        assignStr(w, senderName, name, node);
+                        assignStr(senderName, node, name);
                     }
+
                 }
             }
         }
     }
 
-    void assignStr(CodeWriter w, String senderName, String name, Node node) {
+    void assignStr(String parent, Node node, String name) {
         if (node.astInfo.isInLoop) {
-            w.append("%s.%s.add(%s);", senderName, node.astInfo.varName, name);
+            w.append("%s.%s.add(%s);", parent, node.astInfo.varName, name);
         }
         else {
             //todo sender dot empty, .A* B
-            w.append("%s.%s = %s;", senderName, node.astInfo.varName, name);
+            w.append("%s.%s = %s;", parent, node.astInfo.varName, name);
         }
     }
 
     String getHolder(Item item, Node sym) {
-        if (sym == null) return getParam(item) + ".holder";
+        if (sym == null) return getParamName(item) + ".holder";
         return getBoth(item, sym) + ".holder";
     }
 
     Variable holderVar(Item item, Node sym) {
-        if (nameMap.containsKey(curSet.stateId)) {
-            for (var v : nameMap.get(curSet.stateId).get(sym)) {
+        if (localMap.containsKey(curSet.stateId)) {
+            for (var v : localMap.get(curSet.stateId).get(sym)) {
                 if (v.isHolder() && v.children.contains(item)) {
                     return v;
                 }
@@ -819,12 +835,19 @@ public class JavaGen {
             w.append("if(%s){", JavaRecDescent.loopExpr(la));
             for (var item : e.getValue()) {
                 if (!item.isAlt()) continue;
-                var name = getParam(item);
-                var holder = name + ".holder";
-                w.append("%s.which = %d;", holder, item.rule.which);
-                if (!(options.useSimple && RDParserGen.isSimple(item.rhs))) {
-                    w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, name);
+                var prm = getParam(item);
+                if (prm.isHolder()) {//simple is used
+                    w.append("%s.which = %d;", prm.name, item.rule.which);
                 }
+                else {
+                    var name = prm.name;
+                    var holder = name + ".holder";
+                    w.append("%s.which = %d;", holder, item.rule.which);
+                    if (!(options.useSimple && RDParserGen.isSimple(item.rhs))) {
+                        w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, name);
+                    }
+                }
+
             }
             w.append("}");
         }
@@ -841,19 +864,42 @@ public class JavaGen {
     }
 
 
+//    Item findHolder(Item item, ItemSet set) {
+//        for (var it : set.all) {
+//            if (i) {
+//
+//            }
+//        }
+//    }
+
+    Item getOrigin(Item target) {
+        for (var origin : curSet.all) {
+            if (target.prev.contains(origin)) {
+                return origin;
+            }
+        }
+        return null;
+    }
+
     //inline target reductions if final
     private void inline(ItemSet target, Node sym, LLTransition tr) {
         for (var item : target.all) {
             if (!item.isReduce(tree)) continue;
             if (!item.isAlt()) continue;//only alts have assign
             w.append("if(%s){", JavaRecDescent.loopExpr(item.lookAhead));
-            if (tr.items.size() > 1) throw new RuntimeException("cant find origin");
-            var origin = tr.items.get(0);
-            var holder = getHolder(origin, sym);
-            w.append("%s.which = %d;", holder, item.rule.which);
-            w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getBoth(origin, sym));//todo
-            if (!curSet.isStart && item.isFinalReduce(tree)) {
-                //w.append("return;");//todo dollar is enough?
+            var origins = tr.pairs.stream().map(pair -> pair.origin).collect(Collectors.toList());
+            if (origins.size() > 1) throw new RuntimeException("too many origins");
+            var origin = getOrigin(item);
+            var prm = getBothVar(origin, sym);
+            if (options.useSimple && RDParserGen.isSimple(item.rhs)) {
+                w.append("%s.which = %d;", prm.name, item.rule.which);
+            }
+            else {
+                var holder = getHolder(origin, sym);
+                w.append("%s.which = %d;", holder, item.rule.which);
+                if (!(options.useSimple && RDParserGen.isSimple(item.rhs))) {
+                    w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, getBoth(origin, sym));//todo
+                }
             }
             w.append("}");
         }

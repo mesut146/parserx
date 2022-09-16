@@ -2,15 +2,16 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.nodes.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class LLTransition {
-    Node symbol;
     ItemSet from;
     ItemSet target;
-    List<Item> items;
+    Node symbol;
+    List<ItemPair> pairs = new ArrayList<>();
 
-    public LLTransition(ItemSet from, Node symbol, ItemSet target) {
+    public LLTransition(ItemSet from, ItemSet target, Node symbol) {
         this.from = from;
         this.symbol = symbol;
         this.target = target;
@@ -23,5 +24,15 @@ public class LLTransition {
                 ", target=" + target.stateId +
                 ", symbol=" + symbol +
                 '}';
+    }
+
+    public static class ItemPair {
+        public Item origin;
+        public Item target;
+
+        public ItemPair(Item origin, Item target) {
+            this.origin = origin;
+            this.target = target;
+        }
     }
 }
