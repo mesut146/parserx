@@ -33,18 +33,6 @@ public class RDParserGen {
         return recDescent;
     }
 
-    public static boolean isSimple(Node node) {
-        if (node.isRegex()) {
-            var regex = node.asRegex();
-            return regex.node.isName();
-        }
-        else if (node.isSequence()) {
-            var seq = node.asSequence();
-            return seq.size() == 1 && isSimple(seq.get(0));
-        }
-        return node.isName();
-    }
-
     public void gen() throws IOException {
         prepare();
 

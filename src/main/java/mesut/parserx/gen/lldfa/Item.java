@@ -15,9 +15,8 @@ public class Item {
     public Sequence rhs;
     public Set<ItemSet> gotoSet = new HashSet<>();
     public boolean[] closured;
-    public List<Item> senders = new ArrayList<>();//prev item
+    public List<Item> parents = new ArrayList<>();//th ones created us
     public Set<Item> prev = new LinkedHashSet<>();//prev item
-    public Item parent;
     public List<Item> next = new ArrayList<>();
     public List<Item> reduceParent = new ArrayList<>();
     public List<Item> siblings = new ArrayList<>();
@@ -43,7 +42,7 @@ public class Item {
         this.lookAhead.addAll(item.lookAhead);
         this.gotoSet = item.gotoSet;
         this.ids = new HashSet<>(item.ids);
-        this.senders.add(item);
+        //this.senders.add(item);
         this.prev.add(item);
         this.first = item.first;
         item.next.add(this);

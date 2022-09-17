@@ -10,7 +10,6 @@ public class Options {
     public boolean genVisitor = false;
     public String astClass = "Ast";
     public String nodeSuffix = "";
-    public boolean useSimple = true;
 
     public String sequenceDelimiter = ", ";
     public String arrayDelimiter = ", ";

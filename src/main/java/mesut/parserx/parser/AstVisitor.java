@@ -14,7 +14,7 @@ import java.util.List;
 public class AstVisitor {
 
     public static Tree makeTree(String data) throws IOException {
-        Parser parser = new Parser(new Lexer(new StringReader(data)));
+        var parser = new Parser(new Lexer(new StringReader(data)));
         return new AstVisitor().visitTree(parser.tree());
     }
 
@@ -28,33 +28,33 @@ public class AstVisitor {
     }
 
     public Tree visitTree(Ast.tree node) {
-        Tree tree = new Tree();
-        for (Ast.includeStatement inc : node.includeStatement) {
+        var tree = new Tree();
+        for (var inc : node.includeStatement) {
             tree.addInclude(UnicodeUtils.trimQuotes(inc.STRING.value));
         }
         if (node.optionsBlock != null) {
-            for (Ast.option option : node.optionsBlock.option) {
+            for (var option : node.optionsBlock.option) {
                 if (option.key.value.equals("")) {
                     //todo
                 }
             }
         }
-        for (Ast.treeg1 g1 : node.tokens) {
+        for (var g1 : node.tokens) {
             if (g1.tokenBlock != null) {
-                for (Ast.tokenDecl decl : g1.tokenBlock.tokenDecl) {
+                for (var decl : g1.tokenBlock.tokenBlock.tokenDecl) {
                     tree.addToken(visitTokendecl(decl));
                 }
             }
             else {
-                for (Ast.tokenDecl decl : g1.skipBlock.tokenDecl) {
+                for (var decl : g1.skipBlock.skipBlock.tokenDecl) {
                     tree.addSkip(visitTokendecl(decl));
                 }
             }
         }
         if (node.startDecl != null) {
-            tree.start = new Name(node.startDecl.name.IDENT.value);
+            tree.start = new Name(node.startDecl.name.IDENT.IDENT.value);
         }
-        for (Ast.ruleDecl g2 : node.rules) {
+        for (var g2 : node.rules) {
             tree.addRule(visitRuledecl(g2));
         }
         return tree;
@@ -62,7 +62,7 @@ public class AstVisitor {
 
 
     public TokenDecl visitTokendecl(Ast.tokenDecl node) {
-        TokenDecl decl = new TokenDecl(node.name.IDENT.value);
+        var decl = new TokenDecl(node.name.IDENT.IDENT.value);
         if (node.HASH != null) {
             decl.fragment = true;
         }
@@ -72,11 +72,11 @@ public class AstVisitor {
 
 
     public RuleDecl visitRuledecl(Ast.ruleDecl node) {
-        RuleDecl decl = new RuleDecl(node.name.IDENT.value);
+        var decl = new RuleDecl(node.name.IDENT.IDENT.value);
         if (node.args != null) {
-            decl.ref.args.add(new Name(node.args.name.IDENT.value));
-            for (Ast.argsg1 g1 : node.args.rest) {
-                decl.ref.args.add(new Name(g1.name.IDENT.value));
+            decl.ref.args.add(new Name(node.args.name.IDENT.IDENT.value));
+            for (var g1 : node.args.rest) {
+                decl.ref.args.add(new Name(g1.name.IDENT.IDENT.value));
             }
         }
         decl.rhs = visitRhs(node.rhs);
@@ -87,7 +87,7 @@ public class AstVisitor {
     public Node visitRhs(Ast.rhs node) {
         List<Node> list = new ArrayList<>();
         list.add(visitSequence(node.sequence));
-        for (Ast.rhsg1 g1 : node.g1) {
+        for (var g1 : node.g1) {
             list.add(visitSequence(g1.sequence));
         }
         if (list.size() == 1) {
@@ -99,61 +99,58 @@ public class AstVisitor {
 
     public Node visitSequence(Ast.sequence node) {
         List<Node> list = new ArrayList<>();
-        for (Ast.regex r : node.regex) {
+        for (var r : node.regex) {
             list.add(visitRegex(r));
         }
         //if (list.size() == 1) return list.get(0);
-        Sequence s = new Sequence(list);
+        var seq = new Sequence(list);
         if (node.assoc != null) {
-            if (s.size() != 3 && s.size() != 5) {
+            if (seq.size() != 3 && seq.size() != 5) {
                 throw new RuntimeException("assoc can only be used with 3 or 5 nodes");
             }
             if (node.assoc.LEFT != null) {
-                s.assocLeft = true;
+                seq.assocLeft = true;
             }
             else {
-                s.assocRight = true;
+                seq.assocRight = true;
             }
         }
         if (node.label != null) {
-            s.label = node.label.name.IDENT.value;
+            seq.label = node.label.name.IDENT.IDENT.value;
         }
-        return s;
+        return seq;
     }
 
     String str(Ast.name name) {
         if (name.IDENT != null) {
-            return name.IDENT.value;
+            return name.IDENT.IDENT.value;
         }
         else if (name.OPTIONS != null) {
-            return name.OPTIONS.value;
+            return name.OPTIONS.OPTIONS.value;
         }
         else if (name.SKIP != null) {
-            return name.SKIP.value;
-        }
-        else if (name.TOKEN != null) {
-            return name.TOKEN.value;
+            return name.SKIP.SKIP.value;
         }
         else {
-            return name.INCLUDE.value;
+            return name.TOKEN.TOKEN.value;
         }
     }
 
     public Node visitRegex(Ast.regex node) {
         if (node.regex1 != null) {
-            String name = str(node.regex1.name);
-            Node res = visitSimple(node.regex1.simple);
+            var name = str(node.regex1.name);
+            var res = visitSimple(node.regex1.simple);
             res.astInfo.varName = name;
             if (node.regex1.type != null) {
-                RegexType type = node.regex1.type.PLUS != null ? RegexType.PLUS : (node.regex1.type.STAR != null ? RegexType.STAR : RegexType.OPTIONAL);
+                var type = node.regex1.type.PLUS != null ? RegexType.PLUS : (node.regex1.type.STAR != null ? RegexType.STAR : RegexType.OPTIONAL);
                 return new Regex(res, type);
             }
             return res;
         }
         else {
-            Node res = visitSimple(node.regex2.simple);
+            var res = visitSimple(node.regex2.simple);
             if (node.regex2.type != null) {
-                RegexType type = node.regex2.type.PLUS != null ? RegexType.PLUS : (node.regex2.type.STAR != null ? RegexType.STAR : RegexType.OPTIONAL);
+                var type = node.regex2.type.PLUS != null ? RegexType.PLUS : (node.regex2.type.STAR != null ? RegexType.STAR : RegexType.OPTIONAL);
                 return new Regex(res, type);
             }
             return res;
@@ -163,45 +160,38 @@ public class AstVisitor {
 
     public Node visitSimple(Ast.simple node) {
         if (node.group != null) {
-            return new Group(visitRhs(node.group.rhs));
+            return new Group(visitRhs(node.group.group.rhs));
         }
         else if (node.dotNode != null) {
             return new Dot();
         }
         else if (node.bracketNode != null) {
-            return new Bracket(node.bracketNode.BRACKET.value);
+            return new Bracket(node.bracketNode.bracketNode.BRACKET.value);
         }
         else if (node.name != null) {
-            return new Name(node.name.IDENT.value);
+            return new Name(node.name.name.IDENT.IDENT.value);
         }
         else if (node.stringNode != null) {
-            if (node.stringNode.STRING != null) {
-                return StringNode.from(node.stringNode.STRING.value);
+            if (node.stringNode.stringNode.STRING != null) {
+                return StringNode.from(node.stringNode.stringNode.STRING.STRING.value);
             }
-            return StringNode.from(node.stringNode.CHAR.value);
+            return StringNode.from(node.stringNode.stringNode.CHAR.CHAR.value);
         }
         else if (node.EPSILON != null) {
             return new Epsilon();
         }
         else if (node.untilNode != null) {
-            return new Until(visitRegex(node.untilNode.regex));
-        }
-        else if (node.repeatNode != null) {
-            Node rhs = visitRhs(node.repeatNode.rhs);
-            if (rhs.isSequence() || rhs.isOr()) {
-                rhs = new Group(rhs);
-            }
-            return new Regex(rhs, RegexType.STAR);
+            return new Until(visitRegex(node.untilNode.untilNode.regex));
         }
         else if (node.SHORTCUT != null) {
-            String s = node.SHORTCUT.value;
+            var s = node.SHORTCUT.SHORTCUT.value;
             return new Group(Shortcut.from(s.substring(2, s.length() - 2)));
         }
         else if(node.call != null){
-            String s = node.call.CALL_BEGIN.value;
-            Name res = new Name(s.substring(0, s.length() - 1));
-            res.args.add(new Name(node.call.IDENT.value));
-            for(Ast.callg1 arg : node.call.g1){
+            var s = node.call.call.CALL_BEGIN.value;
+            var res = new Name(s.substring(0, s.length() - 1));
+            res.args.add(new Name(node.call.call.IDENT.value));
+            for(var arg : node.call.call.g1){
                 res.args.add(new Name(arg.IDENT.value));
             }
             return res;

@@ -5,6 +5,7 @@ import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.Normalizer;
 import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.ll.Type;
+import mesut.parserx.gen.lldfa.ItemSet;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
 import mesut.parserx.utils.Utils;
@@ -106,6 +107,7 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
         return null;
     }
 
+
     @Override
     public Void visitOr(Or or, Info arg) {
         w.append("public int which;");
@@ -114,20 +116,27 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
             if (ch.isEpsilon()) continue;
             //in case of factorization pre-write some code
             ch.astInfo.which = id;
-            if (options.useSimple && RDParserGen.isSimple(ch)) {
-                ch.accept(this, arg);
+            //sequence
+            //complex choice point inits holder
+            var altType = new Type(arg.outerCls, Utils.camel(arg.outerCls.name) + id);
+            String v;
+            if (ch.isName() || ch.isSequence() && ch.asSequence().size() == 1) {
+                if (ch.isSequence()) {
+                    v = ItemSet.sym(ch.asSequence().get(0)).name;
+                }
+                else {
+                    v = ItemSet.sym(ch).name;
+                }
             }
             else {
-                //sequence
-                //complex choice point inits holder
-                var clsName = new Type(arg.outerCls, Utils.camel(arg.outerCls.name) + id);
-                var v = arg.outerCls.name.toLowerCase() + id;
-                ch.astInfo.nodeType = clsName;
-                ch.astInfo.varName = v;
-                ch.astInfo.outerVar = arg.outerVar;
-                ch.astInfo.assignOuter = true;
-                w.append("%s %s;", clsName.name, v);
+                v = arg.outerCls.name.toLowerCase() + id;
             }
+            ch.astInfo.nodeType = altType;
+            ch.astInfo.varName = v;
+            ch.astInfo.outerVar = arg.outerVar;
+            ch.astInfo.assignOuter = true;
+            w.append("%s %s;", altType.name, v);
+
             id++;
         }
         return null;
@@ -136,20 +145,17 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
     void orInit(Or or) {
         for (var ch : or) {
             if (ch.isEpsilon()) continue;
-            if (options.useSimple && RDParserGen.isSimple(ch)) {
-            }
-            else {
-                //sequence
-                //complex choice point inits holder
-                var clsName = ch.astInfo.nodeType;
+            //sequence
+            //complex choice point inits holder
+            var clsName = ch.astInfo.nodeType;
 
-                w.append("public static class %s{", clsName.name);
-                //holder ref
-                w.append("%s holder;", curRule);
-                ch.accept(this, new Info(clsName, ch.astInfo.varName));
-                p.writePrinter(ch, true);
-                w.append("}");
-            }
+            w.append("public static class %s{", clsName.name);
+            //holder ref
+            w.append("%s holder;", curRule);
+            ch.accept(this, new Info(clsName, ch.astInfo.varName));
+            p.writePrinter(ch, true);
+            w.append("}");
+
         }
     }
 
@@ -271,9 +277,6 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
                 Node ch = or.get(i);
                 if (ch.isName()) {
                     ch.accept(this, null);
-                }
-                else if (ch.isSequence() && RDParserGen.isSimple(ch)) {
-                    ch.asSequence().get(0).accept(this, null);
                 }
                 else {
                     w.append("sb.append(%s);", ch.astInfo.varName);

@@ -76,7 +76,7 @@ public class RuleDecl {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        RuleDecl other = (RuleDecl) o;
+        var other = (RuleDecl) o;
         return Objects.equals(ref, other.ref) && which == other.which;
     }
 

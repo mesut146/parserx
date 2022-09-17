@@ -1,5 +1,5 @@
 token{
- BOOLEAN: 'true' | 'false';
+ BOOLEAN: "true" | "false";
  OPTIONS: "options";
  TOKEN: "token" | "tokens";
  SKIP: "skip";
@@ -54,7 +54,7 @@ skip{
 
 %start: tree;
 
-tree: includeStatement* optionsBlock? tokens=(tokenBlock  | skipBlock)* startDecl? rules=ruleDecl*;
+tree: includeStatement* optionsBlock? tokens=(tokenBlock | skipBlock)* startDecl? rules=ruleDecl*;
 
 includeStatement: "include" STRING;
 

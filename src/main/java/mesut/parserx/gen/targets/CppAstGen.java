@@ -39,11 +39,10 @@ public class CppAstGen {
             if (decl.rhs.isOr()) {
                 int id = 1;
                 for (Node ch : decl.rhs.asOr()) {
-                    if (!options.useSimple || !RDParserGen.isSimple(ch)) {
-                        String alt = decl.baseName() + id;
-                        sourceWriter.append("%s::%s::%s::%s() = default;", options.astClass, decl.baseName(), alt, alt);
-                        writePrinter(alt, ch, sourceWriter, true);
-                    }
+                    String alt = decl.baseName() + id;
+                    sourceWriter.append("%s::%s::%s::%s() = default;", options.astClass, decl.baseName(), alt, alt);
+                    writePrinter(alt, ch, sourceWriter, true);
+
                     id++;
                 }
             }
@@ -95,9 +94,7 @@ public class CppAstGen {
             //forward alts
             int id = 1;
             for (Node ch : decl.rhs.asOr()) {
-                if (!options.useSimple || !RDParserGen.isSimple(ch)) {
-                    astWriter.append("class %s;", decl.baseName() + id);
-                }
+                astWriter.append("class %s;", decl.baseName() + id);
                 id++;
             }
             astWriter.append("");
@@ -258,28 +255,22 @@ public class CppAstGen {
 
                 //in case of factorization pre-write some code
                 ch.astInfo.which = num;
-                if (options.useSimple && RDParserGen.isSimple(ch)) {
-                    //todo vname
-                    //ch.astInfo.varName = parentClass.toLowerCase() + num;
-                    model(ch, outerCls, outerVar, parent);
-                }
-                else {
-                    //sequence
-                    //complex choice point inits holder
-                    ch.astInfo.nodeType = clsName;
-                    ch.astInfo.varName = v;
-                    ch.astInfo.outerVar = outerVar;
-                    ch.astInfo.assignOuter = true;
-                    parent.append("%s* %s;", clsName.name, v);
-                    CodeWriter c = new CodeWriter(false);
-                    c.append("class %s{", clsName.name);
-                    c.append("public:");
-                    c.append("%s();", clsName.name);//ctor
-                    model(ch, clsName, v, c);
-                    c.append("std::string toString();");
-                    c.append("};");
-                    classes.all(c.get());
-                }
+                //sequence
+                //complex choice point inits holder
+                ch.astInfo.nodeType = clsName;
+                ch.astInfo.varName = v;
+                ch.astInfo.outerVar = outerVar;
+                ch.astInfo.assignOuter = true;
+                parent.append("%s* %s;", clsName.name, v);
+                CodeWriter c = new CodeWriter(false);
+                c.append("class %s{", clsName.name);
+                c.append("public:");
+                c.append("%s();", clsName.name);//ctor
+                model(ch, clsName, v, c);
+                c.append("std::string toString();");
+                c.append("};");
+                classes.all(c.get());
+
                 num++;
             }
         }

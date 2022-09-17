@@ -211,8 +211,7 @@ public class ItemSet {
         for (RuleDecl decl : tree.getRules(node)) {
             Item newItem = new Item(decl, 0);
             newItem.lookAhead.addAll(laList);
-            newItem.senders.add(sender);
-            newItem.parent = sender;
+            newItem.parents.add(sender);
             addOrUpdate(newItem);
             set.add(newItem);
         }
@@ -242,7 +241,7 @@ public class ItemSet {
 //                    }
 //                }
             }
-            prev.senders.addAll(item.senders);
+            prev.parents.addAll(item.parents);
             prev.prev.addAll(item.prev);
             prev.gotoSet.addAll(item.gotoSet);
             updateChildren(prev);

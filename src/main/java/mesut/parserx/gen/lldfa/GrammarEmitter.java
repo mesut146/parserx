@@ -1,6 +1,5 @@
 package mesut.parserx.gen.lldfa;
 
-import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
@@ -118,7 +117,7 @@ public class GrammarEmitter {
                 ItemSet target = tr.target;
                 System.out.printf("moved %d -> %d %s\n", set.stateId, target.stateId, it);
                 Item it2 = new Item(it, it.dotPos);
-                it2.senders.addAll(it.senders);
+                it2.parents.addAll(it.parents);
                 it.lookAhead.remove(tr.symbol.asName());
                 it2.lookAhead.clear();
                 for (LLTransition tr2 : target.transitions) {

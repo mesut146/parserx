@@ -46,7 +46,7 @@ public class Regex extends Node {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Regex regex = (Regex) o;
+        var regex = (Regex) o;
 
         return node.equals(regex.node) && type.equals(regex.type);
     }

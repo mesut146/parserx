@@ -54,7 +54,7 @@ public class Sequence extends NodeList {
             if (astInfo.which != -1) {
                 throw new RuntimeException("norm with code");
             }
-            Node res = get(0);
+            var res = get(0);
             res.label = label;
             return res;
         }
@@ -76,7 +76,7 @@ public class Sequence extends NodeList {
                 arr.add(ch);
             }
         }
-        Sequence res = new Sequence(arr);
+        var res = new Sequence(arr);
         res.astInfo = astInfo.copy();
         res.assocLeft = assocLeft;
         res.assocRight = assocRight;
