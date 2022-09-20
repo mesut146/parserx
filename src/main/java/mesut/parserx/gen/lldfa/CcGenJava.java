@@ -58,8 +58,8 @@ public class CcGenJava {
     public void gen() throws IOException {
         builder = new LLDfaBuilder(tree);
         builder.factor();
-        AstGen.gen(tree, "java");
-        LexerGenerator.gen(tree, "java");
+        AstGen.gen(tree, Lang.JAVA);
+        LexerGenerator.gen(tree, Lang.JAVA);
         JavaRecDescent.genTokenType(tree);
         writeTS(options);
         prep();

@@ -8,9 +8,9 @@ public class Minimization {
 
     //merge transitions and inputs so that its easier to write graph
     public static NFA combineAlphabet(NFA dfa) {
-        Alphabet resAlphabet = new Alphabet();
-        NFA res = new NFA(dfa.lastState);
-        Tree tree = new Tree();
+        var resAlphabet = new Alphabet();
+        var res = new NFA(dfa.lastState);
+        var tree = new Tree();
         tree.alphabet = resAlphabet;
         res.tree = tree;
         res.init(dfa.initialState.id);
@@ -19,7 +19,7 @@ public class Minimization {
             Map<State, List<Node>> map = new HashMap<>();
             if (!state.transitions.isEmpty()) {
                 for (Transition tr : state.transitions) {
-                    List<Node> nodes = map.computeIfAbsent(tr.target, k -> new ArrayList<>());
+                    var nodes = map.computeIfAbsent(tr.target, k -> new ArrayList<>());
                     if (tr.epsilon) {
                         nodes.add(new Epsilon());
                     }
@@ -28,10 +28,10 @@ public class Minimization {
                     }
                 }
                 for (var target : map.keySet()) {
-                    List<Node> nodes = map.get(target);//optimize()
+                    var nodes = map.get(target);//optimize()
                     Bracket bracket = new Bracket();
                     List<Node> or = new ArrayList<>();
-                    for (Node node : nodes) {
+                    for (var node : nodes) {
                         if (node.isRange()) {
                             bracket.add(node);
                         }
@@ -42,7 +42,7 @@ public class Minimization {
                     if (bracket.size() > 0) {
                         or.add(bracket);
                     }
-                    Node node = Or.make(or);
+                    var node = Or.make(or);
                     int id2;
                     if (resAlphabet.map.containsKey(node)) {
                         id2 = resAlphabet.getId(node);
@@ -62,13 +62,13 @@ public class Minimization {
 
     //https://en.wikipedia.org/wiki/DFA_minimization
     public static void removeUnreachable(NFA dfa) {
-        StateSet reachable_states = new StateSet();
+        var reachable_states = new StateSet();
         StateSet new_states = new StateSet();
         reachable_states.addState(dfa.initialState);
         new_states.addState(dfa.initialState);
 
         do {
-            StateSet temp = new StateSet();
+            var temp = new StateSet();
             for (var q : new_states) {
                 for (int c : dfa.getAlphabet().map.values()) {
                     for (Transition tr : q.transitions) {
@@ -95,8 +95,8 @@ public class Minimization {
     public static void removeDead(NFA dfa) {
         for (var state : dfa.it()) {
             if (state.accepting) continue;
-            boolean dead = true;
-            for (Transition tr : state.transitions) {
+            var dead = true;
+            for (var tr : state.transitions) {
                 //looping is not considered as transition
                 if (tr.target.id != state.id) {
                     dead = false;
@@ -110,7 +110,7 @@ public class Minimization {
     }
 
     static StateSet sub(StateSet s1, StateSet s2) {
-        StateSet set = new StateSet();
+        var set = new StateSet();
         for (var c : s1) {
             if (!s2.contains(c)) {
                 set.addState(c);
@@ -120,7 +120,7 @@ public class Minimization {
     }
 
     public static int numOfStates(NFA nfa) {
-        StateSet set = new StateSet();
+        var set = new StateSet();
         for (var state : nfa.it()) {
             if (!nfa.isDead(state) && (state.accepting || !state.transitions.isEmpty())) {
                 set.addState(state);
@@ -132,19 +132,19 @@ public class Minimization {
     //split states into accepting and non-accepting set
     static List<StateSet> group(NFA dfa) {
         List<StateSet> list = new ArrayList<>();
-        StateSet noacc = new StateSet();
+        var noacc = new StateSet();
         Map<String, StateSet> names = new HashMap<>();
         for (var id : dfa.it()) {
             if (dfa.isDead(id)) continue;
             if (id.accepting) {
-                for (String nm : id.names) {
+                for (var nm : id.names) {
                     if (names.containsKey(nm)) {
                         //group same token states
                         names.get(nm).addState(id);
                     }
                     else {
                         //each final state represents a different token so they can't be merged
-                        StateSet acc = new StateSet();
+                        var acc = new StateSet();
                         acc.addState(id);
                         list.add(acc);
                         names.put(nm, acc);

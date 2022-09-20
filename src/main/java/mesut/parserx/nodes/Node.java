@@ -2,10 +2,7 @@ package mesut.parserx.nodes;
 
 import mesut.parserx.gen.AstInfo;
 import mesut.parserx.gen.Copier;
-import mesut.parserx.gen.Insn;
 
-import java.util.ArrayList;
-import java.util.List;
 
 //base class used in grammar file
 public abstract class Node {
@@ -13,7 +10,6 @@ public abstract class Node {
     public static boolean printVarName = true;
     public String label;//name in alternation
     public AstInfo astInfo = new AstInfo();
-    public List<Insn> insnList = new ArrayList<>();
 
     public boolean isSequence() {
         return this instanceof Sequence;

@@ -2,7 +2,7 @@ package parser;
 
 import common.Env;
 import mesut.parserx.gen.lr.AstBuilderGen;
-import mesut.parserx.gen.lr.CodeGen;
+import mesut.parserx.gen.lr.LrCodeGen;
 import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.gen.lr.LrType;
 import mesut.parserx.nodes.Tree;
@@ -52,7 +52,7 @@ public class LrTest {
     public void codeGen() throws Exception {
         Tree tree = Env.tree("lr1/lr1.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        CodeGen codeGen = new CodeGen(tree, LrType.LR1);
+        LrCodeGen codeGen = new LrCodeGen(tree, LrType.LR1);
         codeGen.gen();
         dots(codeGen.gen, tree.file.getName());
     }

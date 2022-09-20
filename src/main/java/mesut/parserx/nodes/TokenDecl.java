@@ -6,11 +6,8 @@ public class TokenDecl {
     public boolean fragment = false;
     public boolean isSkip = false;
     public Node rhs;
-    public String mode;//->mode;
-
-    public TokenDecl(String name) {
-        this(name, null);
-    }
+    public String mode;
+    public ModeBlock modeBlock;
 
     public TokenDecl(String name, Node rhs) {
         if (name.equals("EOF")) {
@@ -34,6 +31,10 @@ public class TokenDecl {
         sb.append(": ");
         sb.append(rhs);
         return sb.toString();
+    }
+
+    public boolean isDefault() {
+        return modeBlock == null;
     }
 
 

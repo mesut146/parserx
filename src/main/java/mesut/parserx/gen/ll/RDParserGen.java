@@ -1,5 +1,6 @@
 package mesut.parserx.gen.ll;
 
+import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.targets.CppRecDescent;
@@ -19,14 +20,14 @@ public class RDParserGen {
     public static String tokens = "Tokens";
     public Options options;
     Tree tree;
-    String target;
+    Lang target;
 
     public RDParserGen(Tree tree) {
         this.tree = tree;
         this.options = tree.options;
     }
 
-    public static RDParserGen gen(Tree tree, String target) throws IOException {
+    public static RDParserGen gen(Tree tree, Lang target) throws IOException {
         var recDescent = new RDParserGen(tree);
         recDescent.target = target;
         recDescent.gen();
@@ -36,10 +37,10 @@ public class RDParserGen {
     public void gen() throws IOException {
         prepare();
 
-        if (target.equals("java")) {
+        if (target==Lang.JAVA) {
             new JavaRecDescent(tree).gen();
         }
-        else if (target.equals("cpp")) {
+        else if (target==Lang.CPP) {
             new CppRecDescent(tree).gen();
         }
     }

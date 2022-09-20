@@ -1,12 +1,11 @@
 package parser;
 
 import common.Env;
+import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.lldfa.*;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
-import mesut.parserx.parser.AstVisitor;
-import mesut.parserx.parser.Parser;
 import mesut.parserx.utils.Utils;
 import org.junit.Test;
 
@@ -94,7 +93,14 @@ public class LLDfaTest {
 //        dump(builder);
 //        var b=Builder.tree(tree).rule("tree").input(tree.file.getAbsolutePath(),"");
 //        DescTester.checkTokens(b);
-        ParserGen.gen(tree, "java");
+        ParserGen.gen(tree, Lang.JAVA);
+    }
+
+    @Test
+    public void prefix() throws IOException {
+        Tree tree = Env.tree("prefix.g");
+        var split = Splitter.split(new Name("A"), tree);
+        System.out.printf("left: %s, right: %s, mid: %s", split.isLeft(tree), split.isRight(tree), split.isMid());
     }
 
     @Test
@@ -198,7 +204,7 @@ public class LLDfaTest {
     public void test_token_stream() throws Exception {
         var tree = Env.tree("lexer/skip.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        LexerGenerator.gen(tree, "java");
+        LexerGenerator.gen(tree, Lang.JAVA);
         CcGenJava.writeTS(tree.options);
         var cl = new URLClassLoader(new URL[]{Env.dotDir().toURI().toURL()});
         var lexerCls = cl.loadClass("Lexer");

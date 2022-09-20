@@ -93,14 +93,6 @@ public class TransformTest {
     }
 
     @Test
-    public void greedyRec() throws IOException {
-        Factor.debug = true;
-        Tree tree = Env.tree("greedy/rec.g");
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        RDParserGen.gen(tree, "java");
-    }
-
-    @Test
     public void greedy() throws Exception {
         Builder.tree("greedy/b.g").rule("E")
                 .input("ca", "")

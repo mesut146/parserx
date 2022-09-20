@@ -1,9 +1,9 @@
 package mesut.parserx.gen.lr;
 
+import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
-import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.UnicodeUtils;
@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.*;
 
 //table driven parser gen
-public class CodeGen {
+public class LrCodeGen {
     public Options options;
     public LrDFAGen gen;
     LrType type;
@@ -22,22 +22,16 @@ public class CodeGen {
     Template template;
     TreeSet<RuleDecl> ruleSet = new TreeSet<>(Comparator.comparingInt(rd -> rd.index));
 
-    public CodeGen(Tree tree, LrType type) {
+    public LrCodeGen(Tree tree, LrType type) {
         this.gen = new LrDFAGen(tree, type);
         this.options = tree.options;
-        this.type = type;
-        gen.generate();
-        gen.checkAndReport();
-    }
-
-    public CodeGen(LrDFAGen gen, LrType type) {
-        this.gen = gen;
-        this.options = gen.tree.options;
         this.type = type;
     }
 
     public void gen() throws IOException {
-        idMap = LexerGenerator.gen(gen.tree, "java").idMap;
+        gen.generate();
+        gen.checkAndReport();
+        idMap = LexerGenerator.gen(gen.tree, Lang.JAVA).idMap;
 
         template = new Template("lalr1.java.template");
         template.set("package", options.packageName == null ? "" : "package " + options.packageName + ";\n");
@@ -72,10 +66,11 @@ public class CodeGen {
                 sb.append(", ");
             }
             sb.append('"');
-            if (rd.transformInfo!=null){
-               sb.append(rd.transformInfo.orgName);
+            if (rd.transformInfo != null) {
+                sb.append(rd.transformInfo.orgName);
 
-            }else{
+            }
+            else {
                 sb.append(rd.getName());
             }
             sb.append('"');
@@ -152,7 +147,7 @@ public class CodeGen {
             if (i > 0) {
                 sb.append(", ");
             }
-            if (rd.transformInfo != null &&rd.transformInfo.isStar && rd.rhs.asSequence().get(0).isName()) {
+            if (rd.transformInfo != null && rd.transformInfo.isStar && rd.rhs.asSequence().get(0).isName()) {
                 sb.append("true");
             }
             else {

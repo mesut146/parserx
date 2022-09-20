@@ -20,7 +20,7 @@ public class Group extends Node implements Iterable<Node> {
     public String toString() {
         boolean backup = Or.newLine;
         Or.newLine = false;
-        String s = varString() + "(" + node + ")";
+        var s = varString() + "(" + node + ")";
         Or.newLine = backup;
         return s;
     }
@@ -46,7 +46,7 @@ public class Group extends Node implements Iterable<Node> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Group nodes = (Group) o;
+        var nodes = (Group) o;
         return Objects.equals(node, nodes.node);
     }
 

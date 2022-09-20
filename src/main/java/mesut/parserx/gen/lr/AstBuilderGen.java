@@ -1,6 +1,7 @@
 package mesut.parserx.gen.lr;
 
 import mesut.parserx.gen.CodeWriter;
+import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.ll.AstGen;
 import mesut.parserx.gen.ll.Type;
@@ -23,7 +24,7 @@ public class AstBuilderGen {
 
     public void gen() throws IOException {
         tree = EbnfToBnf.combineOr(tree);
-        AstGen.gen(tree, "java");
+        AstGen.gen(tree, Lang.JAVA);
         options = tree.options;
         if (options.packageName != null) {
             writer.append("package %s;", options.packageName);

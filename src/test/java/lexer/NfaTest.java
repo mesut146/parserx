@@ -2,7 +2,9 @@ package lexer;
 
 import common.Env;
 import mesut.parserx.dfa.NFA;
+import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.ll.RDParserGen;
+import mesut.parserx.gen.lldfa.ParserGen;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.StringNode;
 import mesut.parserx.nodes.TokenDecl;
@@ -51,7 +53,7 @@ public class NfaTest {
     public void reader2() throws IOException {
         Tree tree = Tree.makeTree(new File("./src/main/grammar/nfaReader.g"));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        RDParserGen.gen(tree, "java");
+        ParserGen.gen(tree, Lang.JAVA);
     }
 
     @Test

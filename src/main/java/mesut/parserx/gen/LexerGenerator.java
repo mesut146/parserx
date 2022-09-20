@@ -10,11 +10,8 @@ import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.UnicodeUtils;
 
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 public class LexerGenerator {
     public IdMap idMap = new IdMap();
@@ -24,20 +21,17 @@ public class LexerGenerator {
     public int[] idArr;
     public TreeSet<Map.Entry<Name, Integer>> tokens;
     Options options;
-    String target;
+    Lang target;
 
-    public LexerGenerator(Tree tree, String target) {
+    public LexerGenerator(Tree tree, Lang target) {
         this.tree = tree;
         this.dfa = tree.makeNFA().dfa();
         this.dfa = Minimization.optimize(this.dfa);
         this.options = tree.options;
-        if (!target.equals("java") && !target.equals("c++") && !target.equals("cpp")) {
-            throw new RuntimeException("invalid target: " + target);
-        }
         this.target = target;
     }
 
-    public static LexerGenerator gen(Tree tree, String target) throws IOException {
+    public static LexerGenerator gen(Tree tree, Lang target) throws IOException {
         var gen = new LexerGenerator(tree, target);
         gen.generate();
         return gen;
@@ -69,10 +63,10 @@ public class LexerGenerator {
     public void generate() throws IOException {
         nameAndId();
         skipList();
-        if (target.equals("java")) {
+        if (target == Lang.JAVA) {
             new JavaLexer().gen(this);
         }
-        else if (target.equals("c++") || target.equals("cpp")) {
+        else if (target == Lang.CPP) {
             new CppLexer().gen(this);
         }
     }

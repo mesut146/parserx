@@ -1,6 +1,7 @@
 package lexer;
 
 import common.Env;
+import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
@@ -21,7 +22,7 @@ public class RealTest {
 
         String outDir = Env.dotDir().getAbsolutePath();
         tree.options.outDir = outDir;
-        LexerGenerator.gen(tree, "java");
+        LexerGenerator.gen(tree, Lang.JAVA);
 
         File out = new File(outDir, "out");
         if (out.exists()) {

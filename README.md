@@ -10,13 +10,13 @@ lexer &amp; parser generator and grammar toolkit written in java
 - left recursion removal(direct and indirect)
 - left factoring
 - ebnf to bnf
-- LR(0),LR(1),LALR(1) parser generator
-- Table based parser & State->Method based parser
-- Outputs AST/CST
+- LR(1),LALR(1) parser generator
 - LL(1) recursive descent parser generator
+- Table based parser & State->Method based parser
+- lexer generator
+- Outputs CST
 - dot graph of NFA, DFA, LR(0), LR(1), LALR(1)
 - DFA minimization
-- lexer generator
 - precedence tool(removes any precedence conflict)
 
 Examples are in examples folder

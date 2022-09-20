@@ -1,6 +1,7 @@
 package lexer;
 
 import common.Env;
+import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
@@ -34,7 +35,7 @@ public class LexerGenTest {
     public void cppTarget() throws IOException {
         Tree tree = Env.tree("lexer/skip.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath() + "/cpp";
-        LexerGenerator.gen(tree, "cpp").dfa.dot(Env.dotFile(tree.file.getName() + ".dot"));
+        LexerGenerator.gen(tree, Lang.CPP).dfa.dot(Env.dotFile(tree.file.getName() + ".dot"));
         Runtime.getRuntime().exec("g++ -shared -fPIC -o l.so Lexer.cpp Token.cpp", null, new File(tree.options.outDir));
     }
 
@@ -95,7 +96,7 @@ public class LexerGenTest {
         Options options = new Options();
         options.outDir = Env.dotDir().getAbsolutePath();
         tree.options = options;
-        LexerGenerator.gen(tree, "java");
+        LexerGenerator.gen(tree, Lang.JAVA);
     }
 
     @Test

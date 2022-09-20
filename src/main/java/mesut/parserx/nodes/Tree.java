@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 //the grammar file for both lexer and parser
 public class Tree {
 
+    public List<TokenBlock> tokenBlocks = new ArrayList<>();
     public List<TokenDecl> tokens = new ArrayList<>();
     public List<RuleDecl> rules = new ArrayList<>();
     public Options options = new Options();

@@ -2,6 +2,7 @@ package parser;
 
 import common.Env;
 import lexer.RealTest;
+import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.ll.DotBuilder;
 import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.lldfa.CcGenJava;
@@ -42,7 +43,7 @@ public class DescTester {
         }
         //RecDescent.gen(tree, "java");
         //new CcGenJava(tree).gen();
-        ParserGen.gen(tree, "java");
+        ParserGen.gen(tree, Lang.JAVA);
 
         File out = new File(outDir, "out");
         if (out.exists()) {
@@ -111,7 +112,7 @@ public class DescTester {
         if (dump) {
             tree.options.dump = true;
         }
-        ParserGen.gen(tree, "java");
+        ParserGen.gen(tree,Lang.JAVA);
 
         var out = new File(outDir, "out");
         if (out.exists()) {
@@ -164,7 +165,7 @@ public class DescTester {
         }
         //RecDescent.gen(tree, "java");
         //new CcGenJava(tree).gen();
-        ParserGen.gen(tree, "java");
+        ParserGen.gen(tree, Lang.JAVA);
 
         File out = new File(outDir, "out");
         if (out.exists()) {
@@ -212,7 +213,7 @@ public class DescTester {
         var outDir = Env.dotDir().getAbsolutePath();
         tree.options.outDir = outDir;
         //RecDescent.gen(tree, "java");
-        ParserGen.gen(tree, "java");
+        ParserGen.gen(tree, Lang.JAVA);
 
         File out = new File(outDir, "out");
         if (out.exists()) {
@@ -253,7 +254,7 @@ public class DescTester {
         var outDir = Env.dotDir().getAbsolutePath();
         Utils.copy(Env.getResFile("DescTester.java.2"), tester);
         tree.options.outDir = outDir;
-        RDParserGen.gen(tree, "java");
+        RDParserGen.gen(tree, Lang.JAVA);
 
         var out = new File(outDir, "out");
         if (out.exists()) {

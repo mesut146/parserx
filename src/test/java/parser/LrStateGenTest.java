@@ -1,6 +1,7 @@
 package parser;
 
 import common.Env;
+import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.lr.*;
 import mesut.parserx.nodes.Tree;
@@ -26,7 +27,7 @@ public class LrStateGenTest {
         dfaGen.checkAndReport();
         dfaGen.genGoto();
         dots(dfaGen, tree.file.getName());
-        LexerGenerator lexerGenerator = LexerGenerator.gen(tree, "java");
+        LexerGenerator lexerGenerator = LexerGenerator.gen(tree, Lang.JAVA);
         StateCodeGen.debugState = true;
         StateCodeGen.debugReduce = true;
         StateCodeGen gen = new StateCodeGen( dfaGen, lexerGenerator.idMap);
@@ -46,12 +47,12 @@ public class LrStateGenTest {
         //Tree tree = Env.tree("lr1/prec3.g");
         Tree tree = Env.tree("lr1/calc.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        LrDFAGen dfaGen = new LrDFAGen(tree, LrType.LALR1);
+        var dfaGen = new LrDFAGen(tree, LrType.LALR1);
         dfaGen.generate();
         dfaGen.checkAndReport();
         dfaGen.genGoto();
         dots(dfaGen, tree.file.getName());
-        LexerGenerator lexerGenerator = LexerGenerator.gen(tree, "java");
+        var lexerGenerator = LexerGenerator.gen(tree, Lang.JAVA);
         StateCodeGen2.debugState = true;
         StateCodeGen2.debugReduce = true;
         StateCodeGen2 gen = new StateCodeGen2( dfaGen, lexerGenerator.idMap);

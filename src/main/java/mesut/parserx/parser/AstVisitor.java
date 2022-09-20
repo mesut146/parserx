@@ -62,11 +62,11 @@ public class AstVisitor {
 
 
     public TokenDecl visitTokendecl(Ast.tokenDecl node) {
-        var decl = new TokenDecl(node.name.IDENT.IDENT.value);
-        if (node.HASH != null) {
-            decl.fragment = true;
-        }
-        decl.rhs = visitRhs(node.rhs);
+        var isFrag = node.HASH != null;
+        var name = node.name.IDENT.IDENT.value;
+        var rhs = visitRhs(node.rhs);
+        var decl = new TokenDecl(name, rhs);
+        decl.fragment = isFrag;
         return decl;
     }
 
@@ -187,15 +187,15 @@ public class AstVisitor {
             var s = node.SHORTCUT.SHORTCUT.value;
             return new Group(Shortcut.from(s.substring(2, s.length() - 2)));
         }
-        else if(node.call != null){
+        else if (node.call != null) {
             var s = node.call.call.CALL_BEGIN.value;
             var res = new Name(s.substring(0, s.length() - 1));
             res.args.add(new Name(node.call.call.IDENT.value));
-            for(var arg : node.call.call.g1){
+            for (var arg : node.call.call.g1) {
                 res.args.add(new Name(arg.IDENT.value));
             }
             return res;
-        }    
+        }
         else {
             throw new RuntimeException("unexpected");
         }

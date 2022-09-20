@@ -1,7 +1,7 @@
 token{
  BOOLEAN: "true" | "false";
  OPTIONS: "options";
- TOKEN: "token" | "tokens";
+ TOKEN: "token";
  SKIP: "skip";
  INCLUDE: "include";
  START: "%start";
@@ -36,7 +36,7 @@ token{
  PLUS: "+";
  QUES: "?";
  POW: "^";
- SEPARATOR: ":" | "=" | ":=" | "::=" | "->";
+ SEPARATOR: ":" | "=" | ":=" | "::=";
  TILDE: "~";
  HASH: "#";
  COMMA: ",";
@@ -44,6 +44,7 @@ token{
  DOT: ".";
  SEMI: ";";
  MINUS: "-";
+ ARROW: "->";
 }
 
 skip{
@@ -63,14 +64,15 @@ option: key=IDENT "=" value=(NUMBER | BOOLEAN) ";"?;
 
 startDecl: START SEPARATOR name ";";
 
-tokenBlock: TOKEN "{" tokenDecl* "}";
+tokenBlock: "token" "{" tokenDecl* "}";
 skipBlock: "skip" "{" tokenDecl* "}";
 
 
-tokenDecl: "#"? name ("-" name)? SEPARATOR rhs ";";
+tokenDecl: "#"? name SEPARATOR rhs mode=("->" modes)? ";";
+modes: ident ("," ident)?;
+
 ruleDecl: name args? SEPARATOR rhs ";";
 args: "(" name rest=("," name)* ")";
-//args: "(" %join(name, ",")  ")";
 
 rhs: sequence ("|" sequence)*;
 sequence: regex+ assoc=("%left" | "%right")? label=("#" name)?;

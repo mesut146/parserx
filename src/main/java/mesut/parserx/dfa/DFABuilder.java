@@ -89,7 +89,7 @@ public class DFABuilder {
     public StateSet closure(State state, StateSet set) {
         if (set.contains(state)) return set;
         set.addState(state);//itself
-        StateSet eps = nfa.getEps(state);
+        var eps = nfa.getEps(state);
         if (eps == null || eps.states.size() == 0) {
             return set;
         }
@@ -101,7 +101,7 @@ public class DFABuilder {
 
     //epsilon closure for dfa conversion
     public StateSet closure(StateSet set) {
-        StateSet res = new StateSet();
+        var res = new StateSet();
         for (var state : set) {
             res.addAll(closure(state));
         }

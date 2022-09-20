@@ -3,11 +3,12 @@ package mesut.parserx;
 import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Validator;
+import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.lldfa.ParserGen;
 import mesut.parserx.gen.lr.AstBuilderGen;
-import mesut.parserx.gen.lr.CodeGen;
+import mesut.parserx.gen.lr.LrCodeGen;
 import mesut.parserx.gen.lr.LrType;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorLoop;
@@ -67,7 +68,7 @@ public class Main {
         String parserClass = null;
         String astClass = null;
         List<String> cmd = new ArrayList<>();
-        String lang = null;
+        Lang lang = Lang.JAVA;
         boolean hasDot = false;
         for (int i = 0; i < args.length; i++) {
             String s = args[i];
@@ -107,7 +108,7 @@ public class Main {
                 i++;
             }
             else if (s.equals("-lang")) {
-                lang = args[i + 1];
+                lang = Lang.from(args[i + 1]);
                 i++;
             }
             else if (cmds.contains(s)) {
@@ -128,9 +129,6 @@ public class Main {
         if (input == null) {
             System.err.println("provide an input file \ncmd is " + NodeList.join(Arrays.asList(args), " "));
             return;
-        }
-        if (lang != null && !lang.equals("java") && !lang.equals("cpp")) {
-            throw new RuntimeException("invalid lang: " + lang);
         }
         try {
             if (cmd.contains("-left")) {
@@ -243,14 +241,13 @@ public class Main {
                 if (tokenClass != null) {
                     tree.options.tokenClass = tokenClass;
                 }
-                checkLang(lang);
-                LexerGenerator generator = LexerGenerator.gen(tree, lang);
+                var generator = LexerGenerator.gen(tree, lang);
                 if (hasDot) {
                     generator.dfa.dot(new FileWriter(new File(tree.options.outDir, Utils.newName(input.getName(), "dot"))));
                 }
             }
             else if (cmd.contains("-desc") || cmd.contains("-lldfa")) {
-                Tree tree = Tree.makeTree(input);
+                var tree = Tree.makeTree(input);
                 if (output == null) {
                     tree.options.outDir = input.getParent();
                 }
@@ -275,7 +272,6 @@ public class Main {
                 if (astClass != null) {
                     tree.options.astClass = astClass;
                 }
-                checkLang(lang);
                 if (cmd.contains("-lldfa")) {
                     ParserGen.gen(tree, lang);
                 }
@@ -316,7 +312,7 @@ public class Main {
                 else {
                     type = LrType.LALR1;
                 }
-                CodeGen gen = new CodeGen(tree, type);
+                LrCodeGen gen = new LrCodeGen(tree, type);
                 gen.gen();
                 AstBuilderGen builderGen = new AstBuilderGen(tree);
                 builderGen.gen();
@@ -337,10 +333,6 @@ public class Main {
 
     private static void logwrite(File file) {
         System.out.println("writing " + file);
-    }
-
-    static void checkLang(String lang) {
-        if (lang == null) throw new RuntimeException("specify a -lang, supported are java,cpp");
     }
 
 
