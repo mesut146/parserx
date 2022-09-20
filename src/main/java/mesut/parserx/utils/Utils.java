@@ -15,7 +15,9 @@ public class Utils {
     public static Tree fromRegex(String regex) throws IOException {
         Node rhs = RegexVisitor.make(regex);
         Tree tree = new Tree();
-        tree.addToken(new TokenDecl("START", rhs));
+        var block = new TokenBlock();
+        tree.tokenBlocks.add(block);
+        tree.addToken(new TokenDecl("START", rhs), block);
         makeTokens(tree, true);
         return tree;
     }
@@ -39,6 +41,8 @@ public class Utils {
     //make missing tokens
     public static void makeTokens(final Tree tree, final boolean fromRegex) {
         final Map<String, TokenDecl> newTokens = new HashMap<>();
+        var block = new TokenBlock();
+        tree.tokenBlocks.add(block);
         new Transformer(tree) {
             int count = 1;
 
@@ -48,14 +52,14 @@ public class Utils {
                 if (tree.getRule(name) == null) {
                     //add fake token
                     name.isToken = true;
-                    tree.tokens.add(new TokenDecl(name.name, new StringNode(name.name)));
+                    tree.addToken(new TokenDecl(name.name, new StringNode(name.name)), block);
                 }
                 return name;
             }
 
             @Override
             public Node visitString(StringNode node, Void parent) {
-                TokenDecl decl = tree.getTokenByValue(node.value);
+                var decl = tree.getTokenByValue(node.value);
                 if (decl == null) {
                     if (fromRegex) {
                         return node;
@@ -68,8 +72,8 @@ public class Utils {
                 return decl.ref();
             }
         }.transformAll();
-        for (TokenDecl decl : newTokens.values()) {
-            tree.addToken(decl);
+        for (var decl : newTokens.values()) {
+            tree.addToken(decl, block);
         }
     }
 

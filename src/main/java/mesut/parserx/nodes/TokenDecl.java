@@ -30,6 +30,19 @@ public class TokenDecl {
         sb.append(name);
         sb.append(": ");
         sb.append(rhs);
+        if (mode != null || isSkip) {
+            sb.append(" -> ");
+            if (isSkip) {
+                sb.append("skip");
+            }
+            if (mode != null) {
+                if (isSkip) {
+                    sb.append(", ");
+                }
+                sb.append(mode);
+            }
+        }
+        sb.append(";");
         return sb.toString();
     }
 

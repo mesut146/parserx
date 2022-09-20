@@ -3,7 +3,7 @@ package mesut.parserx.nodes;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ModeBlock extends Node {
+public class ModeBlock {
 
     public String name;
     public List<TokenDecl> tokens = new ArrayList<>();
@@ -12,8 +12,4 @@ public class ModeBlock extends Node {
         this.name = name;
     }
 
-    @Override
-    public <R, A> R accept(Visitor<R, A> visitor, A arg) {
-        return visitor.visitModeBlock(this, arg);
-    }
 }

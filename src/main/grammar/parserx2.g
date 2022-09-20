@@ -1,8 +1,7 @@
 token{
- BOOLEAN: 'true' | 'false';
+ BOOLEAN: "true" | "false";
  OPTIONS: "options";
- TOKEN: "token" | "tokens";
- SKIP: "skip";
+ TOKEN: "token";
  INCLUDE: "include";
  START: "%start";
  EPSILON: "%epsilon" | "%empty" | "ε";
@@ -17,6 +16,13 @@ token{
  CHAR: "'" ([^\r\n\\'] | "\\" .)* "'";
  NUMBER: [0-9]+;
 }
+
+/*token{
+ #bracketLexer: "[" "^"? unit+ "]";
+ #unit: single ("-" single)?;
+ #single: "\\u" hex_digit hex_digit hex_digit hex_digit | .;
+ #hex_digit: [a-fA-F0-9];
+}*/
 
 token{
  LP: "(";
@@ -38,15 +44,15 @@ token{
  ARROW: "->";
 }
 
-skip{
-  LINE_COMMENT: "//" [^\n]*;
-  BLOCK_COMMENT: "/*" ([^*] | "*" [^/])* "*/";
-  WS: [ \n\r\t]+;
+token{
+  LINE_COMMENT: "//" [^\n]* -> skip;
+  BLOCK_COMMENT: "/*" ([^*] | "*" [^/])* "*/" -> skip;
+  WS: [ \n\r\t]+ -> skip;
 }
 
 %start: tree;
 
-tree: includeStatement* optionsBlock? blocks=modeBlock* startDecl? rules=ruleDecl*;
+tree: includeStatement* optionsBlock? tokens=tokenBlock* startDecl? rules=ruleDecl*;
 
 includeStatement: "include" STRING;
 
@@ -55,16 +61,13 @@ option: key=IDENT "=" value=(NUMBER | BOOLEAN) ";"?;
 
 startDecl: START SEPARATOR name ";";
 
-
-tokenDecl: "#"? name SEPARATOR rhs modeSpec? ";";
-modeSpec: "->" name ("," name)*;
-modeBlock: name "{" modeMember "}";
-modeMember: tokenDecl | modeBlock;
+tokenBlock: "token" "{" (tokenDecl | modeBlock)* "}";
+tokenDecl: "#"? name SEPARATOR rhs mode=("->" modes)? ";";
+modes: name ("," name)?;
+modeBlock: name "{" tokenDecl* "}";
 
 ruleDecl: name args? SEPARATOR rhs ";";
 args: "(" name rest=("," name)* ")";
-//args: "(" %join(name, ",")  ")";
-
 
 rhs: sequence ("|" sequence)*;
 sequence: regex+ assoc=("%left" | "%right")? label=("#" name)?;
@@ -79,7 +82,6 @@ simple: group
      | untilNode
      | dotNode
      | EPSILON
-     | repeatNode
      | SHORTCUT
      | call;
 
@@ -88,8 +90,7 @@ stringNode: STRING | CHAR;
 bracketNode: BRACKET;//easier to handle as token
 untilNode: "~" regex;
 dotNode: ".";
-name: IDENT | TOKEN | "skip" | "options" | "include";
-repeatNode: "{" rhs "}";
+name: IDENT | TOKEN | "options" /*| "include"*/;
 
 call: CALL_BEGIN IDENT ("," IDENT)* ")";
 

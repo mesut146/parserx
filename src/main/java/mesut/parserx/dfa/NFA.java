@@ -17,7 +17,8 @@ public class NFA {
     public Tree tree;
     public int lastState = -1;
     public State initialState;
-    Map<Integer, State> id_to_state;
+    public Map<Integer, State> id_to_state;
+    public Map<String, State> modes = new HashMap<>();
 
     public NFA(int capacity, Tree tree) {
         this.tree = tree;
@@ -30,6 +31,7 @@ public class NFA {
 
     public void init(int initial) {
         initialState = getState(initial);
+        modes.put("DEFAULT", initialState);
     }
 
     public State newState() {
@@ -128,13 +130,32 @@ public class NFA {
         return set.states.stream().anyMatch(s -> s.isSkip);
     }
 
+    //get index of token by name
+    public int indexOf(String name) {
+        for (var tb : tree.tokenBlocks) {
+            for (int i = 0; i < tb.tokens.size(); i++) {
+                if (tb.tokens.get(i).name.equals(name)) {
+                    return i;
+                }
+            }
+            for (var mb : tb.modeBlocks) {
+                for (int i = 0; i < mb.tokens.size(); i++) {
+                    if (tb.tokens.get(i).name.equals(name)) {
+                        return i;
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
     //get token name for state set by defined order
     String getName(StateSet set) {
         int minIndex = Integer.MAX_VALUE;
         String name = null;
         for (var state : set) {
-            for (String nm : state.names) {
-                int i = tree.indexOf(nm);
+            for (var nm : state.names) {
+                int i = indexOf(nm);
                 if (i < minIndex) {
                     name = nm;
                     minIndex = i;
@@ -193,6 +214,12 @@ public class NFA {
     public void dump(Writer writer) {
         PrintWriter w = new PrintWriter(writer);
         w.println("initial = " + initialState);
+        for (var e : modes.entrySet()) {
+            if (e.getKey().equals("DEFAULT")){
+                continue;
+            }
+            w.printf("mode %s = %s;\n", e.getKey(), e.getValue());
+        }
         w.print("final = ");
         boolean first = true;
 
@@ -233,7 +260,7 @@ public class NFA {
                 w.println();
             }
         }
-        w.close();
+        w.flush();
     }
 
     private void sort(List<Transition> arr) {

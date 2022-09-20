@@ -4,16 +4,19 @@ import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.TokenDecl;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class DotWriter {
 
     public static void table(PrintWriter writer, LrDFAGen generator, boolean writeRules) {
-        var tokens = generator.tree.tokens.stream()
-                .filter(td->!td.fragment)
-                .map(TokenDecl::ref)
-                .collect(Collectors.toList());
+        var tokens = new LinkedHashSet<Name>();
+        generator.tree.tokenBlocks.forEach(tb -> {
+            tb.tokens.forEach(decl -> tokens.add(decl.ref()));
+            tb.modeBlocks.forEach(mb -> mb.tokens.forEach(decl -> tokens.add(decl.ref())));
+        });
         tokens.add(LrDFAGen.dollar);
 
         writer.println("digraph G{");
@@ -24,12 +27,12 @@ public class DotWriter {
         writer.println("<<TABLE>");
         writer.println("<TR>");
         writer.println("<TD>States</TD>");
-        if (writeRules){
+        if (writeRules) {
             writer.println("<TD>Rules</TD>");
         }
         //tokens
-        for (Name token : tokens) {
-            TokenDecl decl = generator.tree.getToken(token.name);
+        for (var token : tokens) {
+            var decl = generator.tree.getToken(token.name);
             if (decl != null && decl.rhs.isString()) {
                 writer.print("<TD>" + decl.rhs + "</TD>");
             }
@@ -39,14 +42,14 @@ public class DotWriter {
         }
         //rules
         var rules = generator.tree.rules.stream()
-                .map(rd->rd.ref)
+                .map(rd -> rd.ref)
                 .collect(Collectors.toList());
-        for (Name rule : rules) {
+        for (var rule : rules) {
             writer.println("<TD>" + rule.name + "</TD>");
         }
         writer.println("</TR>");
-        String start = generator.start.baseName();
-        for (LrItemSet set : generator.itemSets) {
+        var start = generator.start.baseName();
+        for (var set : generator.itemSets) {
             writer.print("<TR>");
             writer.println("<TD>" + set.stateId + "</TD>");
             if (writeRules) {
@@ -59,7 +62,7 @@ public class DotWriter {
                 writer.print("</TD>");
             }
             //shift/reduce
-            for (Name token : tokens) {
+            for (var token : tokens) {
                 writer.print("<TD>");
                 //shift
                 for (LrTransition tr : set.transitions) {
@@ -68,8 +71,8 @@ public class DotWriter {
                     }
                 }
                 //reduce
-                for (LrItem item : set.getReduce()) {
-                    String name = item.rule.baseName();
+                for (var item : set.getReduce()) {
+                    var name = item.rule.baseName();
                     if (item.lookAhead.isEmpty()) {
                         //lr0
                         if (name.equals(start)) {
@@ -103,7 +106,7 @@ public class DotWriter {
                 writer.print("</TD>");
             }
             //goto
-            for (Name rule : rules) {
+            for (var rule : rules) {
                 writer.print("<TD>");
                 /*for (LrItem item : set.getReduce()) {
                     if (item.ruleDecl.name.equals(rule.name)) {
@@ -136,7 +139,7 @@ public class DotWriter {
             //labels
             for (LrItemSet set : gen.itemSets) {
                 writer.printf("%s [shape=box xlabel=\"%s\" %s label=\"%s\"]\n",
-                        set.stateId, set.stateId, set.hasReduce() ? "color=red " : "", set.toString().replace("\n", "\\l").replace("\"","\\\"") + "\\l");
+                        set.stateId, set.stateId, set.hasReduce() ? "color=red " : "", set.toString().replace("\n", "\\l").replace("\"", "\\\"") + "\\l");
             }
 
             for (var set : gen.itemSets) {

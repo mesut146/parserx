@@ -12,6 +12,7 @@ import java.util.List;
 
 //cst to ast
 public class AstVisitor {
+    Tree tree;
 
     public static Tree makeTree(String data) throws IOException {
         var parser = new Parser(new Lexer(new StringReader(data)));
@@ -28,27 +29,32 @@ public class AstVisitor {
     }
 
     public Tree visitTree(Ast.tree node) {
-        var tree = new Tree();
+        tree = new Tree();
         for (var inc : node.includeStatement) {
             tree.addInclude(UnicodeUtils.trimQuotes(inc.STRING.value));
         }
         if (node.optionsBlock != null) {
-            for (var option : node.optionsBlock.option) {
-                if (option.key.value.equals("")) {
-                    //todo
-                }
-            }
+            //todo
         }
         for (var g1 : node.tokens) {
             if (g1.tokenBlock != null) {
-                for (var decl : g1.tokenBlock.tokenBlock.tokenDecl) {
-                    tree.addToken(visitTokendecl(decl));
+                var block = new TokenBlock();
+                tree.tokenBlocks.add(block);
+                for (var decl : g1.tokenBlock.tokenBlock.g1) {
+                    if (decl.tokenDecl != null) {
+                        tree.addToken(visitTokendecl(decl.tokenDecl.tokenDecl), block);
+                    }
+                    else {
+                        tree.addModeBlock(visitModeBlock(decl.modeBlock.modeBlock), block);
+                    }
                 }
             }
             else {
-                for (var decl : g1.skipBlock.skipBlock.tokenDecl) {
-                    tree.addSkip(visitTokendecl(decl));
-                }
+//                for (var decl : g1.skipBlock.skipBlock.tokenDecl) {
+//                    var token = visitTokendecl(decl);
+//                    token.isSkip = true;
+//                    tree.addToken(token);
+//                }
             }
         }
         if (node.startDecl != null) {
@@ -60,6 +66,13 @@ public class AstVisitor {
         return tree;
     }
 
+    private ModeBlock visitModeBlock(Ast.modeBlock modeBlock) {
+        var block = new ModeBlock(modeBlock.IDENT.value);
+        for (var decl : modeBlock.tokenDecl) {
+            tree.addToken(visitTokendecl(decl), block);
+        }
+        return block;
+    }
 
     public TokenDecl visitTokendecl(Ast.tokenDecl node) {
         var isFrag = node.HASH != null;
@@ -67,9 +80,32 @@ public class AstVisitor {
         var rhs = visitRhs(node.rhs);
         var decl = new TokenDecl(name, rhs);
         decl.fragment = isFrag;
+        if (node.mode != null) {
+            var firstMode = visitName(node.mode.modes.name);
+            if (firstMode.equals("skip")) {
+                decl.isSkip = true;
+            }
+            else {
+                decl.mode = firstMode;
+            }
+            if (node.mode.modes.g1 != null) {
+                var secondMode = visitName(node.mode.modes.g1.name);
+                if (secondMode.equals(firstMode)) {
+                    throw new RuntimeException("duplicate mode entry in " + name);
+                }
+                if (secondMode.equals("skip")) {
+                    decl.isSkip = true;
+                }
+                else {
+                    if (!firstMode.equals("skip")) {
+                        throw new RuntimeException("more than one mode specified in " + name);
+                    }
+                    decl.mode = secondMode;
+                }
+            }
+        }
         return decl;
     }
-
 
     public RuleDecl visitRuledecl(Ast.ruleDecl node) {
         var decl = new RuleDecl(node.name.IDENT.IDENT.value);
@@ -121,7 +157,7 @@ public class AstVisitor {
         return seq;
     }
 
-    String str(Ast.name name) {
+    String visitName(Ast.name name) {
         if (name.IDENT != null) {
             return name.IDENT.IDENT.value;
         }
@@ -138,7 +174,7 @@ public class AstVisitor {
 
     public Node visitRegex(Ast.regex node) {
         if (node.regex1 != null) {
-            var name = str(node.regex1.name);
+            var name = visitName(node.regex1.name);
             var res = visitSimple(node.regex1.simple);
             res.astInfo.varName = name;
             if (node.regex1.type != null) {

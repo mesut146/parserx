@@ -10,6 +10,7 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -84,7 +85,7 @@ public class JavaRecDescent {
     }
 
     public static void genTokenType(Tree tree) throws IOException {
-        var options=tree.options;
+        var options = tree.options;
         var c = new CodeWriter(true);
         if (options.packageName != null) {
             c.append("package %s;", options.packageName);
@@ -93,10 +94,12 @@ public class JavaRecDescent {
         c.append("public class %s{", tokens);
         c.append("public static final int EOF = 0;");
         int id = 1;
-        for (var decl : tree.tokens) {
+        Set<String> done = new HashSet<>();
+        for (var decl : tree.getTokens()) {
             if (decl.fragment) continue;
-            //if (decl.isSkip) continue;
+            if (done.contains(decl.name)) continue;
             c.append("public static final int %s = %d;", decl.name, id);
+            done.add(decl.name);
             id++;
         }
         c.append("}");

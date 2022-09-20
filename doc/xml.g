@@ -20,10 +20,10 @@ token{
   next_attr{
    GT: ">" -> DEFAULT;
    EMPTY_END: "/>" -> DEFAULT;
-   WS: S -> SKIP, attr_mode;
+   WS: S ->  attr_mode, skip;
   }
 }
 
 element: "<" TAG_NAME attr* end;
-attr: ATTR_NAME EQ VALUE;
+attr: ATTR_NAME EQ ATTR_VALUE;
 end: GT | EMPTY_END;

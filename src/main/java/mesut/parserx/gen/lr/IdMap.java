@@ -11,7 +11,9 @@ import mesut.parserx.utils.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 //common for lexer and parser
@@ -38,25 +40,27 @@ public class IdMap {
     public void genSymbolIds(Tree tree) {
         map.put(EOF, 0);
         lastId = 0;
-        for (TokenDecl decl : tree.tokens) {
+        Set<String> done = new HashSet<>();
+        for (var decl : tree.getTokens()) {
             if (decl.fragment) continue;
-            //if (decl.isSkip) continue;
+            if (done.contains(decl.name)) continue;
             map.put(decl.ref(), ++lastId);
+            done.add(decl.name);
         }
         lastTokenId = lastId;
 
-        for (RuleDecl rule : tree.rules) {
+        for (var rule : tree.rules) {
             map.put(rule.ref, ++lastId);
         }
         map.put(new Name(LrDFAGen.startName, false), ++lastId);
 
-        for (Map.Entry<Name, Integer> entry : map.entrySet()) {
+        for (var entry : map.entrySet()) {
             id_to_name.put(entry.getValue(), entry.getKey());
         }
     }
 
     public void writeSym(Options options) throws IOException {
-        CodeWriter writer = new CodeWriter(true);
+        var writer = new CodeWriter(true);
 
         if (options.packageName != null) {
             writer.all("package %s;\n\n", options.packageName);
@@ -88,7 +92,7 @@ public class IdMap {
         }
         writer.all("\n}");
 
-        File file = new File(options.outDir, className + ".java");
+        var file = new File(options.outDir, className + ".java");
         Utils.write(writer.toString(), file);
     }
 

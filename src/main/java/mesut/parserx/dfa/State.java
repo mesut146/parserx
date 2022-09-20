@@ -35,7 +35,7 @@ public class State {
 
     @Override
     public String toString() {
-        return "" + id;
+        return String.valueOf(id);
     }
 
     @Override

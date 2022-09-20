@@ -1,5 +1,4 @@
 package mesut.parserx.parser;
-
 import java.util.List;
 import java.util.ArrayList;
 
@@ -237,12 +236,169 @@ public class Ast{
     public static class tokenBlock{
         public Token TOKEN;
         public Token LBRACE;
-        public List<tokenDecl> tokenDecl = new ArrayList<>();
+        public List<tokenBlockg1> g1 = new ArrayList<>();
         public Token RBRACE;
         public String toString(){
             StringBuilder sb = new StringBuilder("tokenBlock{");
             boolean first = true;
             sb.append("'").append(TOKEN.value).append("'");
+            first = false;
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append("'").append(LBRACE.value).append("'");
+            if(!g1.isEmpty()){
+                if(!first){
+                    sb.append(", ");
+                }
+                sb.append('[');
+                for(int i = 0;i < g1.size();i++){
+                    sb.append(g1.get(i).toString());
+                    if(i < g1.size() - 1) sb.append(", ");
+                }
+                sb.append(']');
+                first = false;
+            }
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append("'").append(RBRACE.value).append("'");
+            return sb.append("}").toString();
+        }
+    }
+    public static class tokenBlockg1{
+        public int which;
+        Tokenblockg11 tokenDecl;
+        Tokenblockg12 modeBlock;
+        public String toString(){
+            StringBuilder sb = new StringBuilder("tokenBlockg1#" + which + "{");
+            if(which == 1){
+                sb.append(tokenDecl);
+            }
+            else if(which == 2){
+                sb.append(modeBlock);
+            }
+            return sb.append("}").toString();
+        }
+        public static class Tokenblockg11{
+            tokenBlockg1 holder;
+            public tokenDecl tokenDecl;
+            public String toString(){
+                StringBuilder sb = new StringBuilder();
+                boolean first = true;
+                sb.append(tokenDecl.toString());
+                return sb.toString();
+            }
+        }
+        public static class Tokenblockg12{
+            tokenBlockg1 holder;
+            public modeBlock modeBlock;
+            public String toString(){
+                StringBuilder sb = new StringBuilder();
+                boolean first = true;
+                sb.append(modeBlock.toString());
+                return sb.toString();
+            }
+        }
+    }
+    public static class tokenDecl{
+        public Token HASH;
+        public name name;
+        public Token SEPARATOR;
+        public rhs rhs;
+        public tokenDeclg1 mode;
+        public Token SEMI;
+        public String toString(){
+            StringBuilder sb = new StringBuilder("tokenDecl{");
+            boolean first = true;
+            if(HASH != null){
+                sb.append("'").append(HASH.value).append("'");
+                first = false;
+            }
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append(name.toString());
+            first = false;
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append("'").append(SEPARATOR.value).append("'");
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append(rhs.toString());
+            if(mode != null){
+                if(!first){
+                    sb.append(", ");
+                }
+                sb.append(mode.toString());
+                first = false;
+            }
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append("'").append(SEMI.value).append("'");
+            return sb.append("}").toString();
+        }
+    }
+    public static class tokenDeclg1{
+        public Token ARROW;
+        public modes modes;
+        public String toString(){
+            StringBuilder sb = new StringBuilder("tokenDeclg1{");
+            boolean first = true;
+            sb.append("'").append(ARROW.value).append("'");
+            first = false;
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append(modes.toString());
+            return sb.append("}").toString();
+        }
+    }
+    public static class modes{
+        public name name;
+        public modesg1 g1;
+        public String toString(){
+            StringBuilder sb = new StringBuilder("modes{");
+            boolean first = true;
+            sb.append(name.toString());
+            first = false;
+            if(g1 != null){
+                if(!first){
+                    sb.append(", ");
+                }
+                sb.append(g1.toString());
+                first = false;
+            }
+            return sb.append("}").toString();
+        }
+    }
+    public static class modesg1{
+        public Token COMMA;
+        public name name;
+        public String toString(){
+            StringBuilder sb = new StringBuilder("modesg1{");
+            boolean first = true;
+            sb.append("'").append(COMMA.value).append("'");
+            first = false;
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append(name.toString());
+            return sb.append("}").toString();
+        }
+    }
+    public static class modeBlock{
+        public Token IDENT;
+        public Token LBRACE;
+        public List<tokenDecl> tokenDecl = new ArrayList<>();
+        public Token RBRACE;
+        public String toString(){
+            StringBuilder sb = new StringBuilder("modeBlock{");
+            boolean first = true;
+            sb.append("'").append(IDENT.value).append("'");
             first = false;
             if(!first){
                 sb.append(", ");
@@ -297,62 +453,6 @@ public class Ast{
                 sb.append(", ");
             }
             sb.append("'").append(RBRACE.value).append("'");
-            return sb.append("}").toString();
-        }
-    }
-    public static class tokenDecl{
-        public Token HASH;
-        public name name;
-        public tokenDeclg1 g1;
-        public Token SEPARATOR;
-        public rhs rhs;
-        public Token SEMI;
-        public String toString(){
-            StringBuilder sb = new StringBuilder("tokenDecl{");
-            boolean first = true;
-            if(HASH != null){
-                sb.append("'").append(HASH.value).append("'");
-                first = false;
-            }
-            if(!first){
-                sb.append(", ");
-            }
-            sb.append(name.toString());
-            first = false;
-            if(g1 != null){
-                if(!first){
-                    sb.append(", ");
-                }
-                sb.append(g1.toString());
-                first = false;
-            }
-            if(!first){
-                sb.append(", ");
-            }
-            sb.append("'").append(SEPARATOR.value).append("'");
-            if(!first){
-                sb.append(", ");
-            }
-            sb.append(rhs.toString());
-            if(!first){
-                sb.append(", ");
-            }
-            sb.append("'").append(SEMI.value).append("'");
-            return sb.append("}").toString();
-        }
-    }
-    public static class tokenDeclg1{
-        public Token MINUS;
-        public name name;
-        public String toString(){
-            StringBuilder sb = new StringBuilder("tokenDeclg1{");
-            boolean first = true;
-            sb.append("'").append(MINUS.value).append("'");
-            first = false;
-            if(!first){
-                sb.append(", ");
-            }
-            sb.append(name.toString());
             return sb.append("}").toString();
         }
     }
@@ -944,8 +1044,8 @@ public class Ast{
         public int which;
         Name1 IDENT;
         Name2 TOKEN;
-        Name3 SKIP;
-        Name4 OPTIONS;
+        Name3 OPTIONS;
+        Name4 SKIP;
         public String toString(){
             StringBuilder sb = new StringBuilder("name#" + which + "{");
             if(which == 1){
@@ -955,10 +1055,10 @@ public class Ast{
                 sb.append(TOKEN);
             }
             else if(which == 3){
-                sb.append(SKIP);
+                sb.append(OPTIONS);
             }
             else if(which == 4){
-                sb.append(OPTIONS);
+                sb.append(SKIP);
             }
             return sb.append("}").toString();
         }
@@ -984,21 +1084,21 @@ public class Ast{
         }
         public static class Name3{
             name holder;
-            public Token SKIP;
-            public String toString(){
-                StringBuilder sb = new StringBuilder();
-                boolean first = true;
-                sb.append("'").append(SKIP.value).append("'");
-                return sb.toString();
-            }
-        }
-        public static class Name4{
-            name holder;
             public Token OPTIONS;
             public String toString(){
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
                 sb.append("'").append(OPTIONS.value).append("'");
+                return sb.toString();
+            }
+        }
+        public static class Name4{
+            name holder;
+            public Token SKIP;
+            public String toString(){
+                StringBuilder sb = new StringBuilder();
+                boolean first = true;
+                sb.append("'").append(SKIP.value).append("'");
                 return sb.toString();
             }
         }

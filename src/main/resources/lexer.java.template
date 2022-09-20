@@ -11,7 +11,8 @@ public class $lexer_class$ {
     static String[] cMapRegex = {$cMapRegex$};
     int[] skip = {$skip_list$};
     int[] accepting = {$final_list$};
-    //boolean[] after = {$after_list$};
+    //state -> mode_state
+    //int[] push_modes = {$push_modes$};
     //id -> token name
     String[] names = {$name_list$};
     //state->token id
@@ -25,10 +26,10 @@ public class $lexer_class$ {
     public static int bufSize = 100;
     int bufPos = 0;//pos in buffer
     int bufStart = bufPos;
-    int bufEnd;
     char[] yybuf = new char[bufSize];
     static String trans_packed = $trans$;
     static int[][] trans = unpackTrans(trans_packed);
+    int curState = INITIAL;
 
     public $lexer_class$(Reader reader) throws IOException{
         this.reader = reader;
@@ -119,7 +120,7 @@ public class $lexer_class$ {
 
     public $token_class$ $next_token$_normal() throws IOException {
         fill();
-        int curState = INITIAL;
+        curState = INITIAL;
         int lastState = -1;
         int startPos = yypos;
         int startLine = yyline;

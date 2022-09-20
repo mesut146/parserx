@@ -19,8 +19,15 @@ public class Transformer extends BaseVisitor<Node, Void> {
     }
 
     public void transformTokens() {
-        for (TokenDecl decl : tree.tokens) {
-            transformToken(decl);
+        for (var tb : tree.tokenBlocks) {
+            for (var decl : tb.tokens) {
+                transformToken(decl);
+            }
+            for (var mb : tb.modeBlocks) {
+                for (var decl : mb.tokens) {
+                    transformToken(decl);
+                }
+            }
         }
     }
 

@@ -2,8 +2,8 @@ token{
  BOOLEAN: "true" | "false";
  OPTIONS: "options";
  TOKEN: "token";
- SKIP: "skip";
  INCLUDE: "include";
+ SKIP: "skip";
  START: "%start";
  EPSILON: "%epsilon" | "%empty" | "ε";
  LEFT: "%left";
@@ -64,12 +64,12 @@ option: key=IDENT "=" value=(NUMBER | BOOLEAN) ";"?;
 
 startDecl: START SEPARATOR name ";";
 
-tokenBlock: "token" "{" tokenDecl* "}";
-skipBlock: "skip" "{" tokenDecl* "}";
-
-
+tokenBlock: "token" "{" (tokenDecl | modeBlock)* "}";
 tokenDecl: "#"? name SEPARATOR rhs mode=("->" modes)? ";";
-modes: ident ("," ident)?;
+modes: name ("," name)?;
+modeBlock: IDENT "{" tokenDecl* "}";
+
+skipBlock: "skip" "{" tokenDecl* "}";
 
 ruleDecl: name args? SEPARATOR rhs ";";
 args: "(" name rest=("," name)* ")";
@@ -95,7 +95,7 @@ stringNode: STRING | CHAR;
 bracketNode: BRACKET;//easier to handle as token
 untilNode: "~" regex;
 dotNode: ".";
-name: IDENT | TOKEN | "skip" | "options" /*| "include"*/;
+name: IDENT | TOKEN | "options" | "skip" /*| "include"*/;
 
 call: CALL_BEGIN IDENT ("," IDENT)* ")";
 

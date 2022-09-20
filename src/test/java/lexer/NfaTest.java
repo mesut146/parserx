@@ -5,10 +5,7 @@ import mesut.parserx.dfa.NFA;
 import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.lldfa.ParserGen;
-import mesut.parserx.nodes.Node;
-import mesut.parserx.nodes.StringNode;
-import mesut.parserx.nodes.TokenDecl;
-import mesut.parserx.nodes.Tree;
+import mesut.parserx.nodes.*;
 import mesut.parserx.parser.AstVisitor;
 import mesut.parserx.parser.Lexer;
 import mesut.parserx.parser.Parser;
@@ -27,8 +24,10 @@ public class NfaTest {
     @Test
     public void splitRanges() throws IOException {
         Tree tree = new Tree();
-        tree.addToken(new TokenDecl("hex", makeRegex("[a-f]")));
-        tree.addToken(new TokenDecl("rest", makeRegex("[b-z]")));
+        var block = new TokenBlock();
+        tree.tokenBlocks.add(block);
+        tree.addToken(new TokenDecl("hex", makeRegex("[a-f]")), block);
+        tree.addToken(new TokenDecl("rest", makeRegex("[b-z]")), block);
         tree.makeNFA().dump(new PrintWriter(System.out));
     }
 
@@ -70,5 +69,15 @@ public class NfaTest {
         var dot = Env.dotFile("skip");
         nfa.dot(new FileWriter(dot));
         Env.dot(dot);
+    }
+
+    @Test
+    public void mode() throws IOException {
+        Tree tree = Env.tree("lexer/mode.g");
+        var nfa = tree.makeNFA();
+        nfa.dump();
+        System.out.println("----------------");
+        var dfa = nfa.dfa();
+        dfa.dump();
     }
 }

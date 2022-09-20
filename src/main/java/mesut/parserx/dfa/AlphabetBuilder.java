@@ -95,9 +95,8 @@ public class AlphabetBuilder extends Transformer {
         brackets = new ArrayList<>();
 
         //first collect ranges
-        for (TokenDecl token : tree.tokens) {
-            transformToken(token);
-        }
+        transformTokens();
+
         //find intersecting ranges and split them
         outer:
         while (true) {

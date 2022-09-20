@@ -20,6 +20,31 @@ public class PrepareTree extends Transformer {
         transformAll();
     }
 
+    void checkMode(TokenDecl decl) {
+        if (decl.mode == null) return;
+        if (decl.mode.equals("default") || decl.mode.equals("DEFAULT")) {
+            return;
+        }
+        var found = false;
+        for (var tb : tree.tokenBlocks) {
+            for (var mb : tb.modeBlocks) {
+                if (mb.name.equals(decl.mode)) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (!found) {
+            throw new RuntimeException("unknown mode " + decl.mode);
+        }
+    }
+
+    @Override
+    public TokenDecl transformToken(TokenDecl decl) {
+        checkMode(decl);
+        return super.transformToken(decl);
+    }
+
     @Override
     public Node visitName(Name name, Void parent) {
         //rule or token

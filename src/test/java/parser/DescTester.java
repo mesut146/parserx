@@ -62,6 +62,7 @@ public class DescTester {
         javac.directory(new File(outDir));
         javac.redirectErrorStream(true);
         Process p = javac.start();
+        System.out.println(Utils.read(p.getInputStream()));
         if (p.waitFor() != 0) {
             System.out.println(Utils.read(p.getInputStream()));
             throw new RuntimeException("cant compile " + tree.file.getName());
@@ -96,7 +97,6 @@ public class DescTester {
                 end = out.indexOf("'", end + 1);
             }
             list.add(out.substring(quote + 1, end));
-            System.out.println(list.get(list.size() - 1));
             pos = end + 1;
         }
         return list;

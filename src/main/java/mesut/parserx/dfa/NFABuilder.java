@@ -9,7 +9,8 @@ import java.util.Map;
 public class NFABuilder extends BaseVisitor<State, State> {
     NFA nfa;
     Tree tree;
-    Map<Name, State> finalMap = new HashMap<>();
+    Map<TokenDecl, State> finalMap = new HashMap<>();
+    //mode -> start state
 
     public NFABuilder(Tree tree) {
         this.tree = tree;
@@ -19,28 +20,47 @@ public class NFABuilder extends BaseVisitor<State, State> {
         return new NFABuilder(tree).build();
     }
 
+    void createModes() {
+        //nfa.modes.put("DEFAULT", nfa.initialState);
+        for (var tb : tree.tokenBlocks) {
+            for (var mb : tb.modeBlocks) {
+                nfa.modes.put(mb.name, nfa.newState());
+            }
+        }
+    }
+
     public NFA build() {
         new AlphabetBuilder(tree).build();
         nfa = new NFA(100);
         nfa.init(0);
         nfa.tree = tree;
-        for (TokenDecl decl : tree.tokens) {
-            if (decl.fragment) continue;
-            if (!finalMap.containsKey(decl.ref())) {
-                addRegex(decl);
+        createModes();
+        for (var tb : tree.tokenBlocks) {
+            for (var decl : tb.tokens) {
+                if (decl.fragment) continue;
+                if (!finalMap.containsKey(decl)) {
+                    addRegex(decl, null);
+                }
+            }
+            for (var mb : tb.modeBlocks) {
+                for (var decl : mb.tokens) {
+                    if (decl.fragment) continue;
+                    if (!finalMap.containsKey(decl)) {
+                        addRegex(decl, mb);
+                    }
+                }
             }
         }
         return nfa;
     }
 
-    public void addRegex(TokenDecl decl) {
-        State start;
-        start = nfa.initialState;
+    public void addRegex(TokenDecl decl, ModeBlock modeBlock) {
+        State start = modeBlock == null ? nfa.initialState : nfa.modes.get(modeBlock.name);
         var end = decl.rhs.accept(this, start);
         end.accepting = true;
         end.isSkip = decl.isSkip;
         end.addName(decl.name);
-        finalMap.put(decl.ref(), end);
+        finalMap.put(decl, end);
     }
 
     @Override

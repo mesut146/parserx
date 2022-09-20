@@ -3,7 +3,6 @@ package mesut.parserx.gen.ll;
 import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.Options;
-import mesut.parserx.gen.targets.CppRecDescent;
 import mesut.parserx.gen.targets.JavaRecDescent;
 import mesut.parserx.gen.transform.*;
 import mesut.parserx.nodes.Node;
@@ -41,7 +40,7 @@ public class RDParserGen {
             new JavaRecDescent(tree).gen();
         }
         else if (target==Lang.CPP) {
-            new CppRecDescent(tree).gen();
+            throw new RuntimeException();
         }
     }
 

@@ -38,7 +38,6 @@ public class Tree {
         start = tree.start;
         includes = tree.includes;
         file = tree.file;
-        tokens = tree.tokens;
         options = tree.options;
         originalRules = tree.originalRules;
     }
@@ -50,6 +49,15 @@ public class Tree {
             e.addSuppressed(new RuntimeException(path.getAbsolutePath()));
             throw new RuntimeException(e);
         }
+    }
+
+    public List<TokenDecl> getTokens() {
+        var res = new ArrayList<TokenDecl>();
+        tokenBlocks.forEach(tb -> {
+            res.addAll(tb.tokens);
+            tb.modeBlocks.forEach(mb -> res.addAll(mb.tokens));
+        });
+        return res;
     }
 
     static int indexOf(List<TokenDecl> list, String name) {
@@ -75,10 +83,30 @@ public class Tree {
         return originalRules.contains(name);
     }
 
+    public void addModeBlock(ModeBlock modeBlock, TokenBlock tokenBlock) {
+        if (tokenBlocks.stream().
+                anyMatch(tb -> tb.modeBlocks.stream().
+                        anyMatch(mb -> mb.name.equals(modeBlock.name)))) {
+            throw new RuntimeException("a block with same name exists");
+        }
+        tokenBlock.modeBlocks.add(modeBlock);
+    }
+
     //merge two grammar files(lexer,parser)
     void mergeWith(Tree other) {
-        for (TokenDecl decl : other.tokens) {
-            addToken(decl);
+        for (var tb : other.tokenBlocks) {
+            var res = new TokenBlock();
+            tokenBlocks.add(res);
+            for (var decl : tb.tokens) {
+                addToken(decl, res);
+            }
+            for (var mb : tb.modeBlocks) {
+                var newMb = new ModeBlock(mb.name);
+                addModeBlock(newMb, res);
+                for (var decl : mb.tokens) {
+                    addToken(decl, newMb);
+                }
+            }
         }
         for (RuleDecl decl : other.rules) {
             addRule(decl);
@@ -110,17 +138,43 @@ public class Tree {
         }
     }
 
-    public void addToken(TokenDecl token) {
-        if (indexOf(token.name) != -1) {
-            throw new RuntimeException("token " + token + " already exists");
+    public void addToken(TokenDecl token, TokenBlock block) {
+        for (var tb : tokenBlocks) {
+            //globals
+            for (var decl : tb.tokens) {
+                if (decl.name.equals(token.name)) {
+                    throw new RuntimeException("token " + token + " already exists in global");
+                }
+            }
+            for (var mb : tb.modeBlocks) {
+                for (var decl : mb.tokens) {
+                    if (decl.name.equals(token.name)) {
+                        throw new RuntimeException("token " + token + " already exists in mode " + mb.name);
+                    }
+                }
+            }
         }
-        tokens.add(token);
+        block.tokens.add(token);
     }
 
-    public void addSkip(TokenDecl token) {
-        token.isSkip = true;
-        addToken(token);
+    public void addToken(TokenDecl token, ModeBlock modeBlock) {
+        //same scope
+        for (var decl : modeBlock.tokens) {
+            if (decl.name.equals(token.name)) {
+                throw new RuntimeException("token " + token + " already exists in mode " + modeBlock.name);
+            }
+        }
+        //check for globals
+        for (var tb : tokenBlocks) {
+            for (var decl : tb.tokens) {
+                if (decl.name.equals(token.name)) {
+                    throw new RuntimeException("token " + token + " already exists in global");
+                }
+            }
+        }
+        modeBlock.tokens.add(token);
     }
+
 
     public void addRule(RuleDecl rule) {
         if (checkDup) {
@@ -217,12 +271,15 @@ public class Tree {
 
     //find token by string literal
     public TokenDecl getTokenByValue(String val) {
-        for (TokenDecl decl : tokens) {
-            if (isStr(decl.rhs, val)) return decl;
-            else if (decl.rhs.isOr()) {
-                for (Node ch : decl.rhs.asOr()) {
-                    if (isStr(ch, val)) {
-                        return decl;
+        //only globals
+        for (var tb : tokenBlocks) {
+            for (var decl : tb.tokens) {
+                if (isStr(decl.rhs, val)) return decl;
+                else if (decl.rhs.isOr()) {
+                    for (var ch : decl.rhs.asOr()) {
+                        if (isStr(ch, val)) {
+                            return decl;
+                        }
                     }
                 }
             }
@@ -231,16 +288,13 @@ public class Tree {
     }
 
     public TokenDecl getToken(String name) {
-        int idx = indexOf(name);
-        if (idx == -1) {
-            return null;
+        for (var tb : tokenBlocks) {
+            var decl = tb.getToken(name);
+            if (decl != null) {
+                return decl;
+            }
         }
-        return tokens.get(idx);
-    }
-
-    //get index of token by name
-    public int indexOf(String name) {
-        return indexOf(tokens, name);
+        return null;
     }
 
     //construct NFA from this grammar file
@@ -248,35 +302,23 @@ public class Tree {
         return NFABuilder.build(this);
     }
 
-    void printTokens(StringBuilder sb, List<TokenDecl> list, String title) {
-        if (!list.isEmpty()) {
-            sb.append(title);
-            sb.append("{\n");
-            for (TokenDecl td : list) {
-                sb.append("  ");
-                sb.append(td);
-                sb.append(";\n");
-            }
-            sb.append("}");
-            sb.append("\n\n");
-        }
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        List<TokenDecl> normal = new ArrayList<>();
-        List<TokenDecl> skips = new ArrayList<>();
-        for (TokenDecl tokenDecl : tokens) {
-            if (tokenDecl.isSkip) {
-                skips.add(tokenDecl);
+        for (var tb : tokenBlocks) {
+            sb.append("token{\n");
+            for (var decl : tb.tokens) {
+                sb.append("  ").append(decl).append("\n");
             }
-            else {
-                normal.add(tokenDecl);
+            for (var mb : tb.modeBlocks) {
+                sb.append("  ").append(mb.name).append("{\n");
+                for (var decl : mb.tokens) {
+                    sb.append("    ").append(decl).append("\n");
+                }
+                sb.append("  }\n");
             }
+            sb.append("}\n");
         }
-        printTokens(sb, normal, "token");
-        printTokens(sb, skips, "skip");
 
         if (!rules.isEmpty()) {
             sb.append("/* rules */\n");

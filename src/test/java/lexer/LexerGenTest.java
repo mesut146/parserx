@@ -87,7 +87,9 @@ public class LexerGenTest {
     public void itself() throws Exception {
         var grammar = new File("./src/main/grammar/parserx.g");
         Tree tree = Tree.makeTree(grammar);
-        RealTest.check(tree, true, grammar.getAbsolutePath());
+        //RealTest.check(tree, true, grammar.getAbsolutePath());
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        LexerGenerator.gen(tree, Lang.JAVA);
     }
 
     @Test
@@ -119,11 +121,5 @@ public class LexerGenTest {
             assert escaped.equals(strArr[i]);
             System.out.println(escaped);
         }
-    }
-
-    @Test
-    public void after() throws Exception {
-        Tree tree = Env.tree("lexer/after.g");
-        RealTest.check(tree, "<e>");
     }
 }

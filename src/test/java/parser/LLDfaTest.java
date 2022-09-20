@@ -82,18 +82,25 @@ public class LLDfaTest {
     }
 
     @Test
+    public void blocks() {
+        var tree = Tree.makeTree(new File("./doc/xml.g"));
+        System.out.println(tree);
+    }
+
+    @Test
     public void itself() throws Exception {
         //Item.printLa = false;
         Tree tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        tree.options.packageName = "mesut.parserx.parser";
-//        var builder = new LLDfaBuilder(tree);
-//        builder.factor();
-//        dot(builder);
-//        dump(builder);
-//        var b=Builder.tree(tree).rule("tree").input(tree.file.getAbsolutePath(),"");
-//        DescTester.checkTokens(b);
-        ParserGen.gen(tree, Lang.JAVA);
+        //tree.options.packageName = "mesut.parserx.parser";
+        var builder = new LLDfaBuilder(tree);
+        builder.factor();
+        dot(builder);
+        dump(builder);
+        var input = "./doc/xml.g";
+        var b = Builder.tree(tree).rule("tree").input(input, "");
+        DescTester.checkTokens(b);
+        //ParserGen.gen(tree, Lang.JAVA);
     }
 
     @Test

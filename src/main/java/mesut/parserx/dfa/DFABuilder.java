@@ -44,7 +44,7 @@ public class DFABuilder {
             for (var epState : closure) {
                 for (Transition tr : epState.transitions) {
                     if (tr.epsilon) continue;
-                    StateSet targets = map.get(tr.input);//we can cache these
+                    var targets = map.get(tr.input);//we can cache these
                     if (targets == null) {
                         targets = new StateSet();
                         map.put(tr.input, targets);
@@ -54,7 +54,7 @@ public class DFABuilder {
             }
             //make transition for each input
             for (int input : map.keySet()) {
-                StateSet targets = map.get(input);
+                var targets = map.get(input);
                 if (!openStates.contains(targets) && !processed.contains(targets)) {
                     openStates.add(closure(targets));
                 }

@@ -1,12 +1,11 @@
 package mesut.parserx.parser;
-
 public class Tokens{
     public static final int EOF = 0;
     public static final int BOOLEAN = 1;
     public static final int OPTIONS = 2;
     public static final int TOKEN = 3;
-    public static final int SKIP = 4;
-    public static final int INCLUDE = 5;
+    public static final int INCLUDE = 4;
+    public static final int SKIP = 5;
     public static final int START = 6;
     public static final int EPSILON = 7;
     public static final int LEFT = 8;
@@ -35,7 +34,8 @@ public class Tokens{
     public static final int DOT = 31;
     public static final int SEMI = 32;
     public static final int MINUS = 33;
-    public static final int LINE_COMMENT = 34;
-    public static final int BLOCK_COMMENT = 35;
-    public static final int WS = 36;
+    public static final int ARROW = 34;
+    public static final int LINE_COMMENT = 35;
+    public static final int BLOCK_COMMENT = 36;
+    public static final int WS = 37;
 }

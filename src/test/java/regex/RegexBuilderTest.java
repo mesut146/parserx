@@ -4,10 +4,7 @@ import common.Env;
 import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.NFABuilder;
-import mesut.parserx.nodes.Node;
-import mesut.parserx.nodes.Shortcut;
-import mesut.parserx.nodes.TokenDecl;
-import mesut.parserx.nodes.Tree;
+import mesut.parserx.nodes.*;
 import mesut.parserx.regex.RegexBuilder;
 import mesut.parserx.regex.RegexOptimizer;
 import mesut.parserx.regex.RegexPrinter;
@@ -32,7 +29,9 @@ public class RegexBuilderTest {
     public void blockComment() throws IOException {
         Node node = Shortcut.from("block_comment");
         Tree tree = new Tree();
-        tree.addToken(new TokenDecl("comment", node));
+        var block = new TokenBlock();
+        tree.tokenBlocks.add(block);
+        tree.addToken(new TokenDecl("comment", node), block);
         NFA nfa = NFABuilder.build(tree).dfa();
         Minimization.optimize(nfa);
         nfa.dot(new FileWriter(Env.dotFile("a.dfa")));
