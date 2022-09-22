@@ -1,8 +1,8 @@
-package mesut.parserx.gen.targets;
+package mesut.parserx.gen.lexer;
 
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
-import mesut.parserx.gen.LexerGenerator;
+import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
 import mesut.parserx.nodes.Name;
@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static mesut.parserx.gen.LexerGenerator.makeOctal;
+import static mesut.parserx.gen.lexer.LexerGenerator.makeOctal;
 
 public class JavaLexer {
     Template template;
@@ -24,10 +24,13 @@ public class JavaLexer {
     Options options;
     NFA dfa;
 
-    public void gen(LexerGenerator gen) throws IOException {
+    public JavaLexer(LexerGenerator gen) {
         this.gen = gen;
         options = gen.tree.options;
         dfa = gen.dfa;
+    }
+
+    public void gen() throws IOException {
         template = new Template("lexer.java.template");
         if (options.packageName == null) {
             template.set("package", "");
@@ -44,11 +47,38 @@ public class JavaLexer {
         nameAndId();
         writeTrans();
         cmap();
+        writeModes();
 
         File file = new File(options.outDir, options.lexerClass + ".java");
         Utils.write(template.toString(), file);
 
         writeTokenClass();
+    }
+
+    private void writeModes() {
+        var sb = new StringBuilder();
+        for (var mode : dfa.modes.entrySet()) {
+            sb.append(String.format("    static final int %s = %d;\n", mode.getKey(), mode.getValue().id));
+        }
+        template.set("modes", sb.toString());
+
+        //mode_map
+        sb.setLength(0);
+        for (int i = 0; i < gen.mode_arr.length; i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            var mode = gen.mode_arr[i];
+            sb.append(mode);
+        }
+        template.set("mode_map", sb.toString());
+
+        //modenames
+        sb.setLength(0);
+        for (var mode : gen.dfa.modes.entrySet()) {
+            sb.append(String.format("            case %d: return \"%s\";\n", mode.getValue().id, mode.getKey()));
+        }
+        template.set("printModes",sb.toString());
     }
 
     //write char ranges
@@ -121,7 +151,7 @@ public class JavaLexer {
 
     private void nameAndId() {
         //id list
-        StringBuilder idWriter = new StringBuilder();
+        var idWriter = new StringBuilder();
         for (var state : dfa.it()) {
             idWriter.append(gen.idArr[state.id]);
             if (state.id <= dfa.lastState - 1) {
@@ -134,10 +164,10 @@ public class JavaLexer {
         template.set("id_list", idWriter.toString());
 
         //write
-        StringBuilder nameWriter = new StringBuilder();
+        var nameWriter = new StringBuilder();
         int i = 0;
         int column = 20;
-        for (Map.Entry<Name, Integer> entry : gen.tokens) {
+        for (var entry : gen.tokens) {
             if (i > 0) {
                 nameWriter.append(",");
                 if (i % column == 0) {
@@ -151,7 +181,7 @@ public class JavaLexer {
     }
 
     private void writeTokenClass() throws IOException {
-        Template template = new Template("token.java.template");
+        var template = new Template("token.java.template");
         if (options.packageName == null) {
             template.set("package", "");
         }
@@ -159,7 +189,7 @@ public class JavaLexer {
             template.set("package", "package " + options.packageName + ";\n");
         }
         template.set("token_class", options.tokenClass);
-        File out = new File(options.outDir, options.tokenClass + ".java");
+        var out = new File(options.outDir, options.tokenClass + ".java");
         Utils.write(template.toString(), out);
     }
 }

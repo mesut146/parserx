@@ -56,9 +56,9 @@ public class EbnfToBnf extends Transformer {
 
     public static LinkedHashMap<String, List<Node>> makeMap(Tree input) {
         //LinkedHashMap preserves rule order
-        LinkedHashMap<String, List<Node>> map = new LinkedHashMap<>();
-        for (RuleDecl decl : input.rules) {
-            List<Node> or = map.computeIfAbsent(decl.ref.name, k -> new ArrayList<>());
+        var map = new LinkedHashMap<String, List<Node>>();
+        for (var decl : input.rules) {
+            var or = map.computeIfAbsent(decl.ref.name, k -> new ArrayList<>());
             if (decl.rhs.isOr()) {
                 or.addAll(decl.rhs.asOr().list);
             }

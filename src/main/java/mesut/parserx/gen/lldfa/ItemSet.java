@@ -2,6 +2,7 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.lr.LrType;
+import mesut.parserx.gen.lr.TreeInfo;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorHelper;
 import mesut.parserx.nodes.Name;
@@ -22,14 +23,16 @@ public class ItemSet {
     public static int lastId = 0;
     public LrType type;
     Tree tree;
+    TreeInfo treeInfo;
     public List<LLTransition> transitions = new ArrayList<>();
     public List<LLTransition> incoming = new ArrayList<>();
     public Node symbol;
     boolean alreadyGenReduces = false;
 
-    public ItemSet(Tree tree, LrType type) {
-        this.tree = tree;
+    public ItemSet(TreeInfo treeInfo, LrType type) {
+        this.treeInfo = treeInfo;
         this.type = type;
+        this.tree = treeInfo.tree;
         stateId = lastId++;
     }
 
@@ -203,12 +206,10 @@ public class ItemSet {
         }
     }
 
-    private void closure(Name node, int pos, Item sender) {
-        if (node.isToken) return;
-
+    private void closure(Name sym, int pos, Item sender) {
         Set<Name> laList = sender.follow(tree, pos);
         Set<Item> set = new HashSet<>();
-        for (RuleDecl decl : tree.getRules(node)) {
+        for (RuleDecl decl : treeInfo.ruleMap.get(sym.name)) {
             Item newItem = new Item(decl, 0);
             newItem.lookAhead.addAll(laList);
             newItem.parents.add(sender);

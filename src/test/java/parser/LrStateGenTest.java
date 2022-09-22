@@ -2,7 +2,7 @@ package parser;
 
 import common.Env;
 import mesut.parserx.gen.Lang;
-import mesut.parserx.gen.LexerGenerator;
+import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.lr.*;
 import mesut.parserx.nodes.Tree;
 import org.junit.Ignore;

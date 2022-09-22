@@ -247,7 +247,7 @@ public class GrammarEmitter {
     }
 
     void mergeFinals() {
-        var newset = new ItemSet(tree, builder.type);
+        var newset = new ItemSet(builder.treeInfo, builder.type);
         for (var it = all.iterator(); it.hasNext(); ) {
             var set = it.next();
             for (var item : set.all) {

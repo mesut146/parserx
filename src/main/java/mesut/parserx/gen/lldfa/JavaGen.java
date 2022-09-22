@@ -61,7 +61,7 @@ public class JavaGen {
             rule = tree.getRule(ruleName);
             writeRule(builder.rules.get(ruleName));
         }
-        for (var decl : builder.ebnf.rules) {
+        for (var decl : builder.tree.rules) {
             if (builder.rules.containsKey(decl.baseName())) continue;
             rule = decl;
             writeNormal();

@@ -11,11 +11,17 @@ public class Builder {
     Tree tree;
     String curRule;
     List<RuleInfo> cases = new ArrayList<>();
+    boolean dump = false;
 
     static class RuleInfo {
         String rule;
         String input;
         String expected;
+    }
+
+    public Builder dump() {
+        this.dump = true;
+        return this;
     }
 
     public static Builder tree(String name) {

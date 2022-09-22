@@ -2,23 +2,19 @@ package lexer;
 
 import common.Env;
 import mesut.parserx.gen.Lang;
-import mesut.parserx.gen.LexerGenerator;
+import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
 import mesut.parserx.nodes.Shortcut;
 import mesut.parserx.nodes.Tree;
-import mesut.parserx.parser.Lexer;
-import mesut.parserx.parser.Token;
 import mesut.parserx.utils.UnicodeUtils;
 import mesut.parserx.utils.Utils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-//@Ignore
 public class LexerGenTest {
 
     @Test
@@ -87,9 +83,9 @@ public class LexerGenTest {
     public void itself() throws Exception {
         var grammar = new File("./src/main/grammar/parserx.g");
         Tree tree = Tree.makeTree(grammar);
-        //RealTest.check(tree, true, grammar.getAbsolutePath());
+        RealTest.check(tree, true, grammar.getAbsolutePath());
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        LexerGenerator.gen(tree, Lang.JAVA);
+        //LexerGenerator.gen(tree, Lang.JAVA);
     }
 
     @Test
@@ -121,5 +117,11 @@ public class LexerGenTest {
             assert escaped.equals(strArr[i]);
             System.out.println(escaped);
         }
+    }
+
+    @Test
+    public void mode() throws Exception {
+        RealTest.check(Env.tree("lexer/mode.g"), "bbac", "acd");
+        RealTest.check(Env.tree("lexer/xml-mode.g"), "<tag a=\\\"val\\\">");
     }
 }

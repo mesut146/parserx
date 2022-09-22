@@ -3,7 +3,6 @@ token{
  OPTIONS: "options";
  TOKEN: "token";
  INCLUDE: "include";
- SKIP: "skip";
  START: "%start";
  EPSILON: "%epsilon" | "%empty" | "ε";
  LEFT: "%left";
@@ -47,15 +46,15 @@ token{
  ARROW: "->";
 }
 
-skip{
-  LINE_COMMENT: "//" [^\n]*;
-  BLOCK_COMMENT: "/*" ([^*] | "*" [^/])* "*/";
-  WS: [ \n\r\t]+;
+token{
+  LINE_COMMENT: "//" [^\n]* -> skip;
+  BLOCK_COMMENT: "/*" ([^*] | "*" [^/])* "*/" -> skip;
+  WS: [ \n\r\t]+ -> skip;
 }
 
 %start: tree;
 
-tree: includeStatement* optionsBlock? tokens=(tokenBlock | skipBlock)* startDecl? rules=ruleDecl*;
+tree: includeStatement* optionsBlock? tokens=tokenBlock* startDecl? rules=ruleDecl*;
 
 includeStatement: "include" STRING;
 
@@ -68,8 +67,6 @@ tokenBlock: "token" "{" (tokenDecl | modeBlock)* "}";
 tokenDecl: "#"? name SEPARATOR rhs mode=("->" modes)? ";";
 modes: name ("," name)?;
 modeBlock: IDENT "{" tokenDecl* "}";
-
-skipBlock: "skip" "{" tokenDecl* "}";
 
 ruleDecl: name args? SEPARATOR rhs ";";
 args: "(" name rest=("," name)* ")";
@@ -95,7 +92,7 @@ stringNode: STRING | CHAR;
 bracketNode: BRACKET;//easier to handle as token
 untilNode: "~" regex;
 dotNode: ".";
-name: IDENT | TOKEN | "options" | "skip" /*| "include"*/;
+name: IDENT | TOKEN | "options" /*| "include"*/;
 
 call: CALL_BEGIN IDENT ("," IDENT)* ")";
 

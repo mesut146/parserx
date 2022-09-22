@@ -6,7 +6,7 @@ import java.util.*;
 
 public class Minimization {
 
-    //merge transitions and inputs so that its easier to write graph
+    //merge transitions and inputs so that it's easier to write graph
     public static NFA combineAlphabet(NFA dfa) {
         var resAlphabet = new Alphabet();
         var res = new NFA(dfa.lastState);
@@ -18,7 +18,7 @@ public class Minimization {
             //target -> symbol
             Map<State, List<Node>> map = new HashMap<>();
             if (!state.transitions.isEmpty()) {
-                for (Transition tr : state.transitions) {
+                for (var tr : state.transitions) {
                     var nodes = map.computeIfAbsent(tr.target, k -> new ArrayList<>());
                     if (tr.epsilon) {
                         nodes.add(new Epsilon());
@@ -29,7 +29,7 @@ public class Minimization {
                 }
                 for (var target : map.keySet()) {
                     var nodes = map.get(target);//optimize()
-                    Bracket bracket = new Bracket();
+                    var bracket = new Bracket();
                     List<Node> or = new ArrayList<>();
                     for (var node : nodes) {
                         if (node.isRange()) {
@@ -63,15 +63,17 @@ public class Minimization {
     //https://en.wikipedia.org/wiki/DFA_minimization
     public static void removeUnreachable(NFA dfa) {
         var reachable_states = new StateSet();
-        StateSet new_states = new StateSet();
-        reachable_states.addState(dfa.initialState);
-        new_states.addState(dfa.initialState);
+        var new_states = new StateSet();
+        for (var mode : dfa.modes.values()) {
+            reachable_states.addState(mode);
+            new_states.addState(mode);
+        }
 
         do {
             var temp = new StateSet();
             for (var q : new_states) {
                 for (int c : dfa.getAlphabet().map.values()) {
-                    for (Transition tr : q.transitions) {
+                    for (var tr : q.transitions) {
                         if (tr.input == c) {
                             temp.addState(tr.target);
                         }
@@ -119,40 +121,29 @@ public class Minimization {
         return set;
     }
 
-    public static int numOfStates(NFA nfa) {
-        var set = new StateSet();
-        for (var state : nfa.it()) {
-            if (!nfa.isDead(state) && (state.accepting || !state.transitions.isEmpty())) {
-                set.addState(state);
-            }
-        }
-        return set.states.size();
-    }
-
     //split states into accepting and non-accepting set
     static List<StateSet> group(NFA dfa) {
-        List<StateSet> list = new ArrayList<>();
+        var list = new ArrayList<StateSet>();
         var noacc = new StateSet();
-        Map<String, StateSet> names = new HashMap<>();
-        for (var id : dfa.it()) {
-            if (dfa.isDead(id)) continue;
-            if (id.accepting) {
-                for (var nm : id.names) {
-                    if (names.containsKey(nm)) {
-                        //group same token states
-                        names.get(nm).addState(id);
-                    }
-                    else {
-                        //each final state represents a different token so they can't be merged
-                        var acc = new StateSet();
-                        acc.addState(id);
-                        list.add(acc);
-                        names.put(nm, acc);
-                    }
-                }
+        //token name -> finals
+        var names = new HashMap<String, StateSet>();
+        for (var state : dfa.it()) {
+            if (dfa.isDead(state)) continue;
+            if (!state.accepting) {
+                noacc.addState(state);
+                continue;
+            }
+            var name = state.name;
+            if (names.containsKey(name)) {
+                //group same token states
+                names.get(name).addState(state);
             }
             else {
-                noacc.addState(id);
+                //each final state represents a different token, so they can't be merged
+                var acc = new StateSet();
+                acc.addState(state);
+                list.add(acc);
+                names.put(name, acc);
             }
         }
         list.add(noacc);
@@ -162,49 +153,62 @@ public class Minimization {
     public static NFA optimize(NFA dfa) {
         removeDead(dfa);
         removeUnreachable(dfa);
-        List<StateSet> P = group(dfa);
-        List<StateSet> done = new ArrayList<>();
-        List<StateSet> all = new ArrayList<>(P);
-        while (!P.isEmpty()) {
-            StateSet set = P.get(0);
-            List<State> list = new ArrayList<>(set.states);
+        List<StateSet> groups = group(dfa);
+        List<StateSet> finalGroups = new ArrayList<>();
+        List<StateSet> all = new ArrayList<>(groups);
+        while (!groups.isEmpty()) {
+            var group = groups.get(0);
+            var groupList = new ArrayList<>(group.states);
             //get a pair
-            boolean changed = false;
-            main:
+            var changed = false;
             //if any state pair is distinguishable then split
-            for (int i = 0; i < list.size(); i++) {
-                for (int j = i + 1; j < list.size(); j++) {
-                    var q1 = list.get(i);
-                    var q2 = list.get(j);
+            outer:
+            for (int i = 0; i < groupList.size(); i++) {
+                for (int j = i + 1; j < groupList.size(); j++) {
+                    var q1 = groupList.get(i);
+                    var q2 = groupList.get(j);
                     if (dist(q1, q2, all, dfa)) {
                         //split
-                        StateSet s = new StateSet();
-                        s.addState(q2);
-                        set.remove(q2);
-                        P.add(s);
-                        all.add(s);
-                        //System.out.println(q1 + " " + q2);
+                        var newSet = new StateSet();
+                        newSet.addState(q2);
+                        group.remove(q2);
+                        groups.add(newSet);
+                        all.add(newSet);
                         changed = true;
-                        break main;
+                        break outer;
                     }
                 }
             }
+            //indistinguishable add to finalGroup
             if (!changed) {
-                P.remove(0);
-                done.add(set);
+                groups.remove(0);
+                finalGroups.add(group);
             }
         }
         //make new dfa
-        return merge(dfa, done);
+        return merge(dfa, finalGroups);
     }
 
     static NFA merge(NFA dfa, List<StateSet> groups) {
-        NFA res = new NFA(dfa.lastState + 1);
+        for (var state : dfa.it()) {
+            var found = false;
+            for (var g : groups) {
+                if (g.contains(state)) {
+                    found = true;
+                }
+            }
+            if (!found) {
+                throw new RuntimeException("not found: " + state);
+            }
+        }
+        var res = new NFA(dfa.lastState + 1);
         res.init(dfa.initialState.id);
         res.tree = dfa.tree;
+        //todo res.modes = dfa.modes;
         //state -> target
-        Map<State, State> map = new HashMap<>();
-        for (StateSet group : groups) {
+        var map = new HashMap<State, State>();
+        //make target states for groups
+        for (var group : groups) {
             if (group.states.isEmpty()) continue;
             var iterator = group.iterator();
             var first = iterator.next();
@@ -218,7 +222,7 @@ public class Minimization {
         for (var state : dfa.it()) {
             if (dfa.isDead(state)) continue;
             var target = map.get(state);
-            for (Transition tr : state.transitions) {
+            for (var tr : state.transitions) {
                 var s1 = res.getState(target.id);
                 var s2 = map.containsKey(tr.target) ? res.getState(map.get(tr.target).id) : res.getState(tr.target.id);
                 res.addTransition(s1, s2, tr.input);
@@ -227,32 +231,38 @@ public class Minimization {
                 res.setAccepting(state.id, true);
             }
             //set names
-            var names = state.names;
-            if (!names.isEmpty()) {
-                var names2 = res.getState(target.id).names;
-                if (names2.isEmpty()) {
-                    names2.addAll(names);
-                }
-                else {
-                    for (String nm : names) {
-                        if (!names2.contains(nm)) {
-                            target.addName(nm);
-                        }
-                    }
+            if (state.name == null) continue;
+            var targetState = res.getState(target.id);
+            var names2 = targetState.name;
+            //todo names
+
+            if (targetState.name == null) {
+                targetState.name = state.name;
+            }
+            else {
+                if (!names2.equals(state.name)) {
+                    targetState.name = state.name;
                 }
             }
         }
         return res;
     }
 
+    //minimize lastState by removing dead states and shifting others to new places
+    void shrink(NFA dfa) {
+        //todo
+    }
+
     //is distinguishable
-    static boolean dist(State q1, State q2, List<StateSet> P, NFA nfa) {
+    //both have to make same tr for same inputs
+    static boolean dist(State q1, State q2, List<StateSet> groups, NFA nfa) {
         for (int c : nfa.getAlphabet().map.values()) {
             var t1 = nfa.getTarget(q1, c);
             var t2 = nfa.getTarget(q2, c);
             if (t1 == null || t2 == null) continue;
-            for (StateSet set : P) {
-                if (set.contains(t1) && !set.contains(t2) || set.contains(t2) && !set.contains(t1)) {
+            //t1 t2 must be in same group
+            for (var group : groups) {
+                if (group.contains(t1) && !group.contains(t2) || group.contains(t2) && !group.contains(t1)) {
                     return true;
                 }
             }

@@ -1,5 +1,7 @@
 package mesut.parserx.dfa;
 
+import mesut.parserx.nodes.TokenDecl;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,7 +11,8 @@ public class State {
     public List<Transition> incoming = new ArrayList<>();
     public boolean isSkip = false;
     public boolean accepting = false;
-    public List<String> names = new ArrayList<>();
+    public String name;
+    public TokenDecl decl;
 
     public State(int id) {
         this.id = id;
@@ -27,11 +30,6 @@ public class State {
         add(new Transition(this, to));
     }
 
-    public void addName(String name) {
-        if (!names.contains(name)) {
-            names.add(name);
-        }
-    }
 
     @Override
     public String toString() {

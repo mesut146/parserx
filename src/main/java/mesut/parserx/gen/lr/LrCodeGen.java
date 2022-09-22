@@ -1,7 +1,7 @@
 package mesut.parserx.gen.lr;
 
 import mesut.parserx.gen.Lang;
-import mesut.parserx.gen.LexerGenerator;
+import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
 import mesut.parserx.nodes.RuleDecl;

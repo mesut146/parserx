@@ -4,7 +4,7 @@ import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Validator;
 import mesut.parserx.gen.Lang;
-import mesut.parserx.gen.LexerGenerator;
+import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.lldfa.ParserGen;
 import mesut.parserx.gen.lr.AstBuilderGen;

@@ -1,10 +1,7 @@
 package mesut.parserx.dfa;
 
 import mesut.parserx.dfa.parser.NfaVisitor;
-import mesut.parserx.nodes.Epsilon;
-import mesut.parserx.nodes.Node;
-import mesut.parserx.nodes.Range;
-import mesut.parserx.nodes.Tree;
+import mesut.parserx.nodes.*;
 import mesut.parserx.utils.UnicodeUtils;
 
 import java.io.*;
@@ -140,7 +137,7 @@ public class NFA {
             }
             for (var mb : tb.modeBlocks) {
                 for (int i = 0; i < mb.tokens.size(); i++) {
-                    if (tb.tokens.get(i).name.equals(name)) {
+                    if (mb.tokens.get(i).name.equals(name)) {
                         return i;
                     }
                 }
@@ -150,19 +147,18 @@ public class NFA {
     }
 
     //get token name for state set by defined order
-    String getName(StateSet set) {
+    TokenDecl getDecl(StateSet set) {
         int minIndex = Integer.MAX_VALUE;
-        String name = null;
+        TokenDecl decl = null;
         for (var state : set) {
-            for (var nm : state.names) {
-                int i = indexOf(nm);
-                if (i < minIndex) {
-                    name = nm;
-                    minIndex = i;
-                }
+            if(!state.accepting) continue;
+            int i = indexOf(state.name);
+            if (i < minIndex) {
+                decl = state.decl;
+                minIndex = i;
             }
         }
-        return name;
+        return decl;
     }
 
     public Iterable<State> it() {
@@ -187,7 +183,7 @@ public class NFA {
 
     //get target state using state and input
     public State getTarget(State state, int input) {
-        for (Transition tr : state.transitions) {
+        for (var tr : state.transitions) {
             if (tr.input == input) return tr.target;
         }
         return null;
@@ -205,19 +201,13 @@ public class NFA {
     }
 
     String getName(State state) {
-        var names = state.names;
-        if (names.isEmpty()) return "";
-        if (names.size() == 1) return "(" + names.get(0) + ")";
-        return "(" + names + ")";
+        if (state.name == null) return "";
+        return "(" + state.name + ")";
     }
 
     public void dump(Writer writer) {
-        PrintWriter w = new PrintWriter(writer);
-        w.println("initial = " + initialState);
-        for (var e : modes.entrySet()) {
-            if (e.getKey().equals("DEFAULT")){
-                continue;
-            }
+        var w = new PrintWriter(writer);
+        for (var e : modes.entrySet().stream().sorted(Comparator.comparingInt(e->e.getValue().id)).collect(Collectors.toList())) {
             w.printf("mode %s = %s;\n", e.getKey(), e.getValue());
         }
         w.print("final = ");
@@ -239,13 +229,13 @@ public class NFA {
         w.println();
         for (var state : it()) {
             if (state.transitions.isEmpty()) continue;
-            List<Transition> arr = state.transitions;
+            var arr = state.transitions;
             sort(arr);
-            for (Transition tr : arr) {
+            for (var tr : arr) {
                 w.print(state + " -> " + tr.target);
                 if (!tr.epsilon) {
                     w.print("  , ");
-                    Node input = getAlphabet().getRegex(tr.input);
+                    var input = getAlphabet().getRegex(tr.input);
                     if (input.isString()) {
                         w.print(input.asString().printNormal());
                     }
@@ -265,8 +255,8 @@ public class NFA {
 
     private void sort(List<Transition> arr) {
         arr.sort((o1, o2) -> {
-            Node r1 = getAlphabet().getRegex(o1.input);
-            Node r2 = getAlphabet().getRegex(o2.input);
+            var r1 = getAlphabet().getRegex(o1.input);
+            var r2 = getAlphabet().getRegex(o2.input);
             if (r1.isRange() && r2.isRange()) {
                 return r1.asRange().compareTo(r2.asRange());
             }
@@ -279,20 +269,16 @@ public class NFA {
     }
 
     public void dot(Writer writer) {
-        String finalColor = "red";
-        String initialColor = "red";
-        String skipColor = "blue";
-        PrintWriter w = new PrintWriter(writer);
+        var finalColor = "red";
+        var initialColor = "red";
+        var skipColor = "blue";
+        var w = new PrintWriter(writer);
         w.println("digraph G{");
         w.println("rankdir = LR;");
         w.printf("%s [color=%s]\n", initialState, initialColor);
         for (var state : it()) {
             if (isDead(state)) continue;
-            var names = state.names;
-            String name = names.isEmpty() ? "" : names.toString();
-            if (names.size() == 1) {
-                name = names.get(0);
-            }
+            var name = state.name == null ? "" : state.name;
             if (state.accepting) {
                 //todo write label inside
                 w.printf("%d [shape = doublecircle color=%s xlabel=\"%s\"]\n", state.id, finalColor, name);
@@ -306,7 +292,7 @@ public class NFA {
         }
 
         for (var state : it()) {
-            for (Transition tr : state.transitions) {
+            for (var tr : state.transitions) {
                 String label;
                 if (tr.epsilon) {
                     label = Epsilon.str();

@@ -83,7 +83,7 @@ public class NfaVisitor {
         int st = Integer.parseInt(ns.NUM.value);
         res.setAccepting(st, true);
         if (ns.g1 != null) {
-            res.getState(st).addName(ns.g1.IDENT.value);
+            res.getState(st).name = ns.g1.IDENT.value;
         }
     }
 

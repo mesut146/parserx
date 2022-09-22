@@ -1,8 +1,8 @@
-package mesut.parserx.gen.targets;
+package mesut.parserx.gen.lexer;
 
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
-import mesut.parserx.gen.LexerGenerator;
+import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
 import mesut.parserx.nodes.Name;
@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static mesut.parserx.gen.LexerGenerator.makeOctal;
+import static mesut.parserx.gen.lexer.LexerGenerator.makeOctal;
 
 public class CppLexer {
 

@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Queue;
 
 public class DescTester {
-    public static boolean dump = true;
 
 
     public static void checkTokens(Builder builder) throws Exception {
@@ -38,7 +37,7 @@ public class DescTester {
         var outDir = Env.dotDir().getAbsolutePath();
         var tree = builder.tree;
         tree.options.outDir = outDir;
-        if (dump) {
+        if (builder.dump) {
             tree.options.dump = true;
         }
         //RecDescent.gen(tree, "java");
@@ -109,7 +108,7 @@ public class DescTester {
         var tree = builder.tree;
         tree.options.outDir = outDir;
         //RecDescent.gen(tree, "java");
-        if (dump) {
+        if (builder.dump) {
             tree.options.dump = true;
         }
         ParserGen.gen(tree,Lang.JAVA);
@@ -160,11 +159,9 @@ public class DescTester {
         var outDir = Env.dotDir().getAbsolutePath();
         var tree = builder.tree;
         tree.options.outDir = outDir;
-        if (dump) {
+        if (builder.dump) {
             tree.options.dump = true;
         }
-        //RecDescent.gen(tree, "java");
-        //new CcGenJava(tree).gen();
         ParserGen.gen(tree, Lang.JAVA);
 
         File out = new File(outDir, "out");

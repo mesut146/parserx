@@ -1,6 +1,7 @@
 package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.*;
+import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.ll.AstGen;
 import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.targets.JavaRecDescent;

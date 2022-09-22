@@ -22,50 +22,57 @@ public class DFABuilder {
             System.out.println("dfa conversion started");
         }
         dfa = new NFA((nfa.lastState + 1) * 2);
-        dfa.init(0);
+        dfa.init(nfa.initialState.id);
         dfa.tree = nfa.tree;
 
-        Queue<StateSet> openStates = new LinkedList<>();
-        Set<StateSet> processed = new HashSet<>();
-        var cl = closure(nfa.initialState);
-        dfaStateMap.put(cl, dfa.initialState);
-        openStates.add(cl);
+        dfaStateMap.put(closure(nfa.initialState), dfa.initialState);
 
-        while (!openStates.isEmpty()) {
-            var curSet = openStates.poll();//current nfa state set
-            var closure = closure(curSet);
-            processed.add(curSet);
+        for (var mode : nfa.modes.entrySet()) {
+            var modeState = mode.getValue();
+            var openStates = new LinkedList<StateSet>();
+            var processed = new HashSet<StateSet>();
+            var cl = closure(modeState);
+            var modeDfaState = getDfaState(cl);
+            dfaStateMap.put(cl, modeDfaState);
+            dfa.modes.put(mode.getKey(), modeDfaState);
 
-            //get corresponding dfa state
-            var dfaState = getDfaState(closure);
-            //input -> target state set
-            Map<Integer, StateSet> map = new HashMap<>();
-            //find transitions from closure
-            for (var epState : closure) {
-                for (Transition tr : epState.transitions) {
-                    if (tr.epsilon) continue;
-                    var targets = map.get(tr.input);//we can cache these
-                    if (targets == null) {
-                        targets = new StateSet();
-                        map.put(tr.input, targets);
+            openStates.add(cl);
+
+            while (!openStates.isEmpty()) {
+                var curSet = openStates.poll();//current nfa state set
+                var closure = closure(curSet);
+                processed.add(curSet);
+
+                //get corresponding dfa state
+                var dfaState = getDfaState(closure);
+                //input -> target state set
+                var map = new HashMap<Integer, StateSet>();
+                //find transitions from closure
+                for (var epState : closure) {
+                    for (var tr : epState.transitions) {
+                        if (tr.epsilon) continue;
+                        var targets = map.get(tr.input);//we can cache these
+                        if (targets == null) {
+                            targets = new StateSet();
+                            map.put(tr.input, targets);
+                        }
+                        targets.addAll(closure(tr.target));
                     }
-                    targets.addAll(closure(tr.target));
                 }
-            }
-            //make transition for each input
-            for (int input : map.keySet()) {
-                var targets = map.get(input);
-                if (!openStates.contains(targets) && !processed.contains(targets)) {
-                    openStates.add(closure(targets));
+                //make transition for each input
+                for (int input : map.keySet()) {
+                    var targets = map.get(input);
+                    if (!openStates.contains(targets) && !processed.contains(targets)) {
+                        openStates.add(closure(targets));
+                    }
+                    var target_state = getDfaState(targets);
+                    if (debugDFA) {
+                        System.out.printf("targets=%s dfa=%d\n", targets, target_state.id);
+                    }
+                    target_state.accepting = nfa.isAccepting(targets);
+                    target_state.isSkip = nfa.isSkip(targets);
+                    dfa.addTransition(dfaState, target_state, input);
                 }
-                var target_state = getDfaState(targets);
-                if (debugDFA) {
-                    System.out.printf("targets=%s dfa=%d\n", targets, target_state.id);
-                }
-                target_state.accepting = nfa.isAccepting(targets);
-                target_state.isSkip = nfa.isSkip(targets);
-                dfa.addTransition(dfaState, target_state, input);
-                target_state.addName(nfa.getName(targets));
             }
         }
         return dfa;
@@ -76,6 +83,10 @@ public class DFABuilder {
         var state = dfaStateMap.get(set);
         if (state == null) {
             state = dfa.newState();
+            if (nfa.isAccepting(set)) {
+                state.decl = nfa.getDecl(set);
+                state.name = state.decl.name;
+            }
             dfaStateMap.put(set, state);
         }
         return state;

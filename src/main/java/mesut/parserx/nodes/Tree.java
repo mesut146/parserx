@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 public class Tree {
 
     public List<TokenBlock> tokenBlocks = new ArrayList<>();
-    public List<TokenDecl> tokens = new ArrayList<>();
     public List<RuleDecl> rules = new ArrayList<>();
     public Options options = new Options();
     public Name start;
@@ -73,7 +72,7 @@ public class Tree {
 
     public Tree prepare() {
         PrepareTree.checkReferences(this);
-        for (RuleDecl decl : rules) {
+        for (var decl : rules) {
             originalRules.add(decl.ref);
         }
         return this;
@@ -143,14 +142,7 @@ public class Tree {
             //globals
             for (var decl : tb.tokens) {
                 if (decl.name.equals(token.name)) {
-                    throw new RuntimeException("token " + token + " already exists in global");
-                }
-            }
-            for (var mb : tb.modeBlocks) {
-                for (var decl : mb.tokens) {
-                    if (decl.name.equals(token.name)) {
-                        throw new RuntimeException("token " + token + " already exists in mode " + mb.name);
-                    }
+                    throw new RuntimeException("token " + token + " already exists in block");
                 }
             }
         }
@@ -161,20 +153,11 @@ public class Tree {
         //same scope
         for (var decl : modeBlock.tokens) {
             if (decl.name.equals(token.name)) {
-                throw new RuntimeException("token " + token + " already exists in mode " + modeBlock.name);
-            }
-        }
-        //check for globals
-        for (var tb : tokenBlocks) {
-            for (var decl : tb.tokens) {
-                if (decl.name.equals(token.name)) {
-                    throw new RuntimeException("token " + token + " already exists in global");
-                }
+                throw new RuntimeException(String.format("token %s already exists in mode '%s'", token, modeBlock.name));
             }
         }
         modeBlock.tokens.add(token);
     }
-
 
     public void addRule(RuleDecl rule) {
         if (checkDup) {

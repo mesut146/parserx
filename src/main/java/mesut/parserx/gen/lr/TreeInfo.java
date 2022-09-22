@@ -7,6 +7,7 @@ import mesut.parserx.nodes.Tree;
 
 import java.util.*;
 
+//split alts into separate decl
 public class TreeInfo {
     public LinkedHashMap<String, List<Node>> nodeMap = new LinkedHashMap<>();
     public Tree tree;
@@ -30,9 +31,11 @@ public class TreeInfo {
             var rules = new ArrayList<RuleDecl>();
             for (var rhs : entry.getValue()) {
                 var rd = new RuleDecl(name, rhs);
-                rd.transformInfo = tree.getRule(name).transformInfo;
+                var original = tree.getRule(name);
+                rd.transformInfo = original.transformInfo;
                 rd.which = id++;
                 rd.index = index++;
+                rd.retType = original.retType;
                 rules.add(rd);
             }
             res.ruleMap.put(name, rules);

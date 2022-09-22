@@ -32,7 +32,6 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
     }
 
     public void genAst() throws IOException {
-        new Normalizer(tree).normalize();
         if (options.packageName != null) {
             w.append("package %s;", options.packageName);
             w.append("");
@@ -42,7 +41,7 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
         w.append("");
 
         w.append("public class %s{", options.astClass);
-        for (RuleDecl decl : tree.rules) {
+        for (var decl : tree.rules) {
             groupCount = 1;
             curRule = decl.baseName();
             model(decl);
@@ -155,7 +154,6 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
             ch.accept(this, new Info(clsName, ch.astInfo.varName));
             p.writePrinter(ch, true);
             w.append("}");
-
         }
     }
 

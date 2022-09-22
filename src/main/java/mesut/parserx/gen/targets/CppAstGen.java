@@ -52,7 +52,6 @@ public class CppAstGen {
     }
 
     public void genAst() throws IOException {
-        new Normalizer(tree).normalize();
         //ns
         astWriter.append("#pragma once");
         astWriter.append("");

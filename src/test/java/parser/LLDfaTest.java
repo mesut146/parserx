@@ -2,7 +2,7 @@ package parser;
 
 import common.Env;
 import mesut.parserx.gen.Lang;
-import mesut.parserx.gen.LexerGenerator;
+import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.lldfa.*;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
@@ -37,7 +37,7 @@ public class LLDfaTest {
     }
 
     @Test
-    public void all() throws IOException {
+    public void allDot() throws IOException {
         single("rec/cyc.g");
 //        File dir = new File("./src/test/resources/lldfa");
 //        for (String s : dir.list()) {
@@ -309,13 +309,15 @@ public class LLDfaTest {
                 input("ababx", "F#1{X{[A#1{'a'}, A#2{'b'}, A#1{'a'}, A#2{'b'}], 'x'}}").
                 input("ay", "F#2{Y{[B#1{'a'}], 'y'}}").
                 input("bbaay", "F#2{Y{[B#2{'b'}, B#2{'b'}, B#1{'a'}, B#1{'a'}], 'y'}}"));
-        DescTester.check2(Builder.tree("lldfa/rr-loop2.g").rule("E").
+        Builder.tree("lldfa/rr-loop2.g").rule("E").
+                dump().
                 input("acx", "E#1{[A#1{'a'}], [B#1{'c'}], 'x'}").
                 input("bdx", "E#1{[A#2{'b'}], [B#2{'d'}], 'x'}").
-                input("abcdx", "E#1{[A#1{'a'}, A#2{'b'}], [B#1{'c'}, B#2{'d'}], 'x'}").
+        input("abcdx", "E#1{[A#1{'a'}, A#2{'b'}], [B#1{'c'}, B#2{'d'}], 'x'}").
                 input("acy", "E#2{[C#1{'a'}], [D#1{'c'}], 'y'}").
                 input("bdy", "E#2{[C#2{'b'}], [D#2{'d'}], 'y'}").
-                input("abcdy", "E#2{[C#1{'a'}, C#2{'b'}], [D#1{'c'}, D#2{'d'}], 'y'}"));
+                input("abcdy", "E#2{[C#1{'a'}, C#2{'b'}], [D#1{'c'}, D#2{'d'}], 'y'}").
+                check();
         DescTester.check2(Builder.tree("lldfa/rr-loop-len2.g").rule("E").
                 input("x", "E#1{'x'}").
                 input("y", "E#2{'y'}").

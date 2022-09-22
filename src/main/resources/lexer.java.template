@@ -11,13 +11,13 @@ public class $lexer_class$ {
     static String[] cMapRegex = {$cMapRegex$};
     int[] skip = {$skip_list$};
     int[] accepting = {$final_list$};
-    //state -> mode_state
-    //int[] push_modes = {$push_modes$};
+    //acc state -> new mode_state
+    int[] mode_map = {$mode_map$};
     //id -> token name
-    String[] names = {$name_list$};
+    static String[] names = {$name_list$};
     //state->token id
-    int[] ids = {$id_list$};
-    static final int INITIAL = 0;
+    static int[] ids = {$id_list$};
+$modes$
     static final int EOF = 0;
     Reader reader;
     int yypos = 0;//pos in file
@@ -29,7 +29,7 @@ public class $lexer_class$ {
     char[] yybuf = new char[bufSize];
     static String trans_packed = $trans$;
     static int[][] trans = unpackTrans(trans_packed);
-    int curState = INITIAL;
+    int curMode = DEFAULT;
 
     public $lexer_class$(Reader reader) throws IOException{
         this.reader = reader;
@@ -120,7 +120,7 @@ public class $lexer_class$ {
 
     public $token_class$ $next_token$_normal() throws IOException {
         fill();
-        curState = INITIAL;
+        int curState = curMode;
         int lastState = -1;
         int startPos = yypos;
         int startLine = yyline;
@@ -143,16 +143,14 @@ public class $lexer_class$ {
                 if (lastState != -1) {
                     $token_class$ token = new $token_class$(ids[lastState], getText());
                     token.offset = startPos;
-                    token.name = names[ids[lastState]];
+                    token.name = names[token.type];
                     token.line = startLine;
                     bufStart = bufPos;
-                    /*if(!after[ids[lastState]]){
-                      curState = INITIAL;
-                    }*/
+                    curMode = mode_map[lastState];
                     return token;
                 }
                 else {
-                    throw new IOException(String.format("invalid input=%c(%d) pos=%s line=%d buf='%s' expecting=%s",yychar,yychar,yypos,yyline,getText(),findExpected(backupState)));
+                    throw new IOException(String.format("invalid input=%c(%d) pos=%s line=%d mode=%s buf='%s' expecting=%s",yychar,yychar,yypos,yyline,printMode(),getText(),findExpected(backupState)));
                 }
             }
             else {
@@ -170,5 +168,12 @@ public class $lexer_class$ {
                 yypos++;
             }
         }
+    }
+
+    String printMode(){
+        switch(curMode){
+$printModes$
+        }
+        throw new RuntimeException("invalid mode: " + curMode);
     }
 }

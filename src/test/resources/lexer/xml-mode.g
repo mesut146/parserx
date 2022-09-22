@@ -1,7 +1,9 @@
 token{
+  prolog: "<?xml" S "version" S? "=" S? ("'" "1.0" "'" | '"' "1.0" "'") "?>";
   LT: "<" -> in_tag;
   #S: [ \r\n\t]+;
   #ident: [a-zA-Z] [a-zA-Z0-9_]*;
+  COMMENT: "<!--" ("-" "-" [^>] | "-" [^-] | [^-])* "-->";
   in_tag{
     TAG_NAME: ident -> attr_mode;
   }

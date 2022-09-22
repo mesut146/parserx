@@ -32,7 +32,7 @@ public class StateSet implements Iterable<State> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        StateSet stateSet = (StateSet) o;
+        var stateSet = (StateSet) o;
         return states.equals(stateSet.states);
     }
 

@@ -3,6 +3,7 @@ token{
  b: "b";
 
  mode{
-   bb: "b" -> DEFAULT;
+   b: "c" -> DEFAULT;
+   c: "cd";
  }
 }

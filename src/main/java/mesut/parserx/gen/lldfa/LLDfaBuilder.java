@@ -5,6 +5,7 @@ import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.ll.Normalizer;
 import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.gen.lr.LrType;
+import mesut.parserx.gen.lr.TreeInfo;
 import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorHelper;
 import mesut.parserx.gen.transform.FactorLoop;
@@ -22,77 +23,53 @@ import java.util.stream.Collectors;
 public class LLDfaBuilder {
     public Name rule;
     public Tree tree;
-    public Tree ebnf;
+    TreeInfo treeInfo;
     Map<String, ItemSet> firstSets = new HashMap<>();
     Set<ItemSet> all;
     Queue<ItemSet> queue = new LinkedList<>();
-    //String type = "lr1";
     LrType type = LrType.LR1;
     Map<String, Set<ItemSet>> rules = new HashMap<>();
     public static Logger logger = Utils.getLogger();
 
     public LLDfaBuilder(Tree tree) {
-        this.ebnf = tree;
+        this.tree = tree;
         ItemSet.lastId = Item.lastId = 0;
     }
 
     void prepare() {
-        new Normalizer(ebnf).normalize();
-        ebnf.prepare();
-
-        tree = new Tree(ebnf);
-        tree.checkDup = false;
-        for (var rd : ebnf.rules) {
-            var rhs = rd.rhs;
-            if (rhs.isOr()) {
-                int id = 1;
-                for (var ch : rhs.asOr()) {
-                    ch = expandPlus(ch);
-                    var decl = new RuleDecl(rd.ref, ch);
-                    decl.retType = rd.retType;
-                    decl.which = id++;
-                    tree.addRule(decl);
+        new Transformer(tree) {
+            @Override
+            public Node visitSequence(Sequence seq, Void arg) {
+                var list = new ArrayList<Node>();
+                for (int i = 0; i < seq.size(); i++) {
+                    var ch = seq.get(i);
+                    if (ch.isPlus()) {
+                        //a+: a a*
+                        var regex = ch.asRegex();
+                        var node = regex.node.copy();
+                        node.astInfo.isInLoop = true;
+                        list.add(node);
+                        var star = new Regex(regex.node.copy(), RegexType.STAR);
+                        star.astInfo = regex.astInfo.copy();
+                        list.add(star);
+                    }
+                    else {
+                        list.add(ch);
+                    }
                 }
+                var res = new Sequence(list);
+                res.astInfo = seq.astInfo.copy();
+                return res;
             }
-            else {
-                rhs = expandPlus(rhs);
-                var decl = new RuleDecl(rd.ref, rhs);
-                decl.retType = rd.retType;
-                tree.addRule(decl);
-            }
-        }
-    }
-
-    //rewrite a+ as a a*
-    public static Sequence expandPlus(Node node) {
-        var info = node.astInfo;
-        var seq = node.isSequence() ? node.asSequence() : new Sequence(node);
-        var list = new ArrayList<Node>();
-        for (var ch : seq) {
-            if (ch.isPlus()) {
-                var rn = ch.asRegex();
-                var copy = rn.node.copy();
-                list.add(copy);
-                var star = new Regex(rn.node.copy(), RegexType.STAR);
-                star.astInfo = rn.astInfo.copy();
-                list.add(star);
-            }
-            else {
-                list.add(ch);
-            }
-        }
-        var ret = new Sequence(list);
-        ret.assocLeft = seq.assocLeft;
-        ret.assocRight = seq.assocRight;
-        ret.astInfo = info;
-        return ret;
+        }.transformRules();
+        treeInfo = TreeInfo.make(tree);
     }
 
     public void factor() {
         prepare();
-        for (var rd : ebnf.rules) {
+        for (var rd : tree.rules) {
             var visitor = new FactorVisitor();
-            visitor.tree = ebnf;
+            visitor.tree = tree;
             if (rd.rhs.accept(visitor, null)) {
                 rule = rd.ref;
                 build();
@@ -148,7 +125,7 @@ public class LLDfaBuilder {
 
         logger.log(Level.FINE, "building " + rule + " in " + tree.file.getName());
 
-        var firstSet = new ItemSet(tree, type);
+        var firstSet = new ItemSet(treeInfo, type);
         firstSet.isStart = true;
         firstSets.put(rule.name, firstSet);
         Set<Name> la;
@@ -166,8 +143,8 @@ public class LLDfaBuilder {
             //throw new RuntimeException("la need to be computed");
         }
 
-        for (var rd : tree.getRules(rule)) {
-            var first = new Item(rd, 0);
+        for (var decl : treeInfo.ruleMap.get(rule.name)) {
+            var first = new Item(decl, 0);
             first.first = true;
             first.gotoSet.add(firstSet);
             //first.lookAhead.add(dollar);
@@ -267,7 +244,7 @@ public class LLDfaBuilder {
         for (var e : map.entrySet()) {
             var sym = e.getKey();
             var tr = e.getValue();
-            var targetSet = new ItemSet(tree, type);
+            var targetSet = new ItemSet(treeInfo, type);
             targetSet.addAll(tr.pairs.stream().map(pair -> pair.target).collect(Collectors.toList()));
             targetSet.addAll(targetSet.genReduces());
             targetSet.alreadyGenReduces = true;

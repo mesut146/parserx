@@ -1,16 +1,17 @@
-package mesut.parserx.gen;
+package mesut.parserx.gen.lexer;
 
 import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
+import mesut.parserx.dfa.State;
+import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.lr.IdMap;
-import mesut.parserx.gen.targets.CppLexer;
-import mesut.parserx.gen.targets.JavaLexer;
-import mesut.parserx.nodes.Name;
-import mesut.parserx.nodes.Tree;
+import mesut.parserx.nodes.*;
 import mesut.parserx.utils.UnicodeUtils;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 import java.util.TreeSet;
 
 public class LexerGenerator {
@@ -18,16 +19,16 @@ public class LexerGenerator {
     public NFA dfa;
     public Tree tree;
     public boolean[] skipList;
+    //state -> id
     public int[] idArr;
+    //name -> id pairs
     public TreeSet<Map.Entry<Name, Integer>> tokens;
-    Options options;
+    //acc state -> new mode state
+    public int[] mode_arr;
     Lang target;
 
     public LexerGenerator(Tree tree, Lang target) {
         this.tree = tree;
-        this.dfa = tree.makeNFA().dfa();
-        this.dfa = Minimization.optimize(this.dfa);
-        this.options = tree.options;
         this.target = target;
     }
 
@@ -35,6 +36,51 @@ public class LexerGenerator {
         var gen = new LexerGenerator(tree, target);
         gen.generate();
         return gen;
+    }
+
+    public void generate() throws IOException {
+        dfa = tree.makeNFA().dfa();
+        //dfa = Minimization.optimize(this.dfa);
+        nameAndId();
+        skipList();
+        modes();
+        if (target == Lang.JAVA) {
+            new JavaLexer(this).gen();
+        }
+        else if (target == Lang.CPP) {
+            new CppLexer().gen(this);
+        }
+    }
+
+    private void modes() {
+        mode_arr = new int[dfa.lastState + 1];
+        for (var state : dfa.it()) {
+            if (!state.accepting) continue;
+            if (state.decl.mode != null) {
+                mode_arr[state.id] = dfa.modes.get(state.decl.mode).id;
+            }
+            else {
+                //preserve mode
+                var mb = getModeBlock(state.decl);
+                if (mb == null) {
+                    //global token -> DEFAULT
+                    mode_arr[state.id] = dfa.initialState.id;
+                }
+                else {
+                    //mode token -> same mode
+                    mode_arr[state.id] = dfa.modes.get(mb.name).id;
+                }
+            }
+        }
+    }
+
+    ModeBlock getModeBlock(TokenDecl decl) {
+        for (var tb : tree.tokenBlocks) {
+            for (var mb : tb.modeBlocks) {
+                if (mb.tokens.contains(decl)) return mb;
+            }
+        }
+        return null;
     }
 
     //compress boolean bits to integers
@@ -60,17 +106,6 @@ public class LexerGenerator {
         return UnicodeUtils.escapeUnicode(val);
     }
 
-    public void generate() throws IOException {
-        nameAndId();
-        skipList();
-        if (target == Lang.JAVA) {
-            new JavaLexer().gen(this);
-        }
-        else if (target == Lang.CPP) {
-            new CppLexer().gen(this);
-        }
-    }
-
 
     private void skipList() {
         skipList = new boolean[idMap.lastTokenId + 1];
@@ -89,13 +124,8 @@ public class LexerGenerator {
         idArr = new int[dfa.lastState + 1];//state->id
         for (var state : dfa.it()) {
             //make id for token
-            var names = state.names;
-            if (!names.isEmpty() && state.accepting) {
-                //!dfa.isSkip[state]
-                if (names.size() != 1) {
-                    throw new RuntimeException("only one token per state");
-                }
-                idArr[state.id] = idMap.getId(new Name(names.get(0), true));
+            if (state.accepting) {
+                idArr[state.id] = idMap.getId(new Name(state.name, true));
             }
         }
         //sort tokens by id
