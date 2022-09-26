@@ -17,15 +17,13 @@ public class AlphabetBuilder extends Transformer {
 
     //normalize bracket by r1
     private boolean split(Range r1, Bracket bracket) {
-        for (Range r2 : ranges) {
+        for (var r2 : ranges) {
             if (r1.equals(r2) || !r1.intersect(r2)) {
                 continue;
             }
-            Range inter = Range.intersect(r1, r2);
-            Range me1 = Range.of(r1.start, inter.start - 1);
-            Range me2 = Range.of(inter.end + 1, r1.end);
-            //RangeNode he1 = RangeNode.of(r2.start, inter.start - 1);
-            //RangeNode he2 = RangeNode.of(inter.end + 1, r2.end);
+            var inter = Range.intersect(r1, r2);
+            var me1 = Range.of(r1.start, inter.start - 1);
+            var me2 = Range.of(inter.end + 1, r1.end);
             bracket.ranges.remove(r1);
             ranges.remove(r1);
             ranges.remove(r2);
@@ -37,9 +35,6 @@ public class AlphabetBuilder extends Transformer {
                 bracket.ranges.add(me2);
                 ranges.add(me2);
             }
-            //if (he1.isValid()) ranges.add(he1);
-            //if (he2.isValid()) ranges.add(he2);
-
             bracket.ranges.add(inter);
             ranges.add(inter);
             bracket.clear();
@@ -59,16 +54,23 @@ public class AlphabetBuilder extends Transformer {
 
     @Override
     public Node visitUntil(Until node, Void parent) {
-        StringNode ch = node.node.asString();
+        var ch = node.node.asString();
         transformNode(ch, parent);
         for (char c : ch.value.toCharArray()) {
-            Bracket bracket = new Bracket();
+            var bracket = new Bracket();
             bracket.add(new Range(c, c));
             bracket.negate = true;
             node.brackets.add(bracket);
             transformNode(bracket, parent);
         }
         return node;
+    }
+
+    @Override
+    public Node visitSub(Sub sub, Void arg) {
+        sub.node.accept(this, arg);
+        sub.string.accept(this, arg);
+        return super.visitSub(sub, arg);
     }
 
     @Override
@@ -100,8 +102,8 @@ public class AlphabetBuilder extends Transformer {
         //find intersecting ranges and split them
         outer:
         while (true) {
-            for (Bracket bracket : brackets) {
-                for (Range range : bracket.getRanges()) {
+            for (var bracket : brackets) {
+                for (var range : bracket.getRanges()) {
                     //if this range intersect other ranges
                     if (!range.isSingle()) {
                         if (split(range, bracket)) {
@@ -113,14 +115,14 @@ public class AlphabetBuilder extends Transformer {
             break;//found none break while
         }
         //finally, add all ranges to alphabet
-        for (Bracket bracket : brackets) {
-            for (Range range : bracket.getRanges()) {
+        for (var bracket : brackets) {
+            for (var range : bracket.getRanges()) {
                 tree.alphabet.addRegex(range);
             }
         }
         //add chars in strings that are distinct
-        for (Range range : ranges) {
-            Range real = tree.alphabet.findRange(range);
+        for (var range : ranges) {
+            var real = tree.alphabet.findRange(range);
             if (real == null) {
                 tree.alphabet.addRegex(range);
             }

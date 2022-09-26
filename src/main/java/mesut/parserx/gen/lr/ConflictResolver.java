@@ -64,7 +64,6 @@ public class ConflictResolver {
             sb.append(info.toString()).append("\n");
         }
         throw new RuntimeException(sb.toString());
-        //System.err.println(sb);
     }
 
     //check if two items has conflict

@@ -17,28 +17,21 @@ import java.util.stream.Collectors;
 //the grammar file for both lexer and parser
 public class Tree {
 
-    public List<TokenBlock> tokenBlocks = new ArrayList<>();
-    public List<RuleDecl> rules = new ArrayList<>();
+    public List<String> includes = new ArrayList<>();
     public Options options = new Options();
+    public List<TokenBlock> tokenBlocks = new ArrayList<>();
+    public LexerMembers lexerMembers;
+    public ActionBlock actionBlock;
+    public List<RuleDecl> rules = new ArrayList<>();
     public Name start;
     public File file;
     public Alphabet alphabet = new Alphabet();
-    List<String> includes = new ArrayList<>();
     CountingMap<String> newNameCnt = new CountingMap<>();
     Map<String, String> senderMap = new HashMap<>();
-    HashSet<Name> originalRules = new HashSet<>();
+    public HashSet<Name> originalRules = new HashSet<>();
     public boolean checkDup = true;
 
     public Tree() {
-    }
-
-    public Tree(Tree tree) {
-        this();
-        start = tree.start;
-        includes = tree.includes;
-        file = tree.file;
-        options = tree.options;
-        originalRules = tree.originalRules;
     }
 
     public static Tree makeTree(File path) {
@@ -288,6 +281,13 @@ public class Tree {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        if (lexerMembers != null) {
+            sb.append("lexerMembers{\n");
+            for (var member : lexerMembers.members) {
+                sb.append(member).append("\n");
+            }
+            sb.append("}\n");
+        }
         for (var tb : tokenBlocks) {
             sb.append("token{\n");
             for (var decl : tb.tokens) {

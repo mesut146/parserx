@@ -33,8 +33,6 @@ public class LrStateGenTest {
         StateCodeGen gen = new StateCodeGen( dfaGen, lexerGenerator.idMap);
         gen.gen();
 
-        AstBuilderGen astBuilderGen = new AstBuilderGen(tree);
-        astBuilderGen.gen();
     }
 
     @Test

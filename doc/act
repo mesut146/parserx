@@ -1,0 +1,20 @@
+TOKEN: "token" @inToken;
+RBRACE: "}" @inToken2;
+COLON: ":" @COLON;
+ACTION: "{" {)open=1;} ({open>0}? stmt)* "}";
+stmt: "{" @incrOpen | "}" @decrOpen | comment | .;
+
+actions{
+ inToken: %begin inToken=true; %end
+ inToken2: %begin inToken=false; %end
+ incrOpen: %begin open++; %end
+ decrOpen: %begin open--; %end
+ COLON: %begin if(!inToken) inRule=true; %end
+}
+
+lexerMembers{
+  int open = 0;
+  int close = 0;
+  boolean inToken = false;
+  boolean inRule = false;
+}

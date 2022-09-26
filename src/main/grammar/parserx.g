@@ -7,7 +7,6 @@ token{
  EPSILON: "%epsilon" | "%empty" | "ε";
  LEFT: "%left";
  RIGHT: "%right";
- JOIN: "%join";
  IDENT: [a-zA-Z_] [a-zA-Z0-9_]*;
  CALL_BEGIN: IDENT "(";
  SHORTCUT: "[:" IDENT ":]";
@@ -17,33 +16,25 @@ token{
  NUMBER: [0-9]+;
 }
 
-/*token{
- #bracketLexer: "[" "^"? unit+ "]";
- #unit: single ("-" single)?;
- #single: "\\u" hex_digit hex_digit hex_digit hex_digit | .;
- #hex_digit: [a-fA-F0-9];
-}*/
-
 token{
  LP: "(";
  RP: ")";
  LBRACE: "{";
  RBRACE: "}";
- //LBRACKET: "[";
- //RBRACKET: "]";
  STAR: "*";
  PLUS: "+";
  QUES: "?";
- POW: "^";
- SEPARATOR: ":" | "=" | ":=" | "::=";
+ //POW: "^";
+ SEPARATOR: ":";
  TILDE: "~";
  HASH: "#";
  COMMA: ",";
  OR: "|";
  DOT: ".";
  SEMI: ";";
- MINUS: "-";
  ARROW: "->";
+ EQ: "=";
+ MINUS: "-";
 }
 
 token{
@@ -52,9 +43,26 @@ token{
   WS: [ \n\r\t]+ -> skip;
 }
 
+token{
+  ACTION_REF: "@" IDENT;
+  ACTION_TOKEN: "action";
+  ACTION: "%begin" ([^%] | "%" [^e] | "%e" [^n] | "%en" [^d])+ "%end";
+  LEXER_MEMBERS_BEGIN: "lexerMembers" WS? "{" -> member_mode;
+  member_mode{
+    WS1: WS -> skip;
+    LEXER_MEMBER: [^\n;}]+ ";";
+    MEMBERS_END: "}" -> DEFAULT;
+  }
+}
+
 %start: tree;
 
-tree: includeStatement* optionsBlock? tokens=tokenBlock* startDecl? rules=ruleDecl*;
+tree: includeStatement* optionsBlock? lexerMembers? tokens=tokenBlock* actionBlock? startDecl? rules=ruleDecl*;
+
+lexerMembers: LEXER_MEMBERS_BEGIN LEXER_MEMBER+ MEMBERS_END;
+
+actionBlock: "action" "{" actionEntry* "}";
+actionEntry: IDENT ":" ACTION;
 
 includeStatement: "include" STRING;
 
@@ -72,10 +80,13 @@ ruleDecl: name args? SEPARATOR rhs ";";
 args: "(" name rest=("," name)* ")";
 
 rhs: sequence ("|" sequence)*;
-sequence: regex+ assoc=("%left" | "%right")? label=("#" name)?;
+sequence: sub+ assoc=("%left" | "%right")? label=("#" name)?;
 
-regex: name "=" simple type=("*" | "+" | "?")?
-     | simple type=("*" | "+" | "?")?;
+sub: regex ("-" stringNode)?;
+
+regex: name "=" simple type=regexType? ACTION_REF?
+     | simple type=regexType? ACTION_REF?;
+regexType: "*" | "+" | "?";
 
 simple: group
      | name
@@ -92,12 +103,6 @@ stringNode: STRING | CHAR;
 bracketNode: BRACKET;//easier to handle as token
 untilNode: "~" regex;
 dotNode: ".";
-name: IDENT | TOKEN | "options" /*| "include"*/;
+name: IDENT;
 
 call: CALL_BEGIN IDENT ("," IDENT)* ")";
-
-join: "%join" "(" nameOrString: "," nameOrString: ")";
-nameOrString: name | stringNode;
-
-//bracketOpt: "[" rhs "]";
-

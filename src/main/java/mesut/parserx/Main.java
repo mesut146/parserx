@@ -5,13 +5,11 @@ import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Validator;
 import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.lexer.LexerGenerator;
-import mesut.parserx.gen.ll.RDParserGen;
+import mesut.parserx.gen.lldfa.Normalizer;
+import mesut.parserx.gen.lldfa.LLDfaBuilder;
 import mesut.parserx.gen.lldfa.ParserGen;
-import mesut.parserx.gen.lr.AstBuilderGen;
 import mesut.parserx.gen.lr.LrCodeGen;
 import mesut.parserx.gen.lr.LrType;
-import mesut.parserx.gen.transform.Factor;
-import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.gen.transform.LeftRecursive;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.NodeList;
@@ -29,7 +27,7 @@ import java.util.List;
 public class Main {
 
     static List<String> cmds = Arrays.asList("-left", "-factor", "-epsilon",
-            "-optimize", "-dfa", "-nfa", "-nfa2dfa", "-regex", "-desc", "-lldfa", "-lexer", "-lalr1", "-lr1");
+            "-optimize", "-dfa", "-nfa", "-nfa2dfa", "-regex", "-lldfa", "-lexer", "-lalr1", "-lr1");
 
     static String usageStr = "usage:\n" +
             "java -jar <jarfile> <command>\n" +
@@ -43,7 +41,6 @@ public class Main {
             "-nfa2dfa [-optimize]              nfa to dfa\n" +
             "-regex                            nfa to regex\n" +
             "-lexer [-out <path>] [-package <pkg>] [-lexerClass <cls>] [-lexerFunc <func>] [-tokenClass <cls>]  generates just lexer\n" +
-            "-desc [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates LL(1) recursive descent parser\n" +
             "-lldfa [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates LL(1) recursive descent parser\n" +
             "-lalr1 [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lalr(1) parser" +
             "-lr1 [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lr(1) parser" +
@@ -141,8 +138,12 @@ public class Main {
             }
             else if (cmd.contains("-factor")) {
                 Tree tree = Tree.makeTree(input);
-                Factor.keepFactor = false;
-                new FactorLoop(tree, null).factorize();
+                new Normalizer(tree).normalize();
+                new LLDfaBuilder(tree).factor();
+                if (true) {
+                    throw new RuntimeException("TODO");
+                }
+
                 if (output == null) {
                     output = new File(input.getParent(), Utils.newName(input.getName(), "-out.g"));
                 }
@@ -246,7 +247,7 @@ public class Main {
                     generator.dfa.dot(new FileWriter(new File(tree.options.outDir, Utils.newName(input.getName(), "dot"))));
                 }
             }
-            else if (cmd.contains("-desc") || cmd.contains("-lldfa")) {
+            else if (cmd.contains("-lldfa")) {
                 var tree = Tree.makeTree(input);
                 if (output == null) {
                     tree.options.outDir = input.getParent();
@@ -272,12 +273,7 @@ public class Main {
                 if (astClass != null) {
                     tree.options.astClass = astClass;
                 }
-                if (cmd.contains("-lldfa")) {
-                    ParserGen.gen(tree, lang);
-                }
-                else {
-                    RDParserGen.gen(tree, lang);
-                }
+                ParserGen.gen(tree, lang);
             }
             else if (cmd.contains("-lalr1") || cmd.contains("-lr1")) {
                 Tree tree = Tree.makeTree(input);
@@ -314,8 +310,6 @@ public class Main {
                 }
                 LrCodeGen gen = new LrCodeGen(tree, type);
                 gen.gen();
-                AstBuilderGen builderGen = new AstBuilderGen(tree);
-                builderGen.gen();
                 if (hasDot) {
                     File dotFile = new File(tree.options.outDir, Utils.newName(input.getName(), "-dfa.dot"));
                     gen.gen.writeDot(new PrintWriter(dotFile));

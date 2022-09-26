@@ -1,11 +1,8 @@
 package mesut.parserx.gen.lldfa;
 
-import mesut.parserx.gen.ll.Type;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 
 public class Variable {
     public List<Item> children;
@@ -13,7 +10,6 @@ public class Variable {
     public String name;
     public Item item;
     public Variable holder;
-    public boolean isHolder;
     public List<Variable> prevs = new ArrayList<>();//this is param
 
     //alt or normal

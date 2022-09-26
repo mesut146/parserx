@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.function.Function;
 
 public class Env {
     public static String dir = new File(".").getAbsolutePath();
@@ -23,13 +24,19 @@ public class Env {
         return file;
     }
 
-    public static void dot(File name) {
+    public static void dot(File path) {
         try {
-            Runtime.getRuntime().exec(("dot -Tpng -O " + name).split(" "));
-            System.out.println("writing " + name);
+            Runtime.getRuntime().exec(("dot -Tpng -O " + path).split(" "));
+            System.out.println("writing " + path);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void dot(String name, Function<File, Void> f) throws IOException {
+        var dotFile = dotFile(name);
+        f.apply(dotFile);
+        dot(dotFile);
     }
 
     public static File getResFile(String name) throws IOException {

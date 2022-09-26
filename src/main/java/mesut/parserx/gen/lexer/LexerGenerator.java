@@ -1,17 +1,17 @@
 package mesut.parserx.gen.lexer;
 
-import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
-import mesut.parserx.dfa.State;
 import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.lr.IdMap;
-import mesut.parserx.nodes.*;
+import mesut.parserx.nodes.ModeBlock;
+import mesut.parserx.nodes.Name;
+import mesut.parserx.nodes.TokenDecl;
+import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.UnicodeUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Stack;
 import java.util.TreeSet;
 
 public class LexerGenerator {
@@ -25,6 +25,10 @@ public class LexerGenerator {
     public TreeSet<Map.Entry<Name, Integer>> tokens;
     //acc state -> new mode state
     public int[] mode_arr;
+    //final state -> action id
+    public int[] actions;
+    //action name -> action id
+    HashMap<String, Integer> actionIdMap = new HashMap<>();
     Lang target;
 
     public LexerGenerator(Tree tree, Lang target) {
@@ -44,11 +48,33 @@ public class LexerGenerator {
         nameAndId();
         skipList();
         modes();
+        actions();
         if (target == Lang.JAVA) {
             new JavaLexer(this).gen();
         }
         else if (target == Lang.CPP) {
             new CppLexer().gen(this);
+        }
+    }
+
+    private void actions() {
+        if (tree.actionBlock == null) return;
+        actions = new int[dfa.lastState + 1];
+        int id = 1;
+        for (var entry : tree.actionBlock.actions.entrySet()) {
+            actionIdMap.put(entry.getKey(), id++);
+        }
+        for (var token : tree.getTokens()) {
+            if (!token.rhs.isSequence()) continue;
+            var seq = token.rhs.asSequence();
+            var last = seq.get(seq.size() - 1);
+            if (last.actionRef == null) continue;
+            for (var state : dfa.it()) {
+                if (state.decl != null && state.decl == token) {
+                    actions[state.id] = actionIdMap.get(last.actionRef);
+                    break;
+                }
+            }
         }
     }
 

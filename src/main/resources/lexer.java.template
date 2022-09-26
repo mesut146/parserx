@@ -3,7 +3,6 @@ import java.io.*;
 import java.util.*;
 
 public class $lexer_class$ {
-
     static String cMapPacked = $cMap$;
     //input -> input id
     static int[] cMap = unpackCMap(cMapPacked);
@@ -17,6 +16,8 @@ public class $lexer_class$ {
     static String[] names = {$name_list$};
     //state->token id
     static int[] ids = {$id_list$};
+    //final state -> action id
+    static int[] actions = $actions$;
 $modes$
     static final int EOF = 0;
     Reader reader;
@@ -30,6 +31,8 @@ $modes$
     static String trans_packed = $trans$;
     static int[][] trans = unpackTrans(trans_packed);
     int curMode = DEFAULT;
+    $token_class$ lastToken;
+$members$
 
     public $lexer_class$(Reader reader) throws IOException{
         this.reader = reader;
@@ -147,6 +150,8 @@ $modes$
                     token.line = startLine;
                     bufStart = bufPos;
                     curMode = mode_map[lastState];
+                    lastToken = token;
+                    callAction(token, lastState);
                     return token;
                 }
                 else {
@@ -175,5 +180,11 @@ $modes$
 $printModes$
         }
         throw new RuntimeException("invalid mode: " + curMode);
+    }
+
+    void callAction($token_class$ token, int lastState){
+        switch(actions[lastState]){
+$actionCases$
+        }
     }
 }

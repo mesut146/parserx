@@ -13,9 +13,9 @@ token{
  ANY: [^ \t];
 }
 
-skip{
-  ws: [ \t]+;
-  comment: [:line_comment:];
+token{
+  ws: [ \t]+ -> skip;
+  comment: [:line_comment:] -> skip;
 }
 
 nfa: startDecl nls finalDecl nls trLine+;

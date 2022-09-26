@@ -2,10 +2,8 @@ package mesut.parserx.gen.lexer;
 
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
-import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
-import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Range;
@@ -14,7 +12,10 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
 
 import static mesut.parserx.gen.lexer.LexerGenerator.makeOctal;
 
@@ -44,15 +45,56 @@ public class JavaLexer {
         template.set("skip_list", NodeList.join(LexerGenerator.makeIntArr(gen.skipList), ","));
         template.set("final_list", NodeList.join(LexerGenerator.makeIntArr(dfa.acc()), ","));
 
+        if (gen.tree.lexerMembers != null) {
+            var sb = new StringBuilder();
+            for (var member : gen.tree.lexerMembers.members) {
+                sb.append("    ").append(member).append("\n");
+            }
+            template.set("members", sb.toString());
+        }
+        else {
+            template.set("members", "");
+        }
+
         nameAndId();
         writeTrans();
         cmap();
         writeModes();
+        writeActions();
 
         File file = new File(options.outDir, options.lexerClass + ".java");
         Utils.write(template.toString(), file);
 
         writeTokenClass();
+    }
+
+    private void writeActions() {
+        if (gen.actions == null) {
+            template.set("actions", String.format("new int[%d];", dfa.lastState + 1));
+            template.set("actionCases", "");
+        }
+        else {
+            var sb = new StringBuilder("{");
+            for (int i = 0; i < gen.actions.length; i++) {
+                if (i > 0) {
+                    sb.append(", ");
+                }
+                sb.append(gen.actions[i]);
+            }
+            sb.append("}");
+            template.set("actions", sb.toString());
+            sb.setLength(0);
+
+            for (var entry : gen.tree.actionBlock.actions.entrySet()) {
+                var id = gen.actionIdMap.get(entry.getKey());
+                sb.append(String.format("case %d:{\n", id));
+                sb.append(entry.getValue());
+                sb.append("\n");
+                sb.append("break;\n");
+                sb.append("}\n");
+            }
+            template.set("actionCases", sb.toString());
+        }
     }
 
     private void writeModes() {
@@ -78,7 +120,7 @@ public class JavaLexer {
         for (var mode : gen.dfa.modes.entrySet()) {
             sb.append(String.format("            case %d: return \"%s\";\n", mode.getValue().id, mode.getKey()));
         }
-        template.set("printModes",sb.toString());
+        template.set("printModes", sb.toString());
     }
 
     //write char ranges

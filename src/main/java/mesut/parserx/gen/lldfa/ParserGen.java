@@ -2,8 +2,7 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.lexer.LexerGenerator;
-import mesut.parserx.gen.ll.AstGen;
-import mesut.parserx.gen.ll.Normalizer;
+import mesut.parserx.gen.ast.AstGen;
 import mesut.parserx.nodes.Tree;
 
 import java.io.IOException;

@@ -1,6 +1,6 @@
 package mesut.parserx.gen;
 
-import mesut.parserx.gen.ll.Type;
+import mesut.parserx.gen.lldfa.Type;
 
 public class AstInfo {
     public String varName;

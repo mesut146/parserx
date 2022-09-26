@@ -1,6 +1,6 @@
 package mesut.parserx.nodes;
 
-import mesut.parserx.gen.ll.Type;
+import mesut.parserx.gen.lldfa.Type;
 import mesut.parserx.gen.lr.TreeInfo;
 
 import java.util.Objects;

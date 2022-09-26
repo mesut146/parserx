@@ -20,7 +20,7 @@ seq: regex+;
 regex: simple ("?" | "*" | "+")?;
 simple: normalChar | bracket | "(" rhs ")";
 normalChar: CHAR | ESCAPED | "-" | ".";
-bracket: "[" "^"? range+ "]";
+//bracket: "[" "^"? range+ "]";
 bracket: "[" "^" rangeAll+ "]" | "[" rangeNop rangeAll* "]";
 rangeAll: rangeChar ("-" rangeChar)?;
 rangeNop: rangeChar2 ("-" rangeChar2)?

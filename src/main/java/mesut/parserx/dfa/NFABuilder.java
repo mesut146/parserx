@@ -1,7 +1,11 @@
 package mesut.parserx.dfa;
 
 import mesut.parserx.nodes.*;
+import mesut.parserx.utils.Utils;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,6 +52,14 @@ public class NFABuilder extends BaseVisitor<State, State> {
                         addRegex(decl, nfa.modes.get(mb.name));
                     }
                 }
+            }
+        }
+        if (nfa.tree.options.dump) {
+            var file = new File(nfa.tree.options.outDir, Utils.newName(nfa.tree.file.getName(), "-nfa.dump"));
+            try {
+                nfa.dump(new FileWriter(file));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
         return nfa;
@@ -103,6 +115,19 @@ public class NFABuilder extends BaseVisitor<State, State> {
             start.addEpsilon(end);//zero times
             return end;
         }
+    }
+
+    @Override
+    public State visitSub(Sub sub, State arg) {
+        throw new RuntimeException();
+//        var eps = nfa.newState();
+//        arg.addEpsilon(eps);
+//        var last = nfa.lastState;
+//        var end = sub.node.accept(this, eps);
+//        for (int i = last + 1; i <= nfa.lastState; i++) {
+//
+//        }
+//        return end;
     }
 
     int getRangeId(int left, int right) {

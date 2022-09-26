@@ -4,7 +4,6 @@ import common.Env;
 import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.gen.Lang;
-import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.lldfa.ParserGen;
 import mesut.parserx.nodes.*;
 import mesut.parserx.parser.AstVisitor;
@@ -75,7 +74,7 @@ public class NfaTest {
     @Test
     public void mode() throws IOException {
         //Tree tree = Env.tree("lexer/mode.g");
-        var tree=Tree.makeTree(new File("doc/xml.g"));
+        var tree = Tree.makeTree(new File("doc/xml.g"));
         var nfa = tree.makeNFA();
         //nfa.dump();
         System.out.println("----------------");
@@ -111,5 +110,12 @@ public class NfaTest {
         dfa = Minimization.optimize(dfa);
         dfa.dot(new FileWriter(Env.dotFile("dfa1")));
         dfa.dump();
+    }
+
+    @Test
+    public void difference() throws IOException {
+        var tree = Env.tree("lexer/sub.g");
+        var nfa = tree.makeNFA();
+        nfa.dump();
     }
 }

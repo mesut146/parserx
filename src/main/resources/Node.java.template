@@ -24,12 +24,12 @@ public class Node{
     public String toString() {
         StringBuilder sb = new StringBuilder();
         if(token != null){
-          sb.append(token.value);
+          sb.append("'").append(token.value.replace("'", "\\'")).append("'");
         }
         else{
           sb.append(name);
           if(alt != 0){
-            sb.append(alt);
+            sb.append("#").append(alt);
           }
           sb.append("{");
           for(int i = 0;i < children.size();i++){

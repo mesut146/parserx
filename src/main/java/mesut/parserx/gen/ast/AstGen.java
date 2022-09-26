@@ -1,8 +1,6 @@
-package mesut.parserx.gen.ll;
+package mesut.parserx.gen.ast;
 
 import mesut.parserx.gen.Lang;
-import mesut.parserx.gen.targets.CppAstGen;
-import mesut.parserx.gen.targets.JavaAst;
 import mesut.parserx.nodes.Tree;
 
 import java.io.IOException;

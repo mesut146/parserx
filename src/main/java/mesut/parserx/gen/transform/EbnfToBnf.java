@@ -1,6 +1,7 @@
 package mesut.parserx.gen.transform;
 
-import mesut.parserx.gen.ll.Normalizer;
+import mesut.parserx.gen.Copier;
+import mesut.parserx.gen.lldfa.Normalizer;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap;
 
@@ -29,17 +30,6 @@ public class EbnfToBnf extends Transformer {
         return new EbnfToBnf(input).transform();
     }
 
-    public static Tree combineOr(Tree input) {
-        Tree res = new Tree(input);
-        res.rules.clear();
-        for (Map.Entry<Name, Node> entry : combineOrMap(input).entrySet()) {
-            RuleDecl decl = entry.getKey().makeRule();
-            decl.rhs = entry.getValue();
-            res.addRule(decl);
-        }
-        return res;
-    }
-
     public static LinkedHashMap<Name, Node> combineOrMap(Tree input) {
         //LinkedHashMap preserves rule order
         LinkedHashMap<Name, List<Node>> map = new LinkedHashMap<>();
@@ -54,21 +44,6 @@ public class EbnfToBnf extends Transformer {
         return res;
     }
 
-    public static LinkedHashMap<String, List<Node>> makeMap(Tree input) {
-        //LinkedHashMap preserves rule order
-        var map = new LinkedHashMap<String, List<Node>>();
-        for (var decl : input.rules) {
-            var or = map.computeIfAbsent(decl.ref.name, k -> new ArrayList<>());
-            if (decl.rhs.isOr()) {
-                or.addAll(decl.rhs.asOr().list);
-            }
-            else {
-                or.add(decl.rhs);
-            }
-        }
-        return map;
-    }
-
     private void addRule(RuleDecl decl) {
         if (decl.rhs != null) {
             out.addRule(decl);
@@ -76,19 +51,23 @@ public class EbnfToBnf extends Transformer {
     }
 
     public Tree transform() {
-        out = new Tree(tree);//result tree
+        out = Copier.copyTree(tree);
+        out.rules.clear();
         if (combine_or && expand_or) {
             throw new RuntimeException("expand_or and combine_or exclusive");
         }
-        for (RuleDecl decl : tree.rules) {
+        if (combine_or) {
+            for (Map.Entry<Name, Node> entry : combineOrMap(tree).entrySet()) {
+                out.addRule(new RuleDecl(entry.getKey(), entry.getValue()));
+            }
+        }
+        for (var decl : tree.rules) {
             curRule = decl;
             transformRhs(decl);
         }
-        if (combine_or) {
-            out = combineOr(out);
-        }
+
         //make rhs sequence
-        for (RuleDecl decl : out.rules) {
+        for (var decl : out.rules) {
             if (!decl.rhs.isSequence()) {
                 decl.rhs = new Sequence(decl.rhs);
             }
@@ -97,7 +76,7 @@ public class EbnfToBnf extends Transformer {
     }
 
     public void transformRhs(RuleDecl decl) {
-        Node rhs = decl.rhs.accept(this, null);
+        var rhs = decl.rhs.accept(this, null);
         if (rhs != null) {
             addRule(new RuleDecl(decl.ref, rhs));
         }

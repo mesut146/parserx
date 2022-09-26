@@ -1,6 +1,5 @@
 token{
-  //COMMENT: "/*" ~"*/";
-  //asd: "x" ~"ab";
+  COMMENT: "/*" ~"*/";
   //STRING_SINGLE: "'''" ~"'''";
   STRING_DOUBLE: "\"\"\"" ~"\"\"\"";
 }

@@ -23,7 +23,11 @@ public class StringNode extends Node {
 
     @Override
     public String toString() {
-        return varString() + "\"" + printNormal() + "\"";
+        var sb = new StringBuilder(varString() + "\"" + printNormal() + "\"");
+        if (actionRef != null) {
+            sb.append(" @").append(actionRef);
+        }
+        return sb.toString();
     }
 
     public String printNormal() {

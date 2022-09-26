@@ -3,9 +3,7 @@ package mesut.parserx.gen.lldfa;
 import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Options;
-import mesut.parserx.gen.ll.RDParserGen;
-import mesut.parserx.gen.ll.Type;
-import mesut.parserx.gen.targets.JavaRecDescent;
+import mesut.parserx.gen.ParserUtils;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
@@ -72,7 +70,7 @@ public class JavaGen {
         var file = new File(options.outDir, options.parserClass + ".java");
 
         Utils.write(w.get(), file);
-        JavaRecDescent.genTokenType(tree);
+        ParserUtils.genTokenType(tree);
     }
 
     private void writeNormal() {
@@ -89,7 +87,7 @@ public class JavaGen {
         public Void visitOr(Or or, Void arg) {
             int alt = 1;
             for (var ch : or) {
-                w.append("%sif(%s){", alt > 1 ? "else " : "", JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree)));
+                w.append("%sif(%s){", alt > 1 ? "else " : "", ParserUtils.loopExpr(FirstSet.tokens(ch, tree)));
                 w.append("%s %s = new %s();", ch.astInfo.nodeType, ch.astInfo.varName, ch.astInfo.nodeType);
                 w.append("%s.holder = res;", ch.astInfo.varName);
                 w.append("res.%s = %s;", ch.astInfo.varName, ch.astInfo.varName);
@@ -111,7 +109,7 @@ public class JavaGen {
         @Override
         public Void visitRegex(Regex regex, Void arg) {
             var ch = regex.node;
-            var la = JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree));
+            var la = ParserUtils.loopExpr(FirstSet.tokens(ch, tree));
             if (regex.isOptional()) {
                 w.append("if(%s){", la);
                 ch.accept(this, null);
@@ -164,7 +162,8 @@ public class JavaGen {
         var first = true;
         Set<Name> allLa = new HashSet<>();
         //collect items by la
-        var groups = groupByToken();
+        //var groups = groupByToken();
+        var groups = groupBy();
         for (var tr : set.transitions) {
             if (tr.symbol.isName() && tr.symbol.asName().isToken) {
                 var sym = tr.symbol.asName();
@@ -190,11 +189,27 @@ public class JavaGen {
                 handleTarget(sym, tr.target, tr);
                 w.append("}");//if
             }
+            else if (tr.symbol.isName() && !tr.symbol.asName().isToken) {
+                var sym = tr.symbol.asName();
+                var laList = FirstSet.tokens(sym, tree);
+                allLa.addAll(laList);
+                var items = groups.get(sym);
+                w.append("%sif(%s){", first ? "" : "else ", ParserUtils.loopExpr(laList));
+                first = false;
+                //create and assign nodes
+                createNodes(sym);
+                assign(items, sym);
+
+                //preReduce(sym);
+                //inline target reductions
+                handleTarget(sym, tr.target, tr);
+                w.append("}");//if
+            }
             else {
                 var sym = tr.symbol;
                 var laList = FirstSet.tokens(sym, tree);
                 allLa.addAll(laList);
-                w.append("%sif(%s){", first ? "" : "else ", JavaRecDescent.loopExpr(laList));
+                w.append("%sif(%s){", first ? "" : "else ", ParserUtils.loopExpr(laList));
                 first = false;
 
                 //create and assign nodes
@@ -233,12 +248,12 @@ public class JavaGen {
                     else if (ch.isRegex()) {
                         var regex = ch.asRegex();
                         if (regex.isOptional()) {
-                            w.append("if(%s){", JavaRecDescent.loopExpr(FirstSet.tokens(regex.node, tree)));
+                            w.append("if(%s){", ParserUtils.loopExpr(FirstSet.tokens(regex.node, tree)));
                             consumer(regex.node.asName(), vname);
                             w.append("}");
                         }
                         else if (regex.isStar()) {
-                            w.append("while(%s){", JavaRecDescent.loopExpr(FirstSet.tokens(regex.node, tree)));
+                            w.append("while(%s){", ParserUtils.loopExpr(FirstSet.tokens(regex.node, tree)));
                             consumer(regex.node.asName(), vname);
                             w.append("}");
                         }
@@ -284,10 +299,11 @@ public class JavaGen {
     private void initLocals(ItemSet set) {
         curSet = set;
         for (var tr : set.transitions) {
-            if (tr.symbol.isName() && tr.symbol.asName().isToken) {
+            if (tr.symbol.isName()) {
                 var sym = tr.symbol.asName();
                 var items = tr.pairs.stream().map(pair -> pair.origin).collect(Collectors.toList());
-                var group = groupByToken();
+                //var group = groupByToken();
+                var group = groupBy();
                 var locals = genLocals(group.get(sym));
                 //var locals = genLocals(items);
                 localMap.computeIfAbsent(set.stateId, k -> new HashMap<>()).put(sym, locals);
@@ -365,7 +381,7 @@ public class JavaGen {
         for (var tr : set.transitions) {
             if (tr.target.transitions.isEmpty()) continue;//inlined no params
             //if (paramMap.containsKey(tr.target.stateId)) continue;//already done
-            if (tr.symbol.isName() && tr.symbol.asName().isToken) {
+            if (tr.symbol.isName()) {
                 initParamNormal(set, tr);
             }
             else {
@@ -379,11 +395,7 @@ public class JavaGen {
         var locals = localMap.get(set.stateId).get(sym);
         locals = locals.stream().filter(v -> !v.isHolder()).collect(Collectors.toList());
 
-        if (paramMap.containsKey(tr.target.stateId)) {
-            //check local overlaps param
-            handleOverlap(tr.target, locals);
-        }
-        else {
+        if (!paramMap.containsKey(tr.target.stateId)) {
             //check local overlaps param
             //check cur param overlaps param
             //transfer
@@ -402,9 +414,6 @@ public class JavaGen {
                 params.add(makeParam(local, "p" + cnt++));
             }
             paramMap.put(tr.target.stateId, params);
-        }
-        if (paramMap.containsKey(set.stateId)) {
-            handleOverlap(tr.target, paramMap.get(set.stateId));
         }
     }
 
@@ -433,19 +442,6 @@ public class JavaGen {
         return res;
     }
 
-    void handleOverlap(ItemSet target, List<Variable> locals) {
-        if (!paramMap.containsKey(target.stateId)) return;
-        for (var prm : paramMap.get(target.stateId)) {
-            //if two item overlap, convert it to stack
-            for (var local : locals) {
-                if (local.isHolder() || prm.isHolder()) continue;
-                if (overlap(local.item, prm.item)) {
-                    throw new RuntimeException("overlap");
-                    //break;
-                }
-            }
-        }
-    }
 
     boolean overlap(Item i1, Item i2) {
         //has common but not all same
@@ -488,7 +484,7 @@ public class JavaGen {
     private void consumer(Name name, String vname) {
         String rhs;
         if (name.isToken) {
-            rhs = String.format("consume(%s.%s, \"%s\")", RDParserGen.tokens, name.name, name.name);
+            rhs = String.format("consume(%s.%s, \"%s\")", ParserUtils.tokens, name.name, name.name);
         }
         else {
             rhs = name.name + "()";
@@ -623,6 +619,10 @@ public class JavaGen {
 
     //assign created nodes to parents
     private void assign(List<Item> list, Name sym) {
+        if (!sym.isToken) {
+            var type = tree.getRule(sym).retType;
+            w.print("%s %s = %s();\n", type, sym.astInfo.varName, sym.name);
+        }
         Set<String> done = new HashSet<>();
         for (var item : list) {
             if (item.dotPos != 0) continue;
@@ -649,6 +649,13 @@ public class JavaGen {
                 }
             }
         }
+        //assign la
+        var rhs = sym.isToken ? "la" : sym.astInfo.varName;
+        for (var item : list) {
+            var node = findSym(item, sym);
+            if (node == null) continue;
+            assignStr(getBoth(item, sym), node, rhs);
+        }
     }
 
     void assignStr(String parent, Node node, String name) {
@@ -664,7 +671,7 @@ public class JavaGen {
     private void writeReduces() {
         for (var e : collectReduces(curSet).entrySet()) {
             var la = e.getKey();
-            w.append("if(%s){", JavaRecDescent.loopExpr(la));
+            w.append("if(%s){", ParserUtils.loopExpr(la));
             for (var item : e.getValue()) {
                 if (!item.isAlt()) continue;
                 var prm = getParam(item);
@@ -688,7 +695,7 @@ public class JavaGen {
         for (var item : target.all) {
             if (!item.isReduce(tree)) continue;
             if (!item.isAlt()) continue;//only alts have assign
-            w.append("if(%s){", JavaRecDescent.loopExpr(item.lookAhead));
+            w.append("if(%s){", ParserUtils.loopExpr(item.lookAhead));
             var holder = getHolder(item, sym);
             var name = getBoth(item, sym);
             w.append("%s.which = %d;", holder, item.rule.which);
@@ -708,6 +715,36 @@ public class JavaGen {
                 var list = groups.getOrDefault(token, new ArrayList<>());
                 list.add(item);
                 groups.put(token, list);
+            }
+        }
+        return groups;
+    }    //group items by la
+
+    private Map<Name, List<Item>> groupBy() {
+        var groups = new HashMap<Name, List<Item>>();
+        for (var item : curSet.all) {
+            if (item.dotPos == item.rhs.size()) continue;
+            for (int i = item.dotPos; i < item.rhs.size(); i++) {
+                var sym = ItemSet.sym(item.getNode(i));
+                if (sym.isToken || !item.closured[i]) {
+                    //common rule or token
+                    var list = groups.getOrDefault(sym, new ArrayList<>());
+                    list.add(item);
+                    groups.put(sym, list);
+                }
+                else {
+                    var rest = Sequence.make(item.rhs.list.subList(item.dotPos, item.rhs.size()));
+                    var tokens = FirstSet.tokens(rest, tree);
+                    //all token
+                    for (var token : tokens) {
+                        var list = groups.getOrDefault(token, new ArrayList<>());
+                        list.add(item);
+                        groups.put(token, list);
+                    }
+                }
+                if (!FirstSet.canBeEmpty(item.getNode(i), tree)) {
+                    break;
+                }
             }
         }
         return groups;

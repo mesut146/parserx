@@ -3,12 +3,12 @@ package mesut.parserx.nodes;
 import mesut.parserx.gen.AstInfo;
 import mesut.parserx.gen.Copier;
 
-
 //base class used in grammar file
 public abstract class Node {
 
     public static boolean printVarName = true;
     public String label;//name in alternation
+    public String actionRef;
     public AstInfo astInfo = new AstInfo();
 
     public boolean isSequence() {

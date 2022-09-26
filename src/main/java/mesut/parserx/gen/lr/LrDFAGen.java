@@ -1,6 +1,6 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.gen.ll.Normalizer;
+import mesut.parserx.gen.lldfa.Normalizer;
 import mesut.parserx.gen.lldfa.ItemSet;
 import mesut.parserx.gen.transform.LrUtils;
 import mesut.parserx.nodes.*;

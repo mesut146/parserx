@@ -2,9 +2,9 @@ package lexer;
 
 import common.Env;
 import mesut.parserx.gen.Lang;
-import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
+import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.nodes.Shortcut;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.UnicodeUtils;
@@ -25,6 +25,11 @@ public class LexerGenTest {
     @Test
     public void regexTest() throws Exception {
         RealTest.check(Env.tree("lexer/regex.g"), "a ab c cdd e eee");
+    }
+
+    @Test
+    public void until() throws Exception {
+        RealTest.check(Env.tree("lexer/until.g"), "/*asd \n*/");
     }
 
     @Test
@@ -83,9 +88,9 @@ public class LexerGenTest {
     public void itself() throws Exception {
         var grammar = new File("./src/main/grammar/parserx.g");
         Tree tree = Tree.makeTree(grammar);
-        RealTest.check(tree, true, grammar.getAbsolutePath());
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        //LexerGenerator.gen(tree, Lang.JAVA);
+        tree.options.dump = true;
+        //RealTest.check(tree, true, grammar.getAbsolutePath());
+        RealTest.check(tree, true, Env.getResFile("lexer/member.g").getAbsolutePath());
     }
 
     @Test
@@ -123,5 +128,51 @@ public class LexerGenTest {
     public void mode() throws Exception {
         RealTest.check(Env.tree("lexer/mode.g"), "bbac", "acd");
         RealTest.check(Env.tree("lexer/xml-mode.g"), "<tag a=\\\"val\\\">");
+    }
+
+    void dots(Tree tree) throws IOException {
+        var nfa = tree.makeNFA();
+        Env.dot(tree.file.getName() + "nfa", file -> {
+            try {
+                nfa.dot(file);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return null;
+        });
+        Env.dot(tree.file.getName() + "dfa", file -> {
+            try {
+                nfa.dfa().dot(file);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void action() throws Exception {
+        Tree tree = Tree.makeTree(new File("./src/main/grammar/parserx2.g"));
+        //var tree = Env.tree("lexer/action.g");
+        dots(tree);
+        //RealTest.check(tree, true, Env.getResFile("lexer/action.g").getAbsolutePath());
+        RealTest.check(tree, "@{code;}@");
+        //tree.options.outDir = Env.dotDir().getAbsolutePath();
+        //LexerGenerator.gen(tree, Lang.JAVA);
+    }
+
+    @Test
+    public void members() throws Exception {
+        var tree = Env.tree("lexer/member.g");
+        System.out.println(tree);
+        RealTest.check(tree, "a");
+    }
+
+    @Test
+    public void act() throws Exception {
+        var tree = Env.tree("lexer/action.g");
+        //LexerGenerator.gen(tree,Lang.JAVA);
+        //System.out.println(tree);
+        RealTest.check(tree, "abac");
     }
 }

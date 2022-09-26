@@ -23,7 +23,7 @@ public class TreeInfo {
     public static TreeInfo make(Tree tree) {
         var res = new TreeInfo();
         res.tree = tree;
-        res.nodeMap = EbnfToBnf.makeMap(tree);
+        res.nodeMap = makeMap(tree);
         int index = 0;
         for (var entry : res.nodeMap.entrySet()) {
             var name = entry.getKey();
@@ -41,5 +41,20 @@ public class TreeInfo {
             res.ruleMap.put(name, rules);
         }
         return res;
+    }
+
+    public static LinkedHashMap<String, List<Node>> makeMap(Tree input) {
+        //LinkedHashMap preserves rule order
+        var map = new LinkedHashMap<String, List<Node>>();
+        for (var decl : input.rules) {
+            var or = map.computeIfAbsent(decl.ref.name, k -> new ArrayList<>());
+            if (decl.rhs.isOr()) {
+                or.addAll(decl.rhs.asOr().list);
+            }
+            else {
+                or.add(decl.rhs);
+            }
+        }
+        return map;
     }
 }

@@ -1,7 +1,10 @@
 package mesut.parserx.dfa;
 
 import mesut.parserx.dfa.parser.NfaVisitor;
-import mesut.parserx.nodes.*;
+import mesut.parserx.nodes.Epsilon;
+import mesut.parserx.nodes.Range;
+import mesut.parserx.nodes.TokenDecl;
+import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.UnicodeUtils;
 
 import java.io.*;
@@ -97,7 +100,7 @@ public class NFA {
         if (debugTransition) {
             System.out.printf("%s -> %s, %s\n", state, target, getAlphabet().getRange(input));
         }
-        Transition tr = new Transition(state, target, input);
+        var tr = new Transition(state, target, input);
         state.add(tr);
         lastState = Math.max(lastState, Math.max(state.id, target.id));
     }
@@ -151,7 +154,7 @@ public class NFA {
         int minIndex = Integer.MAX_VALUE;
         TokenDecl decl = null;
         for (var state : set) {
-            if(!state.accepting) continue;
+            if (!state.accepting) continue;
             int i = indexOf(state.name);
             if (i < minIndex) {
                 decl = state.decl;
@@ -207,7 +210,7 @@ public class NFA {
 
     public void dump(Writer writer) {
         var w = new PrintWriter(writer);
-        for (var e : modes.entrySet().stream().sorted(Comparator.comparingInt(e->e.getValue().id)).collect(Collectors.toList())) {
+        for (var e : modes.entrySet().stream().sorted(Comparator.comparingInt(e -> e.getValue().id)).collect(Collectors.toList())) {
             w.printf("mode %s = %s;\n", e.getKey(), e.getValue());
         }
         w.print("final = ");

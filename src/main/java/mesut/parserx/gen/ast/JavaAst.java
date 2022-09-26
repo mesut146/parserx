@@ -1,10 +1,8 @@
-package mesut.parserx.gen.targets;
+package mesut.parserx.gen.ast;
 
 import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.Options;
-import mesut.parserx.gen.ll.Normalizer;
-import mesut.parserx.gen.ll.RDParserGen;
-import mesut.parserx.gen.ll.Type;
+import mesut.parserx.gen.lldfa.Type;
 import mesut.parserx.gen.lldfa.ItemSet;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
@@ -12,8 +10,6 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
     public Tree tree;
@@ -24,6 +20,7 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
     int groupCount;
     String curRule;
     Printer p;
+    public static boolean printTokenQuote = true;
 
     public JavaAst(Tree tree) {
         this.tree = tree;
@@ -188,13 +185,18 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
                 rhs.accept(this, null);
                 w.append("return sb.append(\"}\").toString();");
             }
-            w.append("}");//toString
+            w.append("}");
         }
 
         void printer(String expr, boolean isToken) {
             String res;
             if (isToken) {
-                res = String.format("sb.append(\"'\").append(%s.value).append(\"'\");", expr);
+                if (printTokenQuote) {
+                    res = String.format("sb.append(\"'\").append(%s.value.replace(\"'\",\"\\'\")).append(\"'\");", expr);
+                }
+                else {
+                    res = String.format("sb.append(%s.value);", expr);
+                }
             }
             else {
                 res = String.format("sb.append(%s.toString());", expr);

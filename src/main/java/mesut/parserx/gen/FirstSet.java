@@ -18,29 +18,6 @@ public class FirstSet extends BaseVisitor<Void, Void> {
         this.tree = tree;
     }
 
-    //first set graph
-    public static void dot(Name ref, Tree tree, Writer writer) {
-        var w = new PrintWriter(writer);
-        w.println("digraph G{");
-        w.println("rankdir = TB;");
-        HashSet<Name> set = new HashSet<>();
-        set.add(ref);
-        dot(ref, tree, w, set);
-        w.println("}");
-        w.flush();
-    }
-
-    static void dot(Name ref, Tree tree, PrintWriter w, Set<Name> done) {
-        var set = firstSetNoRec(ref, tree);
-        for (var name : set) {
-            if (name.isRule()) {
-                w.printf("%s -> %s;", ref, name);
-                if (done.add(ref)) {
-                    dot(name, tree, w, done);
-                }
-            }
-        }
-    }
 
     public static boolean start(Node node, Name name, Tree tree) {
         return firstSet(node, tree).contains(name);

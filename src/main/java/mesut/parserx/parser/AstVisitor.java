@@ -36,29 +36,36 @@ public class AstVisitor {
         if (node.optionsBlock != null) {
             //todo
         }
-        for (var g1 : node.tokens) {
-            if (g1.tokenBlock != null) {
-                var block = new TokenBlock();
-                tree.tokenBlocks.add(block);
-                for (var decl : g1.tokenBlock.tokenBlock.g1) {
-                    if (decl.tokenDecl != null) {
-                        tree.addToken(visitTokendecl(decl.tokenDecl.tokenDecl), block);
-                    }
-                    else {
-                        tree.addModeBlock(visitModeBlock(decl.modeBlock.modeBlock), block);
-                    }
+        if (node.lexerMembers != null) {
+            var members = new LexerMembers();
+            tree.lexerMembers = members;
+            for (var tok : node.lexerMembers.LEXER_MEMBER) {
+                members.members.add(tok.value);
+            }
+        }
+        for (var tb : node.tokens) {
+            var block = new TokenBlock();
+            tree.tokenBlocks.add(block);
+            for (var decl : tb.g1) {
+                if (decl.tokenDecl != null) {
+                    tree.addToken(visitTokendecl(decl.tokenDecl.tokenDecl), block);
+                }
+                else {
+                    tree.addModeBlock(visitModeBlock(decl.modeBlock.modeBlock), block);
                 }
             }
-            else {
-//                for (var decl : g1.skipBlock.skipBlock.tokenDecl) {
-//                    var token = visitTokendecl(decl);
-//                    token.isSkip = true;
-//                    tree.addToken(token);
-//                }
+        }
+        if (node.actionBlock != null) {
+            var block = new ActionBlock();
+            tree.actionBlock = block;
+            for (var ac : node.actionBlock.actionEntry) {
+                var name = ac.IDENT.value;
+                var value = ac.ACTION.value.substring("%begin".length(), ac.ACTION.value.length() - "%end".length());
+                block.actions.put(name, value);
             }
         }
         if (node.startDecl != null) {
-            tree.start = new Name(node.startDecl.name.IDENT.IDENT.value);
+            tree.start = new Name(node.startDecl.name.IDENT.value);
         }
         for (var g2 : node.rules) {
             tree.addRule(visitRuledecl(g2));
@@ -76,7 +83,7 @@ public class AstVisitor {
 
     public TokenDecl visitTokendecl(Ast.tokenDecl node) {
         var isFrag = node.HASH != null;
-        var name = node.name.IDENT.IDENT.value;
+        var name = node.name.IDENT.value;
         var rhs = visitRhs(node.rhs);
         var decl = new TokenDecl(name, rhs);
         decl.fragment = isFrag;
@@ -108,11 +115,11 @@ public class AstVisitor {
     }
 
     public RuleDecl visitRuledecl(Ast.ruleDecl node) {
-        var decl = new RuleDecl(node.name.IDENT.IDENT.value);
+        var decl = new RuleDecl(node.name.IDENT.value);
         if (node.args != null) {
-            decl.ref.args.add(new Name(node.args.name.IDENT.IDENT.value));
+            decl.ref.args.add(new Name(node.args.name.IDENT.value));
             for (var g1 : node.args.rest) {
-                decl.ref.args.add(new Name(g1.name.IDENT.IDENT.value));
+                decl.ref.args.add(new Name(g1.name.IDENT.value));
             }
         }
         decl.rhs = visitRhs(node.rhs);
@@ -135,10 +142,9 @@ public class AstVisitor {
 
     public Node visitSequence(Ast.sequence node) {
         List<Node> list = new ArrayList<>();
-        for (var r : node.regex) {
-            list.add(visitRegex(r));
+        for (var r : node.sub) {
+            list.add(visitSub(r));
         }
-        //if (list.size() == 1) return list.get(0);
         var seq = new Sequence(list);
         if (node.assoc != null) {
             if (seq.size() != 3 && seq.size() != 5) {
@@ -152,24 +158,22 @@ public class AstVisitor {
             }
         }
         if (node.label != null) {
-            seq.label = node.label.name.IDENT.IDENT.value;
+            seq.label = node.label.name.IDENT.value;
         }
         return seq;
     }
 
     String visitName(Ast.name name) {
-        if (name.IDENT != null) {
-            return name.IDENT.IDENT.value;
+        return name.IDENT.value;
+    }
+
+    public Node visitSub(Ast.sub sub) {
+        var regex = visitRegex(sub.regex);
+        if (sub.g1 != null) {
+            var string = visitString(sub.g1.stringNode);
+            return new Sub(regex, string);
         }
-        else if (name.OPTIONS != null) {
-            return name.OPTIONS.OPTIONS.value;
-        }
-        else if (name.SKIP != null) {
-            return name.SKIP.SKIP.value;
-        }
-        else {
-            return name.TOKEN.TOKEN.value;
-        }
+        return regex;
     }
 
     public Node visitRegex(Ast.regex node) {
@@ -178,21 +182,39 @@ public class AstVisitor {
             var res = visitSimple(node.regex1.simple);
             res.astInfo.varName = name;
             if (node.regex1.type != null) {
-                var type = node.regex1.type.PLUS != null ? RegexType.PLUS : (node.regex1.type.STAR != null ? RegexType.STAR : RegexType.OPTIONAL);
-                return new Regex(res, type);
+                var type = visitRegexType(node.regex1.type);
+                res = new Regex(res, type);
+            }
+            if (node.regex1.ACTION_REF != null) {
+                res.actionRef = node.regex1.ACTION_REF.value.substring(1);
             }
             return res;
         }
         else {
             var res = visitSimple(node.regex2.simple);
             if (node.regex2.type != null) {
-                var type = node.regex2.type.PLUS != null ? RegexType.PLUS : (node.regex2.type.STAR != null ? RegexType.STAR : RegexType.OPTIONAL);
-                return new Regex(res, type);
+                var type = visitRegexType(node.regex2.type);
+                res = new Regex(res, type);
+            }
+            if (node.regex2.ACTION_REF != null) {
+                res.actionRef = node.regex2.ACTION_REF.value.substring(1);
             }
             return res;
         }
     }
 
+    RegexType visitRegexType(Ast.regexType node) {
+        if (node.PLUS != null) return RegexType.PLUS;
+        if (node.STAR != null) return RegexType.STAR;
+        return RegexType.OPTIONAL;
+    }
+
+    public StringNode visitString(Ast.stringNode stringNode) {
+        if (stringNode.STRING != null) {
+            return StringNode.from(stringNode.STRING.STRING.value);
+        }
+        return StringNode.from(stringNode.CHAR.CHAR.value);
+    }
 
     public Node visitSimple(Ast.simple node) {
         if (node.group != null) {
@@ -205,13 +227,10 @@ public class AstVisitor {
             return new Bracket(node.bracketNode.bracketNode.BRACKET.value);
         }
         else if (node.name != null) {
-            return new Name(node.name.name.IDENT.IDENT.value);
+            return new Name(node.name.name.IDENT.value);
         }
         else if (node.stringNode != null) {
-            if (node.stringNode.stringNode.STRING != null) {
-                return StringNode.from(node.stringNode.stringNode.STRING.STRING.value);
-            }
-            return StringNode.from(node.stringNode.stringNode.CHAR.CHAR.value);
+            return visitString(node.stringNode.stringNode);
         }
         else if (node.EPSILON != null) {
             return new Epsilon();

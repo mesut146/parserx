@@ -1,6 +1,14 @@
 package mesut.parserx.dfa;
 
-import java.util.*;
+import mesut.parserx.utils.Utils;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Map;
 
 public class DFABuilder {
     public static boolean debugDFA = false;
@@ -40,15 +48,12 @@ public class DFABuilder {
 
             while (!openStates.isEmpty()) {
                 var curSet = openStates.poll();//current nfa state set
-                var closure = closure(curSet);
                 processed.add(curSet);
 
-                //get corresponding dfa state
-                var dfaState = getDfaState(closure);
                 //input -> target state set
                 var map = new HashMap<Integer, StateSet>();
                 //find transitions from closure
-                for (var epState : closure) {
+                for (var epState : curSet) {
                     for (var tr : epState.transitions) {
                         if (tr.epsilon) continue;
                         var targets = map.get(tr.input);//we can cache these
@@ -59,11 +64,12 @@ public class DFABuilder {
                         targets.addAll(closure(tr.target));
                     }
                 }
+                var dfaState = getDfaState(curSet);
                 //make transition for each input
                 for (int input : map.keySet()) {
                     var targets = map.get(input);
                     if (!openStates.contains(targets) && !processed.contains(targets)) {
-                        openStates.add(closure(targets));
+                        openStates.add(targets);
                     }
                     var target_state = getDfaState(targets);
                     if (debugDFA) {
@@ -73,6 +79,14 @@ public class DFABuilder {
                     target_state.isSkip = nfa.isSkip(targets);
                     dfa.addTransition(dfaState, target_state, input);
                 }
+            }
+        }
+        if (nfa.tree.options.dump) {
+            var file = new File(nfa.tree.options.outDir, Utils.newName(nfa.tree.file.getName(), "-dfa.dump"));
+            try {
+                dfa.dump(new FileWriter(file));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
         return dfa;
@@ -114,7 +128,8 @@ public class DFABuilder {
     public StateSet closure(StateSet set) {
         var res = new StateSet();
         for (var state : set) {
-            res.addAll(closure(state));
+            //res.addAll(closure(state));
+            closure(state, res);
         }
         return res;
     }

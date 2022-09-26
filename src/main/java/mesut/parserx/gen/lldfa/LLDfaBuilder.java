@@ -2,13 +2,10 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
-import mesut.parserx.gen.ll.Normalizer;
 import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.gen.lr.LrType;
 import mesut.parserx.gen.lr.TreeInfo;
-import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorHelper;
-import mesut.parserx.gen.transform.FactorLoop;
 import mesut.parserx.gen.transform.GreedyNormalizer;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Debug;
@@ -37,6 +34,7 @@ public class LLDfaBuilder {
     }
 
     void prepare() {
+        //expand plus
         new Transformer(tree) {
             @Override
             public Node visitSequence(Sequence seq, Void arg) {
@@ -89,7 +87,7 @@ public class LLDfaBuilder {
                 //try seq
                 or.get(i).accept(this, null);
                 for (int j = i + 1; j < or.size(); j++) {
-                    if (hasCommon(or.get(i), or.get(j), tree)) {
+                    if (FactorHelper.hasCommon(or.get(i), or.get(j), tree)) {
                         return true;
                     }
                 }
@@ -104,17 +102,13 @@ public class LLDfaBuilder {
 
                 var a = seq.get(i).copy();
                 var b = seq.get(i + 1).copy();
-                var sym = GreedyNormalizer.hasGreedyTail(a, FirstSet.firstSet(b, tree), tree, new FactorLoop(tree, new Factor(tree)));
+                var sym = GreedyNormalizer.hasGreedyTail(a, FirstSet.firstSet(b, tree), tree);
                 if (sym != null) {
                     throw new RuntimeException(seq + " has greediness");
                 }
             }
             return false;
         }
-    }
-
-    static boolean hasCommon(Node a, Node b, Tree tree) {
-        return new FactorHelper(tree, new Factor(tree)).common(a, b) != null;
     }
 
     public void build() {

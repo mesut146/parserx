@@ -1,11 +1,8 @@
-package mesut.parserx.gen.ll;
+package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.nodes.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 //simplify a little for llrec
 public class Normalizer extends Transformer {

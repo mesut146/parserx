@@ -10,12 +10,12 @@ import java.util.*;
 public class Recursion {
     public static boolean debug = false;
     public boolean any;
-    public Factor factor;
+    Puller puller;
     Tree tree;
 
     public Recursion(Tree tree) {
         this.tree = tree;
-        factor = new Factor(tree);
+        puller=new Puller(tree);
     }
 
     public void all() {
@@ -45,8 +45,8 @@ public class Recursion {
 
         Name ref = decl.ref.copy();
 
-        factor.curRule = decl;
-        Factor.PullInfo info = factor.pullRule(ref, sym);
+        puller.curRule = decl;
+        var info = ref.accept(puller,sym);
         info.zero.astInfo.varName = "res";
         info.zero.astInfo.isPrimary = true;
         info.one.astInfo.varName = "res";
@@ -72,7 +72,7 @@ public class Recursion {
             rec.handle(newTree.getRule(other), false);
             //add new rules
             tree.getRule(other).rhs = newTree.getRule(other).rhs;
-            for (RuleDecl ruleDecl : rec.factor.declSet) {
+            for (RuleDecl ruleDecl : rec.puller.declSet) {
                 tree.addRule(ruleDecl);
             }
         }

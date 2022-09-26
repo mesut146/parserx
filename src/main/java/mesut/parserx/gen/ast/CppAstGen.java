@@ -1,10 +1,8 @@
-package mesut.parserx.gen.targets;
+package mesut.parserx.gen.ast;
 
 import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.Options;
-import mesut.parserx.gen.ll.Normalizer;
-import mesut.parserx.gen.ll.RDParserGen;
-import mesut.parserx.gen.ll.Type;
+import mesut.parserx.gen.lldfa.Type;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
 import mesut.parserx.utils.Utils;

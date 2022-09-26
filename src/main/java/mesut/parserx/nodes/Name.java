@@ -36,6 +36,9 @@ public class Name extends Node implements Comparable<Name> {
             sb.append("()");
             //sb.append("(").append(name).append(")");
         }
+        if (actionRef != null) {
+            sb.append(" @").append(actionRef);
+        }
         if (debug)
             sb.append(astInfo);
         return sb.toString();

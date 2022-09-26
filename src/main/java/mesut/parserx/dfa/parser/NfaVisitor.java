@@ -4,11 +4,14 @@ import mesut.parserx.dfa.Alphabet;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.nodes.Bracket;
 import mesut.parserx.nodes.StringNode;
+import mesut.parserx.nodes.TokenDecl;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
 
 public class NfaVisitor {
 
@@ -19,7 +22,22 @@ public class NfaVisitor {
     public static NFA make(String string) throws IOException {
         Lexer lexer = new Lexer(new StringReader(string));
         Parser parser = new Parser(lexer);
-        return build(parser.nfa());
+        var nfa = build(parser.nfa());
+        //for each final state make token
+        Map<String, TokenDecl> declMap = new HashMap<>();
+        for (var state : nfa.it()) {
+            if (state.accepting) {
+                if (declMap.containsKey(state.name)) {
+                    state.decl = declMap.get(state.name);
+                }
+                else {
+                    var decl = new TokenDecl(state.name, null);
+                    state.decl = decl;
+                    declMap.put(state.name, decl);
+                }
+            }
+        }
+        return nfa;
     }
 
     public static NFA build(Ast.nfa nfa) {
@@ -71,7 +89,10 @@ public class NfaVisitor {
             return alphabet.addRegex(new StringNode(input.IDENT.value));
         }
         else if (input.BRACKET != null) {
-            return alphabet.addRegex(new Bracket(input.BRACKET.value));
+            var br = new Bracket(input.BRACKET.value).normalize();
+            br.list.clear();
+            br.list.addAll(br.ranges);
+            return alphabet.addRegex(br);
         }
         else {
             //any

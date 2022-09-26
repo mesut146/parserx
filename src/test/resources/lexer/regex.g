@@ -4,6 +4,6 @@ token{
   PLUS: "e"+;
 }
 
-skip{
- ws: [ ];
+token{
+ ws: [ ] -> skip;
 }

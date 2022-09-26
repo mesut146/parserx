@@ -1,5 +1,6 @@
 package mesut.parserx.gen.transform;
 
+import mesut.parserx.gen.Copier;
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
@@ -16,12 +17,12 @@ public class EpsilonTrimmer extends Transformer {
 
     public EpsilonTrimmer(Tree tree) {
         super(tree);
-        out = new Tree(tree);
+        out = Copier.copyTree(tree);
     }
 
     public static Tree trim(Tree input) {
         Simplify.all(input);
-        EpsilonTrimmer trimmer = new EpsilonTrimmer(input);
+        var trimmer = new EpsilonTrimmer(input);
         return trimmer.trim();
     }
 
@@ -34,9 +35,9 @@ public class EpsilonTrimmer extends Transformer {
 
     public Tree trim() {
         for (int i = 0; i < tree.rules.size(); i++) {
-            RuleDecl rule = tree.rules.get(i);
-            Node rhs = transformNode(rule.rhs, null);
-            RuleDecl res = new RuleDecl(rule.ref.name + "_noe", rhs);
+            var rule = tree.rules.get(i);
+            var rhs = transformNode(rule.rhs, null);
+            var res = new RuleDecl(rule.ref.name + "_noe", rhs);
             if (rhs.isEpsilon()) {
                 //res.hidden = true;
             }
@@ -105,7 +106,7 @@ public class EpsilonTrimmer extends Transformer {
     @Override
     public Node visitSequence(Sequence seq, Void arg) {
         for (int i = 0; i < seq.size(); i++) {
-            Node ch = seq.get(i);
+            var ch = seq.get(i);
             if (canBeEmpty(ch)) {//!ch.isName()
                 List<Node> l1 = new ArrayList<>(seq.list);
                 l1.remove(i);
@@ -138,7 +139,7 @@ public class EpsilonTrimmer extends Transformer {
 
     @Override
     public Node visitRegex(Regex regex, Void parent) {
-        Node ch = transformNode(regex.node, parent);
+        var ch = transformNode(regex.node, parent);
         if (regex.isOptional()) {
             //a?=a|€
             modified = true;
@@ -156,7 +157,7 @@ public class EpsilonTrimmer extends Transformer {
     @Override
     public Node visitOr(Or or, Void arg) {
         List<Node> list = new ArrayList<>();
-        for (Node ch : or) {
+        for (var ch : or) {
             if (ch.isEpsilon()) continue;
             if (hasEpsilon(ch)) {
                 ch = transformNode(ch, arg);

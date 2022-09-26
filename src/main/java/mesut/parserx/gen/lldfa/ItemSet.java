@@ -3,7 +3,6 @@ package mesut.parserx.gen.lldfa;
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.lr.LrType;
 import mesut.parserx.gen.lr.TreeInfo;
-import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.FactorHelper;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Node;
@@ -121,7 +120,7 @@ public class ItemSet {
             addAll(genReduces());
         }
         alreadyGenReduces = true;
-        for (Item item : kernel) {
+        for (var item : kernel) {
             closure(item);
         }
         for (var it : all) {
@@ -131,8 +130,13 @@ public class ItemSet {
         }
     }
 
-    boolean common(Node s1, Node s2) {
-        return new FactorHelper(tree, new Factor(tree)).common(s1, s2) != null;
+    boolean common(Name s1, Name s2) {
+        return FactorHelper.hasCommon(s1, s2, tree);
+    }
+
+    boolean commonNoSame(Name s1, Name s2) {
+        if (s1.equals(s2)) return false;
+        return FactorHelper.hasCommon(s1, s2, tree);
     }
 
     public static Name sym(Node node) {
@@ -148,7 +152,7 @@ public class ItemSet {
             if (i == j) continue;
             if (j > item.dotPos && !FirstSet.canBeEmpty(item.getNode(j - 1), tree)) break;
             var next = item.getNode(j);
-            if (common(node, next)) {
+            if (common(sym, sym(next))) {
                 return true;
             }
         }
@@ -187,7 +191,7 @@ public class ItemSet {
                 if (i == j) continue;
                 if (j > item.dotPos && !FirstSet.canBeEmpty(item.getNode(j - 1), tree)) break;
                 var next = item.getNode(j);
-                if (common(node, next)) {
+                if (commonNoSame(sym, sym(next))) {
                     item.closured[i] = true;
                     closure(sym, i, item);
                     break;
@@ -197,7 +201,7 @@ public class ItemSet {
             //check dot sym and any other sym have common
             for (var s2 : syms) {
                 if (s2 == sym) continue;
-                if (common(sym, s2)) {
+                if (commonNoSame(sym, s2)) {
                     item.closured[i] = true;
                     closure(sym, i, item);
                     break;

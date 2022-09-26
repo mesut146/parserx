@@ -4,6 +4,7 @@ import mesut.parserx.gen.AstInfo;
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
+import mesut.parserx.utils.CountingMap2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,26 +15,29 @@ public class GreedyNormalizer extends Transformer {
     public static boolean debug = true;
     Tree tree;
     boolean modified;
-    FactorLoop factor;
+    Puller puller;
+    CountingMap2<RuleDecl, Name> factorCount = new CountingMap2<>();
 
-    public GreedyNormalizer(Tree tree, FactorLoop factorLoop) {
+    public GreedyNormalizer(Tree tree) {
         super(tree);
         this.tree = tree;
-        this.factor = factorLoop;
+        this.puller = new Puller(tree);
     }
 
     public void normalize() {
         for (int i = 0; i < tree.rules.size(); i++) {
-            RuleDecl decl = tree.rules.get(i);
+            var decl = tree.rules.get(i);
             modified = false;
             curRule = decl;
-            factor.curRule = decl;
             decl.rhs = decl.rhs.accept(this, null);
             if (modified) {
-                factor.factorRule(decl);
                 i = -1;
             }
         }
+    }
+
+    public String factorName(Name sym) {
+        return sym.name + "f" + factorCount.get(curRule, sym);
     }
 
     @Override
@@ -44,7 +48,7 @@ public class GreedyNormalizer extends Transformer {
             Node a = seq.get(i).copy();
             Node b = seq.get(i + 1).copy();
             if (a.astInfo.isFactored) continue;
-            TailInfo sym = hasGreedyTail(a, FirstSet.firstSet(b, tree), tree, factor);
+            TailInfo sym = hasGreedyTail(a, FirstSet.firstSet(b, tree), tree);
             if (sym == null) continue;
             if (debug) {
                 System.out.println("greediness in " + curRule.ref);
@@ -54,23 +58,24 @@ public class GreedyNormalizer extends Transformer {
 
             sym.list.add(sym.sym);
             Node cur = a;
-            List<Factor.PullInfo> infos = new ArrayList<>();
+            List<Puller.PullInfo> infos = new ArrayList<>();
             List<Node> factors = new ArrayList<>();
             for (Node node : sym.list) {
                 if (node.isOptional() || node.isStar()) {
                     continue;
                 }
-                Factor.PullInfo info;
+                Puller.PullInfo info;
                 Node f = node.copy();
                 f.astInfo = new AstInfo();
                 f.astInfo.isFactor = true;
                 if (node.isPlus()) {
-                    f.astInfo.varName = factor.factor.factorName(f.asRegex().node.asName());
-                    info = factor.pull(cur.copy(), f.asRegex());
+                    f.astInfo.varName = factorName(f.asRegex().node.asName());
+                    //info = factor2.pull(cur.copy(), f.asRegex());
+                    throw new RuntimeException("greedy loop");
                 }
                 else {
-                    f.astInfo.varName = factor.factor.factorName(f.asName());
-                    info = factor.factor.pull(cur.copy(), f.asName());
+                    f.astInfo.varName = factorName(f.asName());
+                    info = cur.copy().accept(puller, f.asName());
                 }
                 factors.add(f);
                 infos.add(info);
@@ -81,7 +86,7 @@ public class GreedyNormalizer extends Transformer {
             List<Node> ors = new ArrayList<>();
             List<Node> fs = new ArrayList<>();
             for (int k = 0; k < factors.size(); k++) {
-                Factor.PullInfo info = infos.get(k);
+                var info = infos.get(k);
                 Node f = factors.get(k);
                 if (info.zero != null) {
                     List<Node> s = new ArrayList<>(fs);
@@ -114,17 +119,14 @@ public class GreedyNormalizer extends Transformer {
     }
 
 
-
-    public static TailInfo hasGreedyTail(Node node, final Set<Name> first, Tree tree, FactorLoop factor) {
+    public static TailInfo hasGreedyTail(Node node, final Set<Name> first, Tree tree) {
         if (node.isName() && node.asName().isToken) {
             return null;
         }
         if (node.isName() && first.contains(node.asName())) return null;
-        //final List<Node> loopTail = new ArrayList<>();
-        BaseVisitor<TailInfo, Void> visitor = new GreedyVisitor(first, tree, factor, node);
+        var visitor = new GreedyVisitor(first, tree, node);
         return node.accept(visitor, null);
     }
-
 
     public static class TailInfo {
         Name sym;
@@ -135,14 +137,12 @@ public class GreedyNormalizer extends Transformer {
     private static class GreedyVisitor extends BaseVisitor<TailInfo, Void> {
         private final Set<Name> first;
         private final Tree tree;
-        private final FactorLoop factor;
         private final Node node;
         boolean foundLoop;
 
-        public GreedyVisitor(Set<Name> first, Tree tree, FactorLoop factor, Node node) {
+        public GreedyVisitor(Set<Name> first, Tree tree, Node node) {
             this.first = first;
             this.tree = tree;
-            this.factor = factor;
             this.node = node;
             foundLoop = false;
         }
@@ -150,7 +150,7 @@ public class GreedyNormalizer extends Transformer {
         @Override
         public TailInfo visitName(Name name, Void arg) {
             if (first.contains(name)) {
-                TailInfo info = new TailInfo();
+                var info = new TailInfo();
                 info.sym = name.copy();
                 return info;
             }
@@ -167,9 +167,9 @@ public class GreedyNormalizer extends Transformer {
                 loopTail.addAll(seq.list);
                 return null;//?
             }*/
-            Node a = seq.first();
-            Node b = Helper.trim(seq);
-            TailInfo info = b.accept(this, arg);
+            var a = seq.first();
+            var b = Helper.trim(seq);
+            var info = b.accept(this, arg);
             if (info != null) {
                 info.list.add(0, a.copy());
                 return info;
@@ -192,13 +192,13 @@ public class GreedyNormalizer extends Transformer {
         public TailInfo visitRegex(Regex regex, Void arg) {
             //todo plus
             if (regex.isOptional() || regex.isStar()) {
-                Name sym = factor.helper.common(first, FirstSet.firstSet(regex.node, tree));
+                var sym = FactorHelper.common(first, FirstSet.firstSet(regex.node, tree), tree);
                 if (sym == null) return null;
                 if (regex.isStar()) {
                     foundLoop = true;
                     throw new RuntimeException("greedy loop in " + node + " la=" + sym);
                 }
-                TailInfo info = new TailInfo();
+                var info = new TailInfo();
                 info.sym = sym.copy();
                 return info;
             }
@@ -211,7 +211,7 @@ public class GreedyNormalizer extends Transformer {
                 return null;
             }
             for (Node ch : or) {
-                TailInfo res = ch.accept(this, arg);
+                var res = ch.accept(this, arg);
                 if (res != null) {
                     return res;
                 }

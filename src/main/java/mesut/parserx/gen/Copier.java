@@ -13,16 +13,21 @@ public class Copier extends Transformer {
     }
 
     public static Tree copyTree(Tree tree) {
-        Tree res = new Tree(tree);
-        res.rules.clear();
-        for (RuleDecl decl : tree.rules) {
+        var res = new Tree();
+        res.file = tree.file;
+        res.start = tree.start;
+        res.includes = tree.includes;
+        res.options = tree.options;
+        res.lexerMembers = tree.lexerMembers;
+        res.originalRules = tree.originalRules;
+        for (var decl : tree.rules) {
             res.addRule(copyRule(decl));
         }
         return res;
     }
 
     public static RuleDecl copyRule(RuleDecl decl) {
-        RuleDecl res = new RuleDecl(decl.ref.<Name>copy(), decl.rhs.copy());
+        var res = new RuleDecl(decl.ref.<Name>copy(), decl.rhs.copy());
         res.retType = decl.retType;
         return res;
     }
@@ -34,14 +39,14 @@ public class Copier extends Transformer {
 
     @Override
     public Node visitName(Name name, Void arg) {
-        Name res = new Name(name.name, name.isToken);
+        var res = new Name(name.name, name.isToken);
         res.args = new ArrayList<>(name.args);
         return withAst(res, name);
     }
 
     @Override
     public Node visitRegex(Regex regex, Void arg) {
-        Node ch = transformNode(regex.node, arg);
+        var ch = transformNode(regex.node, arg);
         return withAst(new Regex(ch, regex.type), regex);
     }
 
@@ -51,7 +56,7 @@ public class Copier extends Transformer {
         for (Node ch : seq) {
             list.add(transformNode(ch, arg));
         }
-        Sequence res = new Sequence(list);
+        var res = new Sequence(list);
         res.assocLeft = seq.assocLeft;
         res.assocRight = seq.assocRight;
         return withAst(res, seq);
@@ -66,7 +71,7 @@ public class Copier extends Transformer {
             ch.label = label;
             list.add(ch);
         }
-        Or res = new Or(list);
+        var res = new Or(list);
         return withAst(res, or);
     }
 

@@ -163,10 +163,6 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
             res.noEps = Or.make(or);
         }
         res.eps = s4;
-        Factor.check(s1);
-        Factor.check(s2);
-        Factor.check(s3);
-        Factor.check(s4);
         return res;
     }
 
@@ -182,13 +178,12 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
             return res;
         }
 
-
         Name noName = tree.getNoEps(name);
         Name epsName = tree.getEps(name);
 
         RuleDecl decl = tree.getRule(name);
-        Name epsRef = Factor.inherit(epsName, decl);
-        Name noRef = Factor.inherit(noName, decl);
+        Name epsRef = inherit(epsName, decl);
+        Name noRef = inherit(noName, decl);
 
         Info tmp = null;
         if (tree.getRule(noName) == null) {
@@ -217,6 +212,16 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
             res.eps = epsName;
         }
         return res;
+    }
+
+    //copy decl args with names
+    public static Name inherit(Name name, RuleDecl decl) {
+        Name ref = name.copy();
+        ref.args.clear();
+        for (Node arg : decl.ref.args) {
+            ref.args.add(arg.copy());
+        }
+        return ref;
     }
 
     private Node orEps(Node e1, Node e2) {

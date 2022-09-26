@@ -1,4 +1,4 @@
-package mesut.parserx.gen.ll;
+package mesut.parserx.gen.lldfa;
 
 //qualified ast type;
 public class Type {

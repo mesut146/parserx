@@ -13,10 +13,12 @@ public class Builder {
     List<RuleInfo> cases = new ArrayList<>();
     boolean dump = false;
 
+
     static class RuleInfo {
         String rule;
         String input;
         String expected;
+        boolean isFile = false;
     }
 
     public Builder dump() {
@@ -54,7 +56,20 @@ public class Builder {
         return this;
     }
 
+    public Builder file(String input) {
+        var info = new RuleInfo();
+        info.input = input;
+        info.rule = curRule;
+        info.isFile = true;
+        cases.add(info);
+        return this;
+    }
+
     public void check() throws Exception {
-        DescTester.check2(this);
+        DescTester.check(this);
+    }
+
+    public void lr() throws Exception {
+        LrTester.check0(this);
     }
 }

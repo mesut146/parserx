@@ -1,7 +1,6 @@
 package parser;
 
 import common.Env;
-import mesut.parserx.gen.lr.AstBuilderGen;
 import mesut.parserx.gen.lr.LrCodeGen;
 import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.gen.lr.LrType;
@@ -67,26 +66,11 @@ public class LrTest {
         dots(generator, tree.file.getName());
     }
 
-    @Test
-    @Ignore
-    public void astBuilder() throws Exception {
-        Tree tree = Env.tree("lr1/calc.g");
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        //todo or combine
-        AstBuilderGen astBuilderGen = new AstBuilderGen(tree);
-        astBuilderGen.gen();
-    }
-
-    @Test
-    public void astReal() throws Exception {
-        LrTester.checkAst(Env.tree("lr1/calc.g"), "1+2", "1+2*3", "3^2*1^(3-1)");
-    }
-
 
     @Test
     public void itself() throws Exception {
         var path = new File("./src/main/grammar/parserx.g");
-        LrTester.check(Tree.makeTree(path),LrType.LR1, Utils.read(path));
+        LrTester.check(Tree.makeTree(path), LrType.LR1, Utils.read(path));
     }
 
     @Test
@@ -100,6 +84,18 @@ public class LrTest {
         //dots("lr1/la2.g");
         //LrTester.check(Env.tree("lr1/la2.g"),LrType.LALR1, "aacx","baacy");
         //LrTester.check(Env.tree("lr1/la2.g"),LrType.LALR1, "aax","baay");
+    }
+
+    @Test
+    public void builder() throws Exception {
+        Builder.tree("lr1/pred.g")
+                .input("1+2+3", "")
+                .input("1-2*-3", "")
+                .input("1?2:3?4:5+6+7", "")
+                //.input("1+2+++3++++", "")
+                .input("1.2.3+1[2][3]","")
+                .input("1.2[3]","")
+                .lr();
     }
 
     @Test
@@ -117,6 +113,7 @@ public class LrTest {
         LrTester.check(Env.tree("lr1/regex.g"), "ccc", "bbbccc", "accc", "abbbccc");
         LrTester.check(Env.tree("lr1/eps.g"), "x", "ax", "bx", "abx", "cy");
         LrTester.check(Env.tree("lr1/la2.g"), "aax", "baay");
+
     }
 
     @Test

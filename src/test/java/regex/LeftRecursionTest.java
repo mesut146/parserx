@@ -2,19 +2,13 @@ package regex;
 
 import common.Env;
 import mesut.parserx.gen.Helper;
-import mesut.parserx.gen.Lang;
-import mesut.parserx.gen.ll.RDParserGen;
 import mesut.parserx.gen.transform.EbnfToBnf;
-import mesut.parserx.gen.transform.Factor;
 import mesut.parserx.gen.transform.LeftRecursive;
 import mesut.parserx.gen.transform.Recursion;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
-import parser.DescTester;
-
-import java.io.IOException;
 
 public class LeftRecursionTest {
 
@@ -67,55 +61,5 @@ public class LeftRecursionTest {
         Tree tree = Env.tree("rec/cyc2.g");
         tree = LeftRecursive.transform(tree);
         tree.printRules();
-    }
-
-    @Test
-    public void indirect3() throws IOException {
-        Tree tree = Env.tree("rec/cyc0.g");
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        /*LeftRecursive l = new LeftRecursive(tree);
-        l.normalizeIndirects();
-        tree.printRules();*/
-        //l.process();
-        RDParserGen.gen(tree, Lang.JAVA);
-    }
-
-    @Test
-    public void indirectFactor() throws IOException {
-        Tree tree = Env.tree("rec/cyc0.g");
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        RDParserGen.gen(tree, Lang.JAVA);
-    }
-
-    @Test
-    public void indirectReal() throws Exception {
-        DescTester.check(Env.tree("rec/cyc0.g"), "A", "cab");
-        //DescTester.check(Env.tree("rec/cyc0.g"), "B", "ca");
-    }
-
-    @Test
-    public void sub() throws IOException {
-        Tree tree = Env.tree("ll/substitude.g");
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        //l.process();
-        RDParserGen.gen(tree, Lang.JAVA);
-    }
-
-    @Test
-    public void simp() throws IOException {
-        Factor.debug = true;
-        Recursion.debug = true;
-        Tree tree = Env.tree("rec/a.g");
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        RDParserGen.gen(tree, Lang.JAVA);
-    }
-
-    @Test
-    public void s() throws Exception {
-        Factor.debug = true;
-        Factor.debugPull = true;
-        Recursion.debug = true;
-        DescTester.check(Env.tree("rec/a.g"), "B", "d", "de", "bc", "dac");
-        //DescTester.check(Env.tree("rec/a.g"), "A");
     }
 }

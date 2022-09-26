@@ -2,9 +2,7 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.*;
 import mesut.parserx.gen.lexer.LexerGenerator;
-import mesut.parserx.gen.ll.AstGen;
-import mesut.parserx.gen.ll.RDParserGen;
-import mesut.parserx.gen.targets.JavaRecDescent;
+import mesut.parserx.gen.ast.AstGen;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
@@ -61,7 +59,7 @@ public class CcGenJava {
         builder.factor();
         AstGen.gen(tree, Lang.JAVA);
         LexerGenerator.gen(tree, Lang.JAVA);
-        JavaRecDescent.genTokenType(tree);
+        ParserUtils.genTokenType(tree);
         writeTS(options);
         prep();
         for (var entry : builder.rules.entrySet()) {
@@ -127,7 +125,7 @@ public class CcGenJava {
         public Void visitOr(Or or, Void arg) {
             int id = 1;
             for (var ch : or) {
-                w.append("%sif(%s){", id > 1 ? "else " : "", JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type"));
+                w.append("%sif(%s){", id > 1 ? "else " : "", ParserUtils.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type"));
                 w.append("%s %s = new %s();", ch.astInfo.nodeType, ch.astInfo.varName, ch.astInfo.nodeType);
                 w.append("%s.holder = res;", ch.astInfo.varName);
                 w.append("res.%s = %s;", ch.astInfo.varName, ch.astInfo.varName);
@@ -148,7 +146,7 @@ public class CcGenJava {
         @Override
         public Void visitRegex(Regex regex, Void arg) {
             var ch = regex.node;
-            var la = JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type");
+            var la = ParserUtils.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type");
             if (regex.isOptional()) {
                 w.append("if(%s){", la);
                 ch.accept(this, null);
@@ -172,7 +170,7 @@ public class CcGenJava {
     private void consumer(Name name, String vname) {
         String rhs;
         if (name.isToken) {
-            rhs = String.format("ts.consume(%s.%s, \"%s\")", RDParserGen.tokens, name.name, name.name);
+            rhs = String.format("ts.consume(%s.%s, \"%s\")", ParserUtils.tokens, name.name, name.name);
         }
         else {
             rhs = name.name + "()";
@@ -205,7 +203,7 @@ public class CcGenJava {
         @Override
         public Void visitRegex(Regex regex, Void arg) {
             var ch = regex.node;
-            var la = JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type");
+            var la = ParserUtils.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type");
             if (regex.isOptional()) {
                 w.append("if(%s){", la);
                 ch.accept(this, arg);
@@ -238,10 +236,10 @@ public class CcGenJava {
             int i = 0;
             for (var ch : or) {
                 if (i > 0) {
-                    w.append("else if(%s){", JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type"));
+                    w.append("else if(%s){", ParserUtils.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type"));
                 }
                 else {
-                    w.append("if(%s){", JavaRecDescent.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type"));
+                    w.append("if(%s){", ParserUtils.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type"));
                 }
                 ch.accept(this, arg);
                 w.append("}");

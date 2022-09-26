@@ -10,14 +10,4 @@ public class LrTester{
     return parser.parse();
   }
 
-  public static Object testAst(String start, String input) throws Exception{
-    Lexer lexer = new Lexer(new StringReader(input));
-    //Parser.debug=true;
-    Parser parser = new Parser(lexer);
-    Node s = parser.parse();
-    Method m = Class.forName("AstBuilder").getDeclaredMethod("make" + start, Node.class);
-    System.out.println(s);
-    return m.invoke(null, s);
-  }
-
 }
