@@ -24,8 +24,8 @@ public class StringNode extends Node {
     @Override
     public String toString() {
         var sb = new StringBuilder(varString() + "\"" + printNormal() + "\"");
-        if (actionRef != null) {
-            sb.append(" @").append(actionRef);
+        if (action != null) {
+            sb.append(" @").append(action);
         }
         return sb.toString();
     }

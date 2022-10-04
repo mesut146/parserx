@@ -33,16 +33,16 @@ public class RegexOptimizer extends Transformer {
                 bracket.add(ch.asString().value.charAt(0));
             }
             else if (ch.isRange()) {
-                bracket.add(ch);
+                bracket.add(ch.asRange());
             }
             else {
                 res.add(ch);
             }
         }
-        if (bracket.size() != 0) {
+        if (bracket.list.size() != 0) {
             bracket.normalize().optimize();
-            if (bracket.size() == 1 && bracket.get(0).asRange().isSingle()) {
-                res.add(new StringNode("" + (char) bracket.get(0).asRange().start));
+            if (bracket.list.size() == 1 && bracket.list.get(0).isSingle()) {
+                res.add(new StringNode("" + (char) bracket.list.get(0).start));
             }
             else {
                 res.add(bracket);

@@ -5,29 +5,51 @@ import java.util.ArrayList;
 
 public class Ast{
     public static class nfa{
-        public startDecl startDecl;
         public Token nls;
-        public finalDecl finalDecl;
+        public startDecl startDecl;
         public Token nls2;
+        public finalDecl finalDecl;
+        public Token nls3;
         public List<trLine> trLine = new ArrayList<>();
-
         public String toString(){
             StringBuilder sb = new StringBuilder("nfa{");
+            boolean first = true;
+            if(nls != null){
+                sb.append("'").append(nls.value.replace("'","\'")).append("'");
+                first = false;
+            }
+            if(!first){
+                sb.append(", ");
+            }
             sb.append(startDecl.toString());
-            sb.append(",");
-            sb.append("'" + nls.value + "'");
-            sb.append(",");
+            first = false;
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append("'").append(nls2.value.replace("'","\'")).append("'");
+            if(!first){
+                sb.append(", ");
+            }
             sb.append(finalDecl.toString());
-            sb.append(",");
-            sb.append("'" + nls2.value + "'");
-            sb.append(",");
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append("'").append(nls3.value.replace("'","\'")).append("'");
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append(trLine.toString());
             if(!trLine.isEmpty()){
+                if(!first){
+                    sb.append(", ");
+                }
                 sb.append('[');
                 for(int i = 0;i < trLine.size();i++){
                     sb.append(trLine.get(i).toString());
-                    if(i < trLine.size() - 1) sb.append(",");
+                    if(i < trLine.size() - 1) sb.append(", ");
                 }
                 sb.append(']');
+                first = false;
             }
             return sb.append("}").toString();
         }
@@ -35,43 +57,73 @@ public class Ast{
     public static class trLine{
         public trLineg1 g1;
         public Token nls;
-
         public String toString(){
             StringBuilder sb = new StringBuilder("trLine{");
+            boolean first = true;
             sb.append(g1.toString());
-            if(nls != null) sb.append(",");
-            sb.append(nls == null?"":"'" + nls.value + "'");
+            first = false;
+            if(nls != null){
+                if(!first){
+                    sb.append(", ");
+                }
+                sb.append("'").append(nls.value.replace("'","\'")).append("'");
+                first = false;
+            }
             return sb.append("}").toString();
         }
     }
     public static class trLineg1{
         public int which;
-        public trArrow trArrow;
-        public trSimple trSimple;
-
+        Trlineg11 trArrow;
+        Trlineg12 trSimple;
         public String toString(){
             StringBuilder sb = new StringBuilder("trLineg1#" + which + "{");
             if(which == 1){
-                sb.append(trArrow.toString());
+                sb.append(trArrow);
             }
             else if(which == 2){
-                sb.append(trSimple.toString());
+                sb.append(trSimple);
             }
             return sb.append("}").toString();
+        }
+        public static class Trlineg11{
+            trLineg1 holder;
+            public trArrow trArrow;
+            public String toString(){
+                StringBuilder sb = new StringBuilder();
+                boolean first = true;
+                sb.append(trArrow.toString());
+                return sb.toString();
+            }
+        }
+        public static class Trlineg12{
+            trLineg1 holder;
+            public trSimple trSimple;
+            public String toString(){
+                StringBuilder sb = new StringBuilder();
+                boolean first = true;
+                sb.append(trSimple.toString());
+                return sb.toString();
+            }
         }
     }
     public static class startDecl{
         public Token START;
         public Token EQ;
         public Token NUM;
-
         public String toString(){
             StringBuilder sb = new StringBuilder("startDecl{");
-            sb.append("'" + START.value + "'");
-            sb.append(",");
-            sb.append("'" + EQ.value + "'");
-            sb.append(",");
-            sb.append("'" + NUM.value + "'");
+            boolean first = true;
+            sb.append("'").append(START.value.replace("'","\'")).append("'");
+            first = false;
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append("'").append(EQ.value.replace("'","\'")).append("'");
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append("'").append(NUM.value.replace("'","\'")).append("'");
             return sb.append("}").toString();
         }
     }
@@ -79,46 +131,41 @@ public class Ast{
         public Token FINAL;
         public Token EQ;
         public finalList finalList;
-
         public String toString(){
             StringBuilder sb = new StringBuilder("finalDecl{");
-            sb.append("'" + FINAL.value + "'");
-            sb.append(",");
-            sb.append("'" + EQ.value + "'");
-            sb.append(",");
+            boolean first = true;
+            sb.append("'").append(FINAL.value.replace("'","\'")).append("'");
+            first = false;
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append("'").append(EQ.value.replace("'","\'")).append("'");
+            if(!first){
+                sb.append(", ");
+            }
             sb.append(finalList.toString());
             return sb.append("}").toString();
         }
     }
     public static class finalList{
-        public int which;
-        public List<namedState> namedState = new ArrayList<>();
-        Finallist2 finallist2;
-        public static class Finallist2{
-                public namedState namedState;
-                public List<finalListg1> g1 = new ArrayList<>();
-                public String toString(){
-                        StringBuilder sb = new StringBuilder();
-                        sb.append(namedState.toString());
-                        if(!g1.isEmpty()) sb.append(",");
-                        if(!g1.isEmpty()){
-                                sb.append('[');
-                                for(int i = 0;i < g1.size();i++){
-                                        sb.append(g1.get(i).toString());
-                                        if(i < g1.size() - 1) sb.append(",");
-                                }
-                                sb.append(']');
-                        }
-                        return sb.toString();
-                }
-        }
+        public namedState namedState;
+        public List<finalListg1> g1 = new ArrayList<>();
         public String toString(){
-            StringBuilder sb = new StringBuilder("finalList#" + which + "{");
-            if(which == 1){
-                sb.append(namedState);
-            }
-            else if(which == 2){
-                sb.append(finallist2);
+            StringBuilder sb = new StringBuilder("finalList{");
+            boolean first = true;
+            sb.append(namedState.toString());
+            first = false;
+            if(!g1.isEmpty()){
+                if(!first){
+                    sb.append(", ");
+                }
+                sb.append('[');
+                for(int i = 0;i < g1.size();i++){
+                    sb.append(g1.get(i).toString());
+                    if(i < g1.size() - 1) sb.append(", ");
+                }
+                sb.append(']');
+                first = false;
             }
             return sb.append("}").toString();
         }
@@ -126,11 +173,14 @@ public class Ast{
     public static class finalListg1{
         public Token COMMA;
         public namedState namedState;
-
         public String toString(){
             StringBuilder sb = new StringBuilder("finalListg1{");
-            sb.append("'" + COMMA.value + "'");
-            sb.append(",");
+            boolean first = true;
+            sb.append("'").append(COMMA.value.replace("'","\'")).append("'");
+            first = false;
+            if(!first){
+                sb.append(", ");
+            }
             sb.append(namedState.toString());
             return sb.append("}").toString();
         }
@@ -138,12 +188,18 @@ public class Ast{
     public static class namedState{
         public Token NUM;
         public namedStateg1 g1;
-
         public String toString(){
             StringBuilder sb = new StringBuilder("namedState{");
-            sb.append("'" + NUM.value + "'");
-            if(g1 != null) sb.append(",");
-            sb.append(g1 == null?"":g1.toString());
+            boolean first = true;
+            sb.append("'").append(NUM.value.replace("'","\'")).append("'");
+            first = false;
+            if(g1 != null){
+                if(!first){
+                    sb.append(", ");
+                }
+                sb.append(g1.toString());
+                first = false;
+            }
             return sb.append("}").toString();
         }
     }
@@ -151,14 +207,19 @@ public class Ast{
         public Token LP;
         public Token IDENT;
         public Token RP;
-
         public String toString(){
             StringBuilder sb = new StringBuilder("namedStateg1{");
-            sb.append("'" + LP.value + "'");
-            sb.append(",");
-            sb.append("'" + IDENT.value + "'");
-            sb.append(",");
-            sb.append("'" + RP.value + "'");
+            boolean first = true;
+            sb.append("'").append(LP.value.replace("'","\'")).append("'");
+            first = false;
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append("'").append(IDENT.value.replace("'","\'")).append("'");
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append("'").append(RP.value.replace("'","\'")).append("'");
             return sb.append("}").toString();
         }
     }
@@ -167,27 +228,40 @@ public class Ast{
         public Token ARROW;
         public Token NUM2;
         public trArrowg1 g1;
-
         public String toString(){
             StringBuilder sb = new StringBuilder("trArrow{");
-            sb.append("'" + NUM.value + "'");
-            sb.append(",");
-            sb.append("'" + ARROW.value + "'");
-            sb.append(",");
-            sb.append("'" + NUM2.value + "'");
-            if(g1 != null) sb.append(",");
-            sb.append(g1 == null?"":g1.toString());
+            boolean first = true;
+            sb.append("'").append(NUM.value.replace("'","\'")).append("'");
+            first = false;
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append("'").append(ARROW.value.replace("'","\'")).append("'");
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append("'").append(NUM2.value.replace("'","\'")).append("'");
+            if(g1 != null){
+                if(!first){
+                    sb.append(", ");
+                }
+                sb.append(g1.toString());
+                first = false;
+            }
             return sb.append("}").toString();
         }
     }
     public static class trArrowg1{
         public Token COMMA;
         public INPUT INPUT;
-
         public String toString(){
             StringBuilder sb = new StringBuilder("trArrowg1{");
-            sb.append("'" + COMMA.value + "'");
-            sb.append(",");
+            boolean first = true;
+            sb.append("'").append(COMMA.value.replace("'","\'")).append("'");
+            first = false;
+            if(!first){
+                sb.append(", ");
+            }
             sb.append(INPUT.toString());
             return sb.append("}").toString();
         }
@@ -196,35 +270,86 @@ public class Ast{
         public Token NUM;
         public Token NUM2;
         public INPUT INPUT;
-
         public String toString(){
             StringBuilder sb = new StringBuilder("trSimple{");
-            sb.append("'" + NUM.value + "'");
-            sb.append(",");
-            sb.append("'" + NUM2.value + "'");
-            if(INPUT != null) sb.append(",");
-            sb.append(INPUT == null?"":INPUT.toString());
+            boolean first = true;
+            sb.append("'").append(NUM.value.replace("'","\'")).append("'");
+            first = false;
+            if(!first){
+                sb.append(", ");
+            }
+            sb.append("'").append(NUM2.value.replace("'","\'")).append("'");
+            if(INPUT != null){
+                if(!first){
+                    sb.append(", ");
+                }
+                sb.append(INPUT.toString());
+                first = false;
+            }
             return sb.append("}").toString();
         }
     }
     public static class INPUT{
         public int which;
-        public Token BRACKET;
-        public Token IDENT;
-        public Token ANY;
-
+        Input1 BRACKET;
+        Input2 IDENT;
+        Input3 ANY;
+        Input4 NUM;
         public String toString(){
             StringBuilder sb = new StringBuilder("INPUT#" + which + "{");
             if(which == 1){
-                sb.append("'" + BRACKET.value + "'");
+                sb.append(BRACKET);
             }
             else if(which == 2){
-                sb.append("'" + IDENT.value + "'");
+                sb.append(IDENT);
             }
             else if(which == 3){
-                sb.append("'" + ANY.value + "'");
+                sb.append(ANY);
+            }
+            else if(which == 4){
+                sb.append(NUM);
             }
             return sb.append("}").toString();
+        }
+        public static class Input1{
+            INPUT holder;
+            public Token BRACKET;
+            public String toString(){
+                StringBuilder sb = new StringBuilder();
+                boolean first = true;
+                sb.append("'").append(BRACKET.value.replace("'","\'")).append("'");
+                return sb.toString();
+            }
+        }
+        public static class Input2{
+            INPUT holder;
+            public Token IDENT;
+            public String toString(){
+                StringBuilder sb = new StringBuilder();
+                boolean first = true;
+                sb.append("'").append(IDENT.value.replace("'","\'")).append("'");
+                return sb.toString();
+            }
+        }
+        public static class Input3{
+            INPUT holder;
+            public Token ANY;
+            public String toString(){
+                StringBuilder sb = new StringBuilder();
+                boolean first = true;
+                sb.append("'").append(ANY.value.replace("'","\'")).append("'");
+                return sb.toString();
+            }
+        }
+        public static class Input4{
+            INPUT holder;
+            public Token NUM;
+            public String toString(){
+                StringBuilder sb = new StringBuilder();
+                boolean first = true;
+                sb.append("'").append(NUM.value.replace("'","\'")).append("'");
+                return sb.toString();
+            }
         }
     }
 }

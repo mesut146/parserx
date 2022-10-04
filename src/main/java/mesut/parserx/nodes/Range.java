@@ -35,7 +35,7 @@ public class Range extends Node implements Comparable<Range> {
     public String toString() {
         if (start == end) {
             if (start == '\"' || start == '\'') {
-                return "" + (char) start;
+                return "\\" + (char) start;
             }
             else if (UnicodeUtils.isSpecial(start)) {
                 return UnicodeUtils.escapeUnicode(start);

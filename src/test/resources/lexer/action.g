@@ -1,11 +1,4 @@
 token{
-  A: "ab" @A -> skip;
-  B: "ac" @B;
+  A: "ab" @{System.out.println("found A");}@ -> skip;
+  B: "ac" @{System.out.println("found B");}@;
 }
-
-action{
-  A: %begin System.out.println("found A"); %end
-  B: %begin System.out.println("found B"); %end
-}
-
-//E: A;

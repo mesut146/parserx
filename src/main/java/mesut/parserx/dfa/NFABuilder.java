@@ -13,7 +13,6 @@ import java.util.Map;
 public class NFABuilder extends BaseVisitor<State, State> {
     NFA nfa;
     Tree tree;
-    Map<TokenDecl, State> finalMap = new HashMap<>();
 
     public NFABuilder(Tree tree) {
         this.tree = tree;
@@ -41,16 +40,12 @@ public class NFABuilder extends BaseVisitor<State, State> {
         for (var tb : tree.tokenBlocks) {
             for (var decl : tb.tokens) {
                 if (decl.fragment) continue;
-                if (!finalMap.containsKey(decl)) {
-                    addRegex(decl, nfa.initialState);
-                }
+                addRegex(decl, nfa.initialState);
             }
             for (var mb : tb.modeBlocks) {
                 for (var decl : mb.tokens) {
                     if (decl.fragment) continue;
-                    if (!finalMap.containsKey(decl)) {
-                        addRegex(decl, nfa.modes.get(mb.name));
-                    }
+                    addRegex(decl, nfa.modes.get(mb.name));
                 }
             }
         }
@@ -71,7 +66,6 @@ public class NFABuilder extends BaseVisitor<State, State> {
         end.isSkip = decl.isSkip;
         end.name = decl.name;
         end.decl = decl;
-        finalMap.put(decl, end);
     }
 
     @Override
@@ -119,7 +113,7 @@ public class NFABuilder extends BaseVisitor<State, State> {
 
     @Override
     public State visitSub(Sub sub, State arg) {
-        throw new RuntimeException();
+        throw new RuntimeException("sub");
 //        var eps = nfa.newState();
 //        arg.addEpsilon(eps);
 //        var last = nfa.lastState;
@@ -154,7 +148,7 @@ public class NFABuilder extends BaseVisitor<State, State> {
     public State visitBracket(Bracket bracket, State start) {
         var end = nfa.newState();
         //in order to have only one end state we add epsilons?
-        for (int i = 0; i < bracket.size(); i++) {
+        for (int i = 0; i < bracket.ranges.size(); i++) {
             var range = bracket.ranges.get(i);
             nfa.addTransition(start, end, getRangeId(range.start, range.end));
         }
@@ -173,19 +167,28 @@ public class NFABuilder extends BaseVisitor<State, State> {
 
     @Override
     public State visitUntil(Until until, State start) {
-        Node reg = until.node;
-        if (!reg.isString()) {
+        if (!until.node.isString()) {
             throw new RuntimeException("until node only supports strings");
         }
+        StringNode str = until.node.asString();
         var end = start;
         State newEnd = null;
+        State second = null;
         int i = 0;
-        for (char ch : reg.asString().value.toCharArray()) {
+        for (char ch : str.value.toCharArray()) {
             newEnd = nfa.newState();
+            //normal
             nfa.addTransition(end, newEnd, getRangeId(ch, ch));
             //add negated transitions
-            for (var range : until.brackets.get(i).getRanges()) {
-                nfa.addTransition(newEnd, start, getRangeId(range.start, range.end));
+            if (i == 0) {
+                second = newEnd;
+            }
+            if (i > 0) {
+                var firstChar = str.value.charAt(0);
+                nfa.addTransition(end, second, getRangeId(firstChar, firstChar));
+            }
+            for (var range : until.brackets.get(i).ranges) {
+                nfa.addTransition(end, start, getRangeId(range.start, range.end));
             }
             end = newEnd;
             i++;

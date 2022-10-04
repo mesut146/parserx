@@ -168,9 +168,12 @@ public class LLDfaBuilder {
                     if (item.closured[i]) continue;
 
                     var node = item.getNode(i);
-                    var sym = (Node) ItemSet.sym(node);
+                    var sym = (Node) ItemSet.sym(node.copy());
                     int newPos = node.isStar() ? i : i + 1;
                     Item target;
+                    if (curSet.isFactor(item, i)) {
+                        sym.astInfo.isFactor = true;
+                    }
                     if (node.isOptional() && sym.asName().isToken && !curSet.isFactor(item, i)) {
                         //.a? b c | b d -> a b c
                         var rhs = new ArrayList<>(item.rhs.list.subList(i, item.rhs.size()));
@@ -223,13 +226,6 @@ public class LLDfaBuilder {
         if (tr == null) {
             tr = new LLTransition(from, null, sym);
             map.put(sym, tr);
-        }
-        else {
-            //factor
-            var f = sym.copy();
-            f.astInfo.isFactor = true;
-            map.remove(sym);
-            map.put(f, tr);
         }
         tr.pairs.add(pair);
     }

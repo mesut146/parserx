@@ -12,6 +12,7 @@ import mesut.parserx.parser.Parser;
 import mesut.parserx.regex.RegexBuilder;
 import org.junit.Assert;
 import org.junit.Test;
+import parser.Builder;
 
 import java.io.*;
 
@@ -49,17 +50,23 @@ public class NfaTest {
     }
 
     @Test
-    public void reader2() throws IOException {
+    public void readerBootstrap() throws Exception {
         Tree tree = Tree.makeTree(new File("./src/main/grammar/nfaReader.g"));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
-        ParserGen.gen(tree, Lang.JAVA);
+        //tree.options.packageName="mesut.parserx.dfa.parser";
+        //ParserGen.gen(tree, Lang.JAVA);
+        Builder.tree(tree).rule("nfa")
+                .file(Env.getResFile("fsm/a.nfa").getAbsolutePath())
+                .file(Env.getResFile("fsm/dfa-min.dfa").getAbsolutePath())
+                .check();
     }
 
     @Test
     public void lineComment() throws IOException {
         NFA nfa = NFA.read("start=0\nfinal=2\n0->1,/\n1->2,/\n2->2,[^\\n]");
         Node node = new RegexBuilder(nfa).buildRegex();
-        Assert.assertEquals("\"/\" \"/\" [^\\n]*", node.toString());
+        //Assert.assertEquals("\"/\" \"/\" [^\\n]*", node.toString());
+        Assert.assertEquals("\"/\" \"/\" [^\\u0000-\\t\\u000b-\\uffff]*", node.toString());
     }
 
     @Test
@@ -84,7 +91,7 @@ public class NfaTest {
 
     @Test
     public void hopcroft() throws Exception {
-        NFA dfa = NFA.read(Env.getResFile("min/dfa2.dfa"));
+        NFA dfa = NFA.read(Env.getResFile("fsm/dfa2.dfa"));
         //Minimization.removeUnreachable(dfa);
         //dfa = Minimization.optimize(dfa);
         dfa = Minimization.Hopcroft(dfa);
@@ -94,17 +101,14 @@ public class NfaTest {
 
     @Test
     public void minimizeMy() throws Exception {
-        //File file = Env.getResFile("fsm/dfa2.dfa");
-        NFA dfa = NFA.read(Env.getResFile("min/dfa-min.dfa"));
-        Minimization.removeUnreachable(dfa);
-        Minimization.removeDead(dfa);
-        Minimization.optimize(dfa);
-        //dfa.dump(new PrintWriter(System.out));
+        NFA dfa = NFA.read(Env.getResFile("fsm/min.dfa"));
+        dfa.dump();
+        Minimization.optimize(dfa).dump();
     }
 
     @Test
     public void loop() throws Exception {
-        Tree tree = Env.tree("min/a.g");
+        Tree tree = Env.tree("fsm/loop.g");
         NFA dfa = tree.makeNFA().dfa();
         //dfa = Minimization.Hopcroft(dfa);
         dfa = Minimization.optimize(dfa);

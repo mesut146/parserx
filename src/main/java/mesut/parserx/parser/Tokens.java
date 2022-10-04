@@ -37,11 +37,9 @@ public class Tokens{
     public static final int LINE_COMMENT = 33;
     public static final int BLOCK_COMMENT = 34;
     public static final int WS = 35;
-    public static final int ACTION_REF = 36;
-    public static final int ACTION_TOKEN = 37;
-    public static final int ACTION = 38;
-    public static final int LEXER_MEMBERS_BEGIN = 39;
-    public static final int WS1 = 40;
-    public static final int LEXER_MEMBER = 41;
-    public static final int MEMBERS_END = 42;
+    public static final int ACTION = 36;
+    public static final int LEXER_MEMBERS_BEGIN = 37;
+    public static final int WS1 = 38;
+    public static final int LEXER_MEMBER = 39;
+    public static final int MEMBERS_END = 40;
 }

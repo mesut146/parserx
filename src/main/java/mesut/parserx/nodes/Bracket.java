@@ -8,8 +8,9 @@ import java.util.*;
 //character set
 //e.g [^a-zA-Z0-9_]
 //consist of char or char range
-public class Bracket extends NodeList {
+public class Bracket extends Node {
 
+    public List<Range> list = new ArrayList<>();
     public List<Range> ranges;
     public boolean negate;
     private int pos;
@@ -22,16 +23,12 @@ public class Bracket extends NodeList {
 
     }
 
-    public Bracket(Node... args) {
-        super(args);
-    }
-
-    public Bracket(List<Node> args) {
-        super(args);
-    }
-
     public void add(char chr) {
-        add(Range.of(chr, chr));
+        list.add(Range.of(chr, chr));
+    }
+
+    public void add(Range range) {
+        list.add(range);
     }
 
     public void parse(String str) {
@@ -40,7 +37,7 @@ public class Bracket extends NodeList {
             err();
         }
         ++pos;
-        if (str.charAt(pos) == '^' || str.charAt(pos) == '!') {
+        if (str.charAt(pos) == '^') {
             negate = true;
             pos++;
         }
@@ -48,7 +45,7 @@ public class Bracket extends NodeList {
             char c = str.charAt(pos);
             pos++;
             if (c == ']') {//end
-                return;
+                break;
             }
             if (c == '\\') {//escape
                 c = readUnicode(str);
@@ -63,12 +60,13 @@ public class Bracket extends NodeList {
                 if (pos > end) {
                     throw new RuntimeException(String.format("invalid range %s-%s in: %s", c, end, str));
                 }
-                add(new Range(c, end));
+                list.add(new Range(c, end));
             }
             else {
                 add(c);
             }
         }
+        checkIntersecting();
     }
 
     char readUnicode(String str) {
@@ -101,74 +99,88 @@ public class Bracket extends NodeList {
         return c - 'A' + 10;
     }
 
-    public void sort(List<Range> ranges) {
-        Collections.sort(ranges, new Comparator<Range>() {
-            @Override
-            public int compare(Range r1, Range r2) {
-                if (r1.start < r2.start) {
-                    return -1;
-                }
-                if (r1.start == r2.start) {
-                    return Integer.compare(r1.end, r2.end);
-                }
-                return 1;
+    static void sort(List<Range> ranges) {
+        ranges.sort((r1, r2) -> {
+            if (r1.start < r2.start) {
+                return -1;
             }
+            if (r1.start == r2.start) {
+                return Integer.compare(r1.end, r2.end);
+            }
+            return 1;
         });
     }
 
-    public List<Range> negateAll() {
-        List<Range> rangeList = getRanges();
-        sort(rangeList);
-        List<Range> res = mergeRanges(rangeList);
-        rangeList.clear();
-        rangeList.addAll(res);
-        res.clear();
+    void checkIntersecting() {
+        for (int i = 0; i < list.size(); i++) {
+            var ch = list.get(i);
+            if (!ch.isValid()) {
+                throw new RuntimeException("invalid range: " + ch);
+            }
+            for (int j = i + 1; j < list.size(); j++) {
+                var ch2 = list.get(j);
+                if (ch.intersect(ch2)) {
+                    throw new RuntimeException(String.format("intersecting ranges: %s %s", ch, ch2));
+                }
+            }
+        }
+    }
+
+    //remove negation
+    public Bracket normalize() {
+        if (!negate) {
+            ranges = new ArrayList<>(list);
+            return this;
+        }
+        var merged = merge(list);
+        ranges = new ArrayList<>();
         //negate distinct ranges
         int last = Alphabet.min;
-        for (Range range : rangeList) {
+        for (var range : merged) {
             if (range.start < last) {
                 //intersect
                 last = range.end + 1;
             }
-            res.add(new Range(last, range.start - 1));
+            ranges.add(new Range(last, range.start - 1));
             last = range.end + 1;
         }
-        res.add(new Range(last, Alphabet.max));
-        return res;
+        ranges.add(new Range(last, Alphabet.max));
+        return this;
     }
 
-    //merge neighbor ranges
-    List<Range> mergeRanges(List<Range> ranges) {
-        sort(ranges);
-        List<Range> res = new ArrayList<>();
-        Range cur = null;
-        Range next;
-        for (int i = 0; i < ranges.size(); i++) {
-            if (cur == null) {
-                cur = ranges.get(i);
+    //merge neighbour ranges
+    public static ArrayList<Range> merge(List<Range> list) {
+        sort(list);
+        var res = new ArrayList<Range>();
+        int pos = 0;
+        while (pos < list.size()) {
+            Range cur = list.get(pos++);
+            if (pos == list.size()) {
+                res.add(cur);
+                break;
             }
-            if (i < ranges.size() - 1) {
-                next = ranges.get(i + 1);
-                if (Range.intersect(cur, next) != null) {
-                    cur = new Range(cur.start, Math.max(cur.end, next.end));
+            var next = list.get(pos);
+            //end of cur + 1 is start of next, then merge
+            if (cur.end + 1 == next.start) {
+                while (cur.end + 1 == next.start) {
+                    cur = new Range(cur.start, cur.end);
+                    cur.end = next.end;
+                    pos++;
+                    if (pos < list.size()) {
+                        next = list.get(pos);
+                    }
                 }
-                else {
-                    res.add(cur);
-                    cur = null;
-                }
+                res.add(cur);
             }
             else {
                 res.add(cur);
-                cur = null;
             }
         }
         return res;
     }
 
     public Bracket optimize() {
-        ranges = mergeRanges(getRanges());
-        list.clear();
-        list.addAll(ranges);
+        ranges = merge(list);
         return this;
     }
 
@@ -178,16 +190,13 @@ public class Bracket extends NodeList {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
-        Bracket bracket = (Bracket) o;
-        return negate == bracket.negate;
+        var bracket = (Bracket) o;
+        return negate == bracket.negate && list.equals(bracket.list);
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + super.hashCode();
-        result = 31 * result + Objects.hashCode(negate);
-        return result;
+        return Objects.hash(list, negate);
     }
 
     void err() {
@@ -196,37 +205,16 @@ public class Bracket extends NodeList {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append("[");
         if (negate) {
             sb.append("^");
         }
-        for (Node node : list) {
+        for (var node : list) {
             sb.append(node.toString().replace("]", "\\]"));
         }
         sb.append("]");
         return sb.toString();
-    }
-
-    public List<Range> getRanges() {
-        if (ranges != null) return ranges;
-        ranges = new ArrayList<>();
-        for (Node node : this) {
-            ranges.add(node.asRange());
-        }
-        return ranges;
-    }
-
-    //remove negation
-    public Bracket normalize() {
-        if (negate) {
-            ranges = negateAll();
-            negate = false;
-        }
-        else {
-            getRanges();
-        }
-        return this;
     }
 
     @Override

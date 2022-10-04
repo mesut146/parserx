@@ -44,9 +44,7 @@ token{
 }
 
 token{
-  ACTION_REF: "@" IDENT;
-  ACTION_TOKEN: "action";
-  ACTION: "%begin" ([^%] | "%" [^e] | "%e" [^n] | "%en" [^d])+ "%end";
+  ACTION: "@{" ([^}] | "}"+ [^@])* "}@";
   LEXER_MEMBERS_BEGIN: "lexerMembers" WS? "{" -> member_mode;
   member_mode{
     WS1: WS -> skip;
@@ -57,12 +55,9 @@ token{
 
 %start: tree;
 
-tree: includeStatement* optionsBlock? lexerMembers? tokens=tokenBlock* actionBlock? startDecl? rules=ruleDecl*;
+tree: includeStatement* optionsBlock? lexerMembers? tokens=tokenBlock* startDecl? rules=ruleDecl*;
 
 lexerMembers: LEXER_MEMBERS_BEGIN LEXER_MEMBER+ MEMBERS_END;
-
-actionBlock: "action" "{" actionEntry* "}";
-actionEntry: IDENT ":" ACTION;
 
 includeStatement: "include" STRING;
 
@@ -84,8 +79,8 @@ sequence: sub+ assoc=("%left" | "%right")? label=("#" name)?;
 
 sub: regex ("-" stringNode)?;
 
-regex: name "=" simple type=regexType? ACTION_REF?
-     | simple type=regexType? ACTION_REF?;
+regex: name "=" simple type=regexType? ACTION?
+     | simple type=regexType? ACTION?;
 regexType: "*" | "+" | "?";
 
 simple: group

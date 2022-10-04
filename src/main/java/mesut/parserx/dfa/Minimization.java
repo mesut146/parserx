@@ -33,13 +33,13 @@ public class Minimization {
                     List<Node> or = new ArrayList<>();
                     for (var node : nodes) {
                         if (node.isRange()) {
-                            bracket.add(node);
+                            bracket.add(node.asRange());
                         }
                         else {
                             or.add(node);
                         }
                     }
-                    if (bracket.size() > 0) {
+                    if (bracket.list.size() > 0) {
                         or.add(bracket);
                     }
                     var node = Or.make(or);
@@ -99,23 +99,24 @@ public class Minimization {
             if (state.accepting) continue;
             var dead = true;
             for (var tr : state.transitions) {
-                //looping is not considered as transition
-                if (tr.target.id != state.id) {
-                    dead = false;
-                    break;
-                }
+                //looping has no contribution
+                if (tr.target.id == state.id) continue;
+                dead = false;
+                break;
             }
             if (dead) {
                 state.transitions.clear();
+                //todo incomings
             }
         }
     }
 
+    //difference set
     static StateSet sub(StateSet s1, StateSet s2) {
         var set = new StateSet();
-        for (var c : s1) {
-            if (!s2.contains(c)) {
-                set.addState(c);
+        for (var state : s1) {
+            if (!s2.contains(state)) {
+                set.addState(state);
             }
         }
         return set;
@@ -164,8 +165,8 @@ public class Minimization {
             //if any state pair is distinguishable then split
             outer:
             for (int i = 0; i < groupList.size(); i++) {
+                var q1 = groupList.get(i);
                 for (int j = i + 1; j < groupList.size(); j++) {
-                    var q1 = groupList.get(i);
                     var q2 = groupList.get(j);
                     if (dist(q1, q2, all, dfa)) {
                         //split
@@ -190,13 +191,9 @@ public class Minimization {
     }
 
     static NFA merge(NFA dfa, List<StateSet> groups) {
+        System.out.println(groups);
         for (var state : dfa.it()) {
-            var found = false;
-            for (var g : groups) {
-                if (g.contains(state)) {
-                    found = true;
-                }
-            }
+            var found = groups.stream().anyMatch(g -> g.contains(state));
             if (!found) {
                 throw new RuntimeException("not found: " + state);
             }
@@ -272,17 +269,17 @@ public class Minimization {
 
     //todo broken
     public static NFA Hopcroft(NFA dfa) {
-        List<StateSet> P = group(dfa);
-        List<StateSet> W = new ArrayList<>(P);
+        var P = group(dfa);
+        var W = new ArrayList<>(P);
         while (!W.isEmpty()) {
             //get some set
-            StateSet A = W.remove(0);
+            var A = W.remove(0);
             for (int c : dfa.getAlphabet().map.values()) {
-                StateSet X = lead(dfa, c, A);
-                for (ListIterator<StateSet> it = P.listIterator(); it.hasNext(); ) {
-                    StateSet Y = it.next();
-                    StateSet inter = inter(X, Y);
-                    StateSet sub = sub(Y, X);
+                var X = lead(dfa, c, A);
+                for (var it = P.listIterator(); it.hasNext(); ) {
+                    var Y = it.next();
+                    var inter = inter(X, Y);
+                    var sub = sub(Y, X);
                     if (!inter.states.isEmpty() && !sub.states.isEmpty()) {
                         //replace Y in P by the two sets X ∩ Y and Y \ X
                         it.remove();
@@ -310,10 +307,10 @@ public class Minimization {
     }
 
     static StateSet inter(StateSet s1, StateSet s2) {
-        StateSet set = new StateSet();
-        for (var c : s1) {
-            if (s2.contains(c)) {
-                set.addState(c);
+        var set = new StateSet();
+        for (var state : s1) {
+            if (s2.contains(state)) {
+                set.addState(state);
             }
         }
         return set;
@@ -321,28 +318,25 @@ public class Minimization {
 
     //if c reaches to any in target set
     static StateSet lead(NFA dfa, int c, StateSet target) {
-        StateSet x = new StateSet();
+        var res = new StateSet();
         for (var s : dfa.it()) {
-            for (Transition tr : s.transitions) {
-                if (tr.input == c) {
-                    //get all incomings and outgoings as closures
-                    StateSet out = out(dfa, tr.target, new StateSet());
-                    for (var o : out) {
-                        if (target.contains(o)) {
-                            StateSet in = in(dfa, tr.from, new StateSet());
-                            x.addAll(in);
-                        }
-                    }
+            for (var tr : s.transitions) {
+                if (tr.input != c) continue;
+                //get all inscoming and outgoings as closures
+                var out = out(dfa, tr.target, new StateSet());
+                for (var o : out) {
+                    if (!target.contains(o)) continue;
+                    res.addAll(in(dfa, tr.from, new StateSet()));
                 }
             }
         }
-        return x;
+        return res;
     }
 
     static StateSet in(NFA dfa, State state, StateSet set) {
         if (set.contains(state)) return set;
         set.addState(state);
-        for (Transition tr : dfa.findIncoming(state)) {
+        for (var tr : dfa.findIncoming(state)) {
             if (tr.from.id == state.id) continue;
             set.addState(tr.from);
             //closure
@@ -356,14 +350,13 @@ public class Minimization {
         if (set.contains(state)) return set;
         set.addState(state);
         if (!state.transitions.isEmpty()) {
-            for (Transition tr : state.transitions) {
+            for (var tr : state.transitions) {
                 set.addState(tr.target);
             }
         }
         for (var s : set) {
             if (s.id == state.id) continue;
             out(dfa, s, set);
-            //System.out.println(s + " ," + state);
         }
         return set;
     }

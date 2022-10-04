@@ -1,8 +1,6 @@
 package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.*;
-import mesut.parserx.gen.lexer.LexerGenerator;
-import mesut.parserx.gen.ast.AstGen;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
@@ -20,48 +18,12 @@ public class CcGenJava {
         this.options = tree.options;
     }
 
-    void prep() {
-        if (options.packageName != null) {
-            w.append("package %s;", options.packageName);
-            w.append("");
-        }
-        w.append("import java.util.List;");
-        w.append("import java.util.ArrayList;");
-        w.append("import java.io.IOException;");
-        w.append("");
-        w.append("public class %s{", options.parserClass);
-
-        w.append("TokenStream ts;", options.lexerClass);
-        w.append("");
-
-        w.append("public %s(%s lexer) throws IOException{", options.parserClass, options.lexerClass);
-        w.all("this.ts = new TokenStream(lexer);\n}");
-        w.append("");
-    }
-
-    public static void writeTS(Options options) throws IOException {
-        File file = new File(options.outDir, "TokenStream.java");
-        var temp = new Template("token_stream.java.template");
-        if (options.packageName == null) {
-            temp.set("package", "");
-        }
-        else {
-            temp.set("package", "package " + options.packageName + ";");
-        }
-        temp.set("lexer_class", options.lexerClass);
-        temp.set("lexer_function", options.lexerFunction);
-        temp.set("token_class", options.tokenClass);
-        Utils.write(temp.toString(), file);
-    }
-
     public void gen() throws IOException {
         builder = new LLDfaBuilder(tree);
         builder.factor();
-        AstGen.gen(tree, Lang.JAVA);
-        LexerGenerator.gen(tree, Lang.JAVA);
         ParserUtils.genTokenType(tree);
         writeTS(options);
-        prep();
+        header();
         for (var entry : builder.rules.entrySet()) {
             var rule = entry.getKey();
 
@@ -103,10 +65,45 @@ public class CcGenJava {
         Utils.write(w.get(), file);
     }
 
+    public static void writeTS(Options options) throws IOException {
+        File file = new File(options.outDir, "TokenStream.java");
+        var temp = new Template("token_stream.java.template");
+        if (options.packageName == null) {
+            temp.set("package", "");
+        }
+        else {
+            temp.set("package", "package " + options.packageName + ";");
+        }
+        temp.set("lexer_class", options.lexerClass);
+        temp.set("lexer_function", options.lexerFunction);
+        temp.set("token_class", options.tokenClass);
+        Utils.write(temp.toString(), file);
+    }
+
+    void header() {
+        if (options.packageName != null) {
+            w.append("package %s;", options.packageName);
+            w.append("");
+        }
+        w.append("import java.util.List;");
+        w.append("import java.util.ArrayList;");
+        w.append("import java.io.IOException;");
+        w.append("");
+        w.append("public class %s{", options.parserClass);
+
+        w.append("TokenStream ts;", options.lexerClass);
+        w.append("");
+
+        w.append("public %s(%s lexer) throws IOException{", options.parserClass, options.lexerClass);
+        w.all("this.ts = new TokenStream(lexer);\n}");
+        w.append("");
+    }
+
 
     void writeDecider(String rule) {
-        var regexBuilder = new RegexBuilder(builder);
+        var regexBuilder = new La1RegexBuilder(builder);
         var regex = regexBuilder.build(rule);
+        System.out.printf("%s -> %s\n", rule, regex);
         w.append("public int %s_decide() throws IOException{", rule);
         var decider = new Decider();
         regex.accept(decider, null);
@@ -187,11 +184,9 @@ public class CcGenJava {
         @Override
         public Void visitName(Name name, Void arg) {
             if (name.isToken) {
+                w.append("ts.pop();");
                 if (!name.astInfo.isFactor) {
                     w.append("return %s;", name.astInfo.which);
-                }
-                else {
-                    w.append("ts.consume(Tokens.%s, \"%s\");", name.name, name.name);
                 }
             }
             else {

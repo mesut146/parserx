@@ -8,16 +8,18 @@ public class $lexer_class$ {
     static int[] cMap = unpackCMap(cMapPacked);
     //input id -> regex string for error reporting
     static String[] cMapRegex = {$cMapRegex$};
+    //acc state(packed) -> isSkip
     int[] skip = {$skip_list$};
+    //acc state(packed) -> isFinal
     int[] accepting = {$final_list$};
+    //acc state(packed) -> isMore
+    int[] more = {$more$};
     //acc state -> new mode_state
     int[] mode_map = {$mode_map$};
     //id -> token name
     static String[] names = {$name_list$};
     //state->token id
     static int[] ids = {$id_list$};
-    //final state -> action id
-    static int[] actions = $actions$;
 $modes$
     static final int EOF = 0;
     Reader reader;
@@ -32,6 +34,7 @@ $modes$
     static int[][] trans = unpackTrans(trans_packed);
     int curMode = DEFAULT;
     $token_class$ lastToken;
+    int lastState;
 $members$
 
     public $lexer_class$(Reader reader) throws IOException{
@@ -115,7 +118,7 @@ $members$
 
     public $token_class$ $next_token$() throws IOException {
         $token_class$ tok = $next_token$_normal();
-        if(getBit(skip, tok.type)){
+        if(getBit(skip, lastState)){
           return $next_token$();
         }
         return tok;
@@ -124,7 +127,7 @@ $members$
     public $token_class$ $next_token$_normal() throws IOException {
         fill();
         int curState = curMode;
-        int lastState = -1;
+        lastState = -1;
         int startPos = yypos;
         int startLine = yyline;
         yychar = yybuf[bufPos];
@@ -144,15 +147,21 @@ $members$
             }
             if (curState == -1) {
                 if (lastState != -1) {
-                    $token_class$ token = new $token_class$(ids[lastState], getText());
-                    token.offset = startPos;
-                    token.name = names[token.type];
-                    token.line = startLine;
-                    bufStart = bufPos;
                     curMode = mode_map[lastState];
-                    lastToken = token;
-                    callAction(token, lastState);
-                    return token;
+                    if(getBit(more, lastState)){
+                        curState = curMode;
+                        lastState = -1;
+                    }
+                    else{
+                        $token_class$ token = new $token_class$(ids[lastState], getText());
+                        token.offset = startPos;
+                        token.name = names[token.type];
+                        token.line = startLine;
+                        bufStart = bufPos;
+                        lastToken = token;
+                        callAction(token, lastState);
+                        return token;
+                    }
                 }
                 else {
                     throw new IOException(String.format("invalid input=%c(%d) pos=%s line=%d mode=%s buf='%s' expecting=%s",yychar,yychar,yypos,yyline,printMode(),getText(),findExpected(backupState)));
@@ -183,7 +192,7 @@ $printModes$
     }
 
     void callAction($token_class$ token, int lastState){
-        switch(actions[lastState]){
+        switch(lastState){
 $actionCases$
         }
     }

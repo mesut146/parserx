@@ -66,7 +66,11 @@ public class Builder {
     }
 
     public void check() throws Exception {
-        DescTester.check(this);
+        DescTester.check(this, true);
+    }
+
+    public void checkCC() throws Exception {
+        DescTester.check(this, true);
     }
 
     public void lr() throws Exception {

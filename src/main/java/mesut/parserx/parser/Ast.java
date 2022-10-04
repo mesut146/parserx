@@ -9,7 +9,6 @@ public class Ast{
         public optionsBlock optionsBlock;
         public lexerMembers lexerMembers;
         public List<tokenBlock> tokens = new ArrayList<>();
-        public actionBlock actionBlock;
         public startDecl startDecl;
         public List<ruleDecl> rules = new ArrayList<>();
         public String toString(){
@@ -48,13 +47,6 @@ public class Ast{
                     if(i < tokens.size() - 1) sb.append(", ");
                 }
                 sb.append(']');
-                first = false;
-            }
-            if(actionBlock != null){
-                if(!first){
-                    sb.append(", ");
-                }
-                sb.append(actionBlock.toString());
                 first = false;
             }
             if(startDecl != null){
@@ -104,59 +96,6 @@ public class Ast{
                 sb.append(", ");
             }
             sb.append(MEMBERS_END.value);
-            return sb.append("}").toString();
-        }
-    }
-    public static class actionBlock{
-        public Token ACTION_TOKEN;
-        public Token LBRACE;
-        public List<actionEntry> actionEntry = new ArrayList<>();
-        public Token RBRACE;
-        public String toString(){
-            StringBuilder sb = new StringBuilder("actionBlock{");
-            boolean first = true;
-            sb.append(ACTION_TOKEN.value);
-            first = false;
-            if(!first){
-                sb.append(", ");
-            }
-            sb.append(LBRACE.value);
-            if(!actionEntry.isEmpty()){
-                if(!first){
-                    sb.append(", ");
-                }
-                sb.append('[');
-                for(int i = 0;i < actionEntry.size();i++){
-                    sb.append(actionEntry.get(i).toString());
-                    if(i < actionEntry.size() - 1) sb.append(", ");
-                }
-                sb.append(']');
-                first = false;
-            }
-            if(!first){
-                sb.append(", ");
-            }
-            sb.append(RBRACE.value);
-            return sb.append("}").toString();
-        }
-    }
-    public static class actionEntry{
-        public Token IDENT;
-        public Token SEPARATOR;
-        public Token ACTION;
-        public String toString(){
-            StringBuilder sb = new StringBuilder("actionEntry{");
-            boolean first = true;
-            sb.append(IDENT.value);
-            first = false;
-            if(!first){
-                sb.append(", ");
-            }
-            sb.append(SEPARATOR.value);
-            if(!first){
-                sb.append(", ");
-            }
-            sb.append(ACTION.value);
             return sb.append("}").toString();
         }
     }
@@ -741,7 +680,7 @@ public class Ast{
             public Token EQ;
             public simple simple;
             public regexType type;
-            public Token ACTION_REF;
+            public Token ACTION;
             public String toString(){
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
@@ -762,11 +701,11 @@ public class Ast{
                     sb.append(type.toString());
                     first = false;
                 }
-                if(ACTION_REF != null){
+                if(ACTION != null){
                     if(!first){
                         sb.append(", ");
                     }
-                    sb.append(ACTION_REF.value);
+                    sb.append(ACTION.value);
                     first = false;
                 }
                 return sb.toString();
@@ -776,7 +715,7 @@ public class Ast{
             regex holder;
             public simple simple;
             public regexType type;
-            public Token ACTION_REF;
+            public Token ACTION;
             public String toString(){
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
@@ -789,11 +728,11 @@ public class Ast{
                     sb.append(type.toString());
                     first = false;
                 }
-                if(ACTION_REF != null){
+                if(ACTION != null){
                     if(!first){
                         sb.append(", ");
                     }
-                    sb.append(ACTION_REF.value);
+                    sb.append(ACTION.value);
                     first = false;
                 }
                 return sb.toString();

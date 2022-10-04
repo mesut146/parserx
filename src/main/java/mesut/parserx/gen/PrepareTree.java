@@ -48,24 +48,32 @@ public class PrepareTree extends Transformer {
     @Override
     public Node visitName(Name name, Void parent) {
         //rule or token
-        if (tree.getRule(name) != null) {
-            name.isToken = false;
+        if (curToken != null) {
+            name.isToken = true;
+            var all = tree.getTokens(name.name);
+            if (all.isEmpty()) {
+                throw new RuntimeException("unknown reference: " + name.name + " in " + curToken);
+            }
+            if (all.contains(curToken)) {
+                throw new RuntimeException("recursive token reference is not allowed: " + curToken);
+            }
+            if (all.size() > 1) {
+                throw new RuntimeException("ambiguous token reference " + name + " in " + curToken);
+            }
         }
         else {
-            var decl = tree.getToken(name.name);
-            if (decl == null) {
-                throw new RuntimeException("invalid reference: " + name.name + " in " + getDecl());
+            if (tree.getRule(name) == null) {
+                name.isToken = true;
+                var all = tree.getTokens(name.name);
+                if (all.isEmpty()) {
+                    throw new RuntimeException("unknown reference: " + name.name + " in " + curToken);
+                }
+                var hasNormal = all.stream().anyMatch(td -> !td.isSkip && !td.isMore);
+                if (!hasNormal) {
+                    throw new RuntimeException("invalid token reference: " + name.name);
+                }
             }
-            if (decl == curToken) {
-                throw new RuntimeException("recursive token reference is not allowed: " + decl);
-            }
-            if (decl.isSkip && curRule != null) {
-                throw new RuntimeException("skip token inside production is not allowed");
-            }
-            name.isToken = true;
-            if (curToken != null) {
-                return decl.rhs;
-            }
+            //is rule otherwise
         }
         return name;
     }
@@ -76,15 +84,11 @@ public class PrepareTree extends Transformer {
 
     @Override
     public Node visitString(StringNode node, Void parent) {
-        if (node.value.isEmpty()) {
-            System.out.println("empty string replaced by epsilon in " + getDecl());
-            return new Epsilon();
-        }
         if (curRule != null) {
             var val = node.value;
             var decl = tree.getTokenByValue(val);
             if (decl == null) {
-                throw new RuntimeException("unknown string token: " + val + " in " + getDecl());
+                throw new RuntimeException("unknown string token: " + val + " in " + curRule.getName());
             }
             //replace with token
             return decl.ref();

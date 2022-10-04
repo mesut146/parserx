@@ -62,7 +62,7 @@ public class Printer extends BaseVisitor<String, Void> {
 
     @Override
     public String visitSequence(Sequence seq, Void arg) {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         for (int i = 0; i < seq.size(); i++) {
             sb.append(seq.get(i).accept(this, arg));
             if (i < seq.size() - 1) {
@@ -74,7 +74,7 @@ public class Printer extends BaseVisitor<String, Void> {
 
     @Override
     public String visitOr(Or or, Void arg) {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         for (int i = 0; i < or.size(); i++) {
             sb.append(or.get(i).accept(this, arg));
             if (i < or.size() - 1) {

@@ -68,14 +68,6 @@ public class NFA {
         return new DFABuilder(this).dfa();
     }
 
-    public boolean[] acc() {
-        var res = new boolean[lastState + 1];
-        for (var state : it()) {
-            res[state.id] = state.accepting;
-        }
-        return res;
-    }
-
     //epsilon transitions from a state
     StateSet getEps(State state) {
         var stateSet = new StateSet();
@@ -214,21 +206,11 @@ public class NFA {
             w.printf("mode %s = %s;\n", e.getKey(), e.getValue());
         }
         w.print("final = ");
-        boolean first = true;
 
         w.println(StreamSupport.stream(it().spliterator(), false)
                 .filter(st -> st.accepting)
                 .map(st -> st.id + getName(st))
                 .collect(Collectors.joining(", ")));
-//        for (var i : it()) {
-//            if (i.accepting) {
-//                if (!first) {
-//                    w.print(", ");
-//                }
-//                w.print(i + getName(i));
-//                first = false;
-//            }
-//        }
         w.println();
         for (var state : it()) {
             if (state.transitions.isEmpty()) continue;

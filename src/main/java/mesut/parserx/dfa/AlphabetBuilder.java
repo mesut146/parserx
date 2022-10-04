@@ -8,20 +8,54 @@ import java.util.List;
 import java.util.Set;
 
 public class AlphabetBuilder extends Transformer {
-    Set<Range> ranges;
-    List<Bracket> brackets;
+    Set<Range> ranges = new HashSet<>();
+    List<Bracket> brackets = new ArrayList<>();
 
     public AlphabetBuilder(Tree tree) {
         super(tree);
     }
 
+    //find all intersecting inputs and split them so that all of them becomes unique
+    public void build() {
+        //first collect ranges
+        transformTokens();
+
+        //find intersecting ranges and split them
+        outer:
+        while (true) {
+            for (var bracket : brackets) {
+                for (var range : bracket.ranges) {
+                    //if this range intersect other ranges
+                    if (!range.isSingle() && split(range, bracket)) {
+                        continue outer;
+                    }
+                }//for bracket
+            }
+            break;//found none break while
+        }
+        //finally, add all ranges to alphabet
+        for (var bracket : brackets) {
+            for (var range : bracket.ranges) {
+                tree.alphabet.addRegex(range);
+            }
+        }
+        //add chars in strings that are distinct
+        for (var range : ranges) {
+            var real = tree.alphabet.findRange(range);
+            if (real == null) {
+                tree.alphabet.addRegex(range);
+            }
+        }
+    }
+
     //normalize bracket by r1
     private boolean split(Range r1, Bracket bracket) {
         for (var r2 : ranges) {
-            if (r1.equals(r2) || !r1.intersect(r2)) {
+            if (r1.equals(r2)) {
                 continue;
             }
             var inter = Range.intersect(r1, r2);
+            if (inter == null) continue;
             var me1 = Range.of(r1.start, inter.start - 1);
             var me2 = Range.of(inter.end + 1, r1.end);
             bracket.ranges.remove(r1);
@@ -37,8 +71,8 @@ public class AlphabetBuilder extends Transformer {
             }
             bracket.ranges.add(inter);
             ranges.add(inter);
-            bracket.clear();
-            bracket.addAll(bracket.ranges);
+            //bracket.clear();
+            //bracket.addAll(bracket.ranges);
             return true;
         }//for ranges
         return false;
@@ -56,9 +90,15 @@ public class AlphabetBuilder extends Transformer {
     public Node visitUntil(Until node, Void parent) {
         var ch = node.node.asString();
         transformNode(ch, parent);
-        for (char c : ch.value.toCharArray()) {
+        //negated sets
+        char firstCh = ch.value.charAt(0);
+        for (int i = 0; i < ch.value.length(); i++) {
+            char c = ch.value.charAt(i);
             var bracket = new Bracket();
             bracket.add(new Range(c, c));
+            if (i > 0) {
+                bracket.add(new Range(firstCh, firstCh));
+            }
             bracket.negate = true;
             node.brackets.add(bracket);
             transformNode(bracket, parent);
@@ -91,41 +131,5 @@ public class AlphabetBuilder extends Transformer {
         return node;
     }
 
-    //find all intersecting inputs and split them so that all of them becomes unique
-    public void build() {
-        ranges = new HashSet<>();
-        brackets = new ArrayList<>();
 
-        //first collect ranges
-        transformTokens();
-
-        //find intersecting ranges and split them
-        outer:
-        while (true) {
-            for (var bracket : brackets) {
-                for (var range : bracket.getRanges()) {
-                    //if this range intersect other ranges
-                    if (!range.isSingle()) {
-                        if (split(range, bracket)) {
-                            continue outer;
-                        }
-                    }
-                }//for bracket
-            }
-            break;//found none break while
-        }
-        //finally, add all ranges to alphabet
-        for (var bracket : brackets) {
-            for (var range : bracket.getRanges()) {
-                tree.alphabet.addRegex(range);
-            }
-        }
-        //add chars in strings that are distinct
-        for (var range : ranges) {
-            var real = tree.alphabet.findRange(range);
-            if (real == null) {
-                tree.alphabet.addRegex(range);
-            }
-        }
-    }
 }

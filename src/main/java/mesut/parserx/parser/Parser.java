@@ -193,20 +193,20 @@ public class Parser{
         else throw new RuntimeException("expecting one of [IDENT, CALL_BEGIN, BRACKET, TILDE, DOT, SHORTCUT, EPSILON, CHAR, LP, STRING] got: "+la);
     }
     public void S6(Ast.regex.Regex1 p0, Ast.regex.Regex2 p1, Ast.simple.Simple2 p2, Ast.name p3) throws IOException{
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+        if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
             p2.holder.which = 2;
             p2.holder.name = p2;
             p1.holder.which = 2;
             p1.holder.regex2 = p1;
         }
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
+        if(la.type == Tokens.ACTION || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
             if(la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
                 p1.type = regexType();
             }
-            if(la.type == Tokens.ACTION_REF){
-                p1.ACTION_REF = consume(Tokens.ACTION_REF, "ACTION_REF");
+            if(la.type == Tokens.ACTION){
+                p1.ACTION = consume(Tokens.ACTION, "ACTION");
             }
-            if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+            if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
                 p1.holder.which = 2;
                 p1.holder.regex2 = p1;
             }
@@ -217,10 +217,10 @@ public class Parser{
             if(la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
                 p0.type = regexType();
             }
-            if(la.type == Tokens.ACTION_REF){
-                p0.ACTION_REF = consume(Tokens.ACTION_REF, "ACTION_REF");
+            if(la.type == Tokens.ACTION){
+                p0.ACTION = consume(Tokens.ACTION, "ACTION");
             }
-            if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+            if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
                 p0.holder.which = 1;
                 p0.holder.regex1 = p0;
             }
@@ -237,20 +237,20 @@ public class Parser{
         }
     }
     public void S8(Ast.regex.Regex2 p0, Ast.simple.Simple4 p1, Ast.bracketNode p2) throws IOException{
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+        if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
             p1.holder.which = 4;
             p1.holder.bracketNode = p1;
             p0.holder.which = 2;
             p0.holder.regex2 = p0;
         }
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
+        if(la.type == Tokens.ACTION || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
             if(la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
                 p0.type = regexType();
             }
-            if(la.type == Tokens.ACTION_REF){
-                p0.ACTION_REF = consume(Tokens.ACTION_REF, "ACTION_REF");
+            if(la.type == Tokens.ACTION){
+                p0.ACTION = consume(Tokens.ACTION, "ACTION");
             }
-            if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+            if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
                 p0.holder.which = 2;
                 p0.holder.regex2 = p0;
             }
@@ -264,67 +264,67 @@ public class Parser{
         }
     }
     public void S10(Ast.regex.Regex2 p0, Ast.simple.Simple6 p1, Ast.dotNode p2) throws IOException{
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+        if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
             p1.holder.which = 6;
             p1.holder.dotNode = p1;
             p0.holder.which = 2;
             p0.holder.regex2 = p0;
         }
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
+        if(la.type == Tokens.ACTION || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
             if(la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
                 p0.type = regexType();
             }
-            if(la.type == Tokens.ACTION_REF){
-                p0.ACTION_REF = consume(Tokens.ACTION_REF, "ACTION_REF");
+            if(la.type == Tokens.ACTION){
+                p0.ACTION = consume(Tokens.ACTION, "ACTION");
             }
-            if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+            if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
                 p0.holder.which = 2;
                 p0.holder.regex2 = p0;
             }
         }
     }
     public void S11(Ast.regex.Regex2 p0, Ast.simple.Simple8 p1) throws IOException{
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+        if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
             p1.holder.which = 8;
             p1.holder.SHORTCUT = p1;
             p0.holder.which = 2;
             p0.holder.regex2 = p0;
         }
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
+        if(la.type == Tokens.ACTION || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
             if(la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
                 p0.type = regexType();
             }
-            if(la.type == Tokens.ACTION_REF){
-                p0.ACTION_REF = consume(Tokens.ACTION_REF, "ACTION_REF");
+            if(la.type == Tokens.ACTION){
+                p0.ACTION = consume(Tokens.ACTION, "ACTION");
             }
-            if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+            if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
                 p0.holder.which = 2;
                 p0.holder.regex2 = p0;
             }
         }
     }
     public void S12(Ast.regex.Regex2 p0, Ast.simple.Simple7 p1) throws IOException{
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+        if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
             p1.holder.which = 7;
             p1.holder.EPSILON = p1;
             p0.holder.which = 2;
             p0.holder.regex2 = p0;
         }
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
+        if(la.type == Tokens.ACTION || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
             if(la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
                 p0.type = regexType();
             }
-            if(la.type == Tokens.ACTION_REF){
-                p0.ACTION_REF = consume(Tokens.ACTION_REF, "ACTION_REF");
+            if(la.type == Tokens.ACTION){
+                p0.ACTION = consume(Tokens.ACTION, "ACTION");
             }
-            if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+            if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
                 p0.holder.which = 2;
                 p0.holder.regex2 = p0;
             }
         }
     }
     public void S13(Ast.regex.Regex2 p0, Ast.simple.Simple3 p1, Ast.stringNode.Stringnode2 p2) throws IOException{
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+        if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
             p2.holder.which = 2;
             p2.holder.CHAR = p2;
             p1.holder.which = 3;
@@ -332,14 +332,14 @@ public class Parser{
             p0.holder.which = 2;
             p0.holder.regex2 = p0;
         }
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
+        if(la.type == Tokens.ACTION || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
             if(la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
                 p0.type = regexType();
             }
-            if(la.type == Tokens.ACTION_REF){
-                p0.ACTION_REF = consume(Tokens.ACTION_REF, "ACTION_REF");
+            if(la.type == Tokens.ACTION){
+                p0.ACTION = consume(Tokens.ACTION, "ACTION");
             }
-            if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+            if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
                 p0.holder.which = 2;
                 p0.holder.regex2 = p0;
             }
@@ -353,7 +353,7 @@ public class Parser{
         }
     }
     public void S15(Ast.regex.Regex2 p0, Ast.simple.Simple3 p1, Ast.stringNode.Stringnode1 p2) throws IOException{
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+        if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
             p2.holder.which = 1;
             p2.holder.STRING = p2;
             p1.holder.which = 3;
@@ -361,74 +361,74 @@ public class Parser{
             p0.holder.which = 2;
             p0.holder.regex2 = p0;
         }
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
+        if(la.type == Tokens.ACTION || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
             if(la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
                 p0.type = regexType();
             }
-            if(la.type == Tokens.ACTION_REF){
-                p0.ACTION_REF = consume(Tokens.ACTION_REF, "ACTION_REF");
+            if(la.type == Tokens.ACTION){
+                p0.ACTION = consume(Tokens.ACTION, "ACTION");
             }
-            if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+            if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
                 p0.holder.which = 2;
                 p0.holder.regex2 = p0;
             }
         }
     }
     public void S18(Ast.regex.Regex2 p0, Ast.simple.Simple9 p1, Ast.call p2) throws IOException{
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+        if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
             p1.holder.which = 9;
             p1.holder.call = p1;
             p0.holder.which = 2;
             p0.holder.regex2 = p0;
         }
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
+        if(la.type == Tokens.ACTION || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
             if(la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
                 p0.type = regexType();
             }
-            if(la.type == Tokens.ACTION_REF){
-                p0.ACTION_REF = consume(Tokens.ACTION_REF, "ACTION_REF");
+            if(la.type == Tokens.ACTION){
+                p0.ACTION = consume(Tokens.ACTION, "ACTION");
             }
-            if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+            if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
                 p0.holder.which = 2;
                 p0.holder.regex2 = p0;
             }
         }
     }
     public void S19(Ast.regex.Regex2 p0, Ast.simple.Simple5 p1, Ast.untilNode p2) throws IOException{
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+        if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
             p1.holder.which = 5;
             p1.holder.untilNode = p1;
             p0.holder.which = 2;
             p0.holder.regex2 = p0;
         }
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
+        if(la.type == Tokens.ACTION || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
             if(la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
                 p0.type = regexType();
             }
-            if(la.type == Tokens.ACTION_REF){
-                p0.ACTION_REF = consume(Tokens.ACTION_REF, "ACTION_REF");
+            if(la.type == Tokens.ACTION){
+                p0.ACTION = consume(Tokens.ACTION, "ACTION");
             }
-            if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+            if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
                 p0.holder.which = 2;
                 p0.holder.regex2 = p0;
             }
         }
     }
     public void S20(Ast.regex.Regex2 p0, Ast.simple.Simple1 p1, Ast.group p2) throws IOException{
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+        if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
             p1.holder.which = 1;
             p1.holder.group = p1;
             p0.holder.which = 2;
             p0.holder.regex2 = p0;
         }
-        if(la.type == Tokens.ACTION_REF || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
+        if(la.type == Tokens.ACTION || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
             if(la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.STAR){
                 p0.type = regexType();
             }
-            if(la.type == Tokens.ACTION_REF){
-                p0.ACTION_REF = consume(Tokens.ACTION_REF, "ACTION_REF");
+            if(la.type == Tokens.ACTION){
+                p0.ACTION = consume(Tokens.ACTION, "ACTION");
             }
-            if(la.type == Tokens.ACTION_REF || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
+            if(la.type == Tokens.ACTION || la.type == Tokens.ARROW || la.type == Tokens.BRACKET || la.type == Tokens.CALL_BEGIN || la.type == Tokens.CHAR || la.type == Tokens.DOT || la.type == Tokens.EPSILON || la.type == Tokens.HASH || la.type == Tokens.IDENT || la.type == Tokens.LEFT || la.type == Tokens.LP || la.type == Tokens.MINUS || la.type == Tokens.OR || la.type == Tokens.PLUS || la.type == Tokens.QUES || la.type == Tokens.RIGHT || la.type == Tokens.RP || la.type == Tokens.SEMI || la.type == Tokens.SHORTCUT || la.type == Tokens.STAR || la.type == Tokens.STRING || la.type == Tokens.TILDE){
                 p0.holder.which = 2;
                 p0.holder.regex2 = p0;
             }
@@ -527,9 +527,6 @@ public class Parser{
         while(la.type == Tokens.TOKEN){
             res.tokens.add(tokenBlock());
         }
-        if(la.type == Tokens.ACTION_TOKEN){
-            res.actionBlock = actionBlock();
-        }
         if(la.type == Tokens.START){
             res.startDecl = startDecl();
         }
@@ -546,23 +543,6 @@ public class Parser{
             res.LEXER_MEMBER.add(consume(Tokens.LEXER_MEMBER, "LEXER_MEMBER"));
         }
         res.MEMBERS_END = consume(Tokens.MEMBERS_END, "MEMBERS_END");
-        return res;
-    }
-    public Ast.actionBlock actionBlock() throws IOException{
-        Ast.actionBlock res = new Ast.actionBlock();
-        res.ACTION_TOKEN = consume(Tokens.ACTION_TOKEN, "ACTION_TOKEN");
-        res.LBRACE = consume(Tokens.LBRACE, "LBRACE");
-        while(la.type == Tokens.IDENT){
-            res.actionEntry.add(actionEntry());
-        }
-        res.RBRACE = consume(Tokens.RBRACE, "RBRACE");
-        return res;
-    }
-    public Ast.actionEntry actionEntry() throws IOException{
-        Ast.actionEntry res = new Ast.actionEntry();
-        res.IDENT = consume(Tokens.IDENT, "IDENT");
-        res.SEPARATOR = consume(Tokens.SEPARATOR, "SEPARATOR");
-        res.ACTION = consume(Tokens.ACTION, "ACTION");
         return res;
     }
     public Ast.includeStatement includeStatement() throws IOException{

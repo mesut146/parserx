@@ -5,10 +5,12 @@ import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
 import mesut.parserx.gen.lexer.LexerGenerator;
+import mesut.parserx.nodes.Bracket;
 import mesut.parserx.nodes.Shortcut;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.UnicodeUtils;
 import mesut.parserx.utils.Utils;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
@@ -28,8 +30,27 @@ public class LexerGenTest {
     }
 
     @Test
+    public void mergeBracket() {
+        var br = new Bracket("[a-cd-ef-mo-pq-s]");
+        var list = Bracket.merge(br.list);//a-m o-s
+        System.out.println(list);
+        Assert.assertEquals(list.get(0).start, 'a');
+        Assert.assertEquals(list.get(0).end, 'm');
+        Assert.assertEquals(list.get(1).start, 'o');
+        Assert.assertEquals(list.get(1).end, 's');
+    }
+
+    @Test
+    public void negate() {
+        var br = new Bracket("[^ab]");
+        br.normalize();
+        System.out.println(br.ranges);
+    }
+
+    @Test
     public void until() throws Exception {
-        RealTest.check(Env.tree("lexer/until.g"), "/*asd \n*/");
+        var tree = Env.tree("lexer/until.g");
+        RealTest.check(tree, "/*asd***/", "'''a'b''c'''", "aababc");
     }
 
     @Test
@@ -60,6 +81,12 @@ public class LexerGenTest {
     public void skip() throws Exception {
         Tree tree = Env.tree("lexer/skip.g");
         RealTest.check(tree, "abc0 cde  aa\nab\rmn");
+    }
+
+    @Test
+    public void more() throws Exception {
+        Tree tree = Env.tree("lexer/more.g");
+        RealTest.check(tree, "abac");
     }
 
     @Test
@@ -152,11 +179,10 @@ public class LexerGenTest {
 
     @Test
     public void action() throws Exception {
-        Tree tree = Tree.makeTree(new File("./src/main/grammar/parserx2.g"));
-        //var tree = Env.tree("lexer/action.g");
-        dots(tree);
-        //RealTest.check(tree, true, Env.getResFile("lexer/action.g").getAbsolutePath());
-        RealTest.check(tree, "@{code;}@");
+        //var tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
+        //dots(tree);
+        RealTest.check(Env.tree("lexer/action.g"), "abac");
+        //RealTest.check(tree, "@{code;asd}}{@}}@");
         //tree.options.outDir = Env.dotDir().getAbsolutePath();
         //LexerGenerator.gen(tree, Lang.JAVA);
     }

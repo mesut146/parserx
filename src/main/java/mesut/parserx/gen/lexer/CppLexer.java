@@ -47,8 +47,8 @@ public class CppLexer {
         header.set("lexer_class", options.lexerClass);
         header.set("token_class", options.tokenClass);
         header.set("next_token", options.lexerFunction);
-        header.set("skip_list", NodeList.join(LexerGenerator.makeIntArr(gen.skipList), ","));
-        header.set("final_list", NodeList.join(LexerGenerator.makeIntArr(dfa.acc()), ","));
+        header.set("skip_list", NodeList.join(gen.skipList(), ","));
+        header.set("final_list", NodeList.join(gen.acc(), ","));
 
         nameAndId();
         writeTrans();

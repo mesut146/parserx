@@ -55,15 +55,6 @@ public class AstVisitor {
                 }
             }
         }
-        if (node.actionBlock != null) {
-            var block = new ActionBlock();
-            tree.actionBlock = block;
-            for (var ac : node.actionBlock.actionEntry) {
-                var name = ac.IDENT.value;
-                var value = ac.ACTION.value.substring("%begin".length(), ac.ACTION.value.length() - "%end".length());
-                block.actions.put(name, value);
-            }
-        }
         if (node.startDecl != null) {
             tree.start = new Name(node.startDecl.name.IDENT.value);
         }
@@ -92,6 +83,9 @@ public class AstVisitor {
             if (firstMode.equals("skip")) {
                 decl.isSkip = true;
             }
+            else if (firstMode.equals("more")) {
+                decl.isMore = true;
+            }
             else {
                 decl.mode = firstMode;
             }
@@ -103,11 +97,17 @@ public class AstVisitor {
                 if (secondMode.equals("skip")) {
                     decl.isSkip = true;
                 }
+                else if (secondMode.equals("more")) {
+                    decl.isMore = true;
+                }
                 else {
-                    if (!firstMode.equals("skip")) {
+                    if (!firstMode.equals("skip") && !firstMode.equals("more")) {
                         throw new RuntimeException("more than one mode specified in " + name);
                     }
                     decl.mode = secondMode;
+                }
+                if (decl.isSkip && decl.isMore) {
+                    throw new RuntimeException("more and skip are exclusive");
                 }
             }
         }
@@ -185,8 +185,8 @@ public class AstVisitor {
                 var type = visitRegexType(node.regex1.type);
                 res = new Regex(res, type);
             }
-            if (node.regex1.ACTION_REF != null) {
-                res.actionRef = node.regex1.ACTION_REF.value.substring(1);
+            if (node.regex1.ACTION != null) {
+                res.action = node.regex1.ACTION.value;
             }
             return res;
         }
@@ -196,8 +196,8 @@ public class AstVisitor {
                 var type = visitRegexType(node.regex2.type);
                 res = new Regex(res, type);
             }
-            if (node.regex2.ACTION_REF != null) {
-                res.actionRef = node.regex2.ACTION_REF.value.substring(1);
+            if (node.regex2.ACTION != null) {
+                res.action = node.regex2.ACTION.value;
             }
             return res;
         }

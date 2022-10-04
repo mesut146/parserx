@@ -41,36 +41,29 @@ public class NfaVisitor {
     }
 
     public static NFA build(Ast.nfa nfa) {
-        NFA res = new NFA(100);
-        Alphabet alphabet = new Alphabet();
-        res.tree.alphabet = alphabet;
+        var res = new NFA(100);
+        var alphabet = res.tree.alphabet;
         res.init(Integer.parseInt(nfa.startDecl.NUM.value));
-        if (!nfa.finalDecl.finalList.namedState.isEmpty()) {
-            for (Ast.namedState ns : nfa.finalDecl.finalList.namedState) {
-                namedState(ns, res);
-            }
+        namedState(nfa.finalDecl.finalList.namedState, res);
+        for (var ns : nfa.finalDecl.finalList.g1) {
+            namedState(ns.namedState, res);
         }
-        else {
-            namedState(nfa.finalDecl.finalList.finallist2.namedState, res);
-            for (Ast.finalListg1 g1 : nfa.finalDecl.finalList.finallist2.g1) {
-                namedState(g1.namedState, res);
-            }
-        }
-        for (Ast.trLine trLine : nfa.trLine) {
+
+        for (var trLine : nfa.trLine) {
             String state, target;
             int input = -1;
             if (trLine.g1.trSimple != null) {
-                state = trLine.g1.trSimple.NUM.value;
-                target = trLine.g1.trSimple.NUM2.value;
-                if (trLine.g1.trSimple.INPUT != null) {
-                    input = input(trLine.g1.trSimple.INPUT, alphabet);
+                state = trLine.g1.trSimple.trSimple.NUM.value;
+                target = trLine.g1.trSimple.trSimple.NUM2.value;
+                if (trLine.g1.trSimple.trSimple.INPUT != null) {
+                    input = input(trLine.g1.trSimple.trSimple.INPUT, alphabet);
                 }
             }
             else {
-                state = trLine.g1.trArrow.NUM.value;
-                target = trLine.g1.trArrow.NUM2.value;
-                if (trLine.g1.trArrow.g1 != null) {
-                    input = input(trLine.g1.trArrow.g1.INPUT, alphabet);
+                state = trLine.g1.trArrow.trArrow.NUM.value;
+                target = trLine.g1.trArrow.trArrow.NUM2.value;
+                if (trLine.g1.trArrow.trArrow.g1 != null) {
+                    input = input(trLine.g1.trArrow.trArrow.g1.INPUT, alphabet);
                 }
             }
             var st = res.getState(Integer.parseInt(state));
@@ -86,17 +79,20 @@ public class NfaVisitor {
 
     static int input(Ast.INPUT input, Alphabet alphabet) {
         if (input.IDENT != null) {
-            return alphabet.addRegex(new StringNode(input.IDENT.value));
+            return alphabet.addRegex(new StringNode(input.IDENT.IDENT.value));
         }
         else if (input.BRACKET != null) {
-            var br = new Bracket(input.BRACKET.value).normalize();
+            var br = new Bracket(input.BRACKET.BRACKET.value).normalize();
             br.list.clear();
             br.list.addAll(br.ranges);
             return alphabet.addRegex(br);
         }
+        else if (input.ANY != null) {
+            return alphabet.addRegex(new StringNode(input.ANY.ANY.value));
+        }
         else {
-            //any
-            return alphabet.addRegex(new StringNode(input.ANY.value));
+            //num
+            return alphabet.addRegex(new StringNode(input.NUM.NUM.value));
         }
     }
 
@@ -105,6 +101,10 @@ public class NfaVisitor {
         res.setAccepting(st, true);
         if (ns.g1 != null) {
             res.getState(st).name = ns.g1.IDENT.value;
+        }
+        else {
+            //res.getState(st).name = "S" + st;
+            res.getState(st).name = "S";
         }
     }
 

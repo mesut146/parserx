@@ -18,12 +18,12 @@ token{
   comment: [:line_comment:] -> skip;
 }
 
-nfa: startDecl nls finalDecl nls trLine+;
+nfa: nls? startDecl nls finalDecl nls trLine+;
 trLine: (trArrow | trSimple) nls?;
 startDecl: START "=" NUM;
 finalDecl: FINAL "=" finalList;
-finalList: namedState+ | namedState ("," namedState)*;
+finalList: namedState ("," namedState)*;
 namedState: NUM ("(" IDENT ")")?;
 trArrow: NUM "->" NUM ("," INPUT)?;
 trSimple: NUM NUM INPUT?;
-INPUT: BRACKET | IDENT | ANY;
+INPUT: BRACKET | IDENT | ANY | NUM;

@@ -21,7 +21,6 @@ public class Tree {
     public Options options = new Options();
     public List<TokenBlock> tokenBlocks = new ArrayList<>();
     public LexerMembers lexerMembers;
-    public ActionBlock actionBlock;
     public List<RuleDecl> rules = new ArrayList<>();
     public Name start;
     public File file;
@@ -29,7 +28,6 @@ public class Tree {
     CountingMap<String> newNameCnt = new CountingMap<>();
     Map<String, String> senderMap = new HashMap<>();
     public HashSet<Name> originalRules = new HashSet<>();
-    public boolean checkDup = true;
 
     public Tree() {
     }
@@ -50,17 +48,6 @@ public class Tree {
             tb.modeBlocks.forEach(mb -> res.addAll(mb.tokens));
         });
         return res;
-    }
-
-    static int indexOf(List<TokenDecl> list, String name) {
-        int i = 0;
-        for (TokenDecl decl : list) {
-            if (decl.name.equals(name)) {
-                return i;
-            }
-            i++;
-        }
-        return -1;
     }
 
     public Tree prepare() {
@@ -153,12 +140,8 @@ public class Tree {
     }
 
     public void addRule(RuleDecl rule) {
-        if (checkDup) {
-            for (RuleDecl old : rules) {
-                if (old.ref.equals(rule.ref)) {
-                    throw new RuntimeException("duplicate rule");
-                }
-            }
+        if (rules.stream().anyMatch(rd -> rd.ref.equals(rule.ref))) {
+            throw new RuntimeException("duplicate rule: " + rule);
         }
         rule.index = rules.size();
         rules.add(rule);
@@ -271,6 +254,17 @@ public class Tree {
             }
         }
         return null;
+    }
+
+    public List<TokenDecl> getTokens(String name) {
+        var list = new ArrayList<TokenDecl>();
+        for (var tb : tokenBlocks) {
+            var decl = tb.getToken(name);
+            if (decl != null) {
+                list.add(decl);
+            }
+        }
+        return list;
     }
 
     //construct NFA from this grammar file

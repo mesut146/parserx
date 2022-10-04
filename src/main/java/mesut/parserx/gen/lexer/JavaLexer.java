@@ -42,8 +42,9 @@ public class JavaLexer {
         template.set("lexer_class", options.lexerClass);
         template.set("token_class", options.tokenClass);
         template.set("next_token", options.lexerFunction);
-        template.set("skip_list", NodeList.join(LexerGenerator.makeIntArr(gen.skipList), ","));
-        template.set("final_list", NodeList.join(LexerGenerator.makeIntArr(dfa.acc()), ","));
+        template.set("skip_list", NodeList.join(gen.skipList(), ","));
+        template.set("final_list", NodeList.join(gen.acc(), ","));
+        template.set("more", NodeList.join(gen.more(), ","));
 
         if (gen.tree.lexerMembers != null) {
             var sb = new StringBuilder();
@@ -70,25 +71,16 @@ public class JavaLexer {
 
     private void writeActions() {
         if (gen.actions == null) {
-            template.set("actions", String.format("new int[%d];", dfa.lastState + 1));
             template.set("actionCases", "");
         }
         else {
-            var sb = new StringBuilder("{");
-            for (int i = 0; i < gen.actions.length; i++) {
-                if (i > 0) {
-                    sb.append(", ");
-                }
-                sb.append(gen.actions[i]);
-            }
-            sb.append("}");
-            template.set("actions", sb.toString());
-            sb.setLength(0);
-
-            for (var entry : gen.tree.actionBlock.actions.entrySet()) {
-                var id = gen.actionIdMap.get(entry.getKey());
-                sb.append(String.format("case %d:{\n", id));
-                sb.append(entry.getValue());
+            var sb = new StringBuilder();
+            for (var state : dfa.it()) {
+                if (!state.accepting) continue;
+                var action = gen.actions[state.id];
+                if (action == null) continue;
+                sb.append(String.format("case %d:{\n", state.id));
+                sb.append(action.substring(2, action.length() - 2));
                 sb.append("\n");
                 sb.append("break;\n");
                 sb.append("}\n");

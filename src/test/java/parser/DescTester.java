@@ -134,7 +134,7 @@ public class DescTester {
         return list;
     }
 
-    public static void check(Builder builder) throws Exception {
+    public static void check(Builder builder, boolean cc) throws Exception {
         var tester = new File(Env.dotDir(), "DescTester.java");
         Utils.copy(Env.getResFile("DescTester.java.2"), tester);
         var outDir = Env.dotDir().getAbsolutePath();
@@ -143,7 +143,12 @@ public class DescTester {
         if (builder.dump) {
             tree.options.dump = true;
         }
-        ParserGen.gen(tree, Lang.JAVA);
+        if (cc) {
+            ParserGen.genCC(tree, Lang.JAVA);
+        }
+        else {
+            ParserGen.gen(tree, Lang.JAVA);
+        }
 
         File out = new File(outDir, "out");
         if (out.exists()) {
@@ -173,8 +178,19 @@ public class DescTester {
         var method = cls.getDeclaredMethod("test", String.class, String.class);
         for (var info : builder.cases) {
             try {
-                var res = method.invoke(null, info.rule, info.input).toString();
-                Assert.assertEquals(info.expected, res);
+                String res;
+                if (info.isFile) {
+                    res = method.invoke(null, info.rule, Utils.read(new File(info.input))).toString();
+                }
+                else {
+                    res = method.invoke(null, info.rule, info.input).toString();
+                }
+                if (info.expected == null) {
+                    System.out.println(res);
+                }
+                else {
+                    Assert.assertEquals(info.expected, res);
+                }
             } catch (Throwable e) {
                 System.err.println("in tree " + tree.file.getName());
                 System.err.println("err for input: " + info.input);

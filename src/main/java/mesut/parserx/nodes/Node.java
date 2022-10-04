@@ -8,7 +8,7 @@ public abstract class Node {
 
     public static boolean printVarName = true;
     public String label;//name in alternation
-    public String actionRef;
+    public String action;
     public AstInfo astInfo = new AstInfo();
 
     public boolean isSequence() {

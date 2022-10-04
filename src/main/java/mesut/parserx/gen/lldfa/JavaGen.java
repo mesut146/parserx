@@ -18,9 +18,8 @@ public class JavaGen {
     RuleDecl rule;
     Tree tree;
     Options options;
-    Map<Integer, Map<Node, List<Variable>>> localMap = new HashMap<>();
-    Map<Integer, List<Variable>> paramMap = new HashMap<>();
     ItemSet curSet;
+    Common common;
 
     public JavaGen(Tree tree) {
         this.tree = tree;
@@ -28,11 +27,9 @@ public class JavaGen {
     }
 
     public void gen() throws IOException {
-        builder = new LLDfaBuilder(tree);
-        builder.factor();
-        tree = builder.tree;
-        initLocals();
-        initParams();
+        common = new Common(tree);
+        common.gen();
+        builder = common.builder;
         w = new CodeWriter(true);
         if (options.packageName != null) {
             w.append("package %s;", options.packageName);
@@ -153,6 +150,7 @@ public class JavaGen {
 
     void writeSet(ItemSet set) {
         curSet = set;
+        common.curSet = set;
         if (set.transitions.isEmpty()) return;
         var type = set.isStart ? rule.retType : "void";
         var name = set.isStart ? rule.getName() : "S" + set.stateId;
@@ -163,7 +161,7 @@ public class JavaGen {
         Set<Name> allLa = new HashSet<>();
         //collect items by la
         //var groups = groupByToken();
-        var groups = groupBy();
+        var groups = common.groupBy();
         for (var tr : set.transitions) {
             if (tr.symbol.isName() && tr.symbol.asName().isToken) {
                 var sym = tr.symbol.asName();
@@ -175,12 +173,6 @@ public class JavaGen {
                 createNodes(sym);
                 assign(items, sym);
 
-                //assign la
-                for (var item : items) {
-                    var node = findSym(item, sym);
-                    if (node == null) continue;
-                    assignStr(getBoth(item, sym), node, "la");
-                }
                 //preReduce(sym);
                 //get next la
                 //todo beginning of every state is better
@@ -214,8 +206,8 @@ public class JavaGen {
 
                 //create and assign nodes
                 String vname = null;
-                if (localMap.containsKey(curSet.stateId) && localMap.get(curSet.stateId).containsKey(sym) && !localMap.get(curSet.stateId).get(sym).isEmpty()) {
-                    var locals = localMap.get(curSet.stateId).get(sym);
+                if (common.localMap.containsKey(curSet.stateId) && common.localMap.get(curSet.stateId).containsKey(sym) && !common.localMap.get(curSet.stateId).get(sym).isEmpty()) {
+                    var locals = common.localMap.get(curSet.stateId).get(sym);
                     for (var local : locals) {
                         w.append("%s %s = new %s();", local.type, local.name, local.type);
                         if (!local.isHolder()) {
@@ -231,12 +223,12 @@ public class JavaGen {
                     for (var it : set.all) {
                         if (it.dotPos == it.rhs.size()) continue;
                         var rest = Sequence.make(it.rhs.list.subList(it.dotPos, it.rhs.size()));
-                        if (hasCommon(rest, sym)) {
+                        if (common.hasCommon(rest, sym)) {
                             if (item != null) throw new RuntimeException("can not happen");
                             item = it;
                         }
                     }
-                    vname = getParam(item).name;
+                    vname = common.getParam(item).name;
                 }
 
                 //consume all
@@ -275,7 +267,7 @@ public class JavaGen {
         var sb = new StringBuilder();
         int cnt = 0;
 
-        for (var e : paramMap.get(set.stateId)) {
+        for (var e : common.paramMap.get(set.stateId)) {
             if (cnt++ > 0) {
                 sb.append(", ");
             }
@@ -287,169 +279,6 @@ public class JavaGen {
         return sb.toString();
     }
 
-    void initLocals() {
-        for (var entry : builder.rules.entrySet()) {
-            rule = tree.getRule(entry.getKey());
-            for (var set : entry.getValue()) {
-                initLocals(set);
-            }
-        }
-    }
-
-    private void initLocals(ItemSet set) {
-        curSet = set;
-        for (var tr : set.transitions) {
-            if (tr.symbol.isName()) {
-                var sym = tr.symbol.asName();
-                var items = tr.pairs.stream().map(pair -> pair.origin).collect(Collectors.toList());
-                //var group = groupByToken();
-                var group = groupBy();
-                var locals = genLocals(group.get(sym));
-                //var locals = genLocals(items);
-                localMap.computeIfAbsent(set.stateId, k -> new HashMap<>()).put(sym, locals);
-            }
-            else {
-                //multi
-                Item item = null;
-                for (var it : set.all) {
-                    if (it.dotPos != 0) continue;
-                    var rest = Sequence.make(it.rhs.list.subList(it.dotPos, it.rhs.size()));
-                    if (hasCommon(rest, tr.symbol)) {
-                        item = it;
-                        break;
-                    }
-                }
-                if (item == null) continue;
-                var locals = new ArrayList<Variable>();
-                if (!item.isAlt()) {
-                    locals.add(new Variable(item.rule.retType, "v0", item));
-                }
-                else {
-                    //holder
-                    var holder = new Variable(item.rule.retType, "v0", item.siblings);
-                    locals.add(holder);
-                    //alt
-                    locals.add(new Variable(item.rule.rhs.astInfo.nodeType, "v1", item, holder));
-                }
-                localMap.computeIfAbsent(set.stateId, k -> new HashMap<>()).put(tr.symbol, locals);
-            }
-        }
-    }
-
-    private List<Variable> genLocals(List<Item> items) {
-        var vars = new ArrayList<Variable>();
-        var done = new HashSet<String>();
-        int cnt = 0;
-        var holderMap = new HashMap<Type, Variable>();
-        for (var item : items) {
-            if (item.dotPos > 0) continue;
-            if (item.advanced) continue;
-            if (!item.isAlt()) {
-                var name = "v" + cnt++;
-                vars.add(new Variable(item.rule.retType, name, item));
-            }
-            else {
-                //holder
-                if (!done.contains(item.rule.baseName())) {
-                    var parentName = "v" + cnt++;
-                    var holderVar = new Variable(item.rule.retType, parentName, item.siblings);
-                    vars.add(holderVar);
-                    done.add(item.rule.baseName());
-                    holderMap.put(holderVar.type, holderVar);
-                }
-                //alt
-                var name = "v" + cnt++;
-                var holderVar = holderMap.get(item.rule.retType);
-                vars.add(new Variable(item.rule.rhs.astInfo.nodeType, name, item, holderVar));
-
-            }
-        }
-        return vars;
-    }
-
-    void initParams() {
-        for (var entry : builder.rules.entrySet()) {
-            rule = tree.getRule(entry.getKey());
-            for (var set : entry.getValue()) {
-                initParam(set);
-            }
-        }
-    }
-
-    void initParam(ItemSet set) {
-        curSet = set;
-        for (var tr : set.transitions) {
-            if (tr.target.transitions.isEmpty()) continue;//inlined no params
-            //if (paramMap.containsKey(tr.target.stateId)) continue;//already done
-            if (tr.symbol.isName()) {
-                initParamNormal(set, tr);
-            }
-            else {
-                initParamMultiSym(set, tr);
-            }
-        }
-    }
-
-    private void initParamNormal(ItemSet set, LLTransition tr) {
-        var sym = tr.symbol.asName();
-        var locals = localMap.get(set.stateId).get(sym);
-        locals = locals.stream().filter(v -> !v.isHolder()).collect(Collectors.toList());
-
-        if (!paramMap.containsKey(tr.target.stateId)) {
-            //check local overlaps param
-            //check cur param overlaps param
-            //transfer
-            //init target params
-            var params = new ArrayList<Variable>();
-            //cur params+locals
-            int cnt = 0;
-            if (paramMap.containsKey(set.stateId)) {
-                for (var param : paramMap.get(set.stateId)) {
-                    if (isReduced(param)) continue;
-                    params.add(makeParam(param, "p" + cnt++));
-                }
-            }
-            for (var local : locals) {
-                //overlap
-                params.add(makeParam(local, "p" + cnt++));
-            }
-            paramMap.put(tr.target.stateId, params);
-        }
-    }
-
-    private void initParamMultiSym(ItemSet set, LLTransition tr) {
-        var params = new ArrayList<Variable>();
-        //cur params+locals
-        if (paramMap.containsKey(set.stateId)) {
-            int cnt = 0;
-            for (var param : paramMap.get(set.stateId)) {
-                if (isReduced(param)) continue;
-                params.add(makeParam(param, "p" + cnt++));
-            }
-        }
-        paramMap.put(tr.target.stateId, params);
-    }
-
-    Variable makeParam(Variable from, String name) {
-        Variable res;
-        if (from.item == null) {
-            res = new Variable(from.type, name, from.children);
-        }
-        else {
-            res = new Variable(from.type, name, from.item, from.holder);
-        }
-        res.prevs.add(from);
-        return res;
-    }
-
-
-    boolean overlap(Item i1, Item i2) {
-        //has common but not all same
-        if (i1.ids.equals(i2.ids)) return false;
-        return hasCommonId(i1.ids, i2.ids);
-    }
-
-
     private void handleTarget(Node sym, ItemSet target, LLTransition tr) {
         if (target.transitions.isEmpty()) {
             //inline final state
@@ -459,26 +288,13 @@ public class JavaGen {
             callTarget(target, sym);
         }
         if (curSet.isStart) {
-            for (Variable v : localMap.get(curSet.stateId).get(sym)) {
+            for (Variable v : common.localMap.get(curSet.stateId).get(sym)) {
                 if (v.type.equals(rule.retType)) {
                     w.append("return %s;", v.name);
                     break;
                 }
             }
         }
-    }
-
-    Map<Set<Name>, List<Item>> collectReduces(ItemSet set) {
-        var map = new HashMap<Set<Name>, List<Item>>();
-        for (var item : set.all) {
-            if (!item.isReduce(tree)) continue;
-            if (!item.isAlt()) continue;//skip normal
-            var la = item.lookAhead;
-            var list = map.getOrDefault(la, new ArrayList<>());
-            list.add(item);
-            map.put(la, list);
-        }
-        return map;
     }
 
     private void consumer(Name name, String vname) {
@@ -497,118 +313,26 @@ public class JavaGen {
         }
     }
 
-    private boolean hasCommon(Node n1, Node n2) {
-        Set<Name> s1 = FirstSet.tokens(n1, tree);
-        Set<Name> s2 = FirstSet.tokens(n2, tree);
-        Set<Name> set = new HashSet<>(s1);
-        set.retainAll(s2);
-        return !set.isEmpty();
-    }
-
     void callTarget(ItemSet target, Node sym) {
-        var targetParams = paramMap.get(target.stateId);
+        var targetParams = common.paramMap.get(target.stateId);
         var sb = new StringBuilder();
         var first = true;
         for (var prm : targetParams) {
             if (!first) sb.append(", ");
-            sb.append(getBothVar(prm.item, sym).name);
+            sb.append(common.getBothVar(prm.item, sym).name);
             first = false;
         }
         w.print("S%d(%s);\n", target.stateId, sb, sym, target);
     }
 
-    boolean isReduced(Variable param) {
-        if (param.isHolder()) {
-            //throw new IllegalStateException("prm can never be holder,it has to be an alt or normal item");
-            for (var item : curSet.all) {
-                if (!item.isReduce(tree)) continue;
-                //prm is holder of local item
-                for (var ch : param.children) {
-                    if (sameItem(item, ch)) return true;
-                }
-            }
-            return false;
-        }
-        for (var item : curSet.all) {
-            if (!item.isReduce(tree)) continue;
-            if (sameItem(item, param.item)) return true;//recursion forces reduce
-        }
-        return false;
-    }
-
-    boolean hasCommonId(Set<Integer> s1, Set<Integer> s2) {
-        var tmp = new HashSet<>(s1);
-        tmp.retainAll(s2);
-        return !tmp.isEmpty();
-    }
-
-    boolean sameItem(Item i1, Item i2) {
-        return i1.equals(i2) || hasCommonId(i1.ids, i2.ids);
-    }
-
-    Variable getLocal(Item item, Node sym) {
-        if (!localMap.containsKey(curSet.stateId)) return null;
-        var map = localMap.get(curSet.stateId);
-        if (map.containsKey(sym)) {
-            for (var v : map.get(sym)) {
-                if (v.isHolder() || !v.item.rule.equals(item.rule)) continue;
-                if (sameItem(v.item, item)) {
-                    return v;
-                }
-            }
-        }
-        return null;
-    }
-
-    Variable getParam(Item item) {
-        if (!paramMap.containsKey(curSet.stateId)) return null;
-        for (var v : paramMap.get(curSet.stateId)) {
-            if (!v.isHolder() && v.item.rule.equals(item.rule) && sameItem(v.item, item)) {
-                return v;
-            }
-        }
-        return null;
-    }
-
-    String getBoth(Item item, Node sym) {
-        return getBothVar(item, sym).name;
-    }
-
-    Variable getBothVar(Item item, Node sym) {
-        var res = getLocal(item, sym);
-        if (res == null) res = getParam(item);
-        if (res == null) {
-            throw new RuntimeException();
-        }
-        return res;
-    }
-
     String getHolder(Item item, Node sym) {
         //if (sym == null) return getParam(item).name + ".holder";
-        return getBoth(item, sym) + ".holder";
-    }
-
-    Variable holderVar(Item item, Node sym) {
-        if (localMap.containsKey(curSet.stateId)) {
-            for (var v : localMap.get(curSet.stateId).get(sym)) {
-                if (v.isHolder() && v.children.contains(item)) {
-                    return v;
-                }
-            }
-        }
-        if (paramMap.containsKey(curSet.stateId)) {
-            for (var v : paramMap.get(curSet.stateId)) {
-                if (v.isHolder() && v.children.contains(item)) {
-                    return v;
-                }
-            }
-        }
-        return null;
+        return common.getBoth(item, sym) + ".holder";
     }
 
     private void createNodes(Node sym) {
-        if (!localMap.containsKey(curSet.stateId)) return;
-        var vars = localMap.get(curSet.stateId).get(sym);
+        if (!common.localMap.containsKey(curSet.stateId)) return;
+        var vars = common.localMap.get(curSet.stateId).get(sym);
         for (var v : vars) {
             w.append("%s %s = new %s();", v.type, v.name, v.type);
             if (!v.isHolder() && v.item.isAlt()) {
@@ -630,9 +354,9 @@ public class JavaGen {
             if (!item.isAlt()) {
                 //normal item
                 for (var parent : item.parents) {
-                    var node = findSym(parent, item.rule.ref);
-                    var parentName = getBoth(parent, sym);
-                    var name = getBoth(item, sym);
+                    var node = common.findSym(parent, item.rule.ref);
+                    var parentName = common.getBoth(parent, sym);
+                    var name = common.getBoth(item, sym);
                     assignStr(parentName, node, name);
                 }
             }
@@ -641,9 +365,9 @@ public class JavaGen {
                 if (!done.contains(item.rule.baseName())) {
                     done.add(item.rule.baseName());
                     for (var parent : item.parents) {
-                        var node = findSym(parent, item.rule.ref);
-                        var parentName = getBoth(parent, sym);
-                        var name = holderVar(item, sym).name;
+                        var node = common.findSym(parent, item.rule.ref);
+                        var parentName = common.getBoth(parent, sym);
+                        var name = common.holderVar(item, sym).name;
                         assignStr(parentName, node, name);
                     }
                 }
@@ -652,9 +376,9 @@ public class JavaGen {
         //assign la
         var rhs = sym.isToken ? "la" : sym.astInfo.varName;
         for (var item : list) {
-            var node = findSym(item, sym);
+            var node = common.findSym(item, sym);
             if (node == null) continue;
-            assignStr(getBoth(item, sym), node, rhs);
+            assignStr(common.getBoth(item, sym), node, rhs);
         }
     }
 
@@ -669,12 +393,12 @@ public class JavaGen {
     }
 
     private void writeReduces() {
-        for (var e : collectReduces(curSet).entrySet()) {
+        for (var e : common.collectReduces(curSet).entrySet()) {
             var la = e.getKey();
             w.append("if(%s){", ParserUtils.loopExpr(la));
             for (var item : e.getValue()) {
                 if (!item.isAlt()) continue;
-                var prm = getParam(item);
+                var prm = common.getParam(item);
                 if (prm.isHolder()) {//simple is used
                     w.append("%s.which = %d;", prm.name, item.rule.which);
                 }
@@ -697,69 +421,10 @@ public class JavaGen {
             if (!item.isAlt()) continue;//only alts have assign
             w.append("if(%s){", ParserUtils.loopExpr(item.lookAhead));
             var holder = getHolder(item, sym);
-            var name = getBoth(item, sym);
+            var name = common.getBoth(item, sym);
             w.append("%s.which = %d;", holder, item.rule.which);
             w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, name);
             w.append("}");
         }
-    }
-
-    //group items by la
-    private Map<Name, List<Item>> groupByToken() {
-        var groups = new HashMap<Name, List<Item>>();
-        for (var item : curSet.all) {
-            if (item.dotPos == item.rhs.size()) continue;
-            var rest = Sequence.make(item.rhs.list.subList(item.dotPos, item.rhs.size()));
-            var tokens = FirstSet.tokens(rest, tree);
-            for (var token : tokens) {
-                var list = groups.getOrDefault(token, new ArrayList<>());
-                list.add(item);
-                groups.put(token, list);
-            }
-        }
-        return groups;
-    }    //group items by la
-
-    private Map<Name, List<Item>> groupBy() {
-        var groups = new HashMap<Name, List<Item>>();
-        for (var item : curSet.all) {
-            if (item.dotPos == item.rhs.size()) continue;
-            for (int i = item.dotPos; i < item.rhs.size(); i++) {
-                var sym = ItemSet.sym(item.getNode(i));
-                if (sym.isToken || !item.closured[i]) {
-                    //common rule or token
-                    var list = groups.getOrDefault(sym, new ArrayList<>());
-                    list.add(item);
-                    groups.put(sym, list);
-                }
-                else {
-                    var rest = Sequence.make(item.rhs.list.subList(item.dotPos, item.rhs.size()));
-                    var tokens = FirstSet.tokens(rest, tree);
-                    //all token
-                    for (var token : tokens) {
-                        var list = groups.getOrDefault(token, new ArrayList<>());
-                        list.add(item);
-                        groups.put(token, list);
-                    }
-                }
-                if (!FirstSet.canBeEmpty(item.getNode(i), tree)) {
-                    break;
-                }
-            }
-        }
-        return groups;
-    }
-
-    Name findSym(Item item, Name sym) {
-        for (int i = item.dotPos; i < item.rhs.size(); i++) {
-            var ch = item.getNode(i);
-            if (ItemSet.sym(ch).equals(sym)) {
-                return ItemSet.sym(ch);
-            }
-            if (!FirstSet.canBeEmpty(ch, tree)) {
-                break;
-            }
-        }
-        return null;
     }
 }

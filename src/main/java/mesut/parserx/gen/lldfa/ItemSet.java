@@ -144,7 +144,6 @@ public class ItemSet {
     }
 
     boolean isFactor(Item item, int i) {
-        var syms = symbols();
         var node = item.getNode(i);
         var sym = sym(node);
         //check two consecutive syms have common
@@ -157,7 +156,31 @@ public class ItemSet {
             }
         }
         //check dot sym and any other sym have common
-        for (var s2 : syms) {
+        for (var it : all) {
+            if (it == item) continue;
+            for (var s : it.getSyms(tree)) {
+                if (sym(s.getKey()).equals(sym)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    boolean isFactor0(Item item, int i) {
+        var node = item.getNode(i);
+        var sym = sym(node);
+        //check two consecutive syms have common
+        for (int j = item.dotPos; j < item.rhs.size(); j++) {
+            if (i == j) continue;
+            if (j > item.dotPos && !FirstSet.canBeEmpty(item.getNode(j - 1), tree)) break;
+            var next = item.getNode(j);
+            if (common(sym, sym(next))) {
+                return true;
+            }
+        }
+        //check dot sym and any other sym have common
+        for (var s2 : symbols()) {
             if (s2 == sym) continue;
             if (common(sym, s2)) {
                 return true;

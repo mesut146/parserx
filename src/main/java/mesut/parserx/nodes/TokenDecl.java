@@ -5,6 +5,7 @@ public class TokenDecl {
     public String name;
     public boolean fragment = false;
     public boolean isSkip = false;
+    public boolean isMore = false;
     public Node rhs;
     public String mode;
     public ModeBlock modeBlock;
@@ -34,6 +35,9 @@ public class TokenDecl {
             sb.append(" -> ");
             if (isSkip) {
                 sb.append("skip");
+            }
+            else if (isMore){
+                sb.append("more");
             }
             if (mode != null) {
                 if (isSkip) {

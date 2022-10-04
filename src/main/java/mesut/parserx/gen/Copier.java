@@ -94,7 +94,9 @@ public class Copier extends Transformer {
 
     @Override
     public Node visitBracket(Bracket bracket, Void arg) {
-        return new Bracket(bracket.list);
+        var res = new Bracket();
+        res.list = new ArrayList<>(bracket.list);
+        return res;
     }
 
     @Override

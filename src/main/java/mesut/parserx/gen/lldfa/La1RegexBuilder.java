@@ -4,38 +4,37 @@ import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.State;
 import mesut.parserx.dfa.Transition;
-import mesut.parserx.gen.CodeWriter;
-import mesut.parserx.gen.Options;
+import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
 import java.util.*;
 
-public class RegexBuilder {
+public class La1RegexBuilder {
     Tree tree;
     LLDfaBuilder builder;
     NFA dfa;
     String curRule;
 
-    public RegexBuilder(LLDfaBuilder builder) {
+    public La1RegexBuilder(LLDfaBuilder builder) {
         this.builder = builder;
         this.tree = builder.tree;
     }
 
     public Node build(String rule) {
         this.curRule = rule;
+        removeNonFactorSets();
         buildNfa();
-        var regex = buildRegex();
-        return regex;
+        return buildRegex();
     }
 
     public void buildNfa() {
         var all = builder.rules.get(curRule);
-        dfa = new NFA(all.size(), tree);
-        Queue<ItemSet> queue = new LinkedList<>();
-        var done = new HashSet<>();
         var first = builder.firstSets.get(curRule);
-        var alphabet = dfa.getAlphabet();
+        dfa = new NFA(all.size(), new Tree());
         dfa.init(first.stateId);
+        var done = new HashSet<>();
+        var alphabet = dfa.getAlphabet();
+        var queue = new LinkedList<ItemSet>();
         queue.add(first);
         while (!queue.isEmpty()) {
             var set = queue.poll();
@@ -51,7 +50,31 @@ public class RegexBuilder {
                 }
             }
         }
-        dfa = Minimization.optimize(dfa);
+        //dfa = Minimization.optimize(dfa);
+    }
+
+    void removeNonFactorSets() {
+        var all = builder.rules.get(curRule);
+        for (var set : all) {
+            for (var tr : set.transitions) {
+                if (tr.symbol.astInfo.isFactor) continue;
+                //if (tr.target.hasFinal()) continue;
+                //find final set and bind this to it
+                tr.target = findTarget(tr.target);
+                tr.symbol.astInfo.which = findWhich(tr.target);
+            }
+        }
+    }
+
+    ItemSet findTarget(ItemSet set) {
+        if (set.hasFinal()) {
+            return set;
+        }
+        for (var tr : set.transitions) {
+            if (tr.target == set) continue;
+            return findTarget(tr.target);
+        }
+        return null;
     }
 
     //remove non-factor symbols to speed up
@@ -59,43 +82,94 @@ public class RegexBuilder {
         for (var tr : set.transitions) {
             if (tr.symbol.astInfo.isFactor) continue;
             var sym = tr.symbol;
-            if (sym.isName() && sym.asName().isToken) {
-                int which = -1;
-                var target = tr.target;
-                for (var item : target.all) {
-                    if (!item.isReduce(tree)) continue;
-                    if (item.rule.getName().equals(curRule)) {
-                        which = item.rule.which;
-                    }
-                }
-                if (which == -1) {
-                    throw new RuntimeException("internal error: which not found");
-                }
-                sym.astInfo.which = which;
-            }
-            if (!sym.isSequence()) continue;
-            var seq = sym.asSequence();
-            List<Node> list = new ArrayList<>();
-            for (var ch : seq) {
-                list.add(ch);
-                if (ch.isName() && ch.asName().isToken) {
-                    if (!ch.astInfo.isFactor) {
-                        break;
-                    }
-                }
-            }
-            tr.symbol = Sequence.make(list);
+            tr.symbol = trim(sym);
         }
+    }
+
+    int findWhich(ItemSet target) {
+        int which = -1;
+        for (var item : target.all) {
+            if (!item.isReduce(tree)) continue;
+            if (item.rule.getName().equals(curRule)) {
+                which = item.rule.which;
+            }
+        }
+        if (which == -1) {
+            throw new RuntimeException("internal error: which not found");
+        }
+        return which;
+    }
+
+    //make node la1
+    Node trim(Node sym) {
+        if (sym.isName()) return sym;
+        if (sym.isRegex()) {
+            if (!sym.asRegex().node.astInfo.isFactor) {
+                return sym.asRegex().node;
+            }
+            return sym;
+        }
+        if (!sym.isSequence()) {
+            throw new RuntimeException("todo trim(non seq)");
+        }
+        var seq = sym.asSequence();
+        var A = seq.first();
+        var B = Helper.trim(seq);
+
+        if (isFactor(A)) {
+            if (Helper.canBeEmpty(A, tree)) {
+                return new Sequence(extract(A), trim(B));
+            }
+            else {
+                return new Sequence(A, trim(B));
+            }
+        }
+        else {
+            if (Helper.canBeEmpty(A, tree)) {
+                if (A.isStar()) {
+                    return new Or(A.asRegex().node, trim(B));
+                }
+                return seq;
+            }
+            else {
+                return A;
+            }
+        }
+    }
+
+    Node extract(Node node) {
+        if (node.isRegex()) return node.asRegex().node;
+        return node;
+    }
+
+    boolean isFactor(Node node) {
+        if (node.isRegex()) return node.asRegex().node.astInfo.isFactor;
+        return node.astInfo.isFactor;
     }
 
     Node buildRegex() {
         mergeFinals();
+        combine();
         for (var state : dfa.it()) {
             if (canBeRemoved(state)) {
                 eliminate(state);
             }
         }
         combine();
+        for (var state : dfa.it()) {
+            if (canBeRemoved(state)) {
+                eliminate(state);
+            }
+        }
+        combine();
+        //check
+        for (var tr : dfa.initialState.transitions) {
+            if (tr.target != dfa.initialState && !tr.target.accepting) {
+                //right rec?
+                throw new RuntimeException("error");
+            }
+        }
+        //build regex
         List<Node> ors = new ArrayList<>();
         Node loop = remLoop(dfa.initialState);
         State target = dfa.initialState.transitions.get(0).target;
@@ -156,11 +230,17 @@ public class RegexBuilder {
                 in.epsilon = true;
             }
             else {
-                in.input = dfa.getAlphabet().addRegex(Sequence.make(list));
+                if (list.size() == 1 && list.get(0).isGroup()) {
+                    in.input = dfa.getAlphabet().addRegex(list.get(0).asGroup().node);
+                }
+                else {
+                    in.input = dfa.getAlphabet().addRegex(Sequence.make(list));
+                }
             }
         }
     }
 
+    //merge same target transitions
     void combine() {
         for (var set : dfa.it()) {
             //target -> ors
@@ -173,7 +253,13 @@ public class RegexBuilder {
                     epsilons.add(tr.target);
                 }
                 else {
-                    list.add(dfa.getAlphabet().getRegex(tr.input));
+                    var regex = dfa.getAlphabet().getRegex(tr.input);
+                    if (regex.isOr()) {
+                        list.addAll(regex.asOr().list);
+                    }
+                    else {
+                        list.add(regex);
+                    }
                 }
             }
             set.transitions.clear();

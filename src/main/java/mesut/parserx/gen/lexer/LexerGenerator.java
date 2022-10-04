@@ -18,17 +18,14 @@ public class LexerGenerator {
     public IdMap idMap = new IdMap();
     public NFA dfa;
     public Tree tree;
-    public boolean[] skipList;
     //state -> id
     public int[] idArr;
     //name -> id pairs
     public TreeSet<Map.Entry<Name, Integer>> tokens;
     //acc state -> new mode state
     public int[] mode_arr;
-    //final state -> action id
-    public int[] actions;
-    //action name -> action id
-    HashMap<String, Integer> actionIdMap = new HashMap<>();
+    //final state -> action
+    public String[] actions;
     Lang target;
 
     public LexerGenerator(Tree tree, Lang target) {
@@ -49,6 +46,7 @@ public class LexerGenerator {
         skipList();
         modes();
         actions();
+        more();
         if (target == Lang.JAVA) {
             new JavaLexer(this).gen();
         }
@@ -57,21 +55,35 @@ public class LexerGenerator {
         }
     }
 
-    private void actions() {
-        if (tree.actionBlock == null) return;
-        actions = new int[dfa.lastState + 1];
-        int id = 1;
-        for (var entry : tree.actionBlock.actions.entrySet()) {
-            actionIdMap.put(entry.getKey(), id++);
+    public int[] acc() {
+        var arr = new boolean[dfa.lastState + 1];
+        for (var state : dfa.it()) {
+            arr[state.id] = state.accepting;
         }
+        return makeIntArr(arr);
+    }
+
+    public int[] more() {
+        var arr = new boolean[dfa.lastState + 1];
+        for (var state : dfa.it()) {
+            if (state.decl != null && state.decl.isMore) {
+                arr[state.id] = true;
+            }
+        }
+        return makeIntArr(arr);
+    }
+
+    private void actions() {
+        actions = new String[dfa.lastState + 1];
+
         for (var token : tree.getTokens()) {
             if (!token.rhs.isSequence()) continue;
             var seq = token.rhs.asSequence();
             var last = seq.get(seq.size() - 1);
-            if (last.actionRef == null) continue;
+            if (last.action == null) continue;
             for (var state : dfa.it()) {
                 if (state.decl != null && state.decl == token) {
-                    actions[state.id] = actionIdMap.get(last.actionRef);
+                    actions[state.id] = last.action;
                     break;
                 }
             }
@@ -133,14 +145,14 @@ public class LexerGenerator {
     }
 
 
-    private void skipList() {
-        skipList = new boolean[idMap.lastTokenId + 1];
-        for (int id = 1; id <= idMap.lastTokenId; id++) {
-            Name tok = idMap.getName(id);
-            if (tree.getToken(tok.name).isSkip) {
-                skipList[id] = true;
+    public int[] skipList() {
+        var arr = new boolean[dfa.lastState + 1];
+        for (var state : dfa.it()) {
+            if (state.decl != null && state.decl.isSkip) {
+                arr[state.id] = true;
             }
         }
+        return makeIntArr(arr);
     }
 
     private void nameAndId() {
