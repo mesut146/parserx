@@ -1,4 +1,3 @@
 include "../common.g"
 
-A: a x | a;
-B: a | a x;
+A: a | a b | a b c;

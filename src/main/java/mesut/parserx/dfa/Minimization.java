@@ -126,26 +126,37 @@ public class Minimization {
     static List<StateSet> group(NFA dfa) {
         var list = new ArrayList<StateSet>();
         var noacc = new StateSet();
-        //token name -> finals
-        var names = new HashMap<String, StateSet>();
+        var whichMap = new HashMap<String, HashMap<Integer, StateSet>>();
         for (var state : dfa.it()) {
             if (dfa.isDead(state)) continue;
             if (!state.accepting) {
                 noacc.addState(state);
                 continue;
             }
-            var name = state.name;
-            if (names.containsKey(name)) {
-                //group same token states
-                names.get(name).addState(state);
+            var map = whichMap.computeIfAbsent(state.name, k -> new HashMap<>());
+            if (map.containsKey(state.which)) {
+                map.get(state.which).addState(state);
             }
             else {
-                //each final state represents a different token, so they can't be merged
-                var acc = new StateSet();
-                acc.addState(state);
-                list.add(acc);
-                names.put(name, acc);
+                var set = new StateSet();
+                list.add(set);
+                set.addState(state);
+                map.put(state.which, set);
             }
+            //token name -> finals
+            //var nameMap = new HashMap<String, StateSet>();
+            //var name = state.name;
+//            if (nameMap.containsKey(name)) {
+//                //group same token states
+//                nameMap.get(name).addState(state);
+//            }
+//            else {
+//                //each final state represents different token, so they can't be merged
+//                var acc = new StateSet();
+//                acc.addState(state);
+//                nameMap.put(name, acc);
+//                list.add(acc);
+//            }
         }
         list.add(noacc);
         return list;

@@ -5,20 +5,20 @@ public class Regex extends Node {
     public Node node;
     public RegexType type;
 
-    public Regex(Node rule, RegexType type) {
-        if (rule.isSequence() || rule.isOr()) {
+    public Regex(Node node, RegexType type) {
+        if (node.isSequence() || node.isOr()) {
             throw new RuntimeException("invalid child, wrap using group");
         }
-        this.node = rule;
+        this.node = node;
         this.type = type;
         if (isStar() || isPlus()) {
             this.node.astInfo.isInLoop = true;
         }
     }
 
-    public static Regex wrap(Node rule, RegexType type) {
-        if (rule.isSequence() || rule.isOr()) return new Regex(new Group(rule), type);
-        return new Regex(rule, type);
+    public static Regex wrap(Node node, RegexType type) {
+        if (node.isSequence() || node.isOr()) return new Regex(new Group(node), type);
+        return new Regex(node, type);
     }
 
     public boolean isStar() {

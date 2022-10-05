@@ -235,6 +235,8 @@ public class LLDfaTest {
 
     @Test
     public void all0() throws Exception {
+        //E: A x | A y
+        //A: a b | a c
         astSimple();
         rr_loop();
         multi();
@@ -258,14 +260,12 @@ public class LLDfaTest {
 
     @Test
     public void astSimple() throws Exception {
-        //todo not needed anymore, since useSimple opt is removed
-        Builder.tree("lldfa/ast.g").rule("A")
-                .input("ax", "A#1{'a', 'x'}")
-                .input("a", "A#2{'a'}")
-                .rule("B")
-                .input("a", "B#1{'a'}")
-                .input("ax", "B#2{'a', 'x'}")
-                .check();
+//        Builder.tree("lldfa/ast.g").rule("A")
+//                .dump()
+//                .input("a", "A#1{'a'}")
+//                .input("ab", "A#2{'a', 'b'}")
+//                .input("abc", "A#3{'a', 'b', 'c'}")
+//                .check();
         Builder.tree("lldfa/simple.g").rule("E").
                 input("acx", "E#1{A#1{'a'}, B#1{'c'}, 'x'}").
                 input("adx", "E#1{A#1{'a'}, B#2{'d'}, 'x'}").
@@ -315,6 +315,7 @@ public class LLDfaTest {
     @Test
     public void rr_loop() throws Exception {
         Builder.tree("lldfa/rr-loop.g").rule("E")
+                .dump()
                 .input("x", "E#1{'x'}")
                 .input("y", "E#2{'y'}")
                 .input("ax", "E#1{[A#1{'a'}], 'x'}")
@@ -372,6 +373,18 @@ public class LLDfaTest {
                 input("y", "E#2{'y'}").
                 input("acbdy", "E#2{[B#1{K#1{'a'}}, B#1{K#2{'c'}}, B#2{M#1{'b'}}, B#2{M#2{'d'}}], 'y'}")
                 .check();
+        Builder.tree("lldfa/rr-loop-sub.g").rule("F").
+                input("z", "F#2{'z'}").
+                input("aaz", "F#2{['a', 'a'], 'z'}").
+                input("x", "F#1{E#1{'x'}}").
+                input("y", "F#1{E#2{'y'}}").
+                input("ax", "F#1{E#1{[A#1{'a'}], 'x'}}").
+                input("aby", "F#1{E#2{[B#1{'a'}, B#2{'b'}], 'y'}}")
+                .check();
+    }
+
+    @Test
+    public void name() throws Exception {
         Builder.tree("lldfa/rr-loop-sub.g").rule("F").
                 input("z", "F#2{'z'}").
                 input("aaz", "F#2{['a', 'a'], 'z'}").

@@ -40,7 +40,11 @@ public class La1RegexBuilder {
             var set = queue.poll();
             var state = dfa.getState(set.stateId);
             trim(set);
-            state.accepting = set.hasFinal();
+            if (set.hasFinal() && set.all.stream().anyMatch(it -> it.isFinalReduce(tree) && it.rule.ref.name.equals(curRule))) {
+                state.which = findWhich(set);
+                state.accepting = true;
+            }
+            //state.accepting = set.hasFinal();
             done.add(set);
             for (var tr : set.transitions) {
                 var target = dfa.getState(tr.target.stateId);
@@ -50,15 +54,19 @@ public class La1RegexBuilder {
                 }
             }
         }
-        //dfa = Minimization.optimize(dfa);
+        dfa = Minimization.optimize(dfa);
     }
 
     void removeNonFactorSets() {
         var all = builder.rules.get(curRule);
         for (var set : all) {
             for (var tr : set.transitions) {
-                if (tr.symbol.astInfo.isFactor) continue;
-                //if (tr.target.hasFinal()) continue;
+                if (tr.symbol.astInfo.isFactor) {
+                    if (tr.target.hasFinal()) {
+                        tr.symbol.astInfo.which = findWhich(tr.target);
+                    }
+                    continue;
+                }
                 //find final set and bind this to it
                 tr.target = findTarget(tr.target);
                 tr.symbol.astInfo.which = findWhich(tr.target);
@@ -77,7 +85,6 @@ public class La1RegexBuilder {
         return null;
     }
 
-    //remove non-factor symbols to speed up
     void trim(ItemSet set) {
         for (var tr : set.transitions) {
             if (tr.symbol.astInfo.isFactor) continue;
@@ -86,6 +93,7 @@ public class La1RegexBuilder {
         }
     }
 
+    //remove non-factor symbols to speed up
     int findWhich(ItemSet target) {
         int which = -1;
         for (var item : target.all) {
@@ -149,19 +157,7 @@ public class La1RegexBuilder {
 
     Node buildRegex() {
         mergeFinals();
-        combine();
-        for (var state : dfa.it()) {
-            if (canBeRemoved(state)) {
-                eliminate(state);
-            }
-        }
-        combine();
-        for (var state : dfa.it()) {
-            if (canBeRemoved(state)) {
-                eliminate(state);
-            }
-        }
-        combine();
+        eliminate();
         //check
         for (var tr : dfa.initialState.transitions) {
             if (tr.target != dfa.initialState && !tr.target.accepting) {
@@ -169,6 +165,7 @@ public class La1RegexBuilder {
                 throw new RuntimeException("error");
             }
         }
+
         //build regex
         List<Node> ors = new ArrayList<>();
         Node loop = remLoop(dfa.initialState);
@@ -192,6 +189,23 @@ public class La1RegexBuilder {
             list.add(loop2);
         }
         return Sequence.make(list);
+    }
+
+    void eliminate() {
+        while (true) {
+            var any = false;
+            combine();
+            for (var state : dfa.it()) {
+                if (canBeRemoved(state)) {
+                    eliminate(state);
+                    any = true;
+                    break;
+                }
+            }
+            if (!any) {
+                break;
+            }
+        }
     }
 
     Node remLoop(State state) {
@@ -271,7 +285,7 @@ public class La1RegexBuilder {
                 else {
                     var sym = Or.make(list);
                     if (epsilons.contains(trg)) {
-                        sym = new Regex(sym, RegexType.OPTIONAL);
+                        sym = Regex.wrap(sym, RegexType.OPTIONAL);
                     }
                     set.add(new Transition(set, trg, dfa.getAlphabet().addRegex(sym)));
                 }
@@ -287,7 +301,7 @@ public class La1RegexBuilder {
     public boolean canBeRemoved(State state) {
         if (countOutgoings(state) != 1) return false;
 
-        if (state.accepting) return false;
+        if (state.accepting || state == dfa.initialState) return false;
         //looping through final state
         Set<Integer> visited = new HashSet<>();
         Queue<State> queue = new LinkedList<>();

@@ -6,12 +6,15 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 public class CcGenJava {
     Tree tree;
     Options options;
     CodeWriter w = new CodeWriter(true);
     LLDfaBuilder builder;
+    Set<Name> popperRules = new HashSet<>();
 
     public CcGenJava(Tree tree) {
         this.tree = tree;
@@ -32,7 +35,6 @@ public class CcGenJava {
             w.append("%s res = new %s();", decl.retType, decl.retType);
 
             var rhs = decl.rhs.asOr();
-            w.append("ts.mark();");
             w.append("switch(%s_decide()){", rule);
             for (int i = 1; i <= rhs.size(); i++) {
                 var ch = rhs.get(i - 1);
@@ -59,6 +61,15 @@ public class CcGenJava {
             w.append("return res;");
             w.append("}");
 
+        }
+        //poppers
+        for (var name : popperRules) {
+            var decl = tree.getRule(name);
+            w.append("public void %s_pop() throws IOException{", decl.getName());
+            var nw = new Decider();
+            nw.popper = true;
+            decl.rhs.accept(nw, null);
+            w.append("}");
         }
         w.append("}");
         var file = new File(options.outDir, options.parserClass + ".java");
@@ -181,16 +192,27 @@ public class CcGenJava {
     }
 
     class Decider extends BaseVisitor<Void, Void> {
+        public boolean popper = false;
+        boolean inCondition = false;
+        Node prev;
+
         @Override
         public Void visitName(Name name, Void arg) {
             if (name.isToken) {
-                w.append("ts.pop();");
-                if (!name.astInfo.isFactor) {
+                if (inCondition) {
+                    w.append("ts.pop();");
+                }
+                else {
+                    w.append("ts.pop(%s.%s, \"%s\");", ParserUtils.tokens, name.name, name.name);
+                }
+                if (!name.astInfo.isFactor && !popper) {
                     w.append("return %s;", name.astInfo.which);
                 }
             }
             else {
-                w.append("return %s_decide();", name.name);
+                //todo
+                w.append("%s_pop();", name.name);
+                popperRules.add(name);
             }
             return null;
         }
@@ -201,12 +223,24 @@ public class CcGenJava {
             var la = ParserUtils.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type");
             if (regex.isOptional()) {
                 w.append("if(%s){", la);
+                inCondition = true;
+                var backupPrev = prev;
                 ch.accept(this, arg);
+                inCondition = false;
                 w.append("}");
+                prev = backupPrev;
+                //if empty tail
+                if (prev.astInfo.which != -1 && !popper) {
+                    w.append("else{");
+                    w.append("return %s;", prev.astInfo.which);
+                    w.append("}");
+                }
             }
             else if (regex.isStar()) {
                 w.append("while(%s){", la);
+                inCondition = true;
                 ch.accept(this, null);
+                inCondition = false;
                 w.append("}");
             }
             else {
@@ -222,6 +256,7 @@ public class CcGenJava {
         public Void visitSequence(Sequence seq, Void arg) {
             for (var ch : seq) {
                 ch.accept(this, arg);
+                prev = ch;
             }
             return null;
         }
@@ -236,7 +271,9 @@ public class CcGenJava {
                 else {
                     w.append("if(%s){", ParserUtils.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type"));
                 }
+                inCondition = true;
                 ch.accept(this, arg);
+                inCondition = false;
                 w.append("}");
                 i++;
             }

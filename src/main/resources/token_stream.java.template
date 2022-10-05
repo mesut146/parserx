@@ -5,8 +5,8 @@ import java.io.*;
 public class TokenStream{
     $lexer_class$ lexer;
     LinkedList<$token_class$> tokens = new LinkedList<>();
-    boolean marked = false;
     public $token_class$ la;
+    int pos = 0;
 
     public TokenStream($lexer_class$ lexer) throws IOException{
         this.lexer = lexer;
@@ -14,8 +14,21 @@ public class TokenStream{
     }
 
     void pop() throws IOException{
-        tokens.add(la);
-        la = lexer.$lexer_function$();
+        if(pos < tokens.size()){
+            pos++;
+            la = tokens.get(pos);
+        }else{
+            pos++;
+            tokens.add(la);
+            la = lexer.$lexer_function$();
+        }
+    }
+
+    void pop(int type, String name) throws IOException{
+        if(la.type != type){
+            throw new RuntimeException("unexpected token: " + la + " expecting: " + name);
+        }
+        pop();
     }
 
     public $token_class$ consume(int type, String name) throws IOException{
@@ -34,13 +47,9 @@ public class TokenStream{
         return res;
     }
 
-    public void mark(){
-        this.marked = true;
-    }
-
     public void unmark(){
-        this.marked = false;
         tokens.add(la);
         this.la = tokens.getFirst();
+        pos = 0;
     }
 }

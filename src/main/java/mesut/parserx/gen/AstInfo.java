@@ -70,7 +70,7 @@ public class AstInfo {
             }
         }
         if (which != -1) {
-            sb.append(" which");
+            sb.append(" #").append(which);
         }
         sb.append('}');
         return sb.toString();

@@ -13,6 +13,7 @@ public class State {
     public boolean accepting = false;
     public String name;
     public TokenDecl decl;
+    public int which = -1;
 
     public State(int id) {
         this.id = id;

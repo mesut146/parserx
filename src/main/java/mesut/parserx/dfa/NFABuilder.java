@@ -158,7 +158,7 @@ public class NFABuilder extends BaseVisitor<State, State> {
     @Override
     public State visitOr(Or or, State start) {
         var end = nfa.newState();
-        for (Node ch : or) {
+        for (var ch : or) {
             var chEnd = ch.accept(this, start);
             chEnd.addEpsilon(end);
         }
