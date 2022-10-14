@@ -29,13 +29,13 @@ public class Name extends Node implements Comparable<Name> {
         var sb = new StringBuilder();
         //sb.append(varString());
         sb.append(name);
-        if (!args.isEmpty()) {
-            sb.append("(").append(NodeList.join(args, ", ")).append(")");
-        }
         if (astInfo.isFactored) {
             sb.append("()");
-            //sb.append("(").append(name).append(")");
         }
+        else if (!args.isEmpty()) {
+            sb.append("(").append(NodeList.join(args, ", ")).append(")");
+        }
+
         if (action != null) {
             sb.append(" @").append(action);
         }
@@ -58,16 +58,12 @@ public class Name extends Node implements Comparable<Name> {
         if (o == null || getClass() != o.getClass()) return false;
         var name = (Name) o;
         return isToken == name.isToken &&
-                Objects.equals(this.name, name.name);
+                Objects.equals(this.name, name.name) && args.equals(name.args);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(name, isToken);
-    }
-
-    public RuleDecl makeRule() {
-        return new RuleDecl(this.<Name>copy());
     }
 
     @Override

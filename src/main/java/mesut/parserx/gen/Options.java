@@ -7,7 +7,6 @@ public class Options {
     public String tokenClass = "Token";
     public String packageName;
     public String outDir;
-    public boolean genVisitor = false;
     public String astClass = "Ast";
     public String nodeSuffix = "";
 

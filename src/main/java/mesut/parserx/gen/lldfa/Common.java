@@ -44,7 +44,7 @@ public class Common {
         for (var tr : set.transitions) {
             if (tr.symbol.isName()) {
                 var sym = tr.symbol.asName();
-                var items = tr.pairs.stream().map(pair -> pair.origin).collect(Collectors.toList());
+                //var items = tr.pairs.stream().map(pair -> pair.origin).collect(Collectors.toList());
                 //var group = groupByToken();
                 var group = groupBy();
                 var locals = genLocals(group.get(sym));

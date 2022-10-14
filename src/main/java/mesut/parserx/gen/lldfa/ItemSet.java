@@ -50,18 +50,15 @@ public class ItemSet {
     }
 
     public void addTransition(LLTransition tr) {
+        for (var old : transitions) {
+            if (old.symbol.equals(tr.symbol) && old.target == tr.target) return;
+        }
         transitions.add(tr);
         tr.target.incoming.add(tr);
     }
 
     public void addTransition(Node sym, ItemSet target) {
-        for (var t : transitions) {
-            if (t.symbol.equals(sym) && t.target == target) return;
-        }
-
-        var tr = new LLTransition(this, target, sym);
-        transitions.add(tr);
-        target.incoming.add(tr);
+        addTransition(new LLTransition(this, target, sym));
     }
 
     public boolean hasFinal() {
@@ -236,7 +233,7 @@ public class ItemSet {
     private void closure(Name sym, int pos, Item sender) {
         Set<Name> laList = sender.follow(tree, pos);
         Set<Item> set = new HashSet<>();
-        for (RuleDecl decl : treeInfo.ruleMap.get(sym.name)) {
+        for (RuleDecl decl : treeInfo.ruleMap.get(sym)) {
             Item newItem = new Item(decl, 0);
             newItem.lookAhead.addAll(laList);
             newItem.parents.add(sender);

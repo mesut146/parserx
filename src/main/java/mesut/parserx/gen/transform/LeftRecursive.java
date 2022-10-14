@@ -145,9 +145,7 @@ public class LeftRecursive {
                 sub.astInfo.which = node.astInfo.which;
                 sub.astInfo.varName = "res2";
                 sub.astInfo.nodeType = decl.retType;
-                sub.astInfo.substitution = true;
                 sub.astInfo.outerVar = node.astInfo.outerVar;
-                sub.astInfo.subVar = node.astInfo.varName;
                 update(sub.node, "res", "res2");
                 return sub;
             }

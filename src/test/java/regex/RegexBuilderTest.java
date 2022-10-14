@@ -1,6 +1,7 @@
 package regex;
 
 import common.Env;
+import lexer.RealTest;
 import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.NFABuilder;
@@ -66,4 +67,8 @@ public class RegexBuilderTest {
         System.out.println(RegexVisitor.make("[a\\]]"));
     }
 
+    @Test
+    public void regex() throws Exception {
+        RealTest.check(Env.tree("lexer/reg.g"), "[^a-Za-zA-Z0-9]", "[_\n[\\]^-]", "[\\u0000\\u0011-\\u0022]", "[ç]");
+    }
 }

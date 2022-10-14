@@ -1,6 +1,4 @@
 include "../common.g"
 
-A: B a | b;
-B: A c | d;
-//A: A c a | d a | b = (d a | b) (c a)*
-//B: B a c | b c | d = (b c | d) (a c)*
+A: B a | x;
+B: A c | y;

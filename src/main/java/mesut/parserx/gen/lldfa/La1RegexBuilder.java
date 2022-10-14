@@ -1,81 +1,122 @@
 package mesut.parserx.gen.lldfa;
 
-import mesut.parserx.dfa.Minimization;
-import mesut.parserx.dfa.NFA;
+
 import mesut.parserx.dfa.State;
-import mesut.parserx.dfa.Transition;
+import mesut.parserx.gen.AstInfo;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static mesut.parserx.gen.lr.LrDFAGen.dollar;
 
 public class La1RegexBuilder {
     Tree tree;
     LLDfaBuilder builder;
-    NFA dfa;
-    String curRule;
+    Name curRule;
+    ItemSet initialState;
+    Set<ItemSet> all;
 
     public La1RegexBuilder(LLDfaBuilder builder) {
         this.builder = builder;
         this.tree = builder.tree;
     }
 
-    public Node build(String rule) {
+    public Node build(Name rule) {
         this.curRule = rule;
-        removeNonFactorSets();
-        buildNfa();
+        this.all = builder.rules.get(curRule);
+        this.initialState = builder.firstSets.get(curRule);
+        mergeSameSets();
+        fillAlts();
+        //buildNfa();
         return buildRegex();
     }
 
-    public void buildNfa() {
-        var all = builder.rules.get(curRule);
-        var first = builder.firstSets.get(curRule);
-        dfa = new NFA(all.size(), new Tree());
-        dfa.init(first.stateId);
-        var done = new HashSet<>();
-        var alphabet = dfa.getAlphabet();
-        var queue = new LinkedList<ItemSet>();
-        queue.add(first);
-        while (!queue.isEmpty()) {
-            var set = queue.poll();
-            var state = dfa.getState(set.stateId);
-            trim(set);
-            if (set.hasFinal() && set.all.stream().anyMatch(it -> it.isFinalReduce(tree) && it.rule.ref.name.equals(curRule))) {
-                state.which = findWhich(set);
-                state.accepting = true;
-            }
-            //state.accepting = set.hasFinal();
-            done.add(set);
-            for (var tr : set.transitions) {
-                var target = dfa.getState(tr.target.stateId);
-                dfa.addTransition(state, target, alphabet.addRegex(tr.symbol));
-                if (!done.contains(tr.target)) {
-                    queue.add(tr.target);
+    void mergeSameSets() {
+        while (true) {
+            var any = false;
+            for (var set1 : all) {
+                //find similar sets
+                var similars = new ArrayList<ItemSet>();
+                for (var set2 : all) {
+                    if (set2 == set1) continue;
+                    if (isSame(set1, set2)) {
+                        similars.add(set2);
+                        //redirect other transitions to set1
+                        for (var tr : set2.incoming) {
+                            tr.target = set1;
+                        }
+                        any = true;
+                    }
+                }
+                //remove sets and redirect other transitions to set1
+                if (!similars.isEmpty()) {
+                    System.out.println(set1.stateId + "," + similars.stream().map(s -> String.valueOf(s.stateId)).collect(Collectors.joining(",")));
+                    similars.forEach(all::remove);
+                    break;
                 }
             }
+            if (!any) break;
         }
-        dfa = Minimization.optimize(dfa);
     }
 
-    void removeNonFactorSets() {
-        var all = builder.rules.get(curRule);
+    boolean isSame(ItemSet set, ItemSet set2) {
+        if (isFinal(set) || isFinal(set2)) return false;
+        if (set.transitions.size() != set2.transitions.size()) return false;
+        var map = new HashMap<Node, ItemSet>();
+        for (var tr : set.transitions) {
+            map.put(tr.symbol, tr.target);
+        }
+        for (var tr : set2.transitions) {
+            if (!map.containsKey(tr.symbol)) return false;
+            if (!map.get(tr.symbol).equals(tr.target)) return false;
+        }
+        return true;
+    }
+
+    public void buildNfa() {
+        for (var set : all) {
+            trim(set);
+        }
+    }
+
+    void fillAlts() {
+        var deads = new HashSet<ItemSet>();
         for (var set : all) {
             for (var tr : set.transitions) {
                 if (tr.symbol.astInfo.isFactor) {
                     if (tr.target.hasFinal()) {
                         tr.symbol.astInfo.which = findWhich(tr.target);
                     }
-                    continue;
                 }
-                //find final set and bind this to it
-                tr.target = findTarget(tr.target);
-                tr.symbol.astInfo.which = findWhich(tr.target);
+                else {
+                    if (!isFinal(tr.target)) {
+                        deads.add(tr.target);
+                    }
+                    //find final set and bind this to it
+                    var target = findTarget(tr.target);
+                    tr.target = target;
+                    tr.symbol.astInfo.which = findWhich(target);
+                }
             }
         }
+        all.removeAll(deads);
+    }
+
+    boolean isFinal(ItemSet set) {
+        for (var item : set.all) {
+            if (isFinal(item)) return true;
+        }
+        return false;
+    }
+
+    boolean isFinal(Item item) {
+        return item.isReduce(tree) && item.rule.ref.equals(curRule) && item.lookAhead.contains(dollar);
     }
 
     ItemSet findTarget(ItemSet set) {
-        if (set.hasFinal()) {
+        if (isFinal(set)) {
             return set;
         }
         for (var tr : set.transitions) {
@@ -95,17 +136,9 @@ public class La1RegexBuilder {
 
     //remove non-factor symbols to speed up
     int findWhich(ItemSet target) {
-        int which = -1;
-        for (var item : target.all) {
-            if (!item.isReduce(tree)) continue;
-            if (item.rule.getName().equals(curRule)) {
-                which = item.rule.which;
-            }
-        }
-        if (which == -1) {
-            throw new RuntimeException("internal error: which not found");
-        }
-        return which;
+        var res = target.all.stream().filter(this::isFinal).findFirst();
+        if (res.isPresent()) return res.get().rule.which;
+        throw new RuntimeException("which not found");
     }
 
     //make node la1
@@ -140,9 +173,17 @@ public class La1RegexBuilder {
                 return seq;
             }
             else {
-                return A;
+                return with(A, sym.astInfo);
             }
         }
+    }
+
+    Node with(Node node, AstInfo info) {
+        node = node.copy();
+        if (info.which != -1) {
+            node.astInfo.which = info.which;
+        }
+        return node;
     }
 
     Node extract(Node node) {
@@ -157,23 +198,26 @@ public class La1RegexBuilder {
 
     Node buildRegex() {
         mergeFinals();
+        System.out.println("merged finals");
+        builder.dump(System.out);
         eliminate();
-        //check
-        for (var tr : dfa.initialState.transitions) {
-            if (tr.target != dfa.initialState && !tr.target.accepting) {
+        System.out.println("eliminated");
+        builder.dump(System.out);
+        for (var tr : initialState.transitions) {
+            if (tr.target != initialState && !isFinal(tr.target)) {
                 //right rec?
-                throw new RuntimeException("error");
+                throw new RuntimeException("error " + tr.target.stateId);
             }
         }
 
         //build regex
         List<Node> ors = new ArrayList<>();
-        Node loop = remLoop(dfa.initialState);
-        State target = dfa.initialState.transitions.get(0).target;
+        Node loop = remLoop(initialState);
+        var target = initialState.transitions.get(0).target;
         Node loop2 = remLoop(target);
         List<Node> list = new ArrayList<>();
-        for (var tr : dfa.initialState.transitions) {
-            ors.add(dfa.getAlphabet().getRegex(tr.input));
+        for (var tr : initialState.transitions) {
+            ors.add(tr.symbol);
         }
         if (loop != null) {
             list.add(loop);
@@ -195,9 +239,11 @@ public class La1RegexBuilder {
         while (true) {
             var any = false;
             combine();
-            for (var state : dfa.it()) {
-                if (canBeRemoved(state)) {
-                    eliminate(state);
+            for (var set : all) {
+                if (canBeRemoved(set)) {
+                    eliminate(set);
+                    all.remove(set);
+                    builder.dump(System.out);
                     any = true;
                     break;
                 }
@@ -208,32 +254,35 @@ public class La1RegexBuilder {
         }
     }
 
-    Node remLoop(State state) {
+    Node remLoop(ItemSet state) {
         for (var tr : state.transitions) {
             if (tr.target == tr.from) {
                 state.transitions.remove(tr);
-                return Regex.wrap(dfa.getAlphabet().getRegex(tr.input), RegexType.STAR);
+                return Regex.wrap(tr.symbol, RegexType.STAR);
             }
         }
         return null;
     }
 
-    void eliminate(State state) {
+    void eliminate(ItemSet set) {
+        System.out.println("eliminate " + set.stateId);
         combine();
         Node loop = null;
-        Transition out = null;
-        for (var tr : state.transitions) {
-            if (tr.target.equals(state)) {
-                loop = dfa.getAlphabet().getRegex(tr.input);
+        LLTransition out = null;
+        for (var tr : set.transitions) {
+            if (tr.target.equals(set)) {
+                loop = tr.symbol;
             }
-            else out = tr;
+            else {
+                out = tr;
+            }
         }
-        state.transitions.remove(out);
+        set.transitions.remove(out);
         out.target.incoming.remove(out);
-        for (var in : state.incoming) {
+        for (var in : set.incoming) {
             in.target = out.target;
-            var s1 = in.epsilon ? null : wrapOr(dfa.getAlphabet().getRegex(in.input));
-            var s2 = out.epsilon ? null : wrapOr(dfa.getAlphabet().getRegex(out.input));
+            var s1 = in.symbol.isEpsilon() ? null : wrapOr(in.symbol);
+            var s2 = out.symbol.isEpsilon() ? null : wrapOr(out.symbol);
             List<Node> list = new ArrayList<>();
             if (s1 != null) list.add(s1);
             if (loop != null) {
@@ -241,14 +290,14 @@ public class La1RegexBuilder {
             }
             if (s2 != null) list.add(s2);
             if (list.isEmpty()) {
-                in.epsilon = true;
+                in.symbol = new Epsilon();
             }
             else {
                 if (list.size() == 1 && list.get(0).isGroup()) {
-                    in.input = dfa.getAlphabet().addRegex(list.get(0).asGroup().node);
+                    in.symbol = list.get(0).asGroup().node;
                 }
                 else {
-                    in.input = dfa.getAlphabet().addRegex(Sequence.make(list));
+                    in.symbol = Sequence.make(list);
                 }
             }
         }
@@ -256,18 +305,18 @@ public class La1RegexBuilder {
 
     //merge same target transitions
     void combine() {
-        for (var set : dfa.it()) {
+        for (var set : all) {
             //target -> ors
-            Map<State, List<Node>> map = new HashMap<>();
-            Set<State> epsilons = new HashSet<>();
+            var map = new HashMap<ItemSet, List<Node>>();
+            var epsilons = new HashSet<ItemSet>();
             for (var tr : set.transitions) {
                 tr.target.incoming.remove(tr);
                 var list = map.computeIfAbsent(tr.target, k -> new ArrayList<>());
-                if (tr.epsilon) {
+                if (tr.symbol.isEpsilon()) {
                     epsilons.add(tr.target);
                 }
                 else {
-                    var regex = dfa.getAlphabet().getRegex(tr.input);
+                    var regex = tr.symbol;
                     if (regex.isOr()) {
                         list.addAll(regex.asOr().list);
                     }
@@ -280,14 +329,14 @@ public class La1RegexBuilder {
             for (var trg : map.keySet()) {
                 var list = map.get(trg);
                 if (list.isEmpty()) {
-                    set.addEpsilon(trg);
+                    set.addTransition(new Epsilon(), trg);
                 }
                 else {
                     var sym = Or.make(list);
                     if (epsilons.contains(trg)) {
                         sym = Regex.wrap(sym, RegexType.OPTIONAL);
                     }
-                    set.add(new Transition(set, trg, dfa.getAlphabet().addRegex(sym)));
+                    set.addTransition(new LLTransition(set, trg, sym));
                 }
             }
         }
@@ -298,29 +347,28 @@ public class La1RegexBuilder {
         return sym;
     }
 
-    public boolean canBeRemoved(State state) {
-        if (countOutgoings(state) != 1) return false;
-
-        if (state.accepting || state == dfa.initialState) return false;
+    public boolean canBeRemoved(ItemSet state) {
+        if (isFinal(state) || state == initialState) return false;
+        if (hasOneOut(state)) return true;
         //looping through final state
-        Set<Integer> visited = new HashSet<>();
-        Queue<State> queue = new LinkedList<>();
-        for (var tr : state.transitions) {
-            if (!tr.target.equals(state)) {
-                queue.add(tr.target);
-                visited.add(tr.target.id);
-            }
-        }
-        //discover
-        while (!queue.isEmpty()) {
-            var cur = queue.poll();
-            var r = reachFinal(cur, state);
-            for (var tr : cur.transitions) {
-                if (tr.target.equals(state) && r) return false;
-                if (!tr.target.equals(state) && visited.add(tr.target.id)) queue.add(tr.target);
-            }
-        }
-        return true;
+//        Set<Integer> visited = new HashSet<>();
+//        Queue<State> queue = new LinkedList<>();
+//        for (var tr : state.transitions) {
+//            if (!tr.target.equals(state)) {
+//                queue.add(tr.target);
+//                visited.add(tr.target.id);
+//            }
+//        }
+//        //discover
+//        while (!queue.isEmpty()) {
+//            var cur = queue.poll();
+//            var r = reachFinal(cur, state);
+//            for (var tr : cur.transitions) {
+//                if (tr.target.equals(state) && r) return false;
+//                if (!tr.target.equals(state) && visited.add(tr.target.id)) queue.add(tr.target);
+//            }
+//        }
+        return false;
     }
 
     public boolean reachFinal(State from, State except) {
@@ -341,23 +389,34 @@ public class La1RegexBuilder {
         return false;
     }
 
-    public static int countOutgoings(State set) {
+    public boolean hasOneOut(ItemSet set) {
         int cnt = 0;
         for (var tr : set.transitions) {
             if (!tr.target.equals(set)) cnt++;
         }
-        return cnt;
+        return cnt == 1;
     }
 
-    State mergeFinals() {
-        var newFinal = dfa.newState();
-        for (var state : dfa.it()) {
-            if (state.accepting) {
-                state.addEpsilon(newFinal);
-                state.accepting = false;
+    void mergeFinals() {
+        ItemSet acc = null;
+        var rem = new ArrayList<ItemSet>();
+        for (var set : all) {
+            if (!isFinal(set)) continue;
+            if (acc == null) {
+                acc = set;
+            }
+            else {
+                //merge into acc
+                rem.add(set);
+                for (var tr : set.incoming) {
+                    tr.target = acc;
+                }
+                for (var tr : set.transitions) {
+                    tr.from = acc;
+                    acc.addTransition(tr);//todo check dup
+                }
             }
         }
-        newFinal.accepting = true;
-        return newFinal;
+        rem.forEach(all::remove);
     }
 }

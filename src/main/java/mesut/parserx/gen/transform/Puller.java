@@ -82,15 +82,13 @@ public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
 
             var tmp = decl.rhs.copy().accept(this, symArg);
 
-            var oneDecl = oneRef.makeRule();
-            oneDecl.rhs = tmp.one;
+            var oneDecl = new RuleDecl(oneRef.copy(), tmp.one);
             oneDecl.retType = decl.retType;
             tree.addRuleBelow(oneDecl, decl);
             declSet.add(oneDecl);
 
             if (tmp.zero != null) {
-                var zeroDecl = zeroRef.makeRule();
-                zeroDecl.rhs = tmp.zero;
+                var zeroDecl = new RuleDecl(zeroRef.copy(), tmp.zero);
                 zeroDecl.retType = decl.retType;
                 tree.addRuleBelow(zeroDecl, decl);
                 declSet.add(zeroDecl);

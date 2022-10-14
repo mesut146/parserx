@@ -48,9 +48,7 @@ public class Recursion {
         puller.curRule = decl;
         var info = ref.accept(puller,sym);
         info.zero.astInfo.varName = "res";
-        info.zero.astInfo.isPrimary = true;
         info.one.astInfo.varName = "res";
-        info.one.astInfo.isSecondary = true;
         decl.rhs = Sequence.make(info.zero, new Regex(info.one, RegexType.STAR));
 
         if (!cycle) return;

@@ -4,6 +4,7 @@ import mesut.parserx.gen.lldfa.LLDfaBuilder;
 import mesut.parserx.nodes.Tree;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
 
 public class Debug {
@@ -16,7 +17,7 @@ public class Debug {
             //Thread.sleep(100);
             dot.delete();
             File dump = new File(tree.options.outDir, Utils.newName(tree.file.getName(), ".dump"));
-            builder.dump(new PrintWriter(dump));
+            builder.dumpItems(new FileOutputStream(dump));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

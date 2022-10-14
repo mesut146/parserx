@@ -97,7 +97,7 @@ public class LrItemSet {
             throw new RuntimeException("closure error on node: " + node + ", was expecting rule");
         }
         Set<Name> laList = sender.follow(treeInfo.tree, pos);
-        for (var rd : treeInfo.ruleMap.get(node.name)) {
+        for (var rd : treeInfo.ruleMap.get(node)) {
             LrItem newItem = new LrItem(rd, 0);
             newItem.lookAhead = new HashSet<>(laList);
             newItem.parent = sender;

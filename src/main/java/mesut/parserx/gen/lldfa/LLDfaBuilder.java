@@ -11,6 +11,7 @@ import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Debug;
 import mesut.parserx.utils.Utils;
 
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.logging.Level;
@@ -21,11 +22,11 @@ public class LLDfaBuilder {
     public Name rule;
     public Tree tree;
     TreeInfo treeInfo;
-    Map<String, ItemSet> firstSets = new HashMap<>();
+    Map<Name, ItemSet> firstSets = new HashMap<>();
     Set<ItemSet> all;
     Queue<ItemSet> queue = new LinkedList<>();
     LrType type = LrType.LR1;
-    Map<String, Set<ItemSet>> rules = new HashMap<>();
+    Map<Name, Set<ItemSet>> rules = new HashMap<>();
     public static Logger logger = Utils.getLogger();
 
     public LLDfaBuilder(Tree tree) {
@@ -121,7 +122,7 @@ public class LLDfaBuilder {
 
         var firstSet = new ItemSet(treeInfo, type);
         firstSet.isStart = true;
-        firstSets.put(rule.name, firstSet);
+        firstSets.put(rule, firstSet);
         Set<Name> la;
         if (rule.equals(tree.start)) {
             la = new HashSet<>();
@@ -137,7 +138,7 @@ public class LLDfaBuilder {
             //throw new RuntimeException("la need to be computed");
         }
 
-        for (var decl : treeInfo.ruleMap.get(rule.name)) {
+        for (var decl : treeInfo.ruleMap.get(rule)) {
             var first = new Item(decl, 0);
             first.first = true;
             first.gotoSet.add(firstSet);
@@ -199,7 +200,7 @@ public class LLDfaBuilder {
             }
             makeTrans(curSet, map);
         }
-        rules.put(rule.name, all);
+        rules.put(rule, all);
     }
 
     boolean canShrink(ItemSet set, Item item, int i) {
@@ -288,10 +289,12 @@ public class LLDfaBuilder {
         return null;
     }
 
-    public void dump2(PrintWriter w) {
+    public void dump(OutputStream os) {
+        PrintWriter w = new PrintWriter(os);
         for (var e : rules.entrySet()) {
             w.println("//" + e.getKey());
             for (var set : e.getValue()) {
+                if (set.transitions.isEmpty()) continue;
                 w.printf("S%d: ", set.stateId);
                 int i = 0;
                 for (var tr : set.transitions) {
@@ -306,10 +309,10 @@ public class LLDfaBuilder {
             w.println();
         }
         w.flush();
-        w.close();
     }
 
-    public void dump(PrintWriter w) {
+    public void dumpItems(OutputStream os) {
+        PrintWriter w = new PrintWriter(os);
         for (var e : this.rules.entrySet()) {
             w.println("----------------------------------");
             w.println("//" + e.getKey());
@@ -326,9 +329,7 @@ public class LLDfaBuilder {
             }
         }
         w.flush();
-        w.close();
     }
-
 
     public void dot(PrintWriter w) {
         w.println("digraph G{");
@@ -377,8 +378,6 @@ public class LLDfaBuilder {
                 }
             }
         }
-
         w.println("\n}");
-        w.close();
     }
 }

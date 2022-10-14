@@ -1,44 +1,33 @@
 package mesut.parserx.nodes;
 
+import mesut.parserx.gen.lldfa.RecursionHandler;
 import mesut.parserx.gen.lldfa.Type;
 import mesut.parserx.gen.lr.TreeInfo;
 
 import java.util.Objects;
 
-//rule decl in grammar
-//name=rules;
+//name: rhs;
 public class RuleDecl {
 
-    public static boolean printIndex = false;
-    public Node rhs;
     public Name ref;
+    public Node rhs;
     public int index;
     public int which = 0;//no alt or alt number
-    public Type retType;//ast type in case it is modified
+    public Type retType;//ast type;
     public TreeInfo.TransformInfo transformInfo;
-
-    public RuleDecl() {
-    }
-
-    public RuleDecl(String name) {
-        this(name, null);
-    }
+    public RecursionHandler.Info recInfo;
+    public static boolean printIndex = false;
 
     public RuleDecl(String name, Node rhs) {
-        if (name.equals("EOF")) {
-            throw new RuntimeException("rule name 'EOF' is reserved use another");
-        }
-        this.ref = new Name(name, false);
-        this.rhs = rhs;
+        this(new Name(name), rhs);
     }
 
     public RuleDecl(Name ref, Node rhs) {
+        if (ref.name.equals("EOF")) {
+            throw new RuntimeException("rule name 'EOF' is reserved use another");
+        }
         this.ref = ref;
         this.rhs = rhs;
-    }
-
-    public RuleDecl(Name ref) {
-        this.ref = ref;
     }
 
     public String getName() {

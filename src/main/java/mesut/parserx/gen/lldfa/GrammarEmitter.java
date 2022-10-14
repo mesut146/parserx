@@ -28,16 +28,16 @@ public class GrammarEmitter {
         //builder.dot(null);
     }
 
-    String getStateName(ItemSet set, String start) {
+    String getStateName(ItemSet set, Name start) {
         if (set.isStart) {
-            return start;
+            return start.name;
         }
         else {
             return "S" + set.stateId;
         }
     }
 
-    public Node emitFor(String name) {
+    public Node emitFor(Name name) {
         res = new Tree();
         all = builder.rules.get(name);
         moveReductions();

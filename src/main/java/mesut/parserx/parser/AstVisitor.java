@@ -115,17 +115,16 @@ public class AstVisitor {
     }
 
     public RuleDecl visitRuledecl(Ast.ruleDecl node) {
-        var decl = new RuleDecl(node.name.IDENT.value);
+        var ref = new Name(node.name.IDENT.value);
         if (node.args != null) {
-            decl.ref.args.add(new Name(node.args.name.IDENT.value));
+            ref.args.add(new Name(node.args.name.IDENT.value));
             for (var g1 : node.args.rest) {
-                decl.ref.args.add(new Name(g1.name.IDENT.value));
+                ref.args.add(new Name(g1.name.IDENT.value));
             }
         }
-        decl.rhs = visitRhs(node.rhs);
-        return decl;
+        var rhs = visitRhs(node.rhs);
+        return new RuleDecl(ref, rhs);
     }
-
 
     public Node visitRhs(Ast.rhs node) {
         List<Node> list = new ArrayList<>();

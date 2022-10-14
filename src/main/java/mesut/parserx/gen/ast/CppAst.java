@@ -10,18 +10,17 @@ import mesut.parserx.utils.Utils;
 import java.io.File;
 import java.io.IOException;
 
-public class CppAstGen {
+public class CppAst {
     public Tree tree;
     CodeWriter astWriter = new CodeWriter(true);
     CodeWriter classes;
     Options options;
     //class name -> map of node -> count
     CountingMap2<String, String> varCount = new CountingMap2<>();
-    int groupCount;
     String curRule;
     CodeWriter sourceWriter = new CodeWriter(true);
 
-    public CppAstGen(Tree tree) {
+    public CppAst(Tree tree) {
         this.tree = tree;
         this.options = tree.options;
     }
@@ -68,7 +67,6 @@ public class CppAstGen {
         astWriter.append("");
 
         for (RuleDecl decl : tree.rules) {
-            groupCount = 1;
             curRule = decl.baseName();
             model(decl);
         }
@@ -257,7 +255,6 @@ public class CppAstGen {
                 ch.astInfo.nodeType = clsName;
                 ch.astInfo.varName = v;
                 ch.astInfo.outerVar = outerVar;
-                ch.astInfo.assignOuter = true;
                 parent.append("%s* %s;", clsName.name, v);
                 CodeWriter c = new CodeWriter(false);
                 c.append("class %s{", clsName.name);

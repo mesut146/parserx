@@ -68,7 +68,6 @@ public class LrCodeGen {
             sb.append('"');
             if (rd.transformInfo != null) {
                 sb.append(rd.transformInfo.orgName);
-
             }
             else {
                 sb.append(rd.getName());

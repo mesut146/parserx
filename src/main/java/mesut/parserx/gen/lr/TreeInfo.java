@@ -1,6 +1,7 @@
 package mesut.parserx.gen.lr;
 
 import mesut.parserx.gen.transform.EbnfToBnf;
+import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
@@ -9,9 +10,9 @@ import java.util.*;
 
 //split alts into separate decl
 public class TreeInfo {
-    public LinkedHashMap<String, List<Node>> nodeMap = new LinkedHashMap<>();
+    public LinkedHashMap<Name, List<Node>> nodeMap = new LinkedHashMap<>();
     public Tree tree;
-    public HashMap<String, List<RuleDecl>> ruleMap = new HashMap<>();
+    public HashMap<Name, List<RuleDecl>> ruleMap = new HashMap<>();
 
     public static class TransformInfo {
         public boolean isPlus;
@@ -43,11 +44,11 @@ public class TreeInfo {
         return res;
     }
 
-    public static LinkedHashMap<String, List<Node>> makeMap(Tree input) {
+    public static LinkedHashMap<Name, List<Node>> makeMap(Tree input) {
         //LinkedHashMap preserves rule order
-        var map = new LinkedHashMap<String, List<Node>>();
+        var map = new LinkedHashMap<Name, List<Node>>();
         for (var decl : input.rules) {
-            var or = map.computeIfAbsent(decl.ref.name, k -> new ArrayList<>());
+            var or = map.computeIfAbsent(decl.ref, k -> new ArrayList<>());
             if (decl.rhs.isOr()) {
                 or.addAll(decl.rhs.asOr().list);
             }

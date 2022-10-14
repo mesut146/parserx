@@ -55,7 +55,6 @@ public class PrecedenceHandler {
                 Name curRef = new Name(name);
                 Name higher = new Name(i == lastLevel ? primRule.baseName() : map.get(i + 1).name);
                 higher.astInfo.outerVar = "res";
-                higher.astInfo.isPrimary = true;
 
                 LevelInfo info = holder.info;
                 Node rhs;
@@ -118,10 +117,8 @@ public class PrecedenceHandler {
             Name factored = higher.copy();
             factored.astInfo = seq.first().astInfo.copy();
             factored.astInfo.isFactored = true;
-            factored.astInfo.factor = makeFactor("res");
             Epsilon eps = new Epsilon();
             eps.astInfo.isFactored = true;
-            eps.astInfo.factor = makeFactor("tmp");
             eps.astInfo.varName = "res";
             Name h2 = higher.copy();
             h2.astInfo = seq.last().astInfo.copy();
@@ -158,11 +155,9 @@ public class PrecedenceHandler {
         Name factored = higher.copy();
         factored.astInfo = holder.node.get(0).astInfo.copy();
         factored.astInfo.isFactored = true;
-        factored.astInfo.factor = makeFactor("res");
 
         Epsilon eps = new Epsilon();
         eps.astInfo.isFactored = true;
-        eps.astInfo.factor = makeFactor("tmp");
         eps.astInfo.varName = "res";
 
         seq.set(0, factored);

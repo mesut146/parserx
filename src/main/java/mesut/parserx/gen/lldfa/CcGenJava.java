@@ -15,6 +15,7 @@ public class CcGenJava {
     CodeWriter w = new CodeWriter(true);
     LLDfaBuilder builder;
     Set<Name> popperRules = new HashSet<>();
+    Set<Name> popperRules2 = new HashSet<>();
 
     public CcGenJava(Tree tree) {
         this.tree = tree;
@@ -31,11 +32,11 @@ public class CcGenJava {
             var rule = entry.getKey();
 
             var decl = tree.getRule(rule);
-            w.append("public %s %s() throws IOException{", decl.retType, rule);
+            w.append("public %s %s() throws IOException{", decl.retType, rule.name);
             w.append("%s res = new %s();", decl.retType, decl.retType);
 
             var rhs = decl.rhs.asOr();
-            w.append("switch(%s_decide()){", rule);
+            w.append("switch(%s_decide()){", rule.name);
             for (int i = 1; i <= rhs.size(); i++) {
                 var ch = rhs.get(i - 1);
                 w.append("case %d:{", i);
@@ -53,7 +54,7 @@ public class CcGenJava {
         }
         //writeRest
         for (var decl : tree.rules) {
-            if (builder.rules.containsKey(decl.getName())) continue;
+            if (builder.rules.containsKey(decl.ref)) continue;
             w.append("public %s %s() throws IOException{", decl.retType, decl.getName());
             w.append("%s res = new %s();", decl.retType, decl.retType);
             var nw = new NormalWriter();
@@ -64,6 +65,15 @@ public class CcGenJava {
         }
         //poppers
         for (var name : popperRules) {
+            var decl = tree.getRule(name);
+            w.append("public void %s_pop() throws IOException{", decl.getName());
+            var nw = new Decider();
+            nw.popper = true;
+            decl.rhs.accept(nw, null);
+            w.append("}");
+        }
+        for (var name : popperRules2) {
+            if (popperRules.contains(name)) continue;
             var decl = tree.getRule(name);
             w.append("public void %s_pop() throws IOException{", decl.getName());
             var nw = new Decider();
@@ -111,7 +121,7 @@ public class CcGenJava {
     }
 
 
-    void writeDecider(String rule) {
+    void writeDecider(Name rule) {
         var regexBuilder = new La1RegexBuilder(builder);
         var regex = regexBuilder.build(rule);
         System.out.printf("%s -> %s\n", rule, regex);
@@ -147,7 +157,7 @@ public class CcGenJava {
 
         @Override
         public Void visitName(Name name, Void arg) {
-            consumer(name, name.astInfo.outerVar);
+            consumer(name);
             return null;
         }
 
@@ -175,7 +185,8 @@ public class CcGenJava {
         }
     }
 
-    private void consumer(Name name, String vname) {
+    private void consumer(Name name) {
+        String outer = name.astInfo.outerVar;
         String rhs;
         if (name.isToken) {
             rhs = String.format("ts.consume(%s.%s, \"%s\")", ParserUtils.tokens, name.name, name.name);
@@ -184,10 +195,10 @@ public class CcGenJava {
             rhs = name.name + "()";
         }
         if (name.astInfo.isInLoop) {
-            w.append("%s.%s.add(%s);", vname, name.astInfo.varName, rhs);
+            w.append("%s.%s.add(%s);", outer, name.astInfo.varName, rhs);
         }
         else {
-            w.append("%s.%s = %s;", vname, name.astInfo.varName, rhs);
+            w.append("%s.%s = %s;", outer, name.astInfo.varName, rhs);
         }
     }
 
@@ -201,18 +212,27 @@ public class CcGenJava {
             if (name.isToken) {
                 if (inCondition) {
                     w.append("ts.pop();");
+                    inCondition = false;
                 }
                 else {
                     w.append("ts.pop(%s.%s, \"%s\");", ParserUtils.tokens, name.name, name.name);
                 }
-                if (!name.astInfo.isFactor && !popper) {
-                    w.append("return %s;", name.astInfo.which);
-                }
+//                if (!name.astInfo.isFactor && !popper) {
+//                    w.append("return %s;", name.astInfo.which);
+//                }
             }
             else {
                 //todo
                 w.append("%s_pop();", name.name);
-                popperRules.add(name);
+                if (popper) {
+                    popperRules2.add(name);
+                }
+                else {
+                    popperRules.add(name);
+                }
+            }
+            if (name.astInfo.which != -1) {
+                w.append("return %s;", name.astInfo.which);
             }
             return null;
         }

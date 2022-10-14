@@ -18,7 +18,6 @@ public class Normalizer extends Transformer {
             groupCount = 1;
             //todo restart
             var decl = tree.rules.get(i);
-            decl.retType = new Type(tree.options.astClass, decl.baseName());
             transformRule(decl);
         }
     }
@@ -40,23 +39,5 @@ public class Normalizer extends Transformer {
         groupCount++;
         tmp.rhs = transformNode(tmp.rhs, null);
         return ref;
-    }
-
-    @Override
-    public Node visitOr(Or node, Void parent) {
-        var tmp = super.visitOr(node, parent);
-        if (!tmp.isOr()) {
-            return tmp;
-        }
-        var list = new ArrayList<Node>();
-        for (var ch : node) {
-            if (!list.contains(ch)) {
-                list.add(ch);
-            }
-            else {
-                System.out.println("removed duplicate child " + ch + " in " + curRule);
-            }
-        }
-        return new Or(list);
     }
 }

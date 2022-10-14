@@ -10,7 +10,6 @@ import mesut.parserx.utils.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class JavaGen {
     LLDfaBuilder builder;
@@ -57,7 +56,7 @@ public class JavaGen {
             writeRule(builder.rules.get(ruleName));
         }
         for (var decl : builder.tree.rules) {
-            if (builder.rules.containsKey(decl.baseName())) continue;
+            if (builder.rules.containsKey(decl.ref)) continue;
             rule = decl;
             writeNormal();
         }

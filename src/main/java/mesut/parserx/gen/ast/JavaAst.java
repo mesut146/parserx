@@ -11,13 +11,10 @@ import mesut.parserx.utils.Utils;
 import java.io.File;
 import java.io.IOException;
 
-public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
+public class JavaAst extends BaseVisitor<Void, Void> {
     public Tree tree;
     CodeWriter w = new CodeWriter(true);
     Options options;
-    //class name -> map of node -> count
-    CountingMap2<String, String> varCount = new CountingMap2<>();
-    int groupCount;
     String curRule;
     Printer p;
     public static boolean printTokenQuote = true;
@@ -38,20 +35,29 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
         w.append("");
 
         w.append("public class %s{", options.astClass);
+        printTokenHelper();
+
         for (var decl : tree.rules) {
-            groupCount = 1;
-            curRule = decl.baseName();
             model(decl);
         }
         w.append("}");
 
         Utils.write(w.get(), new File(options.outDir, options.astClass + ".java"));
-        varCount.clear();
+    }
+
+    void printTokenHelper() {
+        if (!printTokenQuote) return;
+        w.append("");
+        w.append("static void printToken(%s token, StringBuilder sb){", options.tokenClass);
+        w.append("sb.append(\"'\").append(token.value.replace(\"'\",\"\\\\'\")).append(\"'\");");
+        w.append("}");
+        w.append("");
     }
 
     void model(RuleDecl decl) {
-        w.append("public static class %s{", decl.baseName() + options.nodeSuffix);
-        decl.rhs.accept(this, new Info(decl.retType, "res"));
+        curRule = decl.baseName();
+        w.append("public static class %s{", decl.retType.name);
+        decl.rhs.accept(this, null);
 
         //todo create parent
         p.writePrinter(decl.rhs, false);
@@ -61,79 +67,30 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
         w.append("}");
     }
 
-    void setVarName(Name name, Type outerCls) {
-        String varName = name.astInfo.varName;
-        if (varName == null) {
-            varName = vName(name, outerCls.toString());
-            name.astInfo.varName = varName;
-        }
-    }
-
-    //make incremental variable name with class scoped
-    public String vName(Name name, String cls) {
-        int i = varCount.get(cls, name.name);
-        return i == 1 ? name.name : name.name + i;
-    }
-
     @Override
-    public Void visitName(Name name, Info arg) {
-        name.astInfo.outerVar = arg.outerVar;
-        //check if user supplied var name
-        setVarName(name, arg.outerCls);
-        w.append("public %s %s;", name.isToken ? options.tokenClass : name.name, name.astInfo.varName);
+    public Void visitName(Name name, Void arg) {
+        w.append("public %s %s;", name.astInfo.nodeType, name.astInfo.varName);
         return null;
     }
 
     @Override
-    public Void visitRegex(Regex regex, Info arg) {
-        regex.astInfo.outerVar = arg.outerVar;
-        Node ch = regex.node;
+    public Void visitRegex(Regex regex, Void arg) {
         if (regex.isOptional()) {
             regex.node.accept(this, arg);
         }
         else {
-            Name name = ch.asName();
-            setVarName(name, arg.outerCls);
-            ch.astInfo.isInLoop = true;
-            ch.astInfo.outerVar = arg.outerVar;
-            String type = name.isToken ? options.tokenClass : name.name;
-            w.append("public List<%s> %s = new ArrayList<>();", type, name.astInfo.varName);
+            Node ch = regex.node;
+            w.append("public List<%s> %s = new ArrayList<>();", ch.astInfo.nodeType, ch.astInfo.varName);
         }
-        regex.astInfo.varName = ch.astInfo.varName;
         return null;
     }
 
-
     @Override
-    public Void visitOr(Or or, Info arg) {
+    public Void visitOr(Or or, Void arg) {
         w.append("public int which;");
-        int id = 1;
         for (var ch : or) {
             if (ch.isEpsilon()) continue;
-            //in case of factorization pre-write some code
-            ch.astInfo.which = id;
-            //sequence
-            //complex choice point inits holder
-            var altType = new Type(arg.outerCls, Utils.camel(arg.outerCls.name) + id);
-            String v;
-            if (ch.isName() || ch.isSequence() && ch.asSequence().size() == 1) {
-                if (ch.isSequence()) {
-                    v = ItemSet.sym(ch.asSequence().get(0)).name;
-                }
-                else {
-                    v = ItemSet.sym(ch).name;
-                }
-            }
-            else {
-                v = arg.outerCls.name.toLowerCase() + id;
-            }
-            ch.astInfo.nodeType = altType;
-            ch.astInfo.varName = v;
-            ch.astInfo.outerVar = arg.outerVar;
-            ch.astInfo.assignOuter = true;
-            w.append("%s %s;", altType.name, v);
-
-            id++;
+            w.append("%s %s;", ch.astInfo.nodeType.name, ch.astInfo.varName);
         }
         return null;
     }
@@ -141,26 +98,12 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
     void orInit(Or or) {
         for (var ch : or) {
             if (ch.isEpsilon()) continue;
-            //sequence
-            //complex choice point inits holder
-            var clsName = ch.astInfo.nodeType;
-
-            w.append("public static class %s{", clsName.name);
+            w.append("public static class %s{", ch.astInfo.nodeType.name);
             //holder ref
             w.append("%s holder;", curRule);
-            ch.accept(this, new Info(clsName, ch.astInfo.varName));
+            ch.accept(this, null);
             p.writePrinter(ch, true);
             w.append("}");
-        }
-    }
-
-    static class Info {
-        Type outerCls;
-        String outerVar;
-
-        public Info(Type outerCls, String outerVar) {
-            this.outerCls = outerCls;
-            this.outerVar = outerVar;
         }
     }
 
@@ -192,7 +135,7 @@ public class JavaAst extends BaseVisitor<Void, JavaAst.Info> {
             String res;
             if (isToken) {
                 if (printTokenQuote) {
-                    res = String.format("sb.append(\"'\").append(%s.value.replace(\"'\",\"\\'\")).append(\"'\");", expr);
+                    res = String.format("printToken(%s, sb);", expr);
                 }
                 else {
                     res = String.format("sb.append(%s.value);", expr);
