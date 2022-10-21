@@ -51,9 +51,6 @@ public class Sequence extends NodeList {
 
     public Node unwrap() {
         if (size() == 1) {
-            if (astInfo.which != -1) {
-                throw new RuntimeException("norm with code");
-            }
             var res = get(0);
             res.label = label;
             return res;

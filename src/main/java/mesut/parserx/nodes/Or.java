@@ -73,16 +73,6 @@ public class Or extends NodeList {
         return sb.toString();
     }
 
-    //printable without newline
-    boolean isSimple() {
-        for (Node c : this) {
-            if (!c.isString() && !c.isName()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     public Node normal() {
         normalCh();
         if (size() == 1) {

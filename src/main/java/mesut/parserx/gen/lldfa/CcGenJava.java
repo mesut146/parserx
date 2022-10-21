@@ -123,12 +123,15 @@ public class CcGenJava {
 
     void writeDecider(Name rule) {
         var regexBuilder = new La1RegexBuilder(builder);
-        var regex = regexBuilder.build(rule);
-        System.out.printf("%s -> %s\n", rule, regex);
-        w.append("public int %s_decide() throws IOException{", rule);
-        var decider = new Decider();
-        regex.accept(decider, null);
-        w.append("}");
+        regexBuilder.build(rule);
+        for (var s : regexBuilder.rules) {
+            w.append("public int %s_decide() throws IOException{", rule);
+            w.append("int which = 0;");
+            var decider = new Decider();
+            s.rhs.accept(decider, null);
+            w.append("return which;");
+            w.append("}");
+        }
     }
 
     void alt(Node ch, int which) {
@@ -205,7 +208,6 @@ public class CcGenJava {
     class Decider extends BaseVisitor<Void, Void> {
         public boolean popper = false;
         boolean inCondition = false;
-        Node prev;
 
         @Override
         public Void visitName(Name name, Void arg) {
@@ -217,9 +219,6 @@ public class CcGenJava {
                 else {
                     w.append("ts.pop(%s.%s, \"%s\");", ParserUtils.tokens, name.name, name.name);
                 }
-//                if (!name.astInfo.isFactor && !popper) {
-//                    w.append("return %s;", name.astInfo.which);
-//                }
             }
             else {
                 //todo
@@ -232,7 +231,7 @@ public class CcGenJava {
                 }
             }
             if (name.astInfo.which != -1) {
-                w.append("return %s;", name.astInfo.which);
+                w.append("which = %s;", name.astInfo.which);
             }
             return null;
         }
@@ -244,17 +243,9 @@ public class CcGenJava {
             if (regex.isOptional()) {
                 w.append("if(%s){", la);
                 inCondition = true;
-                var backupPrev = prev;
                 ch.accept(this, arg);
                 inCondition = false;
                 w.append("}");
-                prev = backupPrev;
-                //if empty tail
-                if (prev.astInfo.which != -1 && !popper) {
-                    w.append("else{");
-                    w.append("return %s;", prev.astInfo.which);
-                    w.append("}");
-                }
             }
             else if (regex.isStar()) {
                 w.append("while(%s){", la);
@@ -276,7 +267,6 @@ public class CcGenJava {
         public Void visitSequence(Sequence seq, Void arg) {
             for (var ch : seq) {
                 ch.accept(this, arg);
-                prev = ch;
             }
             return null;
         }

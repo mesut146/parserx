@@ -15,7 +15,7 @@ public class Template {
         if (!fileName.startsWith("/")) {
             fileName = "/" + fileName;
         }
-        content = Utils.read(getClass().getResourceAsStream(fileName));
+        content = Utils.read(Objects.requireNonNull(getClass().getResourceAsStream(fileName)));
     }
 
     //mark positions of variable
@@ -38,22 +38,17 @@ public class Template {
     }
 
     void parts() {
-        List<part> indexes = new ArrayList<>();
+        var indexes = new ArrayList<part>();
         //partition
-        for (String key : varMap.keySet()) {
+        for (var key : varMap.keySet()) {
             mark(content, key, indexes);
         }
         //sort
-        Collections.sort(indexes, new Comparator<part>() {
-            @Override
-            public int compare(part o1, part o2) {
-                return Integer.compare(o1.index, o2.index);
-            }
-        });
+        indexes.sort(Comparator.comparingInt(o -> o.index));
         //replace
         int pos = 0;
         for (part part : indexes) {
-            String prev = content.substring(pos, part.index);
+            var prev = content.substring(pos, part.index);
             if (!prev.isEmpty()) {
                 list.add(prev);
             }
