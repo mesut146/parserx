@@ -1,6 +1,5 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.RuleDecl;

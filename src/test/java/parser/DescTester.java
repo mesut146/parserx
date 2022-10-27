@@ -28,9 +28,6 @@ public class DescTester {
         var outDir = Env.dotDir().getAbsolutePath();
         var tree = builder.tree;
         tree.options.outDir = outDir;
-        if (builder.dump) {
-            tree.options.dump = true;
-        }
         JavaAst.printTokenQuote = false;
         //RecDescent.gen(tree, "java");
         //new CcGenJava(tree).gen();
@@ -140,9 +137,6 @@ public class DescTester {
         var outDir = Env.dotDir().getAbsolutePath();
         var tree = builder.tree;
         tree.options.outDir = outDir;
-        if (builder.dump) {
-            tree.options.dump = true;
-        }
         if (cc) {
             ParserGen.genCC(tree, Lang.JAVA);
         }

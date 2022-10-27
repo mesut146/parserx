@@ -248,12 +248,15 @@ public class LLDfaTest {
 
     @Test
     public void all0() throws Exception {
-        //E: A x | A y
-        //A: a b | a c
-        Builder.tree("lldfa/cc-rc.g").rule("E")
-                .input("aax", "E#1{['a', 'a'], 'x'}")
-                .input("aaab", "")
-                .check();
+//        Builder.tree("lldfa/cc-rc.g").dump()
+//                .rule("A")
+//                .input("ab", "A#2{'a', 'b'}")
+//                .input("aab", "")
+//                .input("aaab", "")
+//                .rule("E")
+//                .input("aax", "E#1{['a', 'a'], 'x'}")
+//                .input("aaab", "")
+//                .check();
         Builder.tree("lldfa/cc-complex.g").rule("E")
                 .input("ab", "E#1{'a', S1#1{'b'}}")
                 .input("acd", "E#1{'a', S1#2{'c', S3#2{'d'}}}")
@@ -327,7 +330,8 @@ public class LLDfaTest {
 
     @Test
     public void multi() throws Exception {
-        Builder.tree("lldfa/multi-sym.g").rule("E")
+        Builder.tree("lldfa/multi-sym.g").dump()
+                .rule("E")
                 .input("ax", "E#1{'a', 'x'}")
                 .input("ay", "E#2{'a', 'y'}")
                 .input("zpt", "E#3{A{'z'}, [B#1{'p'}, B#2{'t'}]}")
@@ -340,30 +344,30 @@ public class LLDfaTest {
 
     @Test
     public void rr_loop() throws Exception {
-//        Builder.tree("lldfa/rr-loop.g").rule("E")
-//                .input("x", "E#1{'x'}")
-//                .input("y", "E#2{'y'}")
-//                .input("ax", "E#1{[A#1{'a'}], 'x'}")
-//                .input("ababx", "E#1{[A#1{'a'}, A#2{'b'}, A#1{'a'}, A#2{'b'}], 'x'}")
-//                .input("ay", "E#2{[B#1{'a'}], 'y'}")
-//                .input("bbaay", "E#2{[B#2{'b'}, B#2{'b'}, B#1{'a'}, B#1{'a'}], 'y'}")
-//                .check();
-//        Builder.tree("lldfa/rr-loop.g").rule("F")
-//                .input("x", "F#1{X{'x'}}")
-//                .input("y", "F#2{Y{'y'}}")
-//                .input("ax", "F#1{X{[A#1{'a'}], 'x'}}")
-//                .input("ababx", "F#1{X{[A#1{'a'}, A#2{'b'}, A#1{'a'}, A#2{'b'}], 'x'}}")
-//                .input("ay", "F#2{Y{[B#1{'a'}], 'y'}}")
-//                .input("bbaay", "F#2{Y{[B#2{'b'}, B#2{'b'}, B#1{'a'}, B#1{'a'}], 'y'}}")
-//                .check();
-//        Builder.tree("lldfa/rr-loop2.g").rule("E")
-//                .input("acx", "E#1{[A#1{'a'}], [B#1{'c'}], 'x'}")
-//                .input("bdx", "E#1{[A#2{'b'}], [B#2{'d'}], 'x'}")
-//                .input("abcdx", "E#1{[A#1{'a'}, A#2{'b'}], [B#1{'c'}, B#2{'d'}], 'x'}")
-//                .input("acy", "E#2{[C#1{'a'}], [D#1{'c'}], 'y'}")
-//                .input("bdy", "E#2{[C#2{'b'}], [D#2{'d'}], 'y'}")
-//                .input("abcdy", "E#2{[C#1{'a'}, C#2{'b'}], [D#1{'c'}, D#2{'d'}], 'y'}")
-//                .check();
+        Builder.tree("lldfa/rr-loop.g").rule("E")
+                .dump()
+                .input("x", "E#1{'x'}")
+                .input("y", "E#2{'y'}")
+                .input("ax", "E#1{[A#1{'a'}], 'x'}")
+                .input("ababx", "E#1{[A#1{'a'}, A#2{'b'}, A#1{'a'}, A#2{'b'}], 'x'}")
+                .input("ay", "E#2{[B#1{'a'}], 'y'}")
+                .input("bbaay", "E#2{[B#2{'b'}, B#2{'b'}, B#1{'a'}, B#1{'a'}], 'y'}")
+                .rule("F")
+                .input("x", "F#1{X{'x'}}")
+                .input("y", "F#2{Y{'y'}}")
+                .input("ax", "F#1{X{[A#1{'a'}], 'x'}}")
+                .input("ababx", "F#1{X{[A#1{'a'}, A#2{'b'}, A#1{'a'}, A#2{'b'}], 'x'}}")
+                .input("ay", "F#2{Y{[B#1{'a'}], 'y'}}")
+                .input("bbaay", "F#2{Y{[B#2{'b'}, B#2{'b'}, B#1{'a'}, B#1{'a'}], 'y'}}")
+                .check();
+        Builder.tree("lldfa/rr-loop2.g").rule("E").dump()
+                .input("acx", "E#1{[A#1{'a'}], [B#1{'c'}], 'x'}")
+                .input("bdx", "E#1{[A#2{'b'}], [B#2{'d'}], 'x'}")
+                .input("abcdx", "E#1{[A#1{'a'}, A#2{'b'}], [B#1{'c'}, B#2{'d'}], 'x'}")
+                .input("acy", "E#2{[C#1{'a'}], [D#1{'c'}], 'y'}")
+                .input("bdy", "E#2{[C#2{'b'}], [D#2{'d'}], 'y'}")
+                .input("abcdy", "E#2{[C#1{'a'}, C#2{'b'}], [D#1{'c'}, D#2{'d'}], 'y'}")
+                .check();
         Builder.tree("lldfa/rr-loop-len2.g")
                 .rule("E")
                 .input("x", "E#1{'x'}")
@@ -402,19 +406,6 @@ public class LLDfaTest {
                 .input("acbdy", "E#2{[B#1{K#1{'a'}}, B#1{K#2{'c'}}, B#2{M#1{'b'}}, B#2{M#2{'d'}}], 'y'}")
                 .check();
         Builder.tree("lldfa/rr-loop-sub.g").rule("F")
-                .input("z", "F#2{'z'}")
-                .input("aaz", "F#2{['a', 'a'], 'z'}")
-                .input("x", "F#1{E#1{'x'}}")
-                .input("y", "F#1{E#2{'y'}}")
-                .input("ax", "F#1{E#1{[A#1{'a'}], 'x'}}")
-                .input("aby", "F#1{E#2{[B#1{'a'}, B#2{'b'}], 'y'}}")
-                .check();
-    }
-
-    @Test
-    public void name() throws Exception {
-        Builder.tree("lldfa/rr-loop-sub.g")
-                .rule("F")
                 .input("z", "F#2{'z'}")
                 .input("aaz", "F#2{['a', 'a'], 'z'}")
                 .input("x", "F#1{E#1{'x'}}")

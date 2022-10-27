@@ -8,7 +8,7 @@ import mesut.parserx.nodes.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static mesut.parserx.gen.lr.LrDFAGen.dollar;
+import static mesut.parserx.gen.ParserUtils.dollar;
 
 public class La1RegexBuilder {
     Tree tree;

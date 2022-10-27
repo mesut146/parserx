@@ -27,11 +27,11 @@ public class ParserGen {
         new Normalizer(tree).normalize();
         AstGen.gen(tree, target);
         if (target == Lang.JAVA) {
-            new CcGenJava(tree).gen();
+            //new CcGenJava(tree).gen();
+            new CcStateGenJava(tree).gen();
         }
         else {
             throw new RuntimeException("not yet");
         }
-        LexerGenerator.gen(tree, target);
     }
 }

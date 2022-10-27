@@ -1,6 +1,7 @@
 package mesut.parserx.gen.lr;
 
 import mesut.parserx.gen.Lang;
+import mesut.parserx.gen.ParserUtils;
 import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
@@ -168,7 +169,7 @@ public class LrCodeGen {
         sb.append(pack(gen.acc.stateId));
         sb.append(pack(1));
         for (var item : gen.acc.kernel) {
-            if (item.isReduce(gen.tree) && item.rule.ref.equals(gen.start.ref) && item.lookAhead.contains(LrDFAGen.dollar)) {
+            if (item.isReduce(gen.tree) && item.rule.ref.equals(gen.start.ref) && item.lookAhead.contains(ParserUtils.dollar)) {
                 sb.append(pack(idMap.getId(IdMap.EOF)));
                 break;
             }

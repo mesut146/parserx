@@ -15,7 +15,7 @@ public class Item {
     public Sequence rhs;
     public Set<ItemSet> gotoSet = new HashSet<>();
     public boolean[] closured;
-    public List<Item> parents = new ArrayList<>();//th ones created us
+    public List<Item> parents = new ArrayList<>();//the ones created us
     public Set<Item> prev = new LinkedHashSet<>();//prev item
     public List<Item> next = new ArrayList<>();
     public List<Item> reduceParent = new ArrayList<>();

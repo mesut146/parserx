@@ -1,5 +1,6 @@
 package mesut.parserx.gen.lr;
 
+import mesut.parserx.gen.ParserUtils;
 import mesut.parserx.gen.lldfa.Normalizer;
 import mesut.parserx.gen.lldfa.ItemSet;
 import mesut.parserx.gen.transform.LrUtils;
@@ -24,7 +25,6 @@ public class LrDFAGen {
     public int lastId = -1;
     public List<LrItemSet> itemSets = new ArrayList<>();
     public static boolean debug = false;
-    public static Name dollar = new Name("$", true);//eof
     public static String startName = "%start";
 
     public LrDFAGen(Tree tree, LrType type) {
@@ -63,7 +63,7 @@ public class LrDFAGen {
         treeInfo = TreeInfo.make(tree);
 
         first = new LrItem(start, 0);
-        first.lookAhead.add(dollar);
+        first.lookAhead.add(ParserUtils.dollar);
     }
 
     public void writeGrammar() {

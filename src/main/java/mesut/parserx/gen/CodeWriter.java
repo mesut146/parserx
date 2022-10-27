@@ -13,13 +13,7 @@ public class CodeWriter {
     }
 
     void init() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < level; i++) {
-            for (int j = 0; j < count; j++) {
-                sb.append(" ");
-            }
-        }
-        indent = sb.toString();
+        indent = " ".repeat(Math.max(0, count)).repeat(Math.max(0, level));
     }
 
 
@@ -61,9 +55,9 @@ public class CodeWriter {
         if (args.length != 0) {
             s = String.format(s, args);
         }
-        String[] arr = s.split("\n");
-        for (int i = 0; i < arr.length; i++) {
-            append(arr[i]);
+        var arr = s.split("\n");
+        for (var value : arr) {
+            append(value);
         }
     }
 

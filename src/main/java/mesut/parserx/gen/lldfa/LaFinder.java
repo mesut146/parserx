@@ -1,7 +1,7 @@
 package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.FirstSet;
-import mesut.parserx.gen.lr.LrDFAGen;
+import mesut.parserx.gen.ParserUtils;
 import mesut.parserx.nodes.*;
 
 import java.util.HashMap;
@@ -27,7 +27,7 @@ public class LaFinder extends BaseVisitor<Void, Void> {
         if (done.containsKey(ref)) return done.get(ref);
         done.put(ref, finder.set);
         if (ref.equals(tree.start)) {
-            finder.set.add(LrDFAGen.dollar);
+            finder.set.add(ParserUtils.dollar);
         }
         for (var decl : tree.rules) {
             //if (decl.ref.equals(ref)) continue;

@@ -4,6 +4,7 @@ import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Validator;
 import mesut.parserx.gen.Lang;
+import mesut.parserx.gen.ParserUtils;
 import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.lldfa.Normalizer;
 import mesut.parserx.gen.lldfa.LLDfaBuilder;
@@ -27,7 +28,7 @@ import java.util.List;
 public class Main {
 
     static List<String> cmds = Arrays.asList("-left", "-factor", "-epsilon",
-            "-optimize", "-dfa", "-nfa", "-nfa2dfa", "-regex", "-lldfa", "-lexer", "-lalr1", "-lr1");
+            "-optimize", "-dfa", "-nfa", "-nfa2dfa", "-regex", "-lldfa", "-lexer", "-lalr1", "-lr1", "-cc");
 
     static String usageStr = "usage:\n" +
             "java -jar <jarfile> <command>\n" +
@@ -247,7 +248,7 @@ public class Main {
                     generator.dfa.dot(new FileWriter(new File(tree.options.outDir, Utils.newName(input.getName(), "dot"))));
                 }
             }
-            else if (cmd.contains("-lldfa")) {
+            else if (cmd.contains("-lldfa") || cmd.contains("-cc")) {
                 var tree = Tree.makeTree(input);
                 if (output == null) {
                     tree.options.outDir = input.getParent();
@@ -273,7 +274,12 @@ public class Main {
                 if (astClass != null) {
                     tree.options.astClass = astClass;
                 }
-                ParserGen.gen(tree, lang);
+                if (cmd.contains("-cc")) {
+                    ParserGen.genCC(tree, lang);
+                }
+                else {
+                    ParserGen.gen(tree, lang);
+                }
             }
             else if (cmd.contains("-lalr1") || cmd.contains("-lr1")) {
                 Tree tree = Tree.makeTree(input);

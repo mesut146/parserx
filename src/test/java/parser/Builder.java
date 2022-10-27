@@ -11,8 +11,6 @@ public class Builder {
     Tree tree;
     String curRule;
     List<RuleInfo> cases = new ArrayList<>();
-    boolean dump = false;
-
 
     static class RuleInfo {
         String rule;
@@ -22,7 +20,7 @@ public class Builder {
     }
 
     public Builder dump() {
-        this.dump = true;
+        tree.options.dump = true;
         return this;
     }
 
@@ -66,6 +64,7 @@ public class Builder {
     }
 
     public void check() throws Exception {
+        System.out.println("testing " + tree.file.getName());
         DescTester.check(this, true);
     }
 

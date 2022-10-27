@@ -27,6 +27,7 @@ public class ItemSet {
     public List<LLTransition> incoming = new ArrayList<>();
     public Node symbol;
     boolean alreadyGenReduces = false;
+    public static boolean forceRuleClosure = false;
 
     public ItemSet(TreeInfo treeInfo, LrType type) {
         this.treeInfo = treeInfo;
@@ -199,48 +200,61 @@ public class ItemSet {
     }
 
     public void closure(Item item) {
-        //if dot sym have common factor ,closure is forced to reveal factor
-        var syms = symbols();
-        for (int i = item.dotPos; i < item.rhs.size(); i++) {
-            if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
-            var node = item.getNode(i);
-            var sym = sym(node);
-            if (sym.isToken) continue;
-            //check two consecutive syms have common
-            for (int j = item.dotPos; j < item.rhs.size(); j++) {
-                if (i == j) continue;
-                if (j > item.dotPos && !FirstSet.canBeEmpty(item.getNode(j - 1), tree)) break;
-                var next = item.getNode(j);
-                if (commonNoSame(sym, sym(next))) {
-                    item.closured[i] = true;
-                    closure(sym, i, item);
-                    break;
-                }
+        if (forceRuleClosure) {
+            for (int i = item.dotPos; i < item.rhs.size(); i++) {
+                if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
+                var node = item.getNode(i);
+                var sym = sym(node);
+                if (sym.isToken) continue;
+                item.closured[i] = true;
+                closure(sym, i, item);
             }
-            if (item.closured[i]) continue;
-            //check dot sym and any other sym have common
-            for (var s2 : syms) {
-                if (s2 == sym) continue;
-                if (commonNoSame(sym, s2)) {
-                    item.closured[i] = true;
-                    closure(sym, i, item);
-                    break;
+        }
+        else {
+            //if dot sym have common factor ,closure is forced to reveal factor
+            var syms = symbols();
+            for (int i = item.dotPos; i < item.rhs.size(); i++) {
+                if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
+                var node = item.getNode(i);
+                var sym = sym(node);
+                if (sym.isToken) continue;
+                //check two consecutive syms have common
+                for (int j = item.dotPos; j < item.rhs.size(); j++) {
+                    if (i == j) continue;
+                    if (j > item.dotPos && !FirstSet.canBeEmpty(item.getNode(j - 1), tree)) break;
+                    var next = item.getNode(j);
+                    if (commonNoSame(sym, sym(next))) {
+                        item.closured[i] = true;
+                        closure(sym, i, item);
+                        break;
+                    }
+                }
+                if (item.closured[i]) continue;
+                //check dot sym and any other sym have common
+                for (var s2 : syms) {
+                    if (s2 == sym) continue;
+                    if (commonNoSame(sym, s2)) {
+                        item.closured[i] = true;
+                        closure(sym, i, item);
+                        break;
+                    }
                 }
             }
         }
+
     }
 
     private void closure(Name sym, int pos, Item sender) {
-        Set<Name> laList = sender.follow(tree, pos);
-        Set<Item> set = new HashSet<>();
-        for (RuleDecl decl : treeInfo.ruleMap.get(sym)) {
-            Item newItem = new Item(decl, 0);
+        var laList = sender.follow(tree, pos);
+        var set = new HashSet<Item>();
+        for (var decl : treeInfo.ruleMap.get(sym)) {
+            var newItem = new Item(decl, 0);
             newItem.lookAhead.addAll(laList);
             newItem.parents.add(sender);
             addOrUpdate(newItem);
             set.add(newItem);
         }
-        for (Item item : set) {
+        for (var item : set) {
             item.siblings.addAll(set);
         }
     }
@@ -254,7 +268,7 @@ public class ItemSet {
     }
 
     public boolean update(Item item, boolean updateIds, boolean updateGoto) {
-        for (Item prev : all) {
+        for (var prev : all) {
             if (!prev.isSame(item)) continue;
             //merge la
             prev.lookAhead.addAll(item.lookAhead);

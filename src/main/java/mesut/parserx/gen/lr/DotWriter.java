@@ -1,12 +1,10 @@
 package mesut.parserx.gen.lr;
 
+import mesut.parserx.gen.ParserUtils;
 import mesut.parserx.nodes.Name;
-import mesut.parserx.nodes.TokenDecl;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class DotWriter {
@@ -17,7 +15,7 @@ public class DotWriter {
             tb.tokens.forEach(decl -> tokens.add(decl.ref()));
             tb.modeBlocks.forEach(mb -> mb.tokens.forEach(decl -> tokens.add(decl.ref())));
         });
-        tokens.add(LrDFAGen.dollar);
+        tokens.add(ParserUtils.dollar);
 
         writer.println("digraph G{");
         writer.println("rankdir = TD");
@@ -88,7 +86,7 @@ public class DotWriter {
                     else {
                         //lr1
                         if (item.lookAhead.contains(token)) {
-                            if (item.lookAhead.contains(LrDFAGen.dollar) && name.equals(start)) {
+                            if (item.lookAhead.contains(ParserUtils.dollar) && name.equals(start)) {
                                 writer.print("accept");
                             }
                             else {

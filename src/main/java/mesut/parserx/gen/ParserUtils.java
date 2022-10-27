@@ -11,6 +11,7 @@ import java.util.Set;
 
 public class ParserUtils {
     public static String tokens = "Tokens";
+    public static Name dollar = new Name("$", true);//eof
 
     public static void genTokenType(Tree tree) throws IOException {
         var options = tree.options;
