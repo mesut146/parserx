@@ -23,6 +23,9 @@ public class CcGenJava {
     }
 
     public void gen() throws IOException {
+        LLDfaBuilder.noshrink = true;
+        LLDfaBuilder.skip = true;
+        ItemSet.forceRuleClosure = true;
         builder = new LLDfaBuilder(tree);
         builder.factor();
         ParserUtils.genTokenType(tree);
@@ -42,7 +45,7 @@ public class CcGenJava {
                 w.append("case %d:{", i);
                 w.append("ts.unmark();");
                 alt(ch, i, w);
-                var n = new NormalWriter(w,tree);
+                var n = new NormalWriter(w, tree);
                 ch.accept(n, null);
                 w.append("break;");
                 w.append("}");
@@ -57,7 +60,7 @@ public class CcGenJava {
             if (builder.rules.containsKey(decl.ref)) continue;
             w.append("public %s %s() throws IOException{", decl.retType, decl.getName());
             w.append("%s res = new %s();", decl.retType, decl.retType);
-            var nw = new NormalWriter(w,tree);
+            var nw = new NormalWriter(w, tree);
             decl.rhs.accept(nw, null);
             w.append("return res;");
             w.append("}");
@@ -124,11 +127,15 @@ public class CcGenJava {
     void writeDecider(Name rule) {
         var regexBuilder = new La1RegexBuilder(builder);
         regexBuilder.build(rule);
-        for (var s : regexBuilder.rules) {
+        System.out.println("rules: " + regexBuilder.rules.size());
+        for (var decl : regexBuilder.rules) {
+            System.out.println(decl);
+        }
+        for (var decl : regexBuilder.rules) {
             w.append("public int %s_decide() throws IOException{", rule);
             w.append("int which = 0;");
             var decider = new Decider();
-            s.rhs.accept(decider, null);
+            decl.rhs.accept(decider, null);
             w.append("return which;");
             w.append("}");
         }

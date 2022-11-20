@@ -22,13 +22,17 @@ public class ParserGen {
         LexerGenerator.gen(tree, target);
     }
 
-    public static void genCC(Tree tree, Lang target) throws IOException {
+    public static void genCC(Tree tree, Lang target, boolean regex) throws IOException {
         tree.prepare();
         new Normalizer(tree).normalize();
         AstGen.gen(tree, target);
         if (target == Lang.JAVA) {
-            //new CcGenJava(tree).gen();
-            new CcStateGenJava(tree).gen();
+            if (regex) {
+                new CcGenJava(tree).gen();
+            }
+            else {
+                new CcStateGenJava(tree).gen();
+            }
         }
         else {
             throw new RuntimeException("not yet");

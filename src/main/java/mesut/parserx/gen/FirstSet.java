@@ -102,7 +102,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
             if (list.isEmpty()) {
                 throw new RuntimeException("rule not found: " + name);
             }
-            for (RuleDecl decl : list) {
+            for (var decl : list) {
                 decl.rhs.accept(this, arg);
             }
         }

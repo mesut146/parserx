@@ -293,7 +293,7 @@ public class LLDfaTest {
                 .input("ab", "A#2{'a', 'b'}")
                 .input("abc", "A#3{'a', 'b', 'c'}")
                 .check();
-        Builder.tree("lldfa/simple.g").rule("E")
+        Builder.tree("lldfa/simple.g").rule("E").dump()
                 .input("acx", "E#1{A#1{'a'}, B#1{'c'}, 'x'}")
                 .input("adx", "E#1{A#1{'a'}, B#2{'d'}, 'x'}")
                 .input("bcx", "E#1{A#2{'b'}, B#1{'c'}, 'x'}")

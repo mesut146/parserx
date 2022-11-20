@@ -138,7 +138,7 @@ public class DescTester {
         var tree = builder.tree;
         tree.options.outDir = outDir;
         if (cc) {
-            ParserGen.genCC(tree, Lang.JAVA);
+            ParserGen.genCC(tree, Lang.JAVA, true);
         }
         else {
             ParserGen.gen(tree, Lang.JAVA);

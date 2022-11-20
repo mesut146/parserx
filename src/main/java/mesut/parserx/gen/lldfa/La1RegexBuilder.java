@@ -29,7 +29,7 @@ public class La1RegexBuilder {
         this.all = builder.rules.get(curRule);
         this.initialState = builder.firstSets.get(curRule);
         mergeSameSets();
-        fillAlts();
+        fillAlts2();
         makeRules();
         inline();
     }
@@ -232,6 +232,29 @@ public class La1RegexBuilder {
         all.removeAll(deads);
     }
 
+    void fillAlts2() {
+        var deads = new HashSet<ItemSet>();
+        for (var set : all) {
+            System.out.println("acc for " + set.stateId + " =" + findFinals(set, new HashSet<>()));
+            for (var tr : set.transitions) {
+                var acc = findFinals(tr.target, new HashSet<>());
+                if (tr.target.hasFinal()) {
+                    tr.symbol.astInfo.which = findWhich(tr.target);
+                    if (acc.size() == 1) {
+                        deads.add(tr.target);
+                    }
+                }
+                else {
+                    if (acc.size() == 1) {
+                        tr.symbol.astInfo.which = acc.iterator().next();
+                        deads.add(tr.target);
+                    }
+                }
+            }
+        }
+        all.removeAll(deads);
+    }
+
     boolean isFinal(ItemSet set) {
         for (var item : set.all) {
             if (isFinal(item)) return true;
@@ -267,6 +290,19 @@ public class La1RegexBuilder {
         var res = target.all.stream().filter(this::isFinal).findFirst();
         if (res.isPresent()) return res.get().rule.which;
         throw new RuntimeException("which not found");
+    }
+
+    HashSet<Integer> findFinals(ItemSet set, Set<ItemSet> done) {
+        if (done.contains(set)) return new HashSet<>();
+        done.add(set);
+        var res = new HashSet<Integer>();
+        if (set.hasFinal()) {
+            res.add(findWhich(set));
+        }
+        for (var tr : set.transitions) {
+            res.addAll(findFinals(tr.target, done));
+        }
+        return res;
     }
 
     //make node la1
