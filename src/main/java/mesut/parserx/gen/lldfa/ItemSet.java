@@ -28,6 +28,7 @@ public class ItemSet {
     public Node symbol;
     boolean alreadyGenReduces = false;
     public static boolean forceRuleClosure = false;
+    public boolean isFinal = false;
 
     public ItemSet(TreeInfo treeInfo, LrType type) {
         this.treeInfo = treeInfo;

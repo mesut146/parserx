@@ -18,6 +18,7 @@ public class La1RegexBuilder {
     Set<ItemSet> all;
     List<RuleDecl> rules;
     Set<Name> finals;
+    Map<Set<ItemSet>, ItemSet> groups;
 
     public La1RegexBuilder(LLDfaBuilder builder) {
         this.builder = builder;
@@ -28,10 +29,25 @@ public class La1RegexBuilder {
         this.curRule = rule;
         this.all = builder.rules.get(curRule);
         this.initialState = builder.firstSets.get(curRule);
-        mergeSameSets();
+        groups = new HashMap<>();
+        System.out.println("building regex for  " + curRule);
+        Name.debug = true;
         fillAlts2();
+        mergeSameSets();
         makeRules();
         inline();
+    }
+
+    boolean isSingleAlt(ItemSet target) {
+        var acc = findFinals(target, new HashSet<>());
+        return acc.size() == 1;
+    }
+
+    Name makeRef(ItemSet set) {
+        if (initialState == set) {
+            return new Name(curRule.name + "_decide");
+        }
+        return new Name(curRule.name + "_" + set.stateId);
     }
 
     private void makeRules() {
@@ -40,23 +56,31 @@ public class La1RegexBuilder {
         for (var set : all) {
             var list = new ArrayList<Node>();
             for (var tr : set.transitions) {
-                if (tr.target.transitions.isEmpty()) {
+                if (tr.target.transitions.isEmpty() || isSingleAlt(tr.target)) {
                     list.add(tr.symbol);
                 }
                 else {
+                    var mapped = tr.target;
+                    for (var e : groups.entrySet()) {
+                        if (e.getKey().contains(tr.target)) {
+                            mapped = e.getValue();
+                            break;
+                        }
+                    }
                     if (isFinal(tr.target)) {
-                        list.add(new Sequence(tr.symbol, new Regex(new Name("S" + tr.target.stateId), RegexType.OPTIONAL)));
+                        list.add(new Sequence(tr.symbol, new Regex(makeRef(mapped), RegexType.OPTIONAL)));
                     }
                     else {
-                        list.add(new Sequence(tr.symbol, new Name("S" + tr.target.stateId)));
+                        list.add(new Sequence(tr.symbol, makeRef(mapped)));
                     }
                 }
+
             }
             if (!list.isEmpty()) {
-                rules.add(new RuleDecl("S" + set.stateId, Or.make(list)));
+                rules.add(new RuleDecl(makeRef(set), Or.make(list)));
             }
             if (isFinal(set)) {
-                this.finals.add(new Name("S" + set.stateId));
+                this.finals.add(makeRef(set));
             }
         }
         System.out.println(NodeList.join(rules, "\n"));
@@ -67,7 +91,8 @@ public class La1RegexBuilder {
             var any = false;
             for (var rule : rules) {
                 removeRightRec(rule);
-                if (rule.getName().equals("S" + initialState.stateId)) continue;
+                if (rule.ref.equals(makeRef(initialState))) continue;
+                if (selfReferencing(rule)) continue;//cant inline
                 //remove all references
                 for (var rd : rules) {
                     if (replace(rd.rhs, rule.ref, rule.rhs)) {
@@ -82,6 +107,20 @@ public class La1RegexBuilder {
                 break;
             }
         }
+    }
+
+    boolean selfReferencing(final RuleDecl decl) {
+        var tr = new Transformer() {
+            boolean self = false;
+
+            @Override
+            public Node visitName(Name name, Void arg) {
+                if (name.equals(decl.ref)) self = true;
+                return super.visitName(name, arg);
+            }
+        };
+        decl.rhs.accept(tr, null);
+        return tr.self;
     }
 
     boolean replace(Node node, Name ref, Node with) {
@@ -166,22 +205,19 @@ public class La1RegexBuilder {
             var any = false;
             for (var set1 : all) {
                 //find similar sets
-                var similars = new ArrayList<ItemSet>();
+                var similars = new HashSet<ItemSet>();
                 for (var set2 : all) {
                     if (set2 == set1) continue;
                     if (isSame(set1, set2)) {
                         similars.add(set2);
-                        //redirect other transitions to set1
-                        for (var tr : set2.incoming) {
-                            tr.target = set1;
-                        }
                         any = true;
                     }
                 }
-                //remove sets and redirect other transitions to set1
+                //remove sets
                 if (!similars.isEmpty()) {
                     System.out.println("group " + set1.stateId + "," + similars.stream().map(s -> String.valueOf(s.stateId)).collect(Collectors.joining(",")));
                     similars.forEach(all::remove);
+                    groups.put(similars, set1);
                     break;
                 }
             }
@@ -189,8 +225,14 @@ public class La1RegexBuilder {
         }
     }
 
+    void redirect(ItemSet set, ItemSet target) {
+        for (var tr : set.incoming) {
+            tr.target = target;
+        }
+    }
+
     boolean isSame(ItemSet set, ItemSet set2) {
-        if (isFinal(set) || isFinal(set2)) return false;
+        //if (isFinal(set) || isFinal(set2)) return false;//why not finals?
         if (set.transitions.size() != set2.transitions.size()) return false;
         var map = new HashMap<Node, ItemSet>();
         for (var tr : set.transitions) {
@@ -203,39 +245,10 @@ public class La1RegexBuilder {
         return true;
     }
 
-    public void buildNfa() {
-        for (var set : all) {
-            trim(set);
-        }
-    }
-
-    void fillAlts() {
-        var deads = new HashSet<ItemSet>();
-        for (var set : all) {
-            for (var tr : set.transitions) {
-                if (tr.symbol.astInfo.isFactor) {
-                    if (tr.target.hasFinal()) {
-                        tr.symbol.astInfo.which = findWhich(tr.target);
-                    }
-                }
-                else {
-                    if (!isFinal(tr.target)) {
-                        deads.add(tr.target);
-                    }
-                    //find final set and bind this to it
-                    var target = findTarget(tr.target);
-                    tr.target = target;
-                    tr.symbol.astInfo.which = findWhich(target);
-                }
-            }
-        }
-        all.removeAll(deads);
-    }
-
     void fillAlts2() {
         var deads = new HashSet<ItemSet>();
         for (var set : all) {
-            System.out.println("acc for " + set.stateId + " =" + findFinals(set, new HashSet<>()));
+            //System.out.println("acc for " + set.stateId + " =" + findFinals(set, new HashSet<>()));
             for (var tr : set.transitions) {
                 var acc = findFinals(tr.target, new HashSet<>());
                 if (tr.target.hasFinal()) {
@@ -252,10 +265,15 @@ public class La1RegexBuilder {
                 }
             }
         }
-        all.removeAll(deads);
+        if (!deads.isEmpty()) {
+            var str = deads.stream().map(set -> String.valueOf(set.stateId)).collect(Collectors.toList());
+            System.out.println("deads: " + str);
+            all.removeAll(deads);
+        }
     }
 
     boolean isFinal(ItemSet set) {
+        if (set.isFinal) return true;
         for (var item : set.all) {
             if (isFinal(item)) return true;
         }
@@ -360,13 +378,6 @@ public class La1RegexBuilder {
         return node.astInfo.isFactor;
     }
 
-    //merge same target transitions
-    void combine() {
-        for (var set : all) {
-            combine(set);
-        }
-    }
-
     private static void combine(ItemSet set) {
         //target -> ors
         var map = new HashMap<ItemSet, List<Node>>();
@@ -402,6 +413,5 @@ public class La1RegexBuilder {
             }
         }
     }
-
 
 }

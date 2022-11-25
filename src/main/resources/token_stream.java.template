@@ -15,13 +15,12 @@ public class TokenStream{
 
     void pop() throws IOException{
         if(pos < tokens.size()){
-            pos++;
             la = tokens.get(pos);
         }else{
-            pos++;
             tokens.add(la);
             la = lexer.$lexer_function$();
         }
+        pos++;
     }
 
     void pop(int type, String name) throws IOException{

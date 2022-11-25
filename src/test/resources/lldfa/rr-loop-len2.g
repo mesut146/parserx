@@ -7,3 +7,4 @@ B: a b | c d;
 F: X | Y;
 X: A* x;
 Y: B* y;
+//F-> (c d)* (y | x | a b F)

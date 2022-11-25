@@ -14,8 +14,8 @@ public class CcGenJava {
     Options options;
     CodeWriter w = new CodeWriter(true);
     LLDfaBuilder builder;
-    Set<Name> popperRules = new HashSet<>();
-    Set<Name> popperRules2 = new HashSet<>();
+//    Set<Name> popperRules = new HashSet<>();
+//    Set<Name> popperRules2 = new HashSet<>();
 
     public CcGenJava(Tree tree) {
         this.tree = tree;
@@ -33,7 +33,6 @@ public class CcGenJava {
         header();
         for (var entry : builder.rules.entrySet()) {
             var rule = entry.getKey();
-
             var decl = tree.getRule(rule);
             w.append("public %s %s() throws IOException{", decl.retType, rule.name);
             w.append("%s res = new %s();", decl.retType, decl.retType);
@@ -67,23 +66,23 @@ public class CcGenJava {
 
         }
         //poppers
-        for (var name : popperRules) {
-            var decl = tree.getRule(name);
-            w.append("public void %s_pop() throws IOException{", decl.getName());
-            var nw = new Decider();
-            nw.popper = true;
-            decl.rhs.accept(nw, null);
-            w.append("}");
-        }
-        for (var name : popperRules2) {
-            if (popperRules.contains(name)) continue;
-            var decl = tree.getRule(name);
-            w.append("public void %s_pop() throws IOException{", decl.getName());
-            var nw = new Decider();
-            nw.popper = true;
-            decl.rhs.accept(nw, null);
-            w.append("}");
-        }
+//        for (var name : popperRules) {
+//            var decl = tree.getRule(name);
+//            w.append("public void %s_pop() throws IOException{", decl.getName());
+//            var nw = new Decider();
+//            nw.popper = true;
+//            decl.rhs.accept(nw, null);
+//            w.append("}");
+//        }
+//        for (var name : popperRules2) {
+//            if (popperRules.contains(name)) continue;
+//            var decl = tree.getRule(name);
+//            w.append("public void %s_pop() throws IOException{", decl.getName());
+//            var nw = new Decider();
+//            nw.popper = true;
+//            decl.rhs.accept(nw, null);
+//            w.append("}");
+//        }
         w.append("}");
         var file = new File(options.outDir, options.parserClass + ".java");
         Utils.write(w.get(), file);
@@ -132,9 +131,9 @@ public class CcGenJava {
             System.out.println(decl);
         }
         for (var decl : regexBuilder.rules) {
-            w.append("public int %s_decide() throws IOException{", rule);
+            w.append("public int %s() throws IOException{", decl.getName());
             w.append("int which = 0;");
-            var decider = new Decider();
+            var decider = new Decider(regexBuilder);
             decl.rhs.accept(decider, null);
             w.append("return which;");
             w.append("}");
@@ -149,8 +148,12 @@ public class CcGenJava {
     }
 
     class Decider extends BaseVisitor<Void, Void> {
-        public boolean popper = false;
         boolean inCondition = false;
+        La1RegexBuilder builder;
+
+        public Decider(La1RegexBuilder builder) {
+            this.builder = builder;
+        }
 
         @Override
         public Void visitName(Name name, Void arg) {
@@ -165,13 +168,7 @@ public class CcGenJava {
             }
             else {
                 //todo
-                w.append("%s_pop();", name.name);
-                if (popper) {
-                    popperRules2.add(name);
-                }
-                else {
-                    popperRules.add(name);
-                }
+                w.append("which = %s();", name.name);
             }
             if (name.astInfo.which != -1) {
                 w.append("which = %s;", name.astInfo.which);
@@ -182,7 +179,8 @@ public class CcGenJava {
         @Override
         public Void visitRegex(Regex regex, Void arg) {
             var ch = regex.node;
-            var la = ParserUtils.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type");
+
+            var la = ParserUtils.loopExpr(FirstSet.tokens(ch, tree, builder.rules), "ts.la.type");
             if (regex.isOptional()) {
                 w.append("if(%s){", la);
                 inCondition = true;

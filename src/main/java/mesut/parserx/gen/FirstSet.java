@@ -10,6 +10,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     Tree tree;
     LinkedHashSet<Name> res = new LinkedHashSet<>();
     Set<Name> rules = new HashSet<>();
+    List<RuleDecl> extraRules = new ArrayList<>();
     boolean recurse = true;
     boolean allowEpsilon = true;
     boolean lrEpsilon = false;
@@ -18,19 +19,23 @@ public class FirstSet extends BaseVisitor<Void, Void> {
         this.tree = tree;
     }
 
-
     public static boolean start(Node node, Name name, Tree tree) {
         return firstSet(node, tree).contains(name);
     }
 
     public static Set<Name> firstSet(Node node, Tree tree) {
-        return firstSet(node, tree, false);
+        return firstSet(node, tree, false, new ArrayList<>());
     }
 
     public static Set<Name> firstSet(Node node, Tree tree, boolean lrEpsilon) {
+        return firstSet(node, tree, lrEpsilon, new ArrayList<>());
+    }
+
+    public static Set<Name> firstSet(Node node, Tree tree, boolean lrEpsilon, List<RuleDecl> extraRules) {
         var firstSet = new FirstSet(tree);
         firstSet.recurse = true;
         firstSet.lrEpsilon = lrEpsilon;
+        firstSet.extraRules = extraRules;
         node.accept(firstSet, null);
         return firstSet.res;
     }
@@ -43,8 +48,12 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     }
 
     public static Set<Name> tokens(Node node, Tree tree) {
-        Set<Name> res = new TreeSet<>();
-        for (Name name : firstSet(node, tree)) {
+        return tokens(node, tree, new ArrayList<>());
+    }
+
+    public static Set<Name> tokens(Node node, Tree tree, List<RuleDecl> extraRules) {
+        var res = new TreeSet<Name>();
+        for (Name name : firstSet(node, tree, false, extraRules)) {
             if (name.isToken) {
                 res.add(name);
             }
@@ -100,10 +109,18 @@ public class FirstSet extends BaseVisitor<Void, Void> {
         if (rules.add(name) && name.isRule() && recurse) {
             var list = tree.getRules(name);
             if (list.isEmpty()) {
-                throw new RuntimeException("rule not found: " + name);
+                var extra = extraRules.stream().filter(e -> e.ref.equals(name)).findFirst();
+                if (extra.isPresent()) {
+                    extra.get().rhs.accept(this, arg);
+                }
+                else {
+                    throw new RuntimeException("rule not found: " + name);
+                }
             }
-            for (var decl : list) {
-                decl.rhs.accept(this, arg);
+            else {
+                for (var decl : list) {
+                    decl.rhs.accept(this, arg);
+                }
             }
         }
         return null;
