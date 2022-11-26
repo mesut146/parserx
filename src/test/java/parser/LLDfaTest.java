@@ -12,6 +12,8 @@ import org.junit.Test;
 import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class LLDfaTest {
 
@@ -126,9 +128,6 @@ public class LLDfaTest {
 
     @Test
     public void leftRec() throws Exception {
-        //single("lldfa/left.g");
-        single("lldfa/left-indirect2.g");
-        single("lldfa/left-indirect3.g");
 //        Builder.tree("lldfa/left.g").rule("E")
 //                .input("b", "E#2{'b'}")
 //                .input("ba", "")
@@ -150,6 +149,20 @@ public class LLDfaTest {
 //        Builder.tree("lldfa/left-indirect2.g").rule("A")
 //                .input("xdbdb", "")
 //                .check();
+    }
+
+    @Test
+    public void rec() throws Exception {
+        var tree = Env.tree("lldfa/left-indirect3.g");
+//        var handler = new RecursionHandler(tree);
+//        handler.all();
+//        tree.printRules();
+        Builder.tree(tree)
+                .rule("A")
+                .input("x","A#5{'x'}")
+                .input("xa","A#1{A#5{'x'}, 'a'}")
+                .input("xadb", "A#3{B#1{A#1{A#5{'x'}, 'a'}, 'd'}, 'b'}")
+                .checkCC();
     }
 
     @Test
@@ -177,7 +190,7 @@ public class LLDfaTest {
         Builder.tree("lldfa/mid_as_factor.g")
                 .rule("E")
                 .input("acedbx", "E#1{A#1{'a', A#2{'c', A#3{'e'}, 'd'}, 'b'}, 'x'}")
-                .input("acy","E#2{[X#1{'a'}, X#2{'c'}], 'y'}")
+                .input("acy", "E#2{[X#1{'a'}, X#2{'c'}], 'y'}")
                 .check();
 
         Builder.tree("lldfa/mid.g")
@@ -243,15 +256,6 @@ public class LLDfaTest {
         var method = tsCls.getDeclaredMethod("consume", int.class, String.class);
         var res = method.invoke(ts, 0, "");
         cl.close();
-    }
-
-    @Test
-    public void rec() throws Exception {
-        var tree = Env.tree("lldfa/left-indirect3.g");
-        var handler = new RecursionHandler(tree);
-        handler.all();
-        tree.printRules();
-        //Builder.tree(tree).rule("A").input("xadb", "").checkCC();
     }
 
     @Test

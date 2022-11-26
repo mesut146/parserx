@@ -6,8 +6,6 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 public class CcGenJava {
     Tree tree;
@@ -23,6 +21,8 @@ public class CcGenJava {
     }
 
     public void gen() throws IOException {
+        new RecursionHandler(tree).handleAll();
+        tree.printRules();
         LLDfaBuilder.noshrink = true;
         LLDfaBuilder.skip = true;
         ItemSet.forceRuleClosure = true;
@@ -57,9 +57,22 @@ public class CcGenJava {
         //writeRest
         for (var decl : tree.rules) {
             if (builder.rules.containsKey(decl.ref)) continue;
-            w.append("public %s %s() throws IOException{", decl.retType, decl.getName());
-            w.append("%s res = new %s();", decl.retType, decl.retType);
+            if (decl.recInfo.isState || decl.recInfo.isTail) {
+                var arg = decl.ref.args.get(0);
+                var argType = new Type("Ast", arg.toString());//todo automate
+                w.append("public %s %s(%s arg) throws IOException{", decl.retType, decl.ref.name, argType);
+            }
+            else {
+                w.append("public %s %s() throws IOException{", decl.retType, decl.getName());
+            }
+            if (decl.recInfo.isState || decl.recInfo.isRec) {
+                w.append("%s res = null;", decl.retType);
+            }
+            else {
+                w.append("%s res = new %s();", decl.retType, decl.retType);
+            }
             var nw = new NormalWriter(w, tree);
+            nw.curRule = decl;
             decl.rhs.accept(nw, null);
             w.append("return res;");
             w.append("}");
@@ -141,6 +154,7 @@ public class CcGenJava {
     }
 
     static void alt(Node ch, int which, CodeWriter w) {
+        //todo noo already handled by normal writer
         w.append("%s %s = new %s();", ch.astInfo.nodeType, ch.astInfo.varName, ch.astInfo.nodeType);
         w.append("%s.holder = res;", ch.astInfo.varName);
         w.append("res.%s = %s;", ch.astInfo.varName, ch.astInfo.varName);

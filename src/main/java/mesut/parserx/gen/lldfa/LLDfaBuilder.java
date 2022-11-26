@@ -105,7 +105,7 @@ public class LLDfaBuilder {
                 var b = seq.get(i + 1).copy();
                 var sym = GreedyNormalizer.hasGreedyTail(a, FirstSet.firstSet(b, tree), tree);
                 if (sym != null) {
-                    throw new RuntimeException(seq + " has greediness");
+                    throw new RuntimeException(seq + " has greediness->" + sym.sym);
                 }
             }
             return false;

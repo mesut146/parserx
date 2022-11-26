@@ -2,16 +2,18 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.nodes.*;
+import mesut.parserx.utils.CountingMap;
 
 import java.util.*;
 
 public class RecursionHandler {
     Tree tree;
-    HashMap<Name, Name> afterMap = new HashMap<>();
-    List<RuleDecl> toAdd = new ArrayList<>();
+    HashMap<Name, Name> afterMap;
+    List<RuleDecl> toAdd;
     List<RuleDecl> all = new ArrayList<>();
     Map<Name, List<RuleDecl>> allMap = new LinkedHashMap<>();
-    int id = 1;
+    CountingMap<Name> idCounter = new CountingMap<>();
+    RuleDecl curRule;
 
     public RecursionHandler(Tree tree) {
         this.tree = tree;
@@ -28,23 +30,40 @@ public class RecursionHandler {
         //todo epsilons need to be resolved
     }
 
-    public void all() {
+    public void handleAll() {
         for (var rule : tree.rules) {
-            afterMap.clear();
+            curRule = rule;
+            afterMap = new HashMap<>();
             toAdd = new ArrayList<>();
             handleIndirect(rule);
             all.addAll(toAdd);
             allMap.put(rule.ref, toAdd);
         }
         for (var e : allMap.entrySet()) {
-            var cur = e.getValue();
+            var curRules = e.getValue();
             var orig = tree.getRule(e.getKey());
-            orig.rhs = cur.remove(0).rhs;
+            orig.rhs = curRules.remove(0).rhs;
             orig.recInfo = new Info();
             orig.recInfo.isRec = true;
-            for (var r : cur) {
-                tree.addRuleBelow(r, orig);
+            curRules.sort((r1, r2) -> {
+                if (r1 == r2) return 0;
+                if (r1.recInfo.isPrim) {
+                    if (r2.recInfo.isPrim) return r1.getName().compareTo(r2.getName());
+                    return -1;
+                }
+                if (r2.recInfo.isPrim) return 1;
+                if (r1.recInfo.isState) {
+                    if (r2.recInfo.isState) return r1.getName().compareTo(r2.getName());
+                    return -1;
+                }
+                if (r2.recInfo.isState) return 1;
+                return r1.getName().compareTo(r2.getName());
+            });
+            for (int i = 0; i < curRules.size(); i++) {
+                curRules.get(i).index = tree.rules.size() + i;
             }
+            int pos = tree.rules.indexOf(orig);
+            tree.rules.addAll(pos + 1, curRules);
         }
     }
 
@@ -56,8 +75,13 @@ public class RecursionHandler {
         //primary first
         var prims = new ArrayList<Node>();
         for (var sym : set) {
-            var after = sym.equals(decl.ref) ? new Regex(getAfter(sym), RegexType.OPTIONAL) : getAfter(sym);
-            prims.add(new Sequence(makePrimary(sym, decl.ref), after));
+            var a = getAfter(sym);
+            var after = sym.equals(decl.ref) ? new Regex(a, RegexType.OPTIONAL) : a;
+            var prim = makePrimary(sym, decl.ref);
+            if (sym.equals(decl.ref)) {
+                prim.astInfo.isPrimary = true;
+            }
+            prims.add(new Sequence(prim, after));
         }
         toAdd.add(0, new RuleDecl("S" + decl.ref, new Or(prims)));
         //tails
@@ -67,10 +91,15 @@ public class RecursionHandler {
             //collect all tails for rule
             var list = new ArrayList<Node>();
             for (var sym : set) {
-                var after = sym.equals(decl.ref) ? new Regex(getAfter(sym), RegexType.OPTIONAL) : getAfter(sym);
-                list.add(new Sequence(makeTail(sym, rule), after));
+                var a = getAfter(sym);
+                var after = sym.equals(decl.ref) ? new Regex(a, RegexType.OPTIONAL) : a;
+                var tail = makeTail(sym, rule);
+                list.add(new Sequence(tail, after));
+                if (sym.equals(decl.ref)) {
+                    tail.astInfo.isPrimary = true;
+                }
             }
-            var newRule = new RuleDecl(state, new Or(list));
+            var newRule = new RuleDecl(state, Or.make(list));
             newRule.recInfo = new Info();
             newRule.recInfo.isState = true;
             newRule.retType = decl.retType;
@@ -82,7 +111,8 @@ public class RecursionHandler {
         if (afterMap.containsKey(sym)) {
             return afterMap.get(sym);
         }
-        var res = new Name("S" + id++);
+        var id = idCounter.get(curRule.ref);
+        var res = new Name(curRule.ref + "_" + id);
         res.args.add(sym);
         afterMap.put(sym, res);
         return res;
@@ -106,27 +136,29 @@ public class RecursionHandler {
             var tail = transformTail(decl.rhs, start);
             if (tail != null) list.add(tail);
         }
-        var newRule = new RuleDecl(ref, new Or(list));
+        var newRule = new RuleDecl(ref, Or.make(list));
         newRule.recInfo = new Info();
         newRule.recInfo.isTail = true;
-        //newRule.retType=
+        newRule.retType = decl.retType;
         toAdd.add(newRule);
         return ref;
     }
 
     Node transformTail(Node node, Name start) {
         var seq = node.asSequence();
-        if (seq.get(0).equals(start)) {
-            var res = new Sequence(seq.list.subList(1, seq.list.size()));
-            var arg = new Name(start.name);
-            if (start.equals(arg)) {
-                arg.astInfo.isFactored = true;
-            }
-            arg.args.add(start);
-            res.list.add(0, arg);
-            return res;
+        if (!seq.get(0).equals(start)) {
+            return null;
         }
-        return null;
+        var res = new Sequence(seq.list.subList(1, seq.list.size()));
+        var arg = new Name(start.name);
+        arg.astInfo = seq.get(0).astInfo.copy();//always true?
+        if (start.equals(arg)) {
+            arg.astInfo.isFactored = true;
+        }
+        arg.args.add(start);
+        res.list.add(0, arg);
+        res.astInfo = seq.astInfo.copy();
+        return res;
     }
 
     Name makePrimary(Name rule, Name start) {
@@ -151,6 +183,7 @@ public class RecursionHandler {
         var newRule = new RuleDecl(res, new Or(list));
         newRule.recInfo = new Info();
         newRule.recInfo.isPrim = true;
+        newRule.retType = decl.retType;
         toAdd.add(newRule);
         return res;
     }

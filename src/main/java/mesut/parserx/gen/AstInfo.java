@@ -9,6 +9,7 @@ public class AstInfo {
     public boolean isFactor;//no assign
     public boolean isFactored;//epsilon
     public boolean isInLoop;
+    public boolean isPrimary;
     public int which = -1;
 
     public AstInfo copy() {
@@ -20,6 +21,7 @@ public class AstInfo {
         res.isFactored = isFactored;
         res.isInLoop = isInLoop;
         res.which = which;
+        res.isPrimary = isPrimary;
         return res;
     }
 

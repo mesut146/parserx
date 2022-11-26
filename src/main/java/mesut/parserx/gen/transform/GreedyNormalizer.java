@@ -123,14 +123,15 @@ public class GreedyNormalizer extends Transformer {
         if (node.isName() && node.asName().isToken) {
             return null;
         }
+        if (node.astInfo.isFactored) return null;
         if (node.isName() && first.contains(node.asName())) return null;
         var visitor = new GreedyVisitor(first, tree, node);
         return node.accept(visitor, null);
     }
 
     public static class TailInfo {
-        Name sym;
-        List<Node> list = new ArrayList<>();
+        public Name sym;
+        public List<Node> list = new ArrayList<>();
         List<Node> loopTail = new ArrayList<>();
     }
 

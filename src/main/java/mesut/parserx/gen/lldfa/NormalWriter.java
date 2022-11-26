@@ -8,6 +8,8 @@ import mesut.parserx.nodes.*;
 public class NormalWriter extends BaseVisitor<Void, Void> {
     CodeWriter w;
     Tree tree;
+    int index = 0;
+    Node prev;
 
     public NormalWriter(CodeWriter w, Tree tree) {
         this.w = w;
@@ -19,12 +21,12 @@ public class NormalWriter extends BaseVisitor<Void, Void> {
         int id = 1;
         for (var ch : or) {
             w.append("%sif(%s){", id > 1 ? "else " : "", ParserUtils.loopExpr(FirstSet.tokens(ch, tree), "ts.la.type"));
-            w.append("%s %s = new %s();", ch.astInfo.nodeType, ch.astInfo.varName, ch.astInfo.nodeType);
-            w.append("%s.holder = res;", ch.astInfo.varName);
-            w.append("res.%s = %s;", ch.astInfo.varName, ch.astInfo.varName);
-            w.append("res.which = %s;", id++);
+            if (!curRule.recInfo.isState) {
+                //createAlt(ch);
+            }
             ch.accept(this, arg);
             w.append("}");
+            id++;
         }
         w.append("else throw new RuntimeException(\"expecting one of %s got: \"+ts.la);", FirstSet.tokens(or, tree));
         return null;
@@ -60,13 +62,58 @@ public class NormalWriter extends BaseVisitor<Void, Void> {
     }
 
     private void consumer(Name name) {
+        if (curRule.recInfo.isState) {
+            if (index == 0) {
+                if (name.astInfo.isPrimary) {
+                    w.append("res = %s(arg);", name.name);
+                }
+                else {
+                    var type = new Type("Ast", name.name);//todo automate
+                    w.append("%s tmp = %s(arg);", type, name.name);
+                }
+            }
+            else {
+                if (prev.astInfo.isPrimary) {
+                    w.append("res = %s(res);", name.name);
+                }
+                else {
+                    w.append("res = %s(tmp);", name.name);
+                }
+            }
+            return;
+        }
+        else if (curRule.recInfo.isRec) {
+            if (index == 0) {
+                if (name.astInfo.isPrimary) {
+                    w.append("res = %s();", name.name);
+                }
+                else {
+                    var type = tree.getRule(name).retType;
+                    w.append("%s tmp = %s();", type, name.name);
+                }
+            }
+            else {
+                if (prev.astInfo.isPrimary) {
+                    w.append("res = %s(res);", name.name);
+                }
+                else {
+                    w.append("res = %s(tmp);", name.name);
+                }
+            }
+            return;
+        }
         String outer = name.astInfo.outerVar;
         String rhs;
         if (name.isToken) {
             rhs = String.format("ts.consume(%s.%s, \"%s\")", ParserUtils.tokens, name.name, name.name);
         }
         else {
-            rhs = name.name + "()";
+            if (curRule.recInfo.isTail && name.astInfo.isFactored) {
+                rhs = "arg";
+            }
+            else {
+                rhs = name.name + "()";
+            }
         }
         if (name.astInfo.isInLoop) {
             w.append("%s.%s.add(%s);", outer, name.astInfo.varName, rhs);
@@ -74,5 +121,27 @@ public class NormalWriter extends BaseVisitor<Void, Void> {
         else {
             w.append("%s.%s = %s;", outer, name.astInfo.varName, rhs);
         }
+    }
+
+    void createAlt(Node seq) {
+        w.append("%s %s = new %s();", seq.astInfo.nodeType, seq.astInfo.varName, seq.astInfo.nodeType);
+        w.append("%s.holder = res;", seq.astInfo.varName);
+        w.append("res.%s = %s;", seq.astInfo.varName, seq.astInfo.varName);
+        w.append("res.which = %s;", seq.astInfo.which);
+    }
+
+    @Override
+    public Void visitSequence(Sequence seq, Void arg) {
+        index = 0;
+        if (!curRule.recInfo.isState && !curRule.recInfo.isRec) {
+            createAlt(seq);
+        }
+        prev = null;
+        for (Node ch : seq) {
+            ch.accept(this, arg);
+            index++;
+            prev = ch;
+        }
+        return null;
     }
 }
