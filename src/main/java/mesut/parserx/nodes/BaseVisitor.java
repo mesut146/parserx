@@ -9,6 +9,11 @@ public class BaseVisitor<R, A> implements Visitor<R, A> {
     }
 
     @Override
+    public R visitFactored(Factored factored, A arg) {
+        return null;
+    }
+
+    @Override
     public R visitDot(Dot dot, A arg) {
         return null;
     }

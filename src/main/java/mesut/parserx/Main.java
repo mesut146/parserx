@@ -275,7 +275,7 @@ public class Main {
                     tree.options.astClass = astClass;
                 }
                 if (cmd.contains("-cc")) {
-                    ParserGen.genCC(tree, lang,false);
+                    ParserGen.genCC(tree, lang, true);
                 }
                 else {
                     ParserGen.gen(tree, lang);

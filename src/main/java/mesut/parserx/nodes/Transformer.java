@@ -1,6 +1,6 @@
 package mesut.parserx.nodes;
 
-public class Transformer extends BaseVisitor<Node, Void> {
+public class Transformer implements Visitor<Node, Void> {
 
     public Tree tree;
     protected RuleDecl curRule;
@@ -128,5 +128,13 @@ public class Transformer extends BaseVisitor<Node, Void> {
         return sub;
     }
 
+    @Override
+    public Node visitModeBlock(ModeBlock modeBlock, Void arg) {
+        return modeBlock;
+    }
 
+    @Override
+    public Node visitFactored(Factored factored, Void arg) {
+        return factored;
+    }
 }

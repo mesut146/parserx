@@ -4,10 +4,7 @@ import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.lr.LrType;
 import mesut.parserx.gen.lr.TreeInfo;
 import mesut.parserx.gen.transform.FactorHelper;
-import mesut.parserx.nodes.Name;
-import mesut.parserx.nodes.Node;
-import mesut.parserx.nodes.RuleDecl;
-import mesut.parserx.nodes.Tree;
+import mesut.parserx.nodes.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -77,19 +74,19 @@ public class ItemSet {
             for (var gti : gt.all) {
                 for (int i = gti.dotPos; i < gti.rhs.size(); i++) {
                     if (i > gti.dotPos && !FirstSet.canBeEmpty(gti.getNode(i - 1), tree)) break;
+                    if (gti.getNode(i) instanceof Factored) continue;
                     var sym = sym(gti.getNode(i));
-                    if (sym.equals(it.rule.ref)) {
-                        int newPos = gti.getNode(i).isStar() ? i : i + 1;
-                        var target = new Item(gti, newPos);
-                        //target.advanced = gti.getNode(i).isStar();
-                        if (target.isReduce(tree)) {
-                            it.reduceParent.add(target);
-                        }
-                        //target.gotoSet2.add(gt);
-                        if (!list.contains(target)) {
-                            list.add(target);
-                            gen(target, list);
-                        }
+                    if (!sym.equals(it.rule.ref)) continue;
+                    int newPos = gti.getNode(i).isStar() ? i : i + 1;
+                    var target = new Item(gti, newPos);
+                    //target.advanced = gti.getNode(i).isStar();
+                    if (target.isReduce(tree)) {
+                        it.reduceParent.add(target);
+                    }
+                    //target.gotoSet2.add(gt);
+                    if (!list.contains(target)) {
+                        list.add(target);
+                        gen(target, list);
                     }
                 }
             }
@@ -144,12 +141,14 @@ public class ItemSet {
 
     boolean isFactor(Item item, int i) {
         var node = item.getNode(i);
+        if (node instanceof Factored) return false;
         var sym = sym(node);
         //check two consecutive syms have common
         for (int j = item.dotPos; j < item.rhs.size(); j++) {
             if (i == j) continue;
             if (j > item.dotPos && !FirstSet.canBeEmpty(item.getNode(j - 1), tree)) break;
             var next = item.getNode(j);
+            if (next instanceof Factored) continue;
             if (common(sym, sym(next))) {
                 return true;
             }
@@ -158,6 +157,7 @@ public class ItemSet {
         for (var it : all) {
             if (it == item) continue;
             for (var s : it.getSyms(tree)) {
+                if (s.getKey() instanceof Factored) continue;
                 if (sym(s.getKey()).equals(sym)) {
                     return true;
                 }
@@ -194,6 +194,7 @@ public class ItemSet {
             for (int i = item.dotPos; i < item.rhs.size(); i++) {
                 if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
                 var node = item.getNode(i);
+                if (node instanceof Factored) continue;
                 res.add(sym(node));
             }
         }
@@ -205,6 +206,7 @@ public class ItemSet {
             for (int i = item.dotPos; i < item.rhs.size(); i++) {
                 if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
                 var node = item.getNode(i);
+                if (node instanceof Factored) continue;
                 var sym = sym(node);
                 if (sym.isToken) continue;
                 item.closured[i] = true;
@@ -217,6 +219,7 @@ public class ItemSet {
             for (int i = item.dotPos; i < item.rhs.size(); i++) {
                 if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
                 var node = item.getNode(i);
+                if (node instanceof Factored) continue;
                 var sym = sym(node);
                 if (sym.isToken) continue;
                 //check two consecutive syms have common

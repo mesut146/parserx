@@ -3,6 +3,8 @@ package mesut.parserx.nodes;
 public interface Visitor<R, A> {
     R visitEpsilon(Epsilon epsilon, A arg);
 
+    R visitFactored(Factored factored, A arg);
+
     R visitDot(Dot dot, A arg);
 
     R visitUntil(Until until, A arg);

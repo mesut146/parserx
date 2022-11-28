@@ -41,6 +41,7 @@ public class Copier extends Transformer {
     public Node visitName(Name name, Void arg) {
         var res = new Name(name.name, name.isToken);
         res.args = new ArrayList<>(name.args);
+        res.args2 = new ArrayList<>(name.args2);
         return withAst(res, name);
     }
 

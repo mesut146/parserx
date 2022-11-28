@@ -30,6 +30,7 @@ public class Normalizer extends Transformer {
         tree.addRuleBelow(tmp, curRule);
 
         var ref = tmp.ref.copy();
+        ref.astInfo = node.astInfo.copy();
         if (node.astInfo.varName != null) {
             ref.astInfo.varName = node.astInfo.varName;
         }

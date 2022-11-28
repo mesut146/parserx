@@ -281,7 +281,11 @@ public class La1RegexBuilder {
     }
 
     boolean isFinal(Item item) {
-        return item.isReduce(tree) && item.rule.ref.equals(curRule) && item.lookAhead.contains(dollar);
+        if (item.isReduce(tree)) {
+            if (item.first) return true;
+            return item.rule.ref.equals(curRule) && item.lookAhead.contains(dollar);
+        }
+        return false;
     }
 
     ItemSet findTarget(ItemSet set) {

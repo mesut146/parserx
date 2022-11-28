@@ -129,9 +129,10 @@ public class LLDfaBuilder {
         }
         else {
             la = LaFinder.computeLa(rule, tree);
-            if (tree.start == null) {
-                la.add(ParserUtils.dollar);
-            }
+//            if (tree.start == null) {
+//                la.add(ParserUtils.dollar);
+//            }
+            la.add(ParserUtils.dollar);
         }
         for (var firstDecl : treeInfo.ruleMap.get(rule)) {
             var firstItem = new Item(firstDecl, 0);
@@ -161,6 +162,7 @@ public class LLDfaBuilder {
                     if (item.closured[i]) continue;
 
                     var node = item.getNode(i);
+                    if (node instanceof Factored) continue;
                     var sym = (Node) ItemSet.sym(node.copy());
                     int newPos = node.isStar() ? i : i + 1;
                     Item target;

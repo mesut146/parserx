@@ -4,9 +4,10 @@ import mesut.parserx.gen.lldfa.RecursionHandler;
 import mesut.parserx.gen.lldfa.Type;
 import mesut.parserx.gen.lr.TreeInfo;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
-//name: rhs;
 public class RuleDecl {
 
     public Name ref;
@@ -16,6 +17,7 @@ public class RuleDecl {
     public Type retType;//ast type;
     public TreeInfo.TransformInfo transformInfo;
     public RecursionHandler.Info recInfo;
+    public List<Parameter> parameterList = new ArrayList<>();
     public static boolean printIndex = false;
 
     public RuleDecl(String name, Node rhs) {
@@ -47,6 +49,9 @@ public class RuleDecl {
         String s = ref.name;
         if (!ref.args.isEmpty()) {
             s += "(" + NodeList.join(ref.args, ", ") + ")";
+        }
+        if (!parameterList.isEmpty()){
+            s += "[" + NodeList.join(parameterList, ", ") + "]";
         }
         if (false && rhs.isOr()) {
             s += ":\n" + rhs.asOr().withNewline() + ";";

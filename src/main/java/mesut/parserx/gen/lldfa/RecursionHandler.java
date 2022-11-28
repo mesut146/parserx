@@ -35,9 +35,10 @@ public class RecursionHandler {
             curRule = rule;
             afterMap = new HashMap<>();
             toAdd = new ArrayList<>();
-            handleIndirect(rule);
-            all.addAll(toAdd);
-            allMap.put(rule.ref, toAdd);
+            if (handleIndirect(rule)) {
+                all.addAll(toAdd);
+                allMap.put(rule.ref, toAdd);
+            }
         }
         for (var e : allMap.entrySet()) {
             var curRules = e.getValue();
@@ -67,10 +68,10 @@ public class RecursionHandler {
         }
     }
 
-    void handleIndirect(RuleDecl decl) {
+    boolean handleIndirect(RuleDecl decl) {
         var set = FirstSet.firstSet(decl.rhs, tree);
         set.removeIf(n -> n.isToken);
-        if (!set.contains(decl.ref)) return;
+        if (!set.contains(decl.ref)) return false;
 
         //primary first
         var prims = new ArrayList<Node>();
@@ -103,8 +104,14 @@ public class RecursionHandler {
             newRule.recInfo = new Info();
             newRule.recInfo.isState = true;
             newRule.retType = decl.retType;
+            newRule.parameterList.add(new Parameter(state.args2.get(0).type, "arg"));
             toAdd.add(newRule);
         }
+        return true;
+    }
+
+    Type getType(Name name) {
+        return tree.getRule(name).retType;
     }
 
     private Name getAfter(Name sym) {
@@ -114,13 +121,15 @@ public class RecursionHandler {
         var id = idCounter.get(curRule.ref);
         var res = new Name(curRule.ref + "_" + id);
         res.args.add(sym);
+        res.args2.add(new Parameter(getType(sym), "arg"));
         afterMap.put(sym, res);
         return res;
     }
 
     Name makeTail(Name rule, Name start) {
-        var ref = new Name(rule.name);
+        var ref = new Name(rule.name + "_" + start.toString());
         ref.args.add(start);
+        ref.args2.add(new Parameter(tree.getRule(start).retType, "arg"));
         if (all.stream().anyMatch(rd -> rd.ref.equals(ref))) {
             return ref;
         }
@@ -137,6 +146,7 @@ public class RecursionHandler {
             if (tail != null) list.add(tail);
         }
         var newRule = new RuleDecl(ref, Or.make(list));
+        newRule.parameterList.add(ref.args2.get(0));
         newRule.recInfo = new Info();
         newRule.recInfo.isTail = true;
         newRule.retType = decl.retType;
@@ -149,16 +159,15 @@ public class RecursionHandler {
         if (!seq.get(0).equals(start)) {
             return null;
         }
-        var res = new Sequence(seq.list.subList(1, seq.list.size()));
-        var arg = new Name(start.name);
+        var list = new ArrayList<Node>();
+        var arg = new Factored(start, "arg");
         arg.astInfo = seq.get(0).astInfo.copy();//always true?
-        if (start.equals(arg)) {
-            arg.astInfo.isFactored = true;
-        }
-        arg.args.add(start);
-        res.list.add(0, arg);
-        res.astInfo = seq.astInfo.copy();
-        return res;
+        arg.astInfo.isFactored = true;
+        //arg.args.add(start);
+
+        list.add(arg);
+        list.addAll(seq.list.subList(1, seq.list.size()));
+        return Sequence.make(list).withAst(seq);
     }
 
     Name makePrimary(Name rule, Name start) {
@@ -180,7 +189,7 @@ public class RecursionHandler {
                 list.add(decl.ref);
             }
         }
-        var newRule = new RuleDecl(res, new Or(list));
+        var newRule = new RuleDecl(res, Or.make(list));
         newRule.recInfo = new Info();
         newRule.recInfo.isPrim = true;
         newRule.retType = decl.retType;

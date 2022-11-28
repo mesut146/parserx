@@ -170,6 +170,7 @@ public class Item {
         List<Map.Entry<Node, Integer>> list = new ArrayList<>();
         for (int i = dotPos; i < rhs.size(); i++) {
             var node = getNode(i);
+            if (node instanceof Factored) continue;
             list.add(new AbstractMap.SimpleEntry<>(node, i));
             if (!FirstSet.canBeEmpty(node, tree)) {
                 break;

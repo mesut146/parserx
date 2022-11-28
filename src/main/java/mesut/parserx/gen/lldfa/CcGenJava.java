@@ -12,17 +12,28 @@ public class CcGenJava {
     Options options;
     CodeWriter w = new CodeWriter(true);
     LLDfaBuilder builder;
-//    Set<Name> popperRules = new HashSet<>();
-//    Set<Name> popperRules2 = new HashSet<>();
 
     public CcGenJava(Tree tree) {
         this.tree = tree;
         this.options = tree.options;
     }
 
+    public static String ruleHeader(RuleDecl decl) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(decl.ref.name);
+        sb.append("(");
+        if (!decl.parameterList.isEmpty()) {
+            for (int i = 0; i < decl.parameterList.size(); i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(decl.parameterList.get(i).toString());
+            }
+        }
+        sb.append(")");
+        return sb.toString();
+    }
+
     public void gen() throws IOException {
         new RecursionHandler(tree).handleAll();
-        tree.printRules();
         LLDfaBuilder.noshrink = true;
         LLDfaBuilder.skip = true;
         ItemSet.forceRuleClosure = true;
@@ -34,7 +45,7 @@ public class CcGenJava {
         for (var entry : builder.rules.entrySet()) {
             var rule = entry.getKey();
             var decl = tree.getRule(rule);
-            w.append("public %s %s() throws IOException{", decl.retType, rule.name);
+            w.append("public %s %s throws IOException{", decl.retType, ruleHeader(decl));
             w.append("%s res = new %s();", decl.retType, decl.retType);
 
             var rhs = decl.rhs.asOr();
@@ -42,9 +53,8 @@ public class CcGenJava {
             for (int i = 1; i <= rhs.size(); i++) {
                 var ch = rhs.get(i - 1);
                 w.append("case %d:{", i);
-                w.append("ts.unmark();");
-                alt(ch, i, w);
                 var n = new NormalWriter(w, tree);
+                n.curRule = decl;
                 ch.accept(n, null);
                 w.append("break;");
                 w.append("}");
@@ -57,18 +67,11 @@ public class CcGenJava {
         //writeRest
         for (var decl : tree.rules) {
             if (builder.rules.containsKey(decl.ref)) continue;
-            if (decl.recInfo.isState || decl.recInfo.isTail) {
-                var arg = decl.ref.args.get(0);
-                var argType = new Type("Ast", arg.toString());//todo automate
-                w.append("public %s %s(%s arg) throws IOException{", decl.retType, decl.ref.name, argType);
-            }
-            else {
-                w.append("public %s %s() throws IOException{", decl.retType, decl.getName());
-            }
-            if (decl.recInfo.isState || decl.recInfo.isRec) {
+            w.append("public %s %s throws IOException{", decl.retType, ruleHeader(decl));
+            if (decl.recInfo != null && (decl.recInfo.isState || decl.recInfo.isRec)) {
                 w.append("%s res = null;", decl.retType);
             }
-            else {
+            else{
                 w.append("%s res = new %s();", decl.retType, decl.retType);
             }
             var nw = new NormalWriter(w, tree);
@@ -78,24 +81,6 @@ public class CcGenJava {
             w.append("}");
 
         }
-        //poppers
-//        for (var name : popperRules) {
-//            var decl = tree.getRule(name);
-//            w.append("public void %s_pop() throws IOException{", decl.getName());
-//            var nw = new Decider();
-//            nw.popper = true;
-//            decl.rhs.accept(nw, null);
-//            w.append("}");
-//        }
-//        for (var name : popperRules2) {
-//            if (popperRules.contains(name)) continue;
-//            var decl = tree.getRule(name);
-//            w.append("public void %s_pop() throws IOException{", decl.getName());
-//            var nw = new Decider();
-//            nw.popper = true;
-//            decl.rhs.accept(nw, null);
-//            w.append("}");
-//        }
         w.append("}");
         var file = new File(options.outDir, options.parserClass + ".java");
         Utils.write(w.get(), file);
@@ -148,6 +133,7 @@ public class CcGenJava {
             w.append("int which = 0;");
             var decider = new Decider(regexBuilder);
             decl.rhs.accept(decider, null);
+            w.append("ts.unmark();");
             w.append("return which;");
             w.append("}");
         }
@@ -173,6 +159,7 @@ public class CcGenJava {
         public Void visitName(Name name, Void arg) {
             if (name.isToken) {
                 if (inCondition) {
+                    //optimization, no need to check type
                     w.append("ts.pop();");
                     inCondition = false;
                 }
@@ -181,7 +168,6 @@ public class CcGenJava {
                 }
             }
             else {
-                //todo
                 w.append("which = %s();", name.name);
             }
             if (name.astInfo.which != -1) {

@@ -29,9 +29,7 @@ public class DescTester {
         var tree = builder.tree;
         tree.options.outDir = outDir;
         JavaAst.printTokenQuote = false;
-        //RecDescent.gen(tree, "java");
-        //new CcGenJava(tree).gen();
-        ParserGen.gen(tree, Lang.JAVA);
+        ParserGen.genCC(tree, Lang.JAVA, true);
 
         File out = new File(outDir, "out");
         if (out.exists()) {

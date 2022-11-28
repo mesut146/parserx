@@ -1,4 +1,6 @@
-package mesut.parserx.gen.lldfa;
+package mesut.parserx.nodes;
+
+import mesut.parserx.gen.lldfa.Type;
 
 public class Parameter {
     public Type type;
@@ -7,5 +9,10 @@ public class Parameter {
     public Parameter(Type type, String name) {
         this.type = type;
         this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return type + " " + name;
     }
 }

@@ -104,7 +104,8 @@ public class LLDfaTest {
         //var input = Env.getResFile("lexer/xml-mode.g");
         var input = Env.getResFile("lexer/action.g");
         //var input = tree.file;
-        var b = Builder.tree(tree).rule("tree").file(input.getAbsolutePath());
+        //var b = Builder.tree(tree).dump().rule("tree").file(input.getAbsolutePath());
+        var b = Builder.tree(tree).dump().rule("tree").input(Utils.read(input), "");
         //var b = Builder.tree(tree).rule("tree").file(Env.getResFile("lexer/member.g").getAbsolutePath());
         //var b = Builder.tree(tree).rule("tree").input("A: a+ - \"abc\";", "");
         DescTester.checkTokens(b);
@@ -128,17 +129,27 @@ public class LLDfaTest {
 
     @Test
     public void leftRec() throws Exception {
-//        Builder.tree("lldfa/left.g").rule("E")
-//                .input("b", "E#2{'b'}")
-//                .input("ba", "")
-//                .check();
-//        Builder.tree("lldfa/left.g").rule("A")
-//                .input("c", "A#3{'c'}")
-//                .input("ca", "")
-//                .input("cb", "")
-//                .input("caa", "")
-//                .input("cab", "")
-//                .check();
+//        Builder.tree("lldfa/left-indirect3.g")
+//                .rule("A")
+//                .input("x", "A#5{'x'}")
+//                .input("xa", "A#1{A#5{'x'}, 'a'}")
+//                .input("xadb", "A#3{B#1{A#1{A#5{'x'}, 'a'}, 'd'}, 'b'}")
+//                .input("yhfbp", "A#2{A#3{B#3{C#2{B#4{'y'}, 'h'}, 'f'}, 'b'}, 'p'}")
+//                .checkCC();
+        Builder.tree("lldfa/left.g")
+                .rule("A")
+                .input("c", "A#3{'c'}")
+                .input("ca", "A#1{A#3{'c'}, 'a'}")
+                .input("cb", "A#2{A#3{'c'}, 'b'}")
+                .input("caa", "A#1{A#1{A#3{'c'}, 'a'}, 'a'}")
+                .input("cab", "A#2{A#1{A#3{'c'}, 'a'}, 'b'}")
+                .rule("B")
+                .input("bbbcaa", "B#1{B#1{B#2{['b', 'b', 'b'], 'c'}, 'a'}, 'a'}")
+                .input("bbbdaa", "B#1{B#1{B#3{['b', 'b', 'b'], 'd'}, 'a'}, 'a'}")
+                .rule("C")
+                .input("xaaab", "C#1{C#3{'x'}, ['a', 'a', 'a'], 'b'}")
+                .input("xaaac", "C#2{C#3{'x'}, ['a', 'a', 'a'], 'c'}")
+                .checkCC();
 //        Builder.tree("lldfa/left-indirect.g").rule("A")
 //                .input("b", "A#2{'b'}")
 //                .input("da", "A#1{B#2{'d'}, 'a'}")
@@ -151,19 +162,6 @@ public class LLDfaTest {
 //                .check();
     }
 
-    @Test
-    public void rec() throws Exception {
-        var tree = Env.tree("lldfa/left-indirect3.g");
-//        var handler = new RecursionHandler(tree);
-//        handler.all();
-//        tree.printRules();
-        Builder.tree(tree)
-                .rule("A")
-                .input("x","A#5{'x'}")
-                .input("xa","A#1{A#5{'x'}, 'a'}")
-                .input("xadb", "A#3{B#1{A#1{A#5{'x'}, 'a'}, 'd'}, 'b'}")
-                .checkCC();
-    }
 
     @Test
     public void rightRec() throws Exception {

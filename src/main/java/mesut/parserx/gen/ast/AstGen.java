@@ -33,7 +33,8 @@ public class AstGen extends BaseVisitor<Void, Void> {
 
     public void gen() {
         for (var decl : tree.rules) {
-            decl.retType = new Type(tree.options.astClass, Utils.camel(decl.baseName()) + tree.options.nodeSuffix);
+            //decl.retType = new Type(tree.options.astClass, Utils.camel(decl.baseName()) + tree.options.nodeSuffix);
+            decl.retType = new Type(tree.options.astClass, decl.baseName() + tree.options.nodeSuffix);
             curRule = decl;
             outerCls = decl.retType;
             outer = "res";

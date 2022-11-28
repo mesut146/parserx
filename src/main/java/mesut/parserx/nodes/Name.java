@@ -10,6 +10,7 @@ public class Name extends Node implements Comparable<Name> {
     public String name;
     public boolean isToken;
     public ArrayList<Node> args = new ArrayList<>();
+    public ArrayList<Parameter> args2 = new ArrayList<>();
 
     public Name(String name) {
         this.name = name;

@@ -135,6 +135,11 @@ public class FirstSet extends BaseVisitor<Void, Void> {
         }
 
         @Override
+        public Boolean visitFactored(Factored factored, Void arg) {
+            return true;
+        }
+
+        @Override
         public Boolean visitRegex(Regex regex, Void arg) {
             if (regex.astInfo.isFactored) return true;
             if (regex.isPlus()) {
