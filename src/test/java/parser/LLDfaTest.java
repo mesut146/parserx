@@ -1,6 +1,7 @@
 package parser;
 
 import common.Env;
+import lexer.RealTest;
 import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.lldfa.*;
@@ -115,6 +116,14 @@ public class LLDfaTest {
                 .file(Env.getResFile("lexer/member.g").getAbsolutePath())
                 .file(Env.getResFile("lexer/xml-mode.g").getAbsolutePath())
                 .checkTokens();
+    }
+
+    @Test
+    public void java() throws Exception {
+        //RealTest.check(Env.tree("java/lexer-jls.g"), true, Env.getResFile("java/a.java.res").getAbsolutePath());
+        Builder.tree("java/parser-jls.g")
+                .file(Env.getResFile("java/a.java.res").getAbsolutePath())
+                .checkCC();
     }
 
     @Test

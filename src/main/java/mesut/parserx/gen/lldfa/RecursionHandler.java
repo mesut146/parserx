@@ -177,6 +177,7 @@ public class RecursionHandler {
         }
         var list = new ArrayList<Node>();
         var decl = tree.getRule(rule);
+        //todo indirect primary
         if (decl.rhs.isOr()) {
             for (var ch : decl.rhs.asOr()) {
                 if (!FirstSet.start(ch, start, tree)) {

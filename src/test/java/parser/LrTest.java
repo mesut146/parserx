@@ -37,17 +37,6 @@ public class LrTest {
     }
 
     @Test
-    @Ignore
-    public void java() throws Exception {
-        Tree tree = Env.tree("java/parser-jls-eps.g");
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        LrDFAGen.debug = true;
-        LrDFAGen generator = new LrDFAGen(tree, LrType.LR1);
-        generator.generate();
-        dots(generator, tree.file.getName());
-    }
-
-    @Test
     public void codeGen() throws Exception {
         Tree tree = Env.tree("lr1/lr1.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath();
@@ -68,6 +57,7 @@ public class LrTest {
 
 
     @Test
+    @Ignore
     public void itself() throws Exception {
         var path = new File("./src/main/grammar/parserx.g");
         LrTester.check(Tree.makeTree(path), LrType.LR1, Utils.read(path));
