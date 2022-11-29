@@ -69,10 +69,17 @@ public class Builder {
     }
 
     public void checkCC() throws Exception {
+        System.out.println("testing " + tree.file.getName());
         DescTester.check(this, true);
     }
 
     public void lr() throws Exception {
+        System.out.println("testing " + tree.file.getName());
         LrTester.check0(this);
+    }
+
+    public void checkTokens() throws Exception {
+        System.out.println("testing " + tree.file.getName());
+        DescTester.checkTokens(this);
     }
 }

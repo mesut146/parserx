@@ -4,6 +4,11 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class Ast{
+
+    static void printToken(Token token, StringBuilder sb){
+        sb.append("'").append(token.formatValue()).append("'");
+    }
+
     public static class tree{
         public List<includeStatement> includeStatement = new ArrayList<>();
         public optionsBlock optionsBlock;
@@ -78,7 +83,7 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("lexerMembers{");
             boolean first = true;
-            sb.append(LEXER_MEMBERS_BEGIN.value);
+            printToken(LEXER_MEMBERS_BEGIN, sb);
             first = false;
             if(!LEXER_MEMBER.isEmpty()){
                 if(!first){
@@ -86,7 +91,7 @@ public class Ast{
                 }
                 sb.append('[');
                 for(int i = 0;i < LEXER_MEMBER.size();i++){
-                    sb.append(LEXER_MEMBER.get(i).value);
+                    printToken(LEXER_MEMBER.get(i), sb);
                     if(i < LEXER_MEMBER.size() - 1) sb.append(", ");
                 }
                 sb.append(']');
@@ -95,7 +100,7 @@ public class Ast{
             if(!first){
                 sb.append(", ");
             }
-            sb.append(MEMBERS_END.value);
+            printToken(MEMBERS_END, sb);
             return sb.append("}").toString();
         }
     }
@@ -105,12 +110,12 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("includeStatement{");
             boolean first = true;
-            sb.append(INCLUDE.value);
+            printToken(INCLUDE, sb);
             first = false;
             if(!first){
                 sb.append(", ");
             }
-            sb.append(STRING.value);
+            printToken(STRING, sb);
             return sb.append("}").toString();
         }
     }
@@ -122,12 +127,12 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("optionsBlock{");
             boolean first = true;
-            sb.append(OPTIONS.value);
+            printToken(OPTIONS, sb);
             first = false;
             if(!first){
                 sb.append(", ");
             }
-            sb.append(LBRACE.value);
+            printToken(LBRACE, sb);
             if(!option.isEmpty()){
                 if(!first){
                     sb.append(", ");
@@ -143,7 +148,7 @@ public class Ast{
             if(!first){
                 sb.append(", ");
             }
-            sb.append(RBRACE.value);
+            printToken(RBRACE, sb);
             return sb.append("}").toString();
         }
     }
@@ -155,12 +160,12 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("option{");
             boolean first = true;
-            sb.append(key.value);
+            printToken(key, sb);
             first = false;
             if(!first){
                 sb.append(", ");
             }
-            sb.append(EQ.value);
+            printToken(EQ, sb);
             if(!first){
                 sb.append(", ");
             }
@@ -169,7 +174,7 @@ public class Ast{
                 if(!first){
                     sb.append(", ");
                 }
-                sb.append(SEMI.value);
+                printToken(SEMI, sb);
                 first = false;
             }
             return sb.append("}").toString();
@@ -177,8 +182,8 @@ public class Ast{
     }
     public static class optiong1{
         public int which;
-        Optiong11 NUMBER;
-        Optiong12 BOOLEAN;
+        Alt1 NUMBER;
+        Alt2 BOOLEAN;
         public String toString(){
             StringBuilder sb = new StringBuilder("optiong1#" + which + "{");
             if(which == 1){
@@ -189,23 +194,23 @@ public class Ast{
             }
             return sb.append("}").toString();
         }
-        public static class Optiong11{
+        public static class Alt1{
             optiong1 holder;
             public Token NUMBER;
             public String toString(){
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
-                sb.append(NUMBER.value);
+                printToken(NUMBER, sb);
                 return sb.toString();
             }
         }
-        public static class Optiong12{
+        public static class Alt2{
             optiong1 holder;
             public Token BOOLEAN;
             public String toString(){
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
-                sb.append(BOOLEAN.value);
+                printToken(BOOLEAN, sb);
                 return sb.toString();
             }
         }
@@ -218,12 +223,12 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("startDecl{");
             boolean first = true;
-            sb.append(START.value);
+            printToken(START, sb);
             first = false;
             if(!first){
                 sb.append(", ");
             }
-            sb.append(SEPARATOR.value);
+            printToken(SEPARATOR, sb);
             if(!first){
                 sb.append(", ");
             }
@@ -231,7 +236,7 @@ public class Ast{
             if(!first){
                 sb.append(", ");
             }
-            sb.append(SEMI.value);
+            printToken(SEMI, sb);
             return sb.append("}").toString();
         }
     }
@@ -243,12 +248,12 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("tokenBlock{");
             boolean first = true;
-            sb.append(TOKEN.value);
+            printToken(TOKEN, sb);
             first = false;
             if(!first){
                 sb.append(", ");
             }
-            sb.append(LBRACE.value);
+            printToken(LBRACE, sb);
             if(!g1.isEmpty()){
                 if(!first){
                     sb.append(", ");
@@ -264,14 +269,14 @@ public class Ast{
             if(!first){
                 sb.append(", ");
             }
-            sb.append(RBRACE.value);
+            printToken(RBRACE, sb);
             return sb.append("}").toString();
         }
     }
     public static class tokenBlockg1{
         public int which;
-        Tokenblockg11 tokenDecl;
-        Tokenblockg12 modeBlock;
+        Alt1 tokenDecl;
+        Alt2 modeBlock;
         public String toString(){
             StringBuilder sb = new StringBuilder("tokenBlockg1#" + which + "{");
             if(which == 1){
@@ -282,7 +287,7 @@ public class Ast{
             }
             return sb.append("}").toString();
         }
-        public static class Tokenblockg11{
+        public static class Alt1{
             tokenBlockg1 holder;
             public tokenDecl tokenDecl;
             public String toString(){
@@ -292,7 +297,7 @@ public class Ast{
                 return sb.toString();
             }
         }
-        public static class Tokenblockg12{
+        public static class Alt2{
             tokenBlockg1 holder;
             public modeBlock modeBlock;
             public String toString(){
@@ -314,7 +319,7 @@ public class Ast{
             StringBuilder sb = new StringBuilder("tokenDecl{");
             boolean first = true;
             if(HASH != null){
-                sb.append(HASH.value);
+                printToken(HASH, sb);
                 first = false;
             }
             if(!first){
@@ -325,7 +330,7 @@ public class Ast{
             if(!first){
                 sb.append(", ");
             }
-            sb.append(SEPARATOR.value);
+            printToken(SEPARATOR, sb);
             if(!first){
                 sb.append(", ");
             }
@@ -340,7 +345,7 @@ public class Ast{
             if(!first){
                 sb.append(", ");
             }
-            sb.append(SEMI.value);
+            printToken(SEMI, sb);
             return sb.append("}").toString();
         }
     }
@@ -350,7 +355,7 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("tokenDeclg1{");
             boolean first = true;
-            sb.append(ARROW.value);
+            printToken(ARROW, sb);
             first = false;
             if(!first){
                 sb.append(", ");
@@ -383,7 +388,7 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("modesg1{");
             boolean first = true;
-            sb.append(COMMA.value);
+            printToken(COMMA, sb);
             first = false;
             if(!first){
                 sb.append(", ");
@@ -400,12 +405,12 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("modeBlock{");
             boolean first = true;
-            sb.append(IDENT.value);
+            printToken(IDENT, sb);
             first = false;
             if(!first){
                 sb.append(", ");
             }
-            sb.append(LBRACE.value);
+            printToken(LBRACE, sb);
             if(!tokenDecl.isEmpty()){
                 if(!first){
                     sb.append(", ");
@@ -421,7 +426,7 @@ public class Ast{
             if(!first){
                 sb.append(", ");
             }
-            sb.append(RBRACE.value);
+            printToken(RBRACE, sb);
             return sb.append("}").toString();
         }
     }
@@ -446,7 +451,7 @@ public class Ast{
             if(!first){
                 sb.append(", ");
             }
-            sb.append(SEPARATOR.value);
+            printToken(SEPARATOR, sb);
             if(!first){
                 sb.append(", ");
             }
@@ -454,7 +459,7 @@ public class Ast{
             if(!first){
                 sb.append(", ");
             }
-            sb.append(SEMI.value);
+            printToken(SEMI, sb);
             return sb.append("}").toString();
         }
     }
@@ -466,7 +471,7 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("args{");
             boolean first = true;
-            sb.append(LP.value);
+            printToken(LP, sb);
             first = false;
             if(!first){
                 sb.append(", ");
@@ -487,7 +492,7 @@ public class Ast{
             if(!first){
                 sb.append(", ");
             }
-            sb.append(RP.value);
+            printToken(RP, sb);
             return sb.append("}").toString();
         }
     }
@@ -497,7 +502,7 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("argsg1{");
             boolean first = true;
-            sb.append(COMMA.value);
+            printToken(COMMA, sb);
             first = false;
             if(!first){
                 sb.append(", ");
@@ -535,7 +540,7 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("rhsg1{");
             boolean first = true;
-            sb.append(OR.value);
+            printToken(OR, sb);
             first = false;
             if(!first){
                 sb.append(", ");
@@ -583,7 +588,7 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("sequenceg2{");
             boolean first = true;
-            sb.append(HASH.value);
+            printToken(HASH, sb);
             first = false;
             if(!first){
                 sb.append(", ");
@@ -594,8 +599,8 @@ public class Ast{
     }
     public static class sequenceg1{
         public int which;
-        Sequenceg11 LEFT;
-        Sequenceg12 RIGHT;
+        Alt1 LEFT;
+        Alt2 RIGHT;
         public String toString(){
             StringBuilder sb = new StringBuilder("sequenceg1#" + which + "{");
             if(which == 1){
@@ -606,23 +611,23 @@ public class Ast{
             }
             return sb.append("}").toString();
         }
-        public static class Sequenceg11{
+        public static class Alt1{
             sequenceg1 holder;
             public Token LEFT;
             public String toString(){
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
-                sb.append(LEFT.value);
+                printToken(LEFT, sb);
                 return sb.toString();
             }
         }
-        public static class Sequenceg12{
+        public static class Alt2{
             sequenceg1 holder;
             public Token RIGHT;
             public String toString(){
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
-                sb.append(RIGHT.value);
+                printToken(RIGHT, sb);
                 return sb.toString();
             }
         }
@@ -651,7 +656,7 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("subg1{");
             boolean first = true;
-            sb.append(MINUS.value);
+            printToken(MINUS, sb);
             first = false;
             if(!first){
                 sb.append(", ");
@@ -662,19 +667,19 @@ public class Ast{
     }
     public static class regex{
         public int which;
-        Regex1 regex1;
-        Regex2 regex2;
+        Alt1 alt1;
+        Alt2 alt2;
         public String toString(){
             StringBuilder sb = new StringBuilder("regex#" + which + "{");
             if(which == 1){
-                sb.append(regex1);
+                sb.append(alt1);
             }
             else if(which == 2){
-                sb.append(regex2);
+                sb.append(alt2);
             }
             return sb.append("}").toString();
         }
-        public static class Regex1{
+        public static class Alt1{
             regex holder;
             public name name;
             public Token EQ;
@@ -689,7 +694,7 @@ public class Ast{
                 if(!first){
                     sb.append(", ");
                 }
-                sb.append(EQ.value);
+                printToken(EQ, sb);
                 if(!first){
                     sb.append(", ");
                 }
@@ -705,13 +710,13 @@ public class Ast{
                     if(!first){
                         sb.append(", ");
                     }
-                    sb.append(ACTION.value);
+                    printToken(ACTION, sb);
                     first = false;
                 }
                 return sb.toString();
             }
         }
-        public static class Regex2{
+        public static class Alt2{
             regex holder;
             public simple simple;
             public regexType type;
@@ -732,7 +737,7 @@ public class Ast{
                     if(!first){
                         sb.append(", ");
                     }
-                    sb.append(ACTION.value);
+                    printToken(ACTION, sb);
                     first = false;
                 }
                 return sb.toString();
@@ -741,9 +746,9 @@ public class Ast{
     }
     public static class regexType{
         public int which;
-        Regextype1 STAR;
-        Regextype2 PLUS;
-        Regextype3 QUES;
+        Alt1 STAR;
+        Alt2 PLUS;
+        Alt3 QUES;
         public String toString(){
             StringBuilder sb = new StringBuilder("regexType#" + which + "{");
             if(which == 1){
@@ -757,48 +762,48 @@ public class Ast{
             }
             return sb.append("}").toString();
         }
-        public static class Regextype1{
+        public static class Alt1{
             regexType holder;
             public Token STAR;
             public String toString(){
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
-                sb.append(STAR.value);
+                printToken(STAR, sb);
                 return sb.toString();
             }
         }
-        public static class Regextype2{
+        public static class Alt2{
             regexType holder;
             public Token PLUS;
             public String toString(){
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
-                sb.append(PLUS.value);
+                printToken(PLUS, sb);
                 return sb.toString();
             }
         }
-        public static class Regextype3{
+        public static class Alt3{
             regexType holder;
             public Token QUES;
             public String toString(){
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
-                sb.append(QUES.value);
+                printToken(QUES, sb);
                 return sb.toString();
             }
         }
     }
     public static class simple{
         public int which;
-        Simple1 group;
-        Simple2 name;
-        Simple3 stringNode;
-        Simple4 bracketNode;
-        Simple5 untilNode;
-        Simple6 dotNode;
-        Simple7 EPSILON;
-        Simple8 SHORTCUT;
-        Simple9 call;
+        Alt1 group;
+        Alt2 name;
+        Alt3 stringNode;
+        Alt4 bracketNode;
+        Alt5 untilNode;
+        Alt6 dotNode;
+        Alt7 EPSILON;
+        Alt8 SHORTCUT;
+        Alt9 call;
         public String toString(){
             StringBuilder sb = new StringBuilder("simple#" + which + "{");
             if(which == 1){
@@ -830,7 +835,7 @@ public class Ast{
             }
             return sb.append("}").toString();
         }
-        public static class Simple1{
+        public static class Alt1{
             simple holder;
             public group group;
             public String toString(){
@@ -840,7 +845,7 @@ public class Ast{
                 return sb.toString();
             }
         }
-        public static class Simple2{
+        public static class Alt2{
             simple holder;
             public name name;
             public String toString(){
@@ -850,7 +855,7 @@ public class Ast{
                 return sb.toString();
             }
         }
-        public static class Simple3{
+        public static class Alt3{
             simple holder;
             public stringNode stringNode;
             public String toString(){
@@ -860,7 +865,7 @@ public class Ast{
                 return sb.toString();
             }
         }
-        public static class Simple4{
+        public static class Alt4{
             simple holder;
             public bracketNode bracketNode;
             public String toString(){
@@ -870,7 +875,7 @@ public class Ast{
                 return sb.toString();
             }
         }
-        public static class Simple5{
+        public static class Alt5{
             simple holder;
             public untilNode untilNode;
             public String toString(){
@@ -880,7 +885,7 @@ public class Ast{
                 return sb.toString();
             }
         }
-        public static class Simple6{
+        public static class Alt6{
             simple holder;
             public dotNode dotNode;
             public String toString(){
@@ -890,27 +895,27 @@ public class Ast{
                 return sb.toString();
             }
         }
-        public static class Simple7{
+        public static class Alt7{
             simple holder;
             public Token EPSILON;
             public String toString(){
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
-                sb.append(EPSILON.value);
+                printToken(EPSILON, sb);
                 return sb.toString();
             }
         }
-        public static class Simple8{
+        public static class Alt8{
             simple holder;
             public Token SHORTCUT;
             public String toString(){
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
-                sb.append(SHORTCUT.value);
+                printToken(SHORTCUT, sb);
                 return sb.toString();
             }
         }
-        public static class Simple9{
+        public static class Alt9{
             simple holder;
             public call call;
             public String toString(){
@@ -928,7 +933,7 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("group{");
             boolean first = true;
-            sb.append(LP.value);
+            printToken(LP, sb);
             first = false;
             if(!first){
                 sb.append(", ");
@@ -937,14 +942,14 @@ public class Ast{
             if(!first){
                 sb.append(", ");
             }
-            sb.append(RP.value);
+            printToken(RP, sb);
             return sb.append("}").toString();
         }
     }
     public static class stringNode{
         public int which;
-        Stringnode1 STRING;
-        Stringnode2 CHAR;
+        Alt1 STRING;
+        Alt2 CHAR;
         public String toString(){
             StringBuilder sb = new StringBuilder("stringNode#" + which + "{");
             if(which == 1){
@@ -955,23 +960,23 @@ public class Ast{
             }
             return sb.append("}").toString();
         }
-        public static class Stringnode1{
+        public static class Alt1{
             stringNode holder;
             public Token STRING;
             public String toString(){
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
-                sb.append(STRING.value);
+                printToken(STRING, sb);
                 return sb.toString();
             }
         }
-        public static class Stringnode2{
+        public static class Alt2{
             stringNode holder;
             public Token CHAR;
             public String toString(){
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
-                sb.append(CHAR.value);
+                printToken(CHAR, sb);
                 return sb.toString();
             }
         }
@@ -981,7 +986,7 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("bracketNode{");
             boolean first = true;
-            sb.append(BRACKET.value);
+            printToken(BRACKET, sb);
             return sb.append("}").toString();
         }
     }
@@ -991,7 +996,7 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("untilNode{");
             boolean first = true;
-            sb.append(TILDE.value);
+            printToken(TILDE, sb);
             first = false;
             if(!first){
                 sb.append(", ");
@@ -1005,7 +1010,7 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("dotNode{");
             boolean first = true;
-            sb.append(DOT.value);
+            printToken(DOT, sb);
             return sb.append("}").toString();
         }
     }
@@ -1014,7 +1019,7 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("name{");
             boolean first = true;
-            sb.append(IDENT.value);
+            printToken(IDENT, sb);
             return sb.append("}").toString();
         }
     }
@@ -1026,12 +1031,12 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("call{");
             boolean first = true;
-            sb.append(CALL_BEGIN.value);
+            printToken(CALL_BEGIN, sb);
             first = false;
             if(!first){
                 sb.append(", ");
             }
-            sb.append(IDENT.value);
+            printToken(IDENT, sb);
             if(!g1.isEmpty()){
                 if(!first){
                     sb.append(", ");
@@ -1047,7 +1052,7 @@ public class Ast{
             if(!first){
                 sb.append(", ");
             }
-            sb.append(RP.value);
+            printToken(RP, sb);
             return sb.append("}").toString();
         }
     }
@@ -1057,12 +1062,12 @@ public class Ast{
         public String toString(){
             StringBuilder sb = new StringBuilder("callg1{");
             boolean first = true;
-            sb.append(COMMA.value);
+            printToken(COMMA, sb);
             first = false;
             if(!first){
                 sb.append(", ");
             }
-            sb.append(IDENT.value);
+            printToken(IDENT, sb);
             return sb.append("}").toString();
         }
     }

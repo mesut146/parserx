@@ -1,16 +1,16 @@
-$package$
+package mesut.parserx.parser;
 import java.util.*;
 import java.io.*;
 
 public class TokenStream{
-    $lexer_class$ lexer;
-    LinkedList<$token_class$> tokens = new LinkedList<>();
-    public $token_class$ la;
+    Lexer lexer;
+    LinkedList<Token> tokens = new LinkedList<>();
+    public Token la;
     int pos = 0;
 
-    public TokenStream($lexer_class$ lexer) throws IOException{
+    public TokenStream(Lexer lexer) throws IOException{
         this.lexer = lexer;
-        this.la = lexer.$lexer_function$();
+        this.la = lexer.next();
         tokens.add(this.la);
     }
 
@@ -19,7 +19,7 @@ public class TokenStream{
         if(pos < tokens.size()){
             la = tokens.get(pos);
         }else{
-            la = lexer.$lexer_function$();
+            la = lexer.next();
             tokens.add(la);
         }
     }
@@ -31,17 +31,17 @@ public class TokenStream{
         pop();
     }
 
-    public $token_class$ consume(int type, String name) throws IOException{
+    public Token consume(int type, String name) throws IOException{
         if(la.type != type){
             throw new RuntimeException("unexpected token: " + la + " expecting: " + name);
         }
         if(!tokens.isEmpty()){
             tokens.removeFirst();//cur la
         }
-        $token_class$ res = la;
+        Token res = la;
         //set new la
         if(tokens.isEmpty()){
-            la = lexer.$lexer_function$();
+            la = lexer.next();
             tokens.add(this.la);
         }else{
             la = tokens.getFirst();

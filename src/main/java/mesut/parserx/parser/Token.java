@@ -19,7 +19,11 @@ public class Token{
     }
 
     public String toString(){
-        //return String.format("'%s' [name = %s line = %s]",value, name, line);
-        return String.format("%s{value = %s, line = %s}", name, value, line);
+        if(type == 0) return "EOF";
+        return String.format("%s{value = '%s', line = %s}", name, formatValue(), line);
+    }
+
+    public String formatValue(){
+        return value.replace("\n","\\n").replace("\r","\\r").replace("\'","\\\'");
     }
 }

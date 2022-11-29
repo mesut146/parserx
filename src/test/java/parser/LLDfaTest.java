@@ -7,6 +7,7 @@ import mesut.parserx.gen.lldfa.*;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.*;
@@ -14,6 +15,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 public class LLDfaTest {
 
@@ -60,17 +62,6 @@ public class LLDfaTest {
     }
 
     @Test
-    public void parserx() throws Exception {
-        var tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        //LLDFAGen.gen(tree, "java");
-        Builder.tree(tree).rule("tree").input(Utils.read(tree.file), "").check();
-        var builder = new LLDfaBuilder(tree);
-        builder.factor();
-        dump(builder);
-    }
-
-    @Test
     public void math() throws Exception {
         var tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
         tree.options.outDir = Env.dotDir().getAbsolutePath();
@@ -84,32 +75,46 @@ public class LLDfaTest {
     }
 
     @Test
-    public void computeLa() {
-        var tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
-        System.out.println(LaFinder.computeLa(new Name("regex"), tree));
+    public void computeLa() throws IOException {
+        var tree = Env.tree("lldfa/la_test.g");
+        var ex = "[a, b, c, d, y]";
+        var ac = new ArrayList<>(LaFinder.computeLa(new Name("B"), tree));
+        Collections.sort(ac);
+        Assert.assertEquals(ex, ac.toString());
     }
 
     @Test
-    public void blocks() {
-        var tree = Tree.makeTree(new File("./doc/xml.g"));
-        System.out.println(tree);
+    public void emitter() throws IOException {
+        var tree = Env.tree("rec/cyc.g");
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        LLDfaBuilder builder = new LLDfaBuilder(tree);
+        builder.factor();
+
+        var emitter = new GrammarEmitter(builder);
+        emitter.emitFor(new Name("A"));
+        tree.file = new File(tree.file.getParent(), Utils.newName(tree.file.getName(), "-emit.g"));
+        builder.tree = tree;
+        //dot(builder);
+    }
+
+    @Test
+    public void genItself() throws IOException {
+        Tree tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        tree.options.packageName = "mesut.parserx.parser";
+        ParserGen.genCC(tree, Lang.JAVA, true);
     }
 
     @Test
     public void itself() throws Exception {
         //Item.printLa = false;
-        Tree tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        //tree.options.packageName = "mesut.parserx.parser";
-        //var input = Env.getResFile("lexer/xml-mode.g");
-        var input = Env.getResFile("lexer/action.g");
-        //var input = tree.file;
-        //var b = Builder.tree(tree).dump().rule("tree").file(input.getAbsolutePath());
-        var b = Builder.tree(tree).dump().rule("tree").input(Utils.read(input), "");
-        //var b = Builder.tree(tree).rule("tree").file(Env.getResFile("lexer/member.g").getAbsolutePath());
-        //var b = Builder.tree(tree).rule("tree").input("A: a+ - \"abc\";", "");
-        DescTester.checkTokens(b);
-        //ParserGen.gen(tree, Lang.JAVA);
+        File grammar = new File("./src/main/grammar/parserx.g");
+        Builder.tree(Tree.makeTree(grammar)).rule("tree")
+                .file(grammar.getAbsolutePath())
+                .file(Env.getResFile("lexer/action.g").getAbsolutePath())
+                .file(Env.getResFile("lexer/member.g").getAbsolutePath())
+                .file(Env.getResFile("lexer/xml-mode.g").getAbsolutePath())
+                .checkTokens();
     }
 
     @Test
@@ -124,6 +129,18 @@ public class LLDfaTest {
         Builder.tree("lldfa/pre-reduce.g").rule("E").
                 input("ax", "E#1{'a', 'x'}").
                 input("azy", "E#2{A{'a', 'z'}, 'y'}")
+                .check();
+    }
+
+    @Test
+    public void token_stream() throws Exception {
+        Builder.tree("lldfa/token_stream.g")
+                .rule("A")
+                .input("abc", "A#1{'a', 'b', 'c'}")
+                .input("abd", "A#2{'a', 'b', 'd'}")
+                .rule("E")
+                .input("abcx", "E#1{A#1{'a', 'b', 'c'}, 'x'}")
+                .input("abfy", "E#2{B#2{'a', 'b', 'f'}, 'y'}")
                 .check();
     }
 
@@ -147,6 +164,7 @@ public class LLDfaTest {
                 .input("bbbcaa", "B#1{B#1{B#2{['b', 'b', 'b'], 'c'}, 'a'}, 'a'}")
                 .input("bbbdaa", "B#1{B#1{B#3{['b', 'b', 'b'], 'd'}, 'a'}, 'a'}")
                 .rule("C")
+                .input("xb", "C#1{C#3{'x'}, 'b'}")
                 .input("xaaab", "C#1{C#3{'x'}, ['a', 'a', 'a'], 'b'}")
                 .input("xaaac", "C#2{C#3{'x'}, ['a', 'a', 'a'], 'c'}")
                 .checkCC();
@@ -161,7 +179,6 @@ public class LLDfaTest {
 //                .input("xdbdb", "")
 //                .check();
     }
-
 
     @Test
     public void rightRec() throws Exception {
@@ -184,7 +201,6 @@ public class LLDfaTest {
 
     @Test
     public void mid() throws Exception {
-
         Builder.tree("lldfa/mid_as_factor.g")
                 .rule("E")
                 .input("acedbx", "E#1{A#1{'a', A#2{'c', A#3{'e'}, 'd'}, 'b'}, 'x'}")
@@ -221,43 +237,7 @@ public class LLDfaTest {
     }
 
     @Test
-    public void emitter() throws IOException {
-        //Tree tree = Env.tree("lldfa/factor.g");
-        var tree = Env.tree("rec/cyc.g");
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        LLDfaBuilder builder = new LLDfaBuilder(tree);
-        builder.factor();
-
-        var emitter = new GrammarEmitter(builder);
-        emitter.emitFor(new Name("A"));
-        tree.file = new File(tree.file.getParent(), Utils.newName(tree.file.getName(), "-emit.g"));
-        builder.tree = tree;
-        //dot(builder);
-    }
-
-    @Test
-    public void test_token_stream() throws Exception {
-        var tree = Env.tree("lexer/skip.g");
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        LexerGenerator.gen(tree, Lang.JAVA);
-        CcGenJava.writeTS(tree.options);
-        var cl = new URLClassLoader(new URL[]{Env.dotDir().toURI().toURL()});
-        var lexerCls = cl.loadClass("Lexer");
-        var lexerCons = lexerCls.getDeclaredConstructor(Reader.class);
-        var lexer = lexerCons.newInstance(new StringReader("abc"));
-
-        var tsCls = cl.loadClass("TokenStream");
-        var tsCons = tsCls.getDeclaredConstructor(lexerCls);
-        var ts = tsCons.newInstance(lexer);
-        var mark = tsCls.getDeclaredMethod("mark");
-        var unmark = tsCls.getDeclaredMethod("unmark");
-        var method = tsCls.getDeclaredMethod("consume", int.class, String.class);
-        var res = method.invoke(ts, 0, "");
-        cl.close();
-    }
-
-    @Test
-    public void all0() throws Exception {
+    public void all() throws Exception {
         Builder.tree("lldfa/cc-complex.g").rule("E")
                 .input("ab", "E#1{'a', S1#1{'b'}}")
                 .input("acd", "E#1{'a', S1#2{'c', S3#2{'d'}}}")
@@ -417,22 +397,5 @@ public class LLDfaTest {
                 .input("ax", "F#1{E#1{[A#1{'a'}], 'x'}}")
                 .input("aby", "F#1{E#2{[B#1{'a'}, B#2{'b'}], 'y'}}")
                 .check();
-    }
-
-    @Test
-    public void cc() throws Exception {
-        var tree = Env.tree("lldfa/factor.g");
-        // var tree = Env.tree("lldfa/rr-loop.g");
-        tree.options.dump = true;
-        //ParserGen.genCC(tree, Lang.JAVA);
-        Builder.tree("lldfa/factor.g")
-                .rule("E")
-                .input("c", "E#1{'c'}")
-                .input("d", "E#2{'d'}")
-                .input("aaad", "E#2{['a', 'a', 'a'], 'd'}")
-                .input("aaac", "E#1{[A#1{'a'}, A#1{'a'}, A#1{'a'}], 'c'}")
-                .input("bc", "E#1{[A#2{'b'}], 'c'}")
-                .input("aaabc", "E#1{[A#1{'a'}, A#1{'a'}, A#1{'a'}, A#2{'b'}], 'c'}")
-                .checkCC();
     }
 }

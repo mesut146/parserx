@@ -13,10 +13,10 @@ import java.nio.file.attribute.BasicFileAttributes;
 public class RealTest {
 
     public static void check(Tree tree, String... in) throws Exception {
-        check(tree,false,in);
+        check(tree, false, in);
     }
 
-    public static void check(Tree tree,boolean file, String... in) throws Exception {
+    public static void check(Tree tree, boolean file, String... in) throws Exception {
         File tester = new File(Env.dotDir(), "LexerTester.java");
         Utils.write(Files.readString(Env.getResFile("LexerTester.java.1").toPath()), tester);
 
@@ -25,26 +25,10 @@ public class RealTest {
         LexerGenerator.gen(tree, Lang.JAVA);
 
         File out = new File(outDir, "out");
-        if (out.exists()) {
-            Files.walkFileTree(out.toPath(), new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    Files.delete(file);
-                    return super.visitFile(file, attrs);
-                }
-            });
-            out.delete();
-        }
+        Env.deleteInside(out);
         out.mkdir();
 
-        ProcessBuilder builder = new ProcessBuilder("javac", "-d", "./out", "LexerTester.java");
-        builder.directory(new File(outDir));
-        builder.redirectErrorStream(true);
-        Process p = builder.start();
-        if (p.waitFor() != 0) {
-            System.out.println(read(p.getInputStream()));
-            throw new RuntimeException("cant compile " + tree.file.getName());
-        }
+        Env.compile(tree, tester, out.getName());
 
         for (String s : in) {
             ProcessBuilder runner;
@@ -57,20 +41,10 @@ public class RealTest {
             runner.directory(out);
             runner.redirectErrorStream(true);
             Process p2 = runner.start();
-            System.out.print(read(p2.getInputStream()));
+            System.out.print(Utils.read(p2.getInputStream()));
             if (p2.waitFor() != 0) {
                 throw new RuntimeException("err for input " + s);
             }
         }
-    }
-
-    static String read(InputStream in) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        BufferedReader br = new BufferedReader(new InputStreamReader(in));
-        String line;
-        while ((line = br.readLine()) != null) {
-            sb.append(line).append("\n");
-        }
-        return sb.toString();
     }
 }

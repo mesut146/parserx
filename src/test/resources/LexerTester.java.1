@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.ArrayList;
 
 public class LexerTester {
 
@@ -17,6 +18,19 @@ public class LexerTester {
                 break;
             }
         }
+    }
+
+    public static ArrayList<String> tokens(String data) throws Exception{
+        ArrayList<String> list = new ArrayList<>();
+        Lexer l = new Lexer(new StringReader(data));
+        while (true) {
+            Token t = l.next();
+            if (t.type == 0) {
+                break;
+            }
+            list.add(t.formatValue());
+        }
+        return list;
     }
 
 }

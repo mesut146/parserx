@@ -49,7 +49,8 @@ public class JavaAst extends BaseVisitor<Void, Void> {
         if (!printTokenQuote) return;
         w.append("");
         w.append("static void printToken(%s token, StringBuilder sb){", options.tokenClass);
-        w.append("sb.append(\"'\").append(token.value.replace(\"'\",\"\\\\'\")).append(\"'\");");
+        //w.append("sb.append(\"'\").append(token.value.replace(\"'\",\"\\\\'\")).append(\"'\");");
+        w.append("sb.append(\"'\").append(token.formatValue()).append(\"'\");");
         w.append("}");
         w.append("");
     }

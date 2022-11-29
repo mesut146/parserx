@@ -18,8 +18,11 @@ public class $token_class${
     }
 
     public String toString(){
-        //return String.format("'%s' [name = %s line = %s]",value, name, line);
         if(type == 0) return "EOF";
-        return String.format("%s{value = %s, line = %s}", name, value.replace("\n","\\n"), line);
+        return String.format("%s{value = '%s', line = %s}", name, formatValue(), line);
+    }
+
+    public String formatValue(){
+        return value.replace("\n","\\n").replace("\r","\\r").replace("\'","\\\'");
     }
 }

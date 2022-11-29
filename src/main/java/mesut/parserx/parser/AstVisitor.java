@@ -176,27 +176,27 @@ public class AstVisitor {
     }
 
     public Node visitRegex(Ast.regex node) {
-        if (node.regex1 != null) {
-            var name = visitName(node.regex1.name);
-            var res = visitSimple(node.regex1.simple);
+        if (node.alt1 != null) {
+            var name = visitName(node.alt1.name);
+            var res = visitSimple(node.alt1.simple);
             res.astInfo.varName = name;
-            if (node.regex1.type != null) {
-                var type = visitRegexType(node.regex1.type);
+            if (node.alt1.type != null) {
+                var type = visitRegexType(node.alt1.type);
                 res = new Regex(res, type);
             }
-            if (node.regex1.ACTION != null) {
-                res.action = node.regex1.ACTION.value;
+            if (node.alt1.ACTION != null) {
+                res.action = node.alt1.ACTION.value;
             }
             return res;
         }
         else {
-            var res = visitSimple(node.regex2.simple);
-            if (node.regex2.type != null) {
-                var type = visitRegexType(node.regex2.type);
+            var res = visitSimple(node.alt2.simple);
+            if (node.alt2.type != null) {
+                var type = visitRegexType(node.alt2.type);
                 res = new Regex(res, type);
             }
-            if (node.regex2.ACTION != null) {
-                res.action = node.regex2.ACTION.value;
+            if (node.alt2.ACTION != null) {
+                res.action = node.alt2.ACTION.value;
             }
             return res;
         }
@@ -247,6 +247,7 @@ public class AstVisitor {
             res.args.add(new Name(node.call.call.IDENT.value));
             for (var arg : node.call.call.g1) {
                 res.args.add(new Name(arg.IDENT.value));
+                res.args2.add(new Parameter(null, arg.IDENT.value));
             }
             return res;
         }

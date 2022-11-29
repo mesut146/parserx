@@ -8,6 +8,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.function.Function;
 
 public class Env {
@@ -64,5 +69,27 @@ public class Env {
     @Test
     public void tokenLessTest2() throws IOException {
         System.out.println(Utils.fromRegex("a*b"));
+    }
+
+    public static void compile(Tree tree, File source, String outDir) throws Exception {
+        ProcessBuilder builder = new ProcessBuilder("javac", "-d", "./" + outDir, source.getAbsolutePath());
+        builder.directory(source.getParentFile());
+        builder.redirectErrorStream(true);
+        Process p = builder.start();
+        if (p.waitFor() != 0) {
+            System.out.println(Utils.read(p.getInputStream()));
+            throw new RuntimeException("cant compile " + tree.file.getName());
+        }
+    }
+
+    public static void deleteInside(File dir) throws IOException {
+        if (!dir.exists()) return;
+        Files.walkFileTree(dir.toPath(), new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
+                return super.visitFile(file, attrs);
+            }
+        });
     }
 }
