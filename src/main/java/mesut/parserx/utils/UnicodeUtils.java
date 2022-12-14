@@ -1,7 +1,5 @@
 package mesut.parserx.utils;
 
-import mesut.parserx.nodes.Range;
-
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +34,7 @@ public class UnicodeUtils {
 
     //make escaped(slash) form
     public static String escape(int val) {
-        for (Map.Entry<Character, Character> entry : escapeMap.entrySet()) {
+        for (var entry : escapeMap.entrySet()) {
             if (entry.getValue() == val) {
                 return "\\" + (char) entry.getKey();
             }
@@ -49,7 +47,7 @@ public class UnicodeUtils {
         if (isSpecial(val)) {
             return escape(val);
         }
-        StringBuilder hex = new StringBuilder(Integer.toHexString(val));
+        var hex = new StringBuilder(Integer.toHexString(val));
         if (hex.length() < 4) {
             int need = 4 - hex.length();
             for (int i = 0; i < need; i++) {

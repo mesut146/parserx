@@ -2,8 +2,33 @@ package mesut.parserx.nodes;
 
 public class Printer extends BaseVisitor<String, Void> {
 
+    public boolean antlr = false;
+    String indent = "    ";
+    Tree tree;
+
+    public Printer(Tree tree) {
+        this.tree = tree;
+    }
+
+    public String print(){
+        return tree.toString();
+    }
+
     public String printRule(RuleDecl decl) {
-        return decl.baseName() + ": " + decl.rhs.accept(this, null) + ";";
+        StringBuilder sb = new StringBuilder();
+        sb.append(decl.getName());
+        if (antlr) {
+            sb.append("\n").append(indent).append(":");
+            if (!decl.rhs.isOr()) {
+                sb.append(indent);
+            }
+            sb.append(decl.rhs.accept(this, null));
+            sb.append("\n").append(indent).append(";");
+        }
+        else {
+            sb.append(": ").append(decl.rhs.accept(this, null)).append(";");
+        }
+        return sb.toString();
     }
 
     public String printToken(TokenDecl decl) {
@@ -76,6 +101,9 @@ public class Printer extends BaseVisitor<String, Void> {
     public String visitOr(Or or, Void arg) {
         var sb = new StringBuilder();
         for (int i = 0; i < or.size(); i++) {
+            if (antlr) {
+                sb.append(indent);
+            }
             sb.append(or.get(i).accept(this, arg));
             if (i < or.size() - 1) {
                 sb.append(" | ");

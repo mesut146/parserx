@@ -3,6 +3,7 @@ package mesut.parserx.nodes;
 import mesut.parserx.dfa.Alphabet;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.NFABuilder;
+import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.PrepareTree;
@@ -28,6 +29,7 @@ public class Tree {
     CountingMap<String> newNameCnt = new CountingMap<>();
     Map<String, String> senderMap = new HashMap<>();
     public HashSet<Name> originalRules = new HashSet<>();
+    public FirstSet.EmptyChecker emptyChecker = new FirstSet.EmptyChecker(this);
 
     public Tree() {
     }

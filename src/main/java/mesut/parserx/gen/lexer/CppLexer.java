@@ -2,7 +2,6 @@ package mesut.parserx.gen.lexer;
 
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Transition;
-import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.Template;
 import mesut.parserx.nodes.Name;

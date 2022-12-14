@@ -3,7 +3,9 @@ package mesut.parserx.nodes;
 import mesut.parserx.dfa.Alphabet;
 import mesut.parserx.utils.UnicodeUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 //character set
 //e.g [^a-zA-Z0-9_]
@@ -114,9 +116,6 @@ public class Bracket extends Node {
     void checkIntersecting() {
         for (int i = 0; i < list.size(); i++) {
             var ch = list.get(i);
-            if (!ch.isValid()) {
-                throw new RuntimeException("invalid range: " + ch);
-            }
             for (int j = i + 1; j < list.size(); j++) {
                 var ch2 = list.get(j);
                 if (ch.intersect(ch2)) {
@@ -141,10 +140,14 @@ public class Bracket extends Node {
                 //intersect
                 last = range.end + 1;
             }
-            ranges.add(new Range(last, range.start - 1));
+            if (range.start > 0) {
+                ranges.add(new Range(last, range.start - 1));
+            }
             last = range.end + 1;
         }
-        ranges.add(new Range(last, Alphabet.max));
+        if (last <= Alphabet.max) {
+            ranges.add(new Range(last, Alphabet.max));
+        }
         return this;
     }
 

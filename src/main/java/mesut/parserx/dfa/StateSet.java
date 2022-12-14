@@ -1,6 +1,9 @@
 package mesut.parserx.dfa;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeSet;
 
 //nfa,dfa state set
 public class StateSet implements Iterable<State> {

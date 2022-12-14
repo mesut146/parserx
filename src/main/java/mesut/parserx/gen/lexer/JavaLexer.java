@@ -117,13 +117,13 @@ public class JavaLexer {
 
     //write char ranges
     private void cmap() {
-        StringBuilder cmapWriter = new StringBuilder();
+        var cmapWriter = new StringBuilder();
         cmapWriter.append("\"");
         int column = 20;
         int i = 0;
         //sorted ranges for error report
-        TreeSet<Map.Entry<Node, Integer>> entries = new TreeSet<>(Map.Entry.comparingByValue());
-        for (Iterator<Map.Entry<Node, Integer>> it = dfa.getAlphabet().map.entrySet().iterator(); it.hasNext(); ) {
+        var entries = new TreeSet<Map.Entry<Node, Integer>>(Map.Entry.comparingByValue());
+        for (var it = dfa.getAlphabet().map.entrySet().iterator(); it.hasNext(); ) {
             var entry = it.next();
             Range range = entry.getKey().asRange();
             entries.add(entry);
@@ -142,7 +142,7 @@ public class JavaLexer {
         cmapWriter.append("\"");
         template.set("cMap", cmapWriter.toString());
 
-        StringBuilder regexWriter = new StringBuilder();
+        var regexWriter = new StringBuilder();
         for (var it = entries.iterator(); it.hasNext(); ) {
             var entry = it.next();
             regexWriter.append("\"");

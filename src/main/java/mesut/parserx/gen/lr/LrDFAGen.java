@@ -1,10 +1,13 @@
 package mesut.parserx.gen.lr;
 
 import mesut.parserx.gen.ParserUtils;
-import mesut.parserx.gen.lldfa.Normalizer;
 import mesut.parserx.gen.lldfa.ItemSet;
+import mesut.parserx.gen.lldfa.Normalizer;
 import mesut.parserx.gen.transform.LrUtils;
-import mesut.parserx.nodes.*;
+import mesut.parserx.nodes.Name;
+import mesut.parserx.nodes.RuleDecl;
+import mesut.parserx.nodes.Sequence;
+import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 
 import java.io.File;

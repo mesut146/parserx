@@ -10,7 +10,6 @@ import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.UnicodeUtils;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
 

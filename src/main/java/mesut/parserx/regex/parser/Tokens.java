@@ -1,6 +1,6 @@
 package mesut.parserx.regex.parser;
 
-public class Tokens{
+public class Tokens {
     public static final int EOF = 0;
     public static final int DOT = 1;
     public static final int BAR = 2;

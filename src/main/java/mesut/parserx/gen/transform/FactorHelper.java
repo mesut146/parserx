@@ -17,7 +17,7 @@ public class FactorHelper {
         return rhs.accept(checker, null);
     }
 
-    public static boolean hasCommon(Node a, Node b,Tree tree) {
+    public static boolean hasCommon(Node a, Node b, Tree tree) {
         Set<Name> s1 = FirstSet.tokens(a, tree);
         Set<Name> s2 = FirstSet.tokens(b, tree);
         Set<Name> common = new LinkedHashSet<>(s1);
@@ -25,7 +25,7 @@ public class FactorHelper {
         return !common.isEmpty();
     }
 
-    public static Name common(Set<Name> s1, Set<Name> s2,Tree tree) {
+    public static Name common(Set<Name> s1, Set<Name> s2, Tree tree) {
         Set<Name> common = new LinkedHashSet<>(s1);
         common.retainAll(s2);
         if (common.isEmpty()) return null;

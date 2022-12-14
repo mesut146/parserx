@@ -1,7 +1,6 @@
 package mesut.parserx.gen.lr;
 
 import mesut.parserx.gen.FirstSet;
-import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
 import java.util.*;
@@ -144,7 +143,7 @@ public class LrItem {
         }
         var rest = new Sequence(rhs.list.subList(pos + 1, rhs.size()));
         var res = FirstSet.tokens(rest, tree);
-        if (Helper.canBeEmpty(rest, tree)) {
+        if (FirstSet.canBeEmpty(rest, tree)) {
             //no end,la is carried
             res.addAll(lookAhead);
         }

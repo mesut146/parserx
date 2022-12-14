@@ -1,7 +1,6 @@
 package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.FirstSet;
-import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.ParserUtils;
 import mesut.parserx.gen.lr.LrType;
 import mesut.parserx.gen.lr.TreeInfo;
@@ -9,13 +8,12 @@ import mesut.parserx.gen.transform.FactorHelper;
 import mesut.parserx.gen.transform.GreedyNormalizer;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Debug;
-import mesut.parserx.utils.Utils;
+import mesut.parserx.utils.Log;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class LLDfaBuilder {
@@ -26,9 +24,7 @@ public class LLDfaBuilder {
     Set<ItemSet> all;
     Queue<ItemSet> queue = new LinkedList<>();
     LrType type = LrType.LR1;
-    public static Logger logger = Utils.getLogger();
-    public static boolean noshrink = false;
-    public static boolean skip = false;
+    public static boolean cc = true;
 
     public LLDfaBuilder(Tree tree) {
         this.tree = tree;
@@ -70,6 +66,7 @@ public class LLDfaBuilder {
         for (var rd : tree.rules) {
             var visitor = new FactorVisitor();
             visitor.tree = tree;
+            visitor.curRule = rd;
             if (rd.rhs.accept(visitor, null)) {
                 build(rd);
             }
@@ -103,9 +100,9 @@ public class LLDfaBuilder {
 
                 var a = seq.get(i).copy();
                 var b = seq.get(i + 1).copy();
-                var sym = GreedyNormalizer.hasGreedyTail(a, FirstSet.firstSet(b, tree), tree);
-                if (sym != null) {
-                    throw new RuntimeException(seq + " has greediness->" + sym.sym);
+                var info = GreedyNormalizer.hasGreedyTail(a, FirstSet.firstSet(b, tree), tree);
+                if (info != null) {
+                    //throw new RuntimeException(String.format("%s has greediness, %s follows %s, list: %s, sym: %s", curRule.getName(), a, b, info.list, info.sym));
                 }
             }
             return false;
@@ -117,7 +114,7 @@ public class LLDfaBuilder {
         queue.clear();
         all = new TreeSet<>(Comparator.comparingInt(set -> set.stateId));
 
-        logger.log(Level.FINE, "building " + rule + " in " + tree.file.getName());
+        Log.log(Level.FINE, "building " + rule + " in " + tree.file.getName());
 
         var firstSet = new ItemSet(treeInfo, type);
         firstSet.isStart = true;
@@ -150,8 +147,7 @@ public class LLDfaBuilder {
 
         while (!queue.isEmpty()) {
             var curSet = queue.poll();
-            //if (log) System.out.println("curSet = " + curSet.stateId);
-            logger.log(Level.FINE, "curSet = " + curSet.stateId);
+            Log.log(Level.FINE, "curSet = " + curSet.stateId);
             //closure here because it needs all items
             curSet.closure();
             Map<Node, LLTransition> map = new HashMap<>();
@@ -169,15 +165,19 @@ public class LLDfaBuilder {
                     if (curSet.isFactor(item, i)) {
                         sym.astInfo.isFactor = true;
                     }
-                    if (skip && !sym.astInfo.isFactor) {
-                        //direct transition to alt final state
-                        target = new Item(item, item.rhs.size());
-                        if (i < item.rhs.size() - 1) {
-                            target.lookAhead = item.follow(tree, i);
+                    if (cc) {
+                        if (!sym.astInfo.isFactor) {
+                            //direct transition to alt final state
+                            target = new Item(item, item.rhs.size());
+                            if (i < item.rhs.size() - 1) {
+                                target.lookAhead = item.follow(tree, i);
+                            }
+                            //makeAlt(target, sym.asName(), curSet);
+                            //continue;
                         }
-                    }
-                    else if (noshrink) {
-                        target = new Item(item, newPos);
+                        else {
+                            target = new Item(item, newPos);
+                        }
                     }
                     else if (node.isOptional() && sym.asName().isToken && !curSet.isFactor(item, i)) {
                         //.a? b c | b d -> a b c
@@ -191,9 +191,6 @@ public class LLDfaBuilder {
                         var rhs = new ArrayList<>(item.rhs.list.subList(i, item.rhs.size()));
                         sym = Sequence.make(rhs);
                         target = new Item(item, item.rhs.size());
-                        //todo below line and break not necessary?
-                        //addMap(map, sym, new LLTransition.ItemPair(item, target), curSet);
-                        //break;
                     }
                     else {
                         target = new Item(item, newPos);
@@ -206,13 +203,23 @@ public class LLDfaBuilder {
         rules.put(rule, all);
     }
 
+    Item makeAlt(Item target, Name sym, ItemSet curSet) {
+        var targetSet = new ItemSet(treeInfo, type);
+        targetSet.addItem(target);
+        targetSet.alreadyGenReduces = true;
+        all.add(targetSet);
+        var tr = new LLTransition(curSet, targetSet, sym);
+        curSet.addTransition(tr);
+        return null;
+    }
+
     boolean canShrink(ItemSet set, Item item, int i) {
         var node = item.getNode(i);
         var sym = node.isName() ? node.asName() : node.asRegex().node.asName();
 
         if (set.isFactor(item, i)) return false;
         if (node.isName() && sym.isToken && !set.isFactor(item, i)) return true;
-        if (!Helper.canBeEmpty(node, tree)) return true;//not closured
+        if (!FirstSet.canBeEmpty(node, tree)) return true;//not closured
         return !isFollowHasFactor(set, item, i);
     }
 
@@ -257,9 +264,8 @@ public class LLDfaBuilder {
                 queue.add(targetSet);
             }
             tr.target = targetSet;
-            targetSet.symbol = sym;
             curSet.addTransition(tr);
-            logger.log(Level.FINE, String.format("trans %d -> %d with %s", curSet.stateId, targetSet.stateId, sym));
+            //Log.log(Level.FINE, String.format("trans %d -> %d with %s", curSet.stateId, targetSet.stateId, sym));
         }
     }
 
@@ -291,6 +297,7 @@ public class LLDfaBuilder {
         return null;
     }
 
+    //dump only transitions
     public void dump(OutputStream os) {
         PrintWriter w = new PrintWriter(os);
         for (var e : rules.entrySet()) {
@@ -315,6 +322,7 @@ public class LLDfaBuilder {
 
     public void dumpItems(OutputStream os) {
         PrintWriter w = new PrintWriter(os);
+        Item.printLa = false;
         for (var e : this.rules.entrySet()) {
             w.println("----------------------------------");
             w.println("//" + e.getKey());
@@ -334,6 +342,7 @@ public class LLDfaBuilder {
     }
 
     public void dot(PrintWriter w) {
+        Item.printLa = false;
         w.println("digraph G{");
         w.println("rankdir = TD");
         w.println("ratio=\"fill\";");
@@ -343,24 +352,24 @@ public class LLDfaBuilder {
                 var id = String.valueOf(set.stateId);
                 //items
                 sb.append("<");
-                for (var it : set.all) {
-                    var line = it.toString2(tree);
-                    line = line.replace(">", "&gt;");
-                    if (it.isReduce(tree)) {
-                        sb.append("<FONT color=\"blue\">");
-                        sb.append(line);
-                        sb.append("</FONT>");
-                    }
-                    else if (it.dotPos == 0) {
-                        sb.append("<FONT color=\"red\">");
-                        sb.append(line);
-                        sb.append("</FONT>");
-                    }
-                    else {
-                        sb.append(line);
-                    }
-                    sb.append("<BR ALIGN=\"LEFT\"/>");
-                }
+//                for (var it : set.all) {
+//                    var line = it.toString2(tree);
+//                    line = line.replace(">", "&gt;");
+//                    if (it.isReduce(tree)) {
+//                        sb.append("<FONT color=\"blue\">");
+//                        sb.append(line);
+//                        sb.append("</FONT>");
+//                    }
+//                    else if (it.dotPos == 0) {
+//                        sb.append("<FONT color=\"red\">");
+//                        sb.append(line);
+//                        sb.append("</FONT>");
+//                    }
+//                    else {
+//                        sb.append(line);
+//                    }
+//                    sb.append("<BR ALIGN=\"LEFT\"/>");
+//                }
                 sb.append(">");
                 w.printf("%s [shape=box xlabel=\"%s\" label=%s];\n", id, id, sb);
                 if (set.hasFinal()) {

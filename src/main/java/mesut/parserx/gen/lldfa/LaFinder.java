@@ -2,7 +2,10 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.ParserUtils;
-import mesut.parserx.nodes.*;
+import mesut.parserx.nodes.BaseVisitor;
+import mesut.parserx.nodes.Name;
+import mesut.parserx.nodes.Sequence;
+import mesut.parserx.nodes.Tree;
 
 import java.util.HashMap;
 import java.util.HashSet;

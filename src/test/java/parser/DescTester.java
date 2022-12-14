@@ -9,16 +9,9 @@ import mesut.parserx.utils.Utils;
 import org.junit.Assert;
 
 import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +25,7 @@ public class DescTester {
         var tree = builder.tree;
         tree.options.outDir = outDir;
         JavaAst.printTokenQuote = true;
-        ParserGen.genCC(tree, Lang.JAVA, true);
+        ParserGen.genCC(tree, Lang.JAVA, false);
 
         File classDir = new File(outDir, "out");
         Env.deleteInside(classDir);
@@ -46,6 +39,7 @@ public class DescTester {
             try {
                 String res;
                 if (info.isFile) {
+                    System.out.println("testing input " + info.input);
                     res = method.invoke(null, info.rule, Utils.read(new File(info.input))).toString();
                 }
                 else {

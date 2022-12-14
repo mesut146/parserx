@@ -34,9 +34,8 @@ public class CcStateGenJava {
     }
 
     public void gen() throws IOException {
-        LLDfaBuilder.noshrink = true;
-        LLDfaBuilder.skip = true;
-        ItemSet.forceRuleClosure = true;
+        LLDfaBuilder.cc = true;
+        ItemSet.forceClosure = true;
         builder = new LLDfaBuilder(tree);
         builder.factor();
         ParserUtils.genTokenType(tree);
@@ -57,9 +56,8 @@ public class CcStateGenJava {
             for (int i = 1; i <= rhs.size(); i++) {
                 var ch = rhs.get(i - 1);
                 w.append("case %d:{", i);
-                w.append("ts.unmark();");
-                CcGenJava.alt(ch, i, w);
                 var n = new NormalWriter(w, tree);
+                n.curRule = decl;
                 ch.accept(n, null);
                 w.append("break;");
                 w.append("}");
@@ -68,16 +66,7 @@ public class CcStateGenJava {
             w.append("return res;");
             w.append("}");
         }
-        //writeRest
-        for (var decl : tree.rules) {
-            if (builder.rules.containsKey(decl.ref)) continue;
-            w.append("public %s %s() throws IOException{", decl.retType, decl.getName());
-            w.append("%s res = new %s();", decl.retType, decl.retType);
-            var nw = new NormalWriter(w, tree);
-            decl.rhs.accept(nw, null);
-            w.append("return res;");
-            w.append("}");
-        }
+        CcGenJava.writeRest(tree, builder, w);
 
         w.append("}");
         var file = new File(options.outDir, options.parserClass + ".java");

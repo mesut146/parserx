@@ -76,6 +76,7 @@ public class Env {
         builder.directory(source.getParentFile());
         builder.redirectErrorStream(true);
         Process p = builder.start();
+        System.out.println(Utils.read(p.getInputStream()));
         if (p.waitFor() != 0) {
             System.out.println(Utils.read(p.getInputStream()));
             throw new RuntimeException("cant compile " + tree.file.getName());

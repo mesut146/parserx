@@ -197,7 +197,7 @@ public class GreedyNormalizer extends Transformer {
                 if (sym == null) return null;
                 if (regex.isStar()) {
                     foundLoop = true;
-                    throw new RuntimeException("greedy loop in " + node + " la=" + sym);
+                    //throw new RuntimeException("greedy loop in " + node + " la=" + sym);
                 }
                 var info = new TailInfo();
                 info.sym = sym.copy();

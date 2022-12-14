@@ -1,7 +1,6 @@
 package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.FirstSet;
-import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
 import java.util.*;
@@ -65,7 +64,7 @@ public class Item {
     //dot end or rest is empty
     public boolean isReduce(Tree tree) {
         for (int i = dotPos; i < rhs.size(); i++) {
-            if (!Helper.canBeEmpty(rhs.get(i), tree)) return false;
+            if (!FirstSet.canBeEmpty(rhs.get(i), tree)) return false;
         }
         return true;
     }
@@ -189,7 +188,7 @@ public class Item {
         for (int i = pos + 1; i < rhs.size(); ) {
             Node node = rhs.get(i);
             res.addAll(FirstSet.tokens(node, tree));
-            if (Helper.canBeEmpty(node, tree)) {
+            if (FirstSet.canBeEmpty(node, tree)) {
                 i++;
                 //look next node
             }

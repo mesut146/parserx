@@ -15,7 +15,7 @@ public class CountingMap2<K1, K2> {
         return c.get(key2);
     }
 
-    public void clear(){
+    public void clear() {
         map.clear();
     }
 }

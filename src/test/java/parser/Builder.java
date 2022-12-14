@@ -1,6 +1,7 @@
 package parser;
 
 import common.Env;
+import lexer.RealTest;
 import mesut.parserx.nodes.Tree;
 
 import java.io.IOException;
@@ -81,5 +82,16 @@ public class Builder {
     public void checkTokens() throws Exception {
         System.out.println("testing " + tree.file.getName());
         DescTester.checkTokens(this);
+    }
+
+    public void tokenize() throws Exception {
+        for (var in : cases) {
+            if (in.isFile) {
+                RealTest.check(tree, true, in.input);
+            }
+            else {
+                RealTest.check(tree, in.input);
+            }
+        }
     }
 }

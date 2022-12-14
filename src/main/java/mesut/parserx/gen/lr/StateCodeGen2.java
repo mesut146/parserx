@@ -20,7 +20,7 @@ public class StateCodeGen2 {
     CodeWriter writer = new CodeWriter(true);
     IdMap idMap;
 
-    public StateCodeGen2( LrDFAGen tableGen, IdMap idMap) {
+    public StateCodeGen2(LrDFAGen tableGen, IdMap idMap) {
         this.gen = tableGen;
         this.idMap = idMap;
         options = tableGen.tree.options;

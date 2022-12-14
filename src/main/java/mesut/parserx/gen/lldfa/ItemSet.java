@@ -4,7 +4,10 @@ import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.lr.LrType;
 import mesut.parserx.gen.lr.TreeInfo;
 import mesut.parserx.gen.transform.FactorHelper;
-import mesut.parserx.nodes.*;
+import mesut.parserx.nodes.Factored;
+import mesut.parserx.nodes.Name;
+import mesut.parserx.nodes.Node;
+import mesut.parserx.nodes.Tree;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -22,10 +25,9 @@ public class ItemSet {
     TreeInfo treeInfo;
     public List<LLTransition> transitions = new ArrayList<>();
     public List<LLTransition> incoming = new ArrayList<>();
-    public Node symbol;
     boolean alreadyGenReduces = false;
-    public static boolean forceRuleClosure = false;
     public boolean isFinal = false;
+    public static boolean forceClosure = false;
 
     public ItemSet(TreeInfo treeInfo, LrType type) {
         this.treeInfo = treeInfo;
@@ -202,7 +204,7 @@ public class ItemSet {
     }
 
     public void closure(Item item) {
-        if (forceRuleClosure) {
+        if (forceClosure) {
             for (int i = item.dotPos; i < item.rhs.size(); i++) {
                 if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
                 var node = item.getNode(i);

@@ -1,5 +1,6 @@
 package mesut.parserx.gen.transform;
 
+import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
@@ -102,7 +103,7 @@ public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
         List<Node> one = new ArrayList<>();
         List<Node> zero = new ArrayList<>();
         for (var ch : or) {
-            if (Helper.start(ch, arg, tree)) {
+            if (FirstSet.start(ch, arg, tree)) {
                 var pi = ch.accept(this, arg);
                 one.add(pi.one);
                 if (pi.zero != null) {
@@ -126,9 +127,9 @@ public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
         var A = seq.first();
         var B = Helper.trim(seq);
         var info = new PullInfo();
-        if (Helper.start(A, sym, tree)) {
+        if (FirstSet.start(A, sym, tree)) {
             var ai = A.accept(this, sym);
-            if (Helper.canBeEmpty(A, tree) && Helper.start(B, sym, tree)) {
+            if (FirstSet.canBeEmpty(A, tree) && FirstSet.start(B, sym, tree)) {
                 //(a A(a) | A_no_a) B
                 //a A(a) B | A_no_a B
                 var s1 = new Sequence(ai.zero.copy(), B.copy());

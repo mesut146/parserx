@@ -69,45 +69,50 @@ public class RecursionHandler {
     }
 
     boolean handleIndirect(RuleDecl decl) {
-        var set = FirstSet.firstSet(decl.rhs, tree);
-        set.removeIf(n -> n.isToken);
-        if (!set.contains(decl.ref)) return false;
+        try {
+            var set = FirstSet.firstSet(decl.rhs, tree);
+            set.removeIf(n -> n.isToken || !n.equals(decl.ref) && !FirstSet.start(n, decl.ref, tree));
+            if (!set.contains(decl.ref)) return false;
 
-        //primary first
-        var prims = new ArrayList<Node>();
-        for (var sym : set) {
-            var a = getAfter(sym);
-            var after = sym.equals(decl.ref) ? new Regex(a, RegexType.OPTIONAL) : a;
-            var prim = makePrimary(sym, decl.ref);
-            if (sym.equals(decl.ref)) {
-                prim.astInfo.isPrimary = true;
-            }
-            prims.add(new Sequence(prim, after));
-        }
-        toAdd.add(0, new RuleDecl("S" + decl.ref, new Or(prims)));
-        //tails
-        for (var e : afterMap.entrySet()) {
-            var state = e.getValue();
-            var rule = e.getKey();
-            //collect all tails for rule
-            var list = new ArrayList<Node>();
+            //primary first
+            var prims = new ArrayList<Node>();
             for (var sym : set) {
                 var a = getAfter(sym);
                 var after = sym.equals(decl.ref) ? new Regex(a, RegexType.OPTIONAL) : a;
-                var tail = makeTail(sym, rule);
-                list.add(new Sequence(tail, after));
+                var prim = makePrimary(sym, decl.ref);
                 if (sym.equals(decl.ref)) {
-                    tail.astInfo.isPrimary = true;
+                    prim.astInfo.isPrimary = true;
                 }
+                prims.add(new Sequence(prim, after));
             }
-            var newRule = new RuleDecl(state, Or.make(list));
-            newRule.recInfo = new Info();
-            newRule.recInfo.isState = true;
-            newRule.retType = decl.retType;
-            newRule.parameterList.add(new Parameter(state.args2.get(0).type, "arg"));
-            toAdd.add(newRule);
+            toAdd.add(0, new RuleDecl("S" + decl.ref, new Or(prims)));
+            //tails
+            for (var e : afterMap.entrySet()) {
+                var state = e.getValue();
+                var rule = e.getKey();
+                //collect all tails for rule
+                var list = new ArrayList<Node>();
+                for (var sym : set) {
+                    var a = getAfter(sym);
+                    var after = sym.equals(decl.ref) ? new Regex(a, RegexType.OPTIONAL) : a;
+                    var tail = makeTail(sym, rule);
+                    list.add(new Sequence(tail, after));
+                    if (sym.equals(decl.ref)) {
+                        tail.astInfo.isPrimary = true;
+                    }
+                }
+                var newRule = new RuleDecl(state, Or.make(list));
+                newRule.recInfo = new Info();
+                newRule.recInfo.isState = true;
+                newRule.retType = decl.retType;
+                newRule.parameterList.add(new Parameter(state.args2.get(0).type, "arg"));
+                toAdd.add(newRule);
+            }
+            return true;
+        } catch (Exception e) {
+            System.err.println("failed to remove left recursion on " + decl.getName());
+            throw e;
         }
-        return true;
     }
 
     Type getType(Name name) {

@@ -5,7 +5,6 @@ import mesut.parserx.gen.lldfa.ItemSet;
 import mesut.parserx.gen.lldfa.Type;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
-import mesut.parserx.utils.Utils;
 
 import java.io.IOException;
 

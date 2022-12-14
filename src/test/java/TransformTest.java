@@ -16,15 +16,6 @@ public class TransformTest {
     }
 
     @Test
-    public void recursion() throws IOException {
-        Tree tree = Env.tree("rec/cyc.g");
-        Recursion.debug = true;
-        new Recursion(tree).all();
-        trimRest(tree, "A");
-        tree.printRules();
-    }
-
-    @Test
     public void ebnf() throws Exception {
         Tree tree = Env.tree("ebnf.g");
         tree = EbnfToBnf.transform(tree);
@@ -60,17 +51,9 @@ public class TransformTest {
     }
 
     @Test
-    public void greedy() throws Exception {
-        Builder.tree("greedy/b.g").rule("E")
-                .input("ca", "")
-                .input("caba", "")
-                .check();
-        Builder.tree("greedy/a.g").rule("E")
-                .input("cya", "")
-                .input("cydda", "")
-                .input("cyfa", "")
-                .input("cyfdda", "")
-                .input("cyaeba", "")
-                .check();
+    public void pred() throws IOException {
+        var tree = Env.tree("java/JavaParser.orig.g");
+        PrecedenceHandler.handle(tree);
+        tree.printRules();
     }
 }

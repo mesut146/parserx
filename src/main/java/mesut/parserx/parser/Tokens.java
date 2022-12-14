@@ -1,6 +1,6 @@
 package mesut.parserx.parser;
 
-public class Tokens{
+public class Tokens {
     public static final int EOF = 0;
     public static final int BOOLEAN = 1;
     public static final int OPTIONS = 2;

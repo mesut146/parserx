@@ -2,7 +2,10 @@ package mesut.parserx.dfa;
 
 import mesut.parserx.nodes.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Minimization {
 

@@ -5,7 +5,10 @@ import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 //split alts into separate decl
 public class TreeInfo {

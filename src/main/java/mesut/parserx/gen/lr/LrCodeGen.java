@@ -1,10 +1,10 @@
 package mesut.parserx.gen.lr;
 
 import mesut.parserx.gen.Lang;
-import mesut.parserx.gen.ParserUtils;
-import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.Options;
+import mesut.parserx.gen.ParserUtils;
 import mesut.parserx.gen.Template;
+import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.UnicodeUtils;
@@ -12,7 +12,9 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.TreeSet;
 
 //table driven parser gen
 public class LrCodeGen {

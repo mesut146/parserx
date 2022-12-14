@@ -61,11 +61,11 @@ public class AlphabetBuilder extends Transformer {
             bracket.ranges.remove(r1);
             ranges.remove(r1);
             ranges.remove(r2);
-            if (me1.isValid()) {
+            if (me1 != null) {
                 bracket.ranges.add(me1);
                 ranges.add(me1);
             }
-            if (me2.isValid()) {
+            if (me2 != null) {
                 bracket.ranges.add(me2);
                 ranges.add(me2);
             }

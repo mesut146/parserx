@@ -16,6 +16,6 @@ public class Factored extends Epsilon {
 
     @Override
     public <R, A> R accept(Visitor<R, A> visitor, A arg) {
-        return visitor.visitFactored(this,arg);
+        return visitor.visitFactored(this, arg);
     }
 }

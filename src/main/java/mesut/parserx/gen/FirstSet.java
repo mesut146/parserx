@@ -2,14 +2,13 @@ package mesut.parserx.gen;
 
 import mesut.parserx.nodes.*;
 
-import java.io.PrintWriter;
-import java.io.Writer;
 import java.util.*;
 
 public class FirstSet extends BaseVisitor<Void, Void> {
     Tree tree;
     LinkedHashSet<Name> res = new LinkedHashSet<>();
     Set<Name> rules = new HashSet<>();
+    Map<Name, LinkedHashSet<Name>> cache = new HashMap<>();
     List<RuleDecl> extraRules = new ArrayList<>();
     boolean recurse = true;
     boolean allowEpsilon = true;
@@ -66,7 +65,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     }
 
     public static boolean canBeEmpty(Node node, Tree tree) {
-        return node.accept(new EmptyChecker(tree), null);
+        return EmptyChecker.canBeEmpty(node, tree);
     }
 
     @Override
@@ -105,33 +104,42 @@ public class FirstSet extends BaseVisitor<Void, Void> {
         if (!allowEpsilon && name.isRule() && isEmpty(name, tree)) {
             return null;
         }
+        //cache algorithm is difficult since we need to track cur rule
+//        if (cache.containsKey(name)) {
+//            res.addAll(cache.get(name));
+//            return null;
+//        }
         res.add(name);
-        if (rules.add(name) && name.isRule() && recurse) {
-            var list = tree.getRules(name);
-            if (list.isEmpty()) {
-                var extra = extraRules.stream().filter(e -> e.ref.equals(name)).findFirst();
-                if (extra.isPresent()) {
-                    extra.get().rhs.accept(this, arg);
-                }
-                else {
-                    throw new RuntimeException("rule not found: " + name);
-                }
+        if (!(rules.add(name) && name.isRule() && recurse)) return null;
+        var list = tree.getRules(name);
+        if (list.isEmpty()) {
+            var extra = extraRules.stream().filter(e -> e.ref.equals(name)).findFirst();
+            if (extra.isPresent()) {
+                extra.get().rhs.accept(this, arg);
             }
             else {
-                for (var decl : list) {
-                    decl.rhs.accept(this, arg);
-                }
+                throw new RuntimeException("rule not found: " + name);
+            }
+        }
+        else {
+            for (var decl : list) {
+                decl.rhs.accept(this, arg);
             }
         }
         return null;
     }
 
-    static class EmptyChecker extends BaseVisitor<Boolean, Void> {
+    public static class EmptyChecker extends BaseVisitor<Boolean, Void> {
         Set<Name> rules = new HashSet<>();
+        Map<Name, Boolean> cache = new HashMap<>();
         Tree tree;
 
         public EmptyChecker(Tree tree) {
             this.tree = tree;
+        }
+
+        public static boolean canBeEmpty(Node node, Tree tree) {
+            return node.accept(tree.emptyChecker, null);
         }
 
         @Override
@@ -182,13 +190,19 @@ public class FirstSet extends BaseVisitor<Void, Void> {
         @Override
         public Boolean visitName(Name name, Void arg) {
             if (name.astInfo.isFactored) return true;
-            if (name.isRule() && rules.add(name)) {
+            if (name.isToken) return false;
+            if (cache.containsKey(name)) {
+                return cache.get(name);
+            }
+            if (rules.add(name)) {//prevents recursion
                 for (var decl : tree.getRules(name)) {
                     if (decl.rhs.accept(this, arg)) {
+                        cache.put(name, true);
                         return true;
                     }
                 }
             }
+            cache.put(name, false);
             return false;
         }
     }

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 //remove left recursions by substitutions
 public class LeftRecursive {
@@ -70,11 +71,15 @@ public class LeftRecursive {
         }
     }
 
+    Set<Name> onlyRules(Node node) {
+        return FirstSet.firstSet(node, tree).stream().filter(Name::isRule).collect(Collectors.toSet());
+    }
+
     public Node indirect(RuleDecl rule) {
         Node node = rule.rhs.copy();
         Name ref = rule.ref;
         //cut last transition that reaches rule
-        Set<Name> set = Helper.first(node, tree, true, true, false);
+        Set<Name> set = onlyRules(node);
         for (Name any : set) {
             if (any.equals(ref)) continue;
             //if any start with rule
@@ -94,7 +99,7 @@ public class LeftRecursive {
     public void cutIndirect(RuleDecl rule) {
         Name ref = rule.ref;
         //cut last transition that reaches rule
-        Set<Name> set = Helper.first(rule.rhs, tree, true, true, false);
+        Set<Name> set = onlyRules(rule.rhs);
         for (Name any : set) {
             if (any.equals(ref)) continue;
             //if any start with rule
@@ -127,7 +132,7 @@ public class LeftRecursive {
                 if (start(ch, ref)) {
                     ch = Or.wrap(subFirst(ch, ref));
                     res.set(i, ch);
-                    if (!Helper.canBeEmpty(ch, tree)) {
+                    if (!FirstSet.canBeEmpty(ch, tree)) {
                         //go on if epsilon
                         break;
                     }
@@ -275,13 +280,13 @@ public class LeftRecursive {
             SplitInfo s1 = split(left, name);
             if (start(left, name)) {
                 one = new Or(makeSeq(s1.one, right));
-                if (start(right, name) && Helper.canBeEmpty(left, tree)) {
+                if (start(right, name) && FirstSet.canBeEmpty(left, tree)) {
                     //right is also lr, so merge
                     one = new Or(makeOr(one, split(right, name).one));
                 }
                 if (s1.zero == null) {
                     SplitInfo s2 = split(right, name);
-                    if (Helper.canBeEmpty(left, tree) && s2.zero != null) {
+                    if (FirstSet.canBeEmpty(left, tree) && s2.zero != null) {
                         zero = right;
                     }
                 }
@@ -291,7 +296,7 @@ public class LeftRecursive {
             }
             else {
                 SplitInfo s2 = split(right, name);
-                if (Helper.canBeEmpty(left, tree)) {
+                if (FirstSet.canBeEmpty(left, tree)) {
                     one = s2.one;
                 }
                 zero = new Sequence(s1.zero, right);

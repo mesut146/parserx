@@ -50,7 +50,7 @@ public class RuleDecl {
         if (!ref.args.isEmpty()) {
             s += "(" + NodeList.join(ref.args, ", ") + ")";
         }
-        if (!parameterList.isEmpty()){
+        if (!parameterList.isEmpty()) {
             s += "[" + NodeList.join(parameterList, ", ") + "]";
         }
         if (false && rhs.isOr()) {

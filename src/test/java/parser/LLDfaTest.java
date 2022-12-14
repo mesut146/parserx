@@ -1,9 +1,7 @@
 package parser;
 
 import common.Env;
-import lexer.RealTest;
 import mesut.parserx.gen.Lang;
-import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.lldfa.*;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
@@ -12,10 +10,10 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.*;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 
 public class LLDfaTest {
@@ -121,9 +119,25 @@ public class LLDfaTest {
     @Test
     public void java() throws Exception {
         //RealTest.check(Env.tree("java/lexer-jls.g"), true, Env.getResFile("java/a.java.res").getAbsolutePath());
-        Builder.tree("java/parser-jls.g")
+        Builder.tree("java/JavaParser.g")
                 .file(Env.getResFile("java/a.java.res").getAbsolutePath())
                 .checkCC();
+    }
+
+    @Test
+    public void groovy() throws Exception {
+        var builder = Builder.tree("groovy/groovy.g").rule("Unit");
+        builder.dump();
+        try (var files = Files.walk(Path.of("C:\\Users\\Mesut\\StudioProjects\\ide"))) {
+            files
+                    .filter(path ->  Files.isRegularFile(path) && path.toString().endsWith(".gradle"))
+                    .forEach(path -> builder.file(path.toAbsolutePath().toString()));
+        }
+        builder
+                //.tokenize()
+                .checkTokens()
+        //.checkCC()
+        ;
     }
 
     @Test

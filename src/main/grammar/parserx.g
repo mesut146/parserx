@@ -38,7 +38,7 @@ token{
 }
 
 token{
-  LINE_COMMENT: "//" [^\n]* -> skip;
+  LINE_COMMENT: "//" [^r\n]* -> skip;
   BLOCK_COMMENT: "/*" ([^*] | "*" [^/])* "*/" -> skip;
   WS: [ \n\r\t]+ -> skip;
 }

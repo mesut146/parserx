@@ -12,6 +12,9 @@ public class Range extends Node implements Comparable<Range> {
     public Range(int start, int end) {
         this.start = start;
         this.end = end;
+        if (start > end) {
+            throw new RuntimeException("invalid range: " + this);
+        }
     }
 
     public Range(int start) {
@@ -19,7 +22,10 @@ public class Range extends Node implements Comparable<Range> {
     }
 
     public static Range of(int start, int end) {
-        return new Range(start, end);
+        if (start <= end) {
+            return new Range(start, end);
+        }
+        return null;
     }
 
     public static Range intersect(Range r1, Range r2) {
@@ -42,7 +48,7 @@ public class Range extends Node implements Comparable<Range> {
             }
             return UnicodeUtils.printChar(start);
         }
-        if (UnicodeUtils.isPrintableChar( start) && UnicodeUtils.isPrintableChar( end)) {
+        if (UnicodeUtils.isPrintableChar(start) && UnicodeUtils.isPrintableChar(end)) {
             return (char) start + "-" + (char) end;
         }
         return UnicodeUtils.escapeUnicode(start) + "-" + UnicodeUtils.escapeUnicode(end);
@@ -50,10 +56,6 @@ public class Range extends Node implements Comparable<Range> {
 
     public boolean intersect(Range other) {
         return intersect(this, other) != null;
-    }
-
-    public boolean isValid() {
-        return start <= end;
     }
 
     public boolean isSingle() {

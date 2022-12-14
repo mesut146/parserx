@@ -1,6 +1,6 @@
 package mesut.parserx.dfa.parser;
 
-public class Tokens{
+public class Tokens {
     public static final int EOF = 0;
     public static final int NUM = 1;
     public static final int LP = 2;

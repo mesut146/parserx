@@ -3,8 +3,6 @@ package mesut.parserx.gen.lr;
 import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.Options;
 import mesut.parserx.nodes.Name;
-import mesut.parserx.nodes.RuleDecl;
-import mesut.parserx.nodes.TokenDecl;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 

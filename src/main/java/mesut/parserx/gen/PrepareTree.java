@@ -52,7 +52,7 @@ public class PrepareTree extends Transformer {
             name.isToken = true;
             var all = tree.getTokens(name.name);
             if (all.isEmpty()) {
-                throw new RuntimeException("unknown reference: " + name.name + " in " + curToken);
+                throw new RuntimeException("undefined reference: " + name.name + " in " + curToken);
             }
             if (all.contains(curToken)) {
                 throw new RuntimeException("recursive token reference is not allowed: " + curToken);
@@ -66,7 +66,7 @@ public class PrepareTree extends Transformer {
                 name.isToken = true;
                 var all = tree.getTokens(name.name);
                 if (all.isEmpty()) {
-                    throw new RuntimeException("unknown reference: " + name.name + " in " + curToken);
+                    throw new RuntimeException("undefined reference: " + name.name + " in " + curRule);
                 }
                 var hasNormal = all.stream().anyMatch(td -> !td.isSkip && !td.isMore);
                 if (!hasNormal) {

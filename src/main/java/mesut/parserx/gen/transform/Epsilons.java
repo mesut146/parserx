@@ -25,7 +25,7 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
     //trim major epsilon so that result is at least one token long
     //E: ... -> E1: ...,     E: E1 | €
     public Info trim(Node node) {
-        if (!Helper.canBeEmpty(node, tree)) {
+        if (!FirstSet.canBeEmpty(node, tree)) {
             throw new RuntimeException("invalid call");
         }
         return node.accept(this, null);
@@ -53,7 +53,7 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
 
     public Info visitRegex(Regex regex, Void arg) {
         Info res = new Info();
-        boolean empty = Helper.canBeEmpty(regex.node, tree);
+        boolean empty = FirstSet.canBeEmpty(regex.node, tree);
         if (regex.isOptional()) {
             if (empty) {
                 //A? = A | € = A_no_eps | A_eps | €
@@ -105,9 +105,9 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
         Info res = new Info();
         Node a = or.first();
         Node b = Helper.trim(or);
-        if (Helper.canBeEmpty(a, tree)) {
+        if (FirstSet.canBeEmpty(a, tree)) {
             Info a1 = trim(a);
-            if (Helper.canBeEmpty(b, tree)) {
+            if (FirstSet.canBeEmpty(b, tree)) {
                 //A | B = A1 | € | B1 | € = A1 | B1 | €
                 Info b1 = trim(b);
                 res.noEps = Or.make(a1.noEps, b1.noEps);

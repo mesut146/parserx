@@ -4,7 +4,8 @@ import mesut.parserx.gen.Copier;
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.nodes.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 //remove left recursion by factorization
 public class Recursion {
@@ -15,7 +16,7 @@ public class Recursion {
 
     public Recursion(Tree tree) {
         this.tree = tree;
-        puller=new Puller(tree);
+        puller = new Puller(tree);
     }
 
     public void all() {
@@ -46,7 +47,7 @@ public class Recursion {
         Name ref = decl.ref.copy();
 
         puller.curRule = decl;
-        var info = ref.accept(puller,sym);
+        var info = ref.accept(puller, sym);
         info.zero.astInfo.varName = "res";
         info.one.astInfo.varName = "res";
         decl.rhs = Sequence.make(info.zero, new Regex(info.one, RegexType.STAR));

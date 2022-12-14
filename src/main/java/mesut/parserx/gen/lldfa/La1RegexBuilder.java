@@ -2,10 +2,13 @@ package mesut.parserx.gen.lldfa;
 
 
 import mesut.parserx.gen.AstInfo;
+import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
+import mesut.parserx.utils.Log;
 
 import java.util.*;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import static mesut.parserx.gen.ParserUtils.dollar;
@@ -83,7 +86,7 @@ public class La1RegexBuilder {
                 this.finals.add(makeRef(set));
             }
         }
-        System.out.println(NodeList.join(rules, "\n"));
+        Log.log(Level.FINEST, NodeList.join(rules, "\n"));
     }
 
     void inline() {
@@ -96,7 +99,7 @@ public class La1RegexBuilder {
                 //remove all references
                 for (var rd : rules) {
                     if (replace(rd.rhs, rule.ref, rule.rhs)) {
-                        System.out.println("inline " + rule.ref + " in " + rd);
+                        //System.out.println("inline " + rule.ref + " in " + rd);
                         any = true;
                     }
                 }
@@ -197,7 +200,7 @@ public class La1RegexBuilder {
         var pref = prefix.size() == 1 ? prefix.get(0) : new Or(prefix);
         var re = rest.size() == 1 ? rest.get(0) : new Group(Or.make(rest));
         decl.rhs = new Sequence(new Regex(new Group(pref), RegexType.STAR), re);
-        System.out.println("right rec: " + decl);
+        //System.out.println("right rec: " + decl);
     }
 
     void mergeSameSets() {
@@ -215,7 +218,7 @@ public class La1RegexBuilder {
                 }
                 //remove sets
                 if (!similars.isEmpty()) {
-                    System.out.println("group " + set1.stateId + "," + similars.stream().map(s -> String.valueOf(s.stateId)).collect(Collectors.joining(",")));
+                    Log.log(Level.FINEST,"group " + set1.stateId + "," + similars.stream().map(s -> String.valueOf(s.stateId)).collect(Collectors.joining(",")));
                     similars.forEach(all::remove);
                     groups.put(similars, set1);
                     break;
@@ -267,7 +270,7 @@ public class La1RegexBuilder {
         }
         if (!deads.isEmpty()) {
             var str = deads.stream().map(set -> String.valueOf(set.stateId)).collect(Collectors.toList());
-            System.out.println("deads: " + str);
+            Log.log(Level.FINE, "deads: " + str);
             all.removeAll(deads);
         }
     }
@@ -344,7 +347,7 @@ public class La1RegexBuilder {
         var B = Helper.trim(seq);
 
         if (isFactor(A)) {
-            if (Helper.canBeEmpty(A, tree)) {
+            if (FirstSet.canBeEmpty(A, tree)) {
                 return new Sequence(extract(A), trim(B));
             }
             else {
@@ -352,7 +355,7 @@ public class La1RegexBuilder {
             }
         }
         else {
-            if (Helper.canBeEmpty(A, tree)) {
+            if (FirstSet.canBeEmpty(A, tree)) {
                 if (A.isStar()) {
                     return new Or(A.asRegex().node, trim(B));
                 }

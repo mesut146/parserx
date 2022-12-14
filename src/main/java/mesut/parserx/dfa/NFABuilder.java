@@ -6,8 +6,6 @@ import mesut.parserx.utils.Utils;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 //nfa from grammar
 public class NFABuilder extends BaseVisitor<State, State> {

@@ -2,8 +2,6 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.nodes.*;
 
-import java.util.ArrayList;
-
 //simplify a little for llrec
 public class Normalizer extends Transformer {
 

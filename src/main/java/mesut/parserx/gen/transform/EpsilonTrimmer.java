@@ -2,7 +2,6 @@ package mesut.parserx.gen.transform;
 
 import mesut.parserx.gen.Copier;
 import mesut.parserx.gen.FirstSet;
-import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
 import java.util.ArrayList;
@@ -64,7 +63,7 @@ public class EpsilonTrimmer extends Transformer {
     }
 
     boolean canBeEmpty(Node node) {
-        return Helper.canBeEmpty(node, tree);
+        return FirstSet.canBeEmpty(node, tree);
     }
 
 
@@ -73,7 +72,7 @@ public class EpsilonTrimmer extends Transformer {
         new Transformer(tree) {
             @Override
             public Node visitName(Name name, Void parent) {
-                if (Helper.canBeEmpty(name, tree)) {
+                if (FirstSet.canBeEmpty(name, tree)) {
                     has[0] = true;
                 }
                 return super.visitName(name, parent);
@@ -131,7 +130,7 @@ public class EpsilonTrimmer extends Transformer {
 
     @Override
     public Node visitName(Name name, Void parent) {
-        if (Helper.canBeEmpty(name, tree)) {
+        if (FirstSet.canBeEmpty(name, tree)) {
             return new Name(name.name + "_noe");
         }
         return name;

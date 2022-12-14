@@ -34,9 +34,8 @@ public class CcGenJava {
 
     public void gen() throws IOException {
         new RecursionHandler(tree).handleAll();
-        LLDfaBuilder.noshrink = true;
-        LLDfaBuilder.skip = true;
-        ItemSet.forceRuleClosure = true;
+        LLDfaBuilder.cc = true;
+        ItemSet.forceClosure = true;
         builder = new LLDfaBuilder(tree);
         builder.factor();
         ParserUtils.genTokenType(tree);
@@ -64,14 +63,20 @@ public class CcGenJava {
             w.append("}");
             writeDecider(rule);
         }
-        //writeRest
+        writeRest(tree, builder, w);
+        w.append("}");
+        var file = new File(options.outDir, options.parserClass + ".java");
+        Utils.write(w.get(), file);
+    }
+
+    public static void writeRest(Tree tree, LLDfaBuilder builder, CodeWriter w) {
         for (var decl : tree.rules) {
             if (builder.rules.containsKey(decl.ref)) continue;
             w.append("public %s %s throws IOException{", decl.retType, ruleHeader(decl));
             if (decl.recInfo != null && (decl.recInfo.isState || decl.recInfo.isRec)) {
                 w.append("%s res = null;", decl.retType);
             }
-            else{
+            else {
                 w.append("%s res = new %s();", decl.retType, decl.retType);
             }
             var nw = new NormalWriter(w, tree);
@@ -81,9 +86,6 @@ public class CcGenJava {
             w.append("}");
 
         }
-        w.append("}");
-        var file = new File(options.outDir, options.parserClass + ".java");
-        Utils.write(w.get(), file);
     }
 
     public static void writeTS(Options options) throws IOException {

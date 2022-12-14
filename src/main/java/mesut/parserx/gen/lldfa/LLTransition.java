@@ -1,6 +1,6 @@
 package mesut.parserx.gen.lldfa;
 
-import mesut.parserx.nodes.*;
+import mesut.parserx.nodes.Node;
 
 import java.util.ArrayList;
 import java.util.List;

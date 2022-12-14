@@ -2,10 +2,7 @@ package mesut.parserx.gen.ast;
 
 import mesut.parserx.gen.CodeWriter;
 import mesut.parserx.gen.Options;
-import mesut.parserx.gen.lldfa.Type;
-import mesut.parserx.gen.lldfa.ItemSet;
 import mesut.parserx.nodes.*;
-import mesut.parserx.utils.CountingMap2;
 import mesut.parserx.utils.Utils;
 
 import java.io.File;
