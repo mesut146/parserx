@@ -1,6 +1,7 @@
 package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.*;
+import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Utils;
 
@@ -33,6 +34,7 @@ public class CcGenJava {
     }
 
     public void gen() throws IOException {
+        LexerGenerator.gen(tree, Lang.JAVA);
         new RecursionHandler(tree).handleAll();
         LLDfaBuilder.cc = true;
         ItemSet.forceClosure = true;
@@ -172,9 +174,7 @@ public class CcGenJava {
             else {
                 w.append("which = %s();", name.name);
             }
-            if (name.astInfo.which != -1) {
-                w.append("which = %s;", name.astInfo.which);
-            }
+            name.astInfo.which.ifPresent(integer -> w.append("which = %s;", integer));
             return null;
         }
 

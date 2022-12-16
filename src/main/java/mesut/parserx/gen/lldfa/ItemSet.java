@@ -1,7 +1,6 @@
 package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.FirstSet;
-import mesut.parserx.gen.lr.LrType;
 import mesut.parserx.gen.lr.TreeInfo;
 import mesut.parserx.gen.transform.FactorHelper;
 import mesut.parserx.nodes.Factored;
@@ -9,10 +8,7 @@ import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.Tree;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class ItemSet {
     public Set<Item> kernel = new HashSet<>();
@@ -20,18 +16,17 @@ public class ItemSet {
     public boolean isStart = false;
     public int stateId;
     public static int lastId = 0;
-    public LrType type;
     Tree tree;
     TreeInfo treeInfo;
     public List<LLTransition> transitions = new ArrayList<>();
     public List<LLTransition> incoming = new ArrayList<>();
     boolean alreadyGenReduces = false;
-    public boolean isFinal = false;
+    boolean noClosure = false;
+    public Optional<Integer> which = Optional.empty();
     public static boolean forceClosure = false;
 
-    public ItemSet(TreeInfo treeInfo, LrType type) {
+    public ItemSet(TreeInfo treeInfo) {
         this.treeInfo = treeInfo;
-        this.type = type;
         this.tree = treeInfo.tree;
         stateId = lastId++;
     }
@@ -114,6 +109,7 @@ public class ItemSet {
     }
 
     public void closure() {
+        if (noClosure) return;
         if (!alreadyGenReduces) {
             addAll(genReduces());
         }
@@ -141,57 +137,48 @@ public class ItemSet {
         return node.isName() ? node.asName() : node.asRegex().node.asName();
     }
 
-    boolean isFactor(Item item, int i) {
+    boolean isFactor(Item item, int i, boolean checkConsecutive, boolean exact) {
         var node = item.getNode(i);
         if (node instanceof Factored) return false;
         var sym = sym(node);
-        //check two consecutive syms have common
-        for (int j = item.dotPos; j < item.rhs.size(); j++) {
-            if (i == j) continue;
-            if (j > item.dotPos && !FirstSet.canBeEmpty(item.getNode(j - 1), tree)) break;
-            var next = item.getNode(j);
-            if (next instanceof Factored) continue;
-            if (common(sym, sym(next))) {
-                return true;
-            }
-        }
-        //check dot sym and any other sym have common
-        for (var it : all) {
-            if (it == item) continue;
-            for (var s : it.getSyms(tree)) {
-                if (s.getKey() instanceof Factored) continue;
-                if (sym(s.getKey()).equals(sym)) {
+        if (checkConsecutive) {
+            //check two consecutive syms have common
+            for (int j = item.dotPos; j < item.rhs.size(); j++) {
+                if (i == j) continue;
+                if (j > item.dotPos && !FirstSet.canBeEmpty(item.getNode(j - 1), tree)) break;
+                var next = item.getNode(j);
+                if (common(sym, sym(next))) {
                     return true;
                 }
             }
         }
-        return false;
-    }
-
-    boolean isFactor0(Item item, int i) {
-        var node = item.getNode(i);
-        var sym = sym(node);
-        //check two consecutive syms have common
-        for (int j = item.dotPos; j < item.rhs.size(); j++) {
-            if (i == j) continue;
-            if (j > item.dotPos && !FirstSet.canBeEmpty(item.getNode(j - 1), tree)) break;
-            var next = item.getNode(j);
-            if (common(sym, sym(next))) {
-                return true;
+        if (exact) {
+            //check dot sym and any other sym have common
+            for (var it : all) {
+                if (it == item) continue;
+                for (var s : it.getSyms(tree)) {
+                    if (s.getKey() instanceof Factored) continue;
+                    //todo if closured item is factor, child item incorrectly becomes non-factor
+                    if (sym(s.getKey()).equals(sym)) {
+                        return true;
+                    }
+                }
             }
         }
-        //check dot sym and any other sym have common
-        for (var s2 : symbols()) {
-            if (s2 == sym) continue;
-            if (common(sym, s2)) {
-                return true;
-            }
-        }//for
+        else {
+            //check dot sym and any other sym have common
+            for (var s2 : symbols()) {
+                if (s2 == sym) continue;
+                if (common(sym, s2)) {
+                    return true;
+                }
+            }//for
+        }
         return false;
     }
 
     List<Name> symbols() {
-        List<Name> res = new ArrayList<>();
+        var res = new ArrayList<Name>();
         for (var item : all) {
             for (int i = item.dotPos; i < item.rhs.size(); i++) {
                 if (i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
@@ -255,6 +242,12 @@ public class ItemSet {
         var set = new HashSet<Item>();
         for (var decl : treeInfo.ruleMap.get(sym)) {
             var newItem = new Item(decl, 0);
+            if (sender.firstParents.isEmpty()) {
+                newItem.firstParents.add(sender);
+            }
+            else {
+                newItem.firstParents = sender.firstParents;
+            }
             newItem.lookAhead.addAll(laList);
             newItem.parents.add(sender);
             addOrUpdate(newItem);
@@ -278,6 +271,7 @@ public class ItemSet {
             if (!prev.isSame(item)) continue;
             //merge la
             prev.lookAhead.addAll(item.lookAhead);
+            prev.firstParents.addAll(item.firstParents);
             if (updateIds) {
                 prev.ids.addAll(item.ids);
 //                if (prev.dotPos){

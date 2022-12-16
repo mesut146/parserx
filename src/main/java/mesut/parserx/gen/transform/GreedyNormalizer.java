@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-
 public class GreedyNormalizer extends Transformer {
     public static boolean debug = true;
     Tree tree;
@@ -47,7 +46,7 @@ public class GreedyNormalizer extends Transformer {
 
             Node a = seq.get(i).copy();
             Node b = seq.get(i + 1).copy();
-            if (a.astInfo.isFactored) continue;
+            if (a instanceof Factored) continue;
             TailInfo sym = hasGreedyTail(a, FirstSet.firstSet(b, tree), tree);
             if (sym == null) continue;
             if (debug) {
@@ -123,7 +122,7 @@ public class GreedyNormalizer extends Transformer {
         if (node.isName() && node.asName().isToken) {
             return null;
         }
-        if (node.astInfo.isFactored) return null;
+        if (node instanceof Factored) return null;
         if (node.isName() && first.contains(node.asName())) return null;
         var visitor = new GreedyVisitor(first, tree, node);
         return node.accept(visitor, null);

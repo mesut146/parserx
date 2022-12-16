@@ -5,7 +5,6 @@ import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
     Tree tree;
@@ -52,12 +51,12 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
     }
 
     public Info visitRegex(Regex regex, Void arg) {
-        Info res = new Info();
+        var res = new Info();
         boolean empty = FirstSet.canBeEmpty(regex.node, tree);
         if (regex.isOptional()) {
             if (empty) {
                 //A? = A | € = A_no_eps | A_eps | €
-                Info tmp = trim(regex.node);
+                var tmp = trim(regex.node);
                 res.eps = tmp.eps;
                 res.noEps = tmp.noEps;
             }
@@ -72,8 +71,8 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
                 //A* = A+ | € = A A* | €
                 //(A_eps | A_noe) A* | €
                 //A_eps A* | A_noe A*
-                Info tmp = trim(regex.node);
-                Node no = tmp.noEps;
+                var tmp = trim(regex.node);
+                var no = tmp.noEps;
                 no.astInfo.isInLoop = true;
                 res.noEps = new Sequence(no, regex.copy());
                 res.eps = tmp.eps;
@@ -90,10 +89,10 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
             //node must be empty
             //A+ = A A* = (A_noe | A_eps) A*
             //A_noe A* | A_eps A*
-            Info tmp = trim(regex.node);
-            Regex star = new Regex(regex.node, RegexType.STAR);
+            var tmp = trim(regex.node);
+            var star = new Regex(regex.node, RegexType.STAR);
             star.astInfo = regex.astInfo.copy();
-            Node no = tmp.noEps.copy();
+            var no = tmp.noEps.copy();
             no.astInfo.isInLoop = true;
             res.noEps = new Sequence(no, star);
             res.eps = tmp.eps.copy();
@@ -102,14 +101,14 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
     }
 
     public Info visitOr(Or or, Void arg) {
-        Info res = new Info();
-        Node a = or.first();
-        Node b = Helper.trim(or);
+        var res = new Info();
+        var a = or.first();
+        var b = Helper.trim(or);
         if (FirstSet.canBeEmpty(a, tree)) {
-            Info a1 = trim(a);
+            var a1 = trim(a);
             if (FirstSet.canBeEmpty(b, tree)) {
                 //A | B = A1 | € | B1 | € = A1 | B1 | €
-                Info b1 = trim(b);
+                var b1 = trim(b);
                 res.noEps = Or.make(a1.noEps, b1.noEps);
                 res.eps = orEps(a1.eps, b1.eps);
             }
@@ -127,7 +126,7 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
         else {
             //b must be empty
             // A | B = A | B1 | €
-            Info tmp = trim(b);
+            var tmp = trim(b);
             res.noEps = tmp.noEps == null ? a : new Or(a, tmp.noEps);
             res.eps = tmp.eps;
         }
@@ -136,17 +135,17 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
 
     @Override
     public Info visitSequence(Sequence s, Void arg) {
-        Info res = new Info();
-        Info a = trim(s.first());
-        Info b = trim(Helper.trim(s));
+        var res = new Info();
+        var a = trim(s.first());
+        var b = trim(Helper.trim(s));
         //both a b are empty
         //A B = (A1 | A0) (B1 | B0) = A1 B1 | A1 A0 | A0 B1 | A0 B0;
-        Node s1 = (a.noEps == null || b.noEps == null) ? null : Sequence.make(a.noEps, b.noEps);
-        Node s2 = a.noEps == null ? null : Sequence.make(a.noEps, b.eps);
-        Node s3 = b.noEps == null ? null : Sequence.make(a.eps, b.noEps);
-        Node s4 = Sequence.make(a.eps, b.eps);
+        var s1 = (a.noEps == null || b.noEps == null) ? null : Sequence.make(a.noEps, b.noEps);
+        var s2 = a.noEps == null ? null : Sequence.make(a.noEps, b.eps);
+        var s3 = b.noEps == null ? null : Sequence.make(a.eps, b.noEps);
+        var s4 = Sequence.make(a.eps, b.eps);
         s4.astInfo = s.astInfo.copy();
-        List<Node> or = new ArrayList<>();
+        var or = new ArrayList<Node>();
         if (s1 != null) {
             s1.astInfo = s.astInfo.copy();
             or.add(s1);
@@ -166,29 +165,32 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
         return res;
     }
 
+    @Override
+    public Info visitFactored(Factored factored, Void arg) {
+        var res = new Info();
+        res.eps = factored;
+        return res;
+    }
+
     public Info visitName(Name name, Void arg) {
-        Info res = new Info();
-        if (name.astInfo.isFactored) {
-            res.eps = name;
-            return res;
-        }
+        var res = new Info();
         if (isFactored(name)) {
             //still factored but chained
             res.eps = name;
             return res;
         }
 
-        Name noName = tree.getNoEps(name);
-        Name epsName = tree.getEps(name);
+        var noName = tree.getNoEps(name);
+        var epsName = tree.getEps(name);
 
-        RuleDecl decl = tree.getRule(name);
-        Name epsRef = inherit(epsName, decl);
-        Name noRef = inherit(noName, decl);
+        var decl = tree.getRule(name);
+        var epsRef = inherit(epsName, decl);
+        var noRef = inherit(noName, decl);
 
         Info tmp = null;
         if (tree.getRule(noName) == null) {
             tmp = trim(decl.rhs);
-            RuleDecl noDecl = new RuleDecl(noRef, tmp.noEps);
+            var noDecl = new RuleDecl(noRef, tmp.noEps);
             noDecl.retType = decl.retType;
             tree.addRuleBelow(noDecl, decl);
             res.noEps = noName;
@@ -202,7 +204,7 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
             }
             if (!tmp.eps.isEpsilon()) {
                 //factored eps still needs ast builder
-                RuleDecl epsDecl = new RuleDecl(epsRef, tmp.eps);
+                var epsDecl = new RuleDecl(epsRef, tmp.eps);
                 epsDecl.retType = decl.retType;
                 tree.addRuleBelow(epsDecl, decl);
                 res.eps = epsName;
@@ -217,10 +219,8 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
     //copy decl args with names
     public static Name inherit(Name name, RuleDecl decl) {
         Name ref = name.copy();
-        ref.args.clear();
-        for (Node arg : decl.ref.args) {
-            ref.args.add(arg.copy());
-        }
+        ref.args2.clear();
+        ref.args2.addAll(decl.ref.args2);
         return ref;
     }
 

@@ -94,13 +94,11 @@ public class FirstSet extends BaseVisitor<Void, Void> {
 
     @Override
     public Void visitRegex(Regex regex, Void arg) {
-        if (regex.astInfo.isFactored) return null;
         return regex.node.accept(this, arg);
     }
 
     @Override
     public Void visitName(Name name, Void arg) {
-        if (name.astInfo.isFactored) return null;
         if (!allowEpsilon && name.isRule() && isEmpty(name, tree)) {
             return null;
         }
@@ -149,7 +147,6 @@ public class FirstSet extends BaseVisitor<Void, Void> {
 
         @Override
         public Boolean visitRegex(Regex regex, Void arg) {
-            if (regex.astInfo.isFactored) return true;
             if (regex.isPlus()) {
                 return regex.node.accept(this, arg);
             }
@@ -187,9 +184,9 @@ public class FirstSet extends BaseVisitor<Void, Void> {
             return true;
         }
 
+
         @Override
         public Boolean visitName(Name name, Void arg) {
-            if (name.astInfo.isFactored) return true;
             if (name.isToken) return false;
             if (cache.containsKey(name)) {
                 return cache.get(name);

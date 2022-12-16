@@ -24,7 +24,7 @@ public class ParserGen {
 
     public static void genCC(Tree tree, Lang target, boolean regex) throws IOException {
         tree.prepare();
-        LexerGenerator.gen(tree, target);
+        //LexerGenerator.gen(tree, target);
         new Normalizer(tree).normalize();
         AstGen.gen(tree, target);
         if (target == Lang.JAVA) {

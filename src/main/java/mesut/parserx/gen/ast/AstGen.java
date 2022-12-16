@@ -7,6 +7,7 @@ import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap2;
 
 import java.io.IOException;
+import java.util.Optional;
 
 //generate ast file and astinfo per node
 public class AstGen extends BaseVisitor<Void, Void> {
@@ -46,7 +47,7 @@ public class AstGen extends BaseVisitor<Void, Void> {
         for (int id = 1; id <= or.size(); id++) {
             var ch = or.get(id - 1);
             if (ch.isEpsilon()) continue;
-            ch.astInfo.which = id;
+            ch.astInfo.which = Optional.of(id);
             ch.astInfo.nodeType = new Type(curRule.retType, "Alt" + id);
             ch.astInfo.varName = altVar(ch);
             ch.astInfo.outerVar = outer;

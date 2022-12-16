@@ -143,7 +143,6 @@ public class LexerGenerator {
         return UnicodeUtils.escapeUnicode(val);
     }
 
-
     public int[] skipList() {
         var arr = new boolean[dfa.lastState + 1];
         for (var state : dfa.it()) {

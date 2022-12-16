@@ -96,6 +96,9 @@ public class RecursionHandler {
                     var a = getAfter(sym);
                     var after = sym.equals(decl.ref) ? new Regex(a, RegexType.OPTIONAL) : a;
                     var tail = makeTail(sym, rule);
+                    if (tail == null) {
+                        continue;
+                    }
                     list.add(new Sequence(tail, after));
                     if (sym.equals(decl.ref)) {
                         tail.astInfo.isPrimary = true;
@@ -125,7 +128,6 @@ public class RecursionHandler {
         }
         var id = idCounter.get(curRule.ref);
         var res = new Name(curRule.ref + "_" + id);
-        res.args.add(sym);
         res.args2.add(new Parameter(getType(sym), "arg"));
         afterMap.put(sym, res);
         return res;
@@ -133,8 +135,7 @@ public class RecursionHandler {
 
     Name makeTail(Name rule, Name start) {
         var ref = new Name(rule.name + "_" + start.toString());
-        ref.args.add(start);
-        ref.args2.add(new Parameter(tree.getRule(start).retType, "arg"));
+        ref.args2.add(new Parameter(getType(start), "arg"));
         if (all.stream().anyMatch(rd -> rd.ref.equals(ref))) {
             return ref;
         }
@@ -149,6 +150,9 @@ public class RecursionHandler {
         else {
             var tail = transformTail(decl.rhs, start);
             if (tail != null) list.add(tail);
+        }
+        if (list.isEmpty()) {
+            return null;
         }
         var newRule = new RuleDecl(ref, Or.make(list));
         newRule.parameterList.add(ref.args2.get(0));
@@ -167,7 +171,6 @@ public class RecursionHandler {
         var list = new ArrayList<Node>();
         var arg = new Factored(start, "arg");
         arg.astInfo = seq.get(0).astInfo.copy();//always true?
-        arg.astInfo.isFactored = true;
         //arg.args.add(start);
 
         list.add(arg);

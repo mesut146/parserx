@@ -101,24 +101,15 @@ public class PrecedenceHandler {
         return new Or(seq, higher);
     }
 
-    AstInfo makeFactor(String name) {
-        AstInfo info = new AstInfo();
-        info.isFactor = true;
-        info.varName = name;
-        return info;
-    }
-
     private Node makeBinary(RuleDecl decl, Holder holder, Name curRef, Name higher) {
         //E: E op E | E2
         if (holder.node.assocLeft || !holder.node.assocRight && isAssocLeft) {
             //left assoc
             //E: E2 (E2(E2) op E2])*
             Sequence seq = holder.node.copy();
-            Name factored = higher.copy();
+            var factored = new Factored(higher.copy(), higher.name);
             factored.astInfo = seq.first().astInfo.copy();
-            factored.astInfo.isFactored = true;
             Epsilon eps = new Epsilon();
-            eps.astInfo.isFactored = true;
             eps.astInfo.varName = "res";
             Name h2 = higher.copy();
             h2.astInfo = seq.last().astInfo.copy();
@@ -152,12 +143,10 @@ public class PrecedenceHandler {
         //E: E2 (E2(E2) op)*
         Sequence seq = holder.node.copy();
 
-        Name factored = higher.copy();
+        var factored = new Factored(higher.copy(), higher.name);
         factored.astInfo = holder.node.get(0).astInfo.copy();
-        factored.astInfo.isFactored = true;
 
         Epsilon eps = new Epsilon();
-        eps.astInfo.isFactored = true;
         eps.astInfo.varName = "res";
 
         seq.set(0, factored);

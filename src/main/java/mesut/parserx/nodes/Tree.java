@@ -7,6 +7,7 @@ import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.Options;
 import mesut.parserx.gen.PrepareTree;
+import mesut.parserx.gen.lldfa.Type;
 import mesut.parserx.parser.AstVisitor;
 import mesut.parserx.utils.CountingMap;
 
@@ -162,16 +163,20 @@ public class Tree {
         }
     }
 
+    public Type getType(Name name){
+        return getRule(name).retType;
+    }
+
     //find root of rule
     public String getSender(String name) {
         return senderMap.getOrDefault(name, name);
     }
 
-    public Name getFactorOne(Name old, Name factor) {
+    public Name getFactorOne(Name old, Parameter factor) {
         Name res = new Name(old.name + "_" + factor.name);
         res.astInfo = old.astInfo.copy();
-        res.args = new ArrayList<>(old.args);
-        res.args.add(factor.copy());
+        res.args2 = new ArrayList<>(old.args2);
+        res.args2.add(factor.copy());
         senderMap.put(res.name, getSender(old.name));
         return res;
     }
@@ -179,24 +184,7 @@ public class Tree {
     public Name getFactorZero(Name old, Name factor) {
         Name res = new Name(old.name + "_no_" + factor.name);
         res.astInfo = old.astInfo.copy();
-        res.args = new ArrayList<>(old.args);
-        senderMap.put(res.name, getSender(old.name));
-        return res;
-    }
-
-    public Name getFactorPlusZero(Name old, Regex factor) {
-        Name res = new Name(old.name + "_nop_" + factor.node.asName().name);
-        res.astInfo = old.astInfo.copy();
-        res.args = new ArrayList<>(old.args);
-        senderMap.put(res.name, getSender(old.name));
-        return res;
-    }
-
-    public Name getFactorPlusOne(Name old, Regex factor) {
-        Name res = new Name(getFreeName(getSender(old.name)));
-        res.astInfo = old.astInfo.copy();
-        res.args = new ArrayList<>(old.args);
-        res.args.add(factor.copy());
+        res.args2 = new ArrayList<>(old.args2);
         senderMap.put(res.name, getSender(old.name));
         return res;
     }
@@ -204,7 +192,7 @@ public class Tree {
     public Name getEps(Name old) {
         Name res = new Name(old.name + "_eps");
         res.astInfo = old.astInfo.copy();
-        res.args = new ArrayList<>(old.args);
+        res.args2 = new ArrayList<>(old.args2);
         senderMap.put(res.name, getSender(old.name));
         return res;
     }
@@ -212,7 +200,7 @@ public class Tree {
     public Name getNoEps(Name old) {
         Name res = new Name(old.name + "_noe");
         res.astInfo = old.astInfo.copy();
-        res.args = new ArrayList<>(old.args);
+        res.args2 = new ArrayList<>(old.args2);
         senderMap.put(res.name, getSender(old.name));
         return res;
     }

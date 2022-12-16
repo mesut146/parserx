@@ -72,7 +72,8 @@ modes: name ("," name)?;
 modeBlock: IDENT "{" tokenDecl* "}";
 
 ruleDecl: name args? SEPARATOR rhs ";";
-args: "(" name rest=("," name)* ")";
+args: "(" param rest=("," param)* ")";
+param: name name;
 
 rhs: sequence ("|" sequence)*;
 sequence: sub+ assoc=("%left" | "%right")? label=("#" name)?;

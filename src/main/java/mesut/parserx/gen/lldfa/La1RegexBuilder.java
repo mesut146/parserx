@@ -218,7 +218,7 @@ public class La1RegexBuilder {
                 }
                 //remove sets
                 if (!similars.isEmpty()) {
-                    Log.log(Level.FINEST,"group " + set1.stateId + "," + similars.stream().map(s -> String.valueOf(s.stateId)).collect(Collectors.joining(",")));
+                    Log.log(Level.FINEST, "group " + set1.stateId + "," + similars.stream().map(s -> String.valueOf(s.stateId)).collect(Collectors.joining(",")));
                     similars.forEach(all::remove);
                     groups.put(similars, set1);
                     break;
@@ -262,7 +262,7 @@ public class La1RegexBuilder {
                 }
                 else {
                     if (acc.size() == 1) {
-                        tr.symbol.astInfo.which = acc.iterator().next();
+                        tr.symbol.astInfo.which = Optional.of(acc.iterator().next());
                         deads.add(tr.target);
                     }
                 }
@@ -276,7 +276,7 @@ public class La1RegexBuilder {
     }
 
     boolean isFinal(ItemSet set) {
-        if (set.isFinal) return true;
+        if (set.which.isPresent()) return true;
         for (var item : set.all) {
             if (isFinal(item)) return true;
         }
@@ -302,18 +302,11 @@ public class La1RegexBuilder {
         return null;
     }
 
-    void trim(ItemSet set) {
-        for (var tr : set.transitions) {
-            if (tr.symbol.astInfo.isFactor) continue;
-            var sym = tr.symbol;
-            tr.symbol = trim(sym);
-        }
-    }
 
     //remove non-factor symbols to speed up
-    int findWhich(ItemSet target) {
+    Optional<Integer> findWhich(ItemSet target) {
         var res = target.all.stream().filter(this::isFinal).findFirst();
-        if (res.isPresent()) return res.get().rule.which;
+        if (res.isPresent()) return Optional.of(res.get().rule.which.get());
         throw new RuntimeException("which not found");
     }
 
@@ -322,7 +315,7 @@ public class La1RegexBuilder {
         done.add(set);
         var res = new HashSet<Integer>();
         if (set.hasFinal()) {
-            res.add(findWhich(set));
+            res.add(findWhich(set).get());
         }
         for (var tr : set.transitions) {
             res.addAll(findFinals(tr.target, done));
@@ -330,46 +323,9 @@ public class La1RegexBuilder {
         return res;
     }
 
-    //make node la1
-    Node trim(Node sym) {
-        if (sym.isName()) return sym;
-        if (sym.isRegex()) {
-            if (!sym.asRegex().node.astInfo.isFactor) {
-                return sym.asRegex().node;
-            }
-            return sym;
-        }
-        if (!sym.isSequence()) {
-            throw new RuntimeException("todo trim(non seq)");
-        }
-        var seq = sym.asSequence();
-        var A = seq.first();
-        var B = Helper.trim(seq);
-
-        if (isFactor(A)) {
-            if (FirstSet.canBeEmpty(A, tree)) {
-                return new Sequence(extract(A), trim(B));
-            }
-            else {
-                return new Sequence(A, trim(B));
-            }
-        }
-        else {
-            if (FirstSet.canBeEmpty(A, tree)) {
-                if (A.isStar()) {
-                    return new Or(A.asRegex().node, trim(B));
-                }
-                return seq;
-            }
-            else {
-                return withAst(A, sym.astInfo);
-            }
-        }
-    }
-
     Node withAst(Node node, AstInfo info) {
         node = node.copy();
-        if (info.which != -1) {
+        if (info.which .isPresent()) {
             node.astInfo.which = info.which;
         }
         return node;
@@ -380,10 +336,6 @@ public class La1RegexBuilder {
         return node;
     }
 
-    boolean isFactor(Node node) {
-        if (node.isRegex()) return node.asRegex().node.astInfo.isFactor;
-        return node.astInfo.isFactor;
-    }
 
     private static void combine(ItemSet set) {
         //target -> ors

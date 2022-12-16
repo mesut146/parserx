@@ -10,17 +10,21 @@ import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Debug;
 import mesut.parserx.utils.Log;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import static mesut.parserx.gen.ParserUtils.dollar;
+
 public class LLDfaBuilder {
     public Tree tree;
     TreeInfo treeInfo;
     Map<Name, ItemSet> firstSets = new HashMap<>();
-    Map<Name, Set<ItemSet>> rules = new HashMap<>();
+    Map<Name, Set<ItemSet>> rules = new LinkedHashMap<>();
     Set<ItemSet> all;
     Queue<ItemSet> queue = new LinkedList<>();
     LrType type = LrType.LR1;
@@ -116,7 +120,7 @@ public class LLDfaBuilder {
 
         Log.log(Level.FINE, "building " + rule + " in " + tree.file.getName());
 
-        var firstSet = new ItemSet(treeInfo, type);
+        var firstSet = new ItemSet(treeInfo);
         firstSet.isStart = true;
         firstSets.put(rule, firstSet);
         Set<Name> la;
@@ -147,10 +151,13 @@ public class LLDfaBuilder {
 
         while (!queue.isEmpty()) {
             var curSet = queue.poll();
-            Log.log(Level.FINE, "curSet = " + curSet.stateId);
+            Log.log(Level.FINEST, "curSet = " + curSet.stateId);
             //closure here because it needs all items
             curSet.closure();
-            Map<Node, LLTransition> map = new HashMap<>();
+            if (curSet.which.isEmpty() && curSet.hasFinal()) {
+                curSet.which = findWhich(curSet, rule);
+            }
+            var map = new HashMap<Node, LLTransition>();
             for (var item : curSet.all) {
                 //improve stars as non closured
                 for (int i = item.dotPos; i < item.rhs.size(); i++) {
@@ -162,7 +169,7 @@ public class LLDfaBuilder {
                     var sym = (Node) ItemSet.sym(node.copy());
                     int newPos = node.isStar() ? i : i + 1;
                     Item target;
-                    if (curSet.isFactor(item, i)) {
+                    if (curSet.isFactor(item, i, true, false)) {
                         sym.astInfo.isFactor = true;
                     }
                     if (cc) {
@@ -172,14 +179,14 @@ public class LLDfaBuilder {
                             if (i < item.rhs.size() - 1) {
                                 target.lookAhead = item.follow(tree, i);
                             }
-                            //makeAlt(target, sym.asName(), curSet);
-                            //continue;
+                            makeAlt(target, sym.asName(), curSet);
+                            continue;
                         }
                         else {
                             target = new Item(item, newPos);
                         }
                     }
-                    else if (node.isOptional() && sym.asName().isToken && !curSet.isFactor(item, i)) {
+                    else if (node.isOptional() && sym.asName().isToken && !curSet.isFactor(item, i, true, true)) {
                         //.a? b c | b d -> a b c
                         var rhs = new ArrayList<>(item.rhs.list.subList(i, item.rhs.size()));
                         rhs.set(0, sym);
@@ -200,25 +207,64 @@ public class LLDfaBuilder {
             }
             makeTrans(curSet, map);
         }
+        //mergeSameSets();
         rules.put(rule, all);
     }
 
-    Item makeAlt(Item target, Name sym, ItemSet curSet) {
-        var targetSet = new ItemSet(treeInfo, type);
-        targetSet.addItem(target);
+    int findAltEarly(Item item) {
+        var cur = item;
+        while (true) {
+            if (cur.rule.which.isPresent()) {
+                return cur.rule.which.get();
+            }
+            if (cur.prev.isEmpty()) {
+                cur = cur.parents.get(0);
+            }
+            else {
+                cur = cur.prev.iterator().next();
+            }
+        }
+    }
+
+    void fillAlt() {
+        for (var set : all) {
+            for (var tr : set.transitions) {
+                if (tr.target.which.isPresent()) {
+                    tr.symbol.astInfo.which = tr.target.which;
+                }
+            }
+        }
+    }
+
+    Optional<Integer> findWhich(ItemSet target, Name curRule) {
+        var res = target.all.stream().filter(set -> isFinal(set, curRule)).findFirst();
+        if (res.isPresent()) {
+            return res.get().rule.which;
+        }
+        return Optional.empty();
+    }
+
+    boolean isFinal(Item item, Name curRule) {
+        return item.isReduce(tree) && item.rule.ref.equals(curRule) && item.lookAhead.contains(dollar);
+    }
+
+    void makeAlt(Item target, Name sym, ItemSet curSet) {
+        var targetSet = new ItemSet(treeInfo);
+        targetSet.noClosure = true;
         targetSet.alreadyGenReduces = true;
+        targetSet.addItem(target);
         all.add(targetSet);
         var tr = new LLTransition(curSet, targetSet, sym);
         curSet.addTransition(tr);
-        return null;
+        targetSet.which = Optional.of(findAltEarly(target));
     }
 
     boolean canShrink(ItemSet set, Item item, int i) {
         var node = item.getNode(i);
         var sym = node.isName() ? node.asName() : node.asRegex().node.asName();
-
-        if (set.isFactor(item, i)) return false;
-        if (node.isName() && sym.isToken && !set.isFactor(item, i)) return true;
+        var isFactor = set.isFactor(item, i, true, true);
+        if (isFactor) return false;
+        if (node.isName() && sym.isToken) return true;
         if (!FirstSet.canBeEmpty(node, tree)) return true;//not closured
         return !isFollowHasFactor(set, item, i);
     }
@@ -226,7 +272,7 @@ public class LLDfaBuilder {
     boolean isFollowHasFactor(ItemSet set, Item item, int pos) {
         for (int i = pos + 1; i < item.rhs.size(); i++) {
             //if(i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
-            if (set.isFactor(item, i)) return true;
+            if (set.isFactor(item, i, true, true)) return true;
             if (!FirstSet.canBeEmpty(item.getNode(i), tree)) break;
         }
         return false;
@@ -245,7 +291,7 @@ public class LLDfaBuilder {
         for (var e : map.entrySet()) {
             var sym = e.getKey();
             var tr = e.getValue();
-            var targetSet = new ItemSet(treeInfo, type);
+            var targetSet = new ItemSet(treeInfo);
             targetSet.addAll(tr.pairs.stream().map(pair -> pair.target).collect(Collectors.toList()));
             targetSet.addAll(targetSet.genReduces());
             targetSet.alreadyGenReduces = true;
@@ -297,6 +343,60 @@ public class LLDfaBuilder {
         return null;
     }
 
+    public void mergeSameSets() {
+        while (true) {
+            var any = false;
+            for (var set1 : all) {
+                //find similar sets
+                var similars = new HashSet<ItemSet>();
+                for (var set2 : all) {
+                    if (set2 == set1) continue;
+                    if (isSame(set1, set2)) {
+                        similars.add(set2);
+                        any = true;
+                    }
+                }
+                //remove sets
+                if (!similars.isEmpty()) {
+                    Log.log(Level.FINE, "group " + set1.stateId + "," + similars.stream().map(s -> String.valueOf(s.stateId)).collect(Collectors.joining(",")));
+                    similars.forEach(all::remove);
+                    merge(similars, set1);
+                    //groups.put(similars, set1);
+                    break;
+                }
+            }
+            if (!any) break;
+        }
+    }
+
+    private void merge(HashSet<ItemSet> similars, ItemSet set1) {
+        for (var set : all) {
+            for (var tr : set.transitions) {
+                if (similars.contains(tr.from)) {
+                    tr.from = set1;
+                }
+                if (similars.contains(tr.target)) {
+                    tr.target = set1;
+                }
+            }
+        }
+    }
+
+
+    static boolean isSame(ItemSet set, ItemSet set2) {
+        //if (isFinal(set) || isFinal(set2)) return false;//why not finals?
+        if (set.transitions.size() != set2.transitions.size()) return false;
+        var map = new HashMap<Node, ItemSet>();
+        for (var tr : set.transitions) {
+            map.put(tr.symbol, tr.target);
+        }
+        for (var tr : set2.transitions) {
+            if (!map.containsKey(tr.symbol)) return false;
+            if (!map.get(tr.symbol).equals(tr.target)) return false;
+        }
+        return true;
+    }
+
     //dump only transitions
     public void dump(OutputStream os) {
         PrintWriter w = new PrintWriter(os);
@@ -310,7 +410,12 @@ public class LLDfaBuilder {
                     if (i > 0) {
                         w.print(" | ");
                     }
-                    w.printf("%s S%d", tr.symbol.toString(), tr.target.stateId);
+                    if (tr.target.which.isPresent()) {
+                        w.printf("%s#%s S%d?", tr.symbol.toString(), tr.target.which.get(), tr.target.stateId);
+                    }
+                    else {
+                        w.printf("%s S%d", tr.symbol.toString(), tr.target.stateId);
+                    }
                     i++;
                 }
                 w.println(";");
@@ -341,17 +446,26 @@ public class LLDfaBuilder {
         w.flush();
     }
 
-    public void dot(PrintWriter w) {
+    public List<File> dotAll(File dir) throws FileNotFoundException {
+        var list = new ArrayList<File>();
+        for (var e : rules.entrySet()) {
+            var file = new File(dir, tree.file.getName() + "-" + e.getKey() + ".dot");
+            dot(new PrintWriter(file), e.getValue());
+            list.add(file);
+        }
+        return list;
+    }
+
+    public static void dot(PrintWriter w, Set<ItemSet> all) {
         Item.printLa = false;
         w.println("digraph G{");
         w.println("rankdir = TD");
         w.println("ratio=\"fill\";");
-        for (var all : rules.values()) {
-            for (var set : all) {
-                var sb = new StringBuilder();
-                var id = String.valueOf(set.stateId);
-                //items
-                sb.append("<");
+        for (var set : all) {
+            var sb = new StringBuilder();
+            var id = String.valueOf(set.stateId);
+            //items
+            sb.append("<");
 //                for (var it : set.all) {
 //                    var line = it.toString2(tree);
 //                    line = line.replace(">", "&gt;");
@@ -370,23 +484,20 @@ public class LLDfaBuilder {
 //                    }
 //                    sb.append("<BR ALIGN=\"LEFT\"/>");
 //                }
-                sb.append(">");
-                w.printf("%s [shape=box xlabel=\"%s\" label=%s];\n", id, id, sb);
-                if (set.hasFinal()) {
-                    w.printf("%s [style=filled fillcolor=gray];\n", id);
-                }
-                for (var tr : set.transitions) {
-                    var labelBuf = new StringBuilder();
-                    if (tr.symbol.astInfo.isFactor) {
-                        labelBuf.append("<<FONT color=\"green\">");
-                        labelBuf.append(tr.symbol);
-                        labelBuf.append("</FONT>>");
-                    }
-                    else {
-                        labelBuf.append("\"").append(tr.symbol).append("\"");
-                    }
-                    w.printf("%s -> %s [label=%s];\n", id, tr.target.stateId, labelBuf);
-                }
+            sb.append(">");
+            w.printf("%s [shape=box xlabel=\"%s\" label=%s];\n", id, id, sb);
+            if (set.hasFinal()) {
+                w.printf("%s [style=filled fillcolor=gray];\n", id);
+            }
+            for (var tr : set.transitions) {
+                var labelBuf = new StringBuilder();
+//                if (tr.symbol.astInfo.isFactor) {
+//                    labelBuf.append("<<FONT color=\"green\">");
+//                    labelBuf.append(tr.symbol);
+//                    labelBuf.append("</FONT>>");
+//                }
+                labelBuf.append("\"").append(tr.symbol).append("\"");
+                w.printf("%s -> %s [label=%s];\n", id, tr.target.stateId, labelBuf);
             }
         }
         w.println("\n}");

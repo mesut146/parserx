@@ -35,12 +35,14 @@ tmp: sep (blockStatement tmp?)?;
 
 blockStatement: /*localVariableDeclaration |*/ statement;
 
+argument: namedArg | expression;
+
 statement: expression | methodCall_no_lp | SEMI;
 
-expression: methodCall | assign | literal | list | closure;
+expression: methodCall | qname | assign | literal | list | closure;
 
-assign: qname (op rhs)?;
-op: '=';
+assign: qname "=" rhs;
+op: "=" | "+=";
 //op: "=" | "+=" | "-=" | "*=" | "/=" | "&=" | "|=" | "^=" | "%=" | "<<=" | ">>=" | ">>>=" | "?=";
 rhs: expression | methodCall_no_lp;
 
@@ -49,7 +51,7 @@ qname: identifier ("." identifier)*;
 methodCall_no_lp: identifier arguments;
 methodCall: identifier "(" arguments? ")" closure?;
 arguments: nls argument ("," nls argument)*;
-argument: expression | namedArg;
+
 
 namedArg: identifier ":" expression;
 closure: "{" /*(nls (formalParameterList nls)? ARROW)?*/ sep? blockStatements? "}";

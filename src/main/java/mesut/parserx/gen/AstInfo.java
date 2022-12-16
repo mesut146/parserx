@@ -2,15 +2,16 @@ package mesut.parserx.gen;
 
 import mesut.parserx.gen.lldfa.Type;
 
+import java.util.Optional;
+
 public class AstInfo {
     public String varName;
     public String outerVar;
     public Type nodeType;
     public boolean isFactor;//no assign
-    public boolean isFactored;//epsilon
     public boolean isInLoop;
     public boolean isPrimary;
-    public int which = -1;
+    public Optional<Integer> which = Optional.empty();
 
     public AstInfo copy() {
         AstInfo res = new AstInfo();
@@ -18,7 +19,6 @@ public class AstInfo {
         res.outerVar = outerVar;
         res.nodeType = nodeType;
         res.isFactor = isFactor;
-        res.isFactored = isFactored;
         res.isInLoop = isInLoop;
         res.which = which;
         res.isPrimary = isPrimary;
@@ -32,12 +32,9 @@ public class AstInfo {
             sb.append("factor ").append(varName);
         }
         else {
-            if (isFactored) {
-                sb.append("factored ");
-            }
             sb.append(String.format("%s.%s", outerVar, varName));
         }
-        if (which != -1) {
+        if (which.isPresent()) {
             sb.append(" #").append(which);
         }
         sb.append('}');

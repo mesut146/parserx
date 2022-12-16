@@ -4,16 +4,14 @@ import mesut.parserx.gen.lldfa.RecursionHandler;
 import mesut.parserx.gen.lldfa.Type;
 import mesut.parserx.gen.lr.TreeInfo;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class RuleDecl {
 
     public Name ref;
     public Node rhs;
     public int index;
-    public int which = 0;//no alt or alt number
+    public Optional<Integer> which = Optional.empty();//no alt or alt number
     public Type retType;//ast type;
     public TreeInfo.TransformInfo transformInfo;
     public RecursionHandler.Info recInfo;
@@ -41,15 +39,12 @@ public class RuleDecl {
     }
 
     public boolean isAlt() {
-        return which != -1;
+        return which.isPresent();
     }
 
     @Override
     public String toString() {
         String s = ref.name;
-        if (!ref.args.isEmpty()) {
-            s += "(" + NodeList.join(ref.args, ", ") + ")";
-        }
         if (!parameterList.isEmpty()) {
             s += "[" + NodeList.join(parameterList, ", ") + "]";
         }
@@ -71,7 +66,7 @@ public class RuleDecl {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         var other = (RuleDecl) o;
-        return Objects.equals(ref, other.ref) && which == other.which;
+        return Objects.equals(ref, other.ref) && which.equals( other.which);
     }
 
     @Override

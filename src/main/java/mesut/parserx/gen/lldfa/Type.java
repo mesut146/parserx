@@ -1,9 +1,11 @@
 package mesut.parserx.gen.lldfa;
 
+import mesut.parserx.nodes.Name;
+
 //qualified ast type;
 public class Type {
     public String name;
-    Type scope;
+    public Type scope;
 
     public Type(String name) {
         this.name = name;
@@ -18,6 +20,7 @@ public class Type {
         this.scope = new Type(scope);
         this.name = name;
     }
+
 
     @Override
     public String toString() {

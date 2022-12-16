@@ -6,22 +6,22 @@ import mesut.parserx.nodes.*;
 import java.util.*;
 
 public class Item {
-    public static boolean printLa = true;
     public RuleDecl rule;
+    public Sequence rhs;
     public int dotPos;
     public Set<Name> lookAhead = new TreeSet<>();
     public Set<Integer> ids = new TreeSet<>();
-    public Sequence rhs;
     public Set<ItemSet> gotoSet = new HashSet<>();
     public boolean[] closured;
     public List<Item> parents = new ArrayList<>();//the ones created us
     public Set<Item> prev = new LinkedHashSet<>();//prev item
-    public List<Item> next = new ArrayList<>();
     public List<Item> reduceParent = new ArrayList<>();
     public List<Item> siblings = new ArrayList<>();
     public boolean advanced = false;//dot star but advanced
     public ItemSet itemSet;
+    public HashSet<Item> firstParents = new HashSet<>();
     public boolean first = false;
+    public static boolean printLa = true;
     public static int lastId = 0;
 
     public Item(RuleDecl rule, int dotPos) {
@@ -44,7 +44,7 @@ public class Item {
         //this.senders.add(item);
         this.prev.add(item);
         this.first = item.first;
-        item.next.add(this);
+        this.firstParents = item.firstParents;
         this.siblings = item.siblings;
         if (item.getNode(item.dotPos).isStar()) {
             advanced = true;
@@ -53,7 +53,7 @@ public class Item {
     }
 
     public boolean isAlt() {
-        return rule.which != 0;
+        return rule.which.isPresent();
     }
 
     public boolean isEpsilon() {
@@ -82,8 +82,8 @@ public class Item {
     public String toString() {
         var sb = new StringBuilder();
         sb.append(rule.ref);
-        if (rule.isAlt()) {
-            sb.append("#").append(rule.which);
+        if (rule.which.isPresent()) {
+            sb.append("#").append(rule.which.get());
         }
         sb.append(": ");
         Sequence rhs = rule.rhs.asSequence();

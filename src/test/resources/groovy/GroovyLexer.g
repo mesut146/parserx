@@ -106,7 +106,7 @@ VOLATILE      : 'volatile';
 WHILE         : 'while';
 
 ELLIPSIS: "...";
- AT: "@";
+AT: "@";
 
 LPAREN          : '('  ;
 RPAREN          : ')'  ;
@@ -177,7 +177,7 @@ DOT             : ".";
  BooleanLiteral: "true" | "false";
  NullLiteral: "null";
 
- CapitalizedIdentifier:   [A-Z] JavaLetterOrDigit*;
+ CapitalizedIdentifier: [A-Z] JavaLetterOrDigit*;
  Identifier: JavaLetter JavaLetterOrDigit*;
  #JavaLetter: [a-zA-Z$_] | [^\u0000-\u007F\uD800-\uDBFF] | [\uD800-\uDBFF] [\uDC00-\uDFFF];
  #JavaLetterOrDigit: JavaLetter | [0-9];

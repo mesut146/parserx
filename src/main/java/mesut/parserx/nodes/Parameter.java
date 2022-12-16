@@ -11,8 +11,25 @@ public class Parameter {
         this.name = name;
     }
 
+    //arg
+    public Parameter(String name) {
+        this.name = name;
+    }
+
     @Override
     public String toString() {
+        if (type == null) return name;
         return type + " " + name;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        Parameter other = (Parameter) obj;
+        if (name == null) return type.equals(other.type);
+        return type.equals(other.type) && name.equals(other.name);
+    }
+
+    public Parameter copy() {
+        return new Parameter(type, name);
     }
 }

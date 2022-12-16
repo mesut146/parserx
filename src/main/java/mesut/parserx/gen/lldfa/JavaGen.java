@@ -401,12 +401,12 @@ public class JavaGen {
                 if (!item.isAlt()) continue;
                 var prm = common.getParam(item);
                 if (prm.isHolder()) {//simple is used
-                    w.append("%s.which = %d;", prm.name, item.rule.which);
+                    w.append("%s.which = %d;", prm.name, item.rule.which.get());
                 }
                 else {
                     var name = prm.name;
                     var holder = name + ".holder";
-                    w.append("%s.which = %d;", holder, item.rule.which);
+                    w.append("%s.which = %d;", holder, item.rule.which.get());
                     w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, name);
                 }
 
@@ -423,7 +423,7 @@ public class JavaGen {
             w.append("if(%s){", ParserUtils.loopExpr(item.lookAhead));
             var holder = getHolder(item, sym);
             var name = common.getBoth(item, sym);
-            w.append("%s.which = %d;", holder, item.rule.which);
+            w.append("%s.which = %d;", holder, item.rule.which.get());
             w.append("%s.%s = %s;", holder, item.rhs.astInfo.varName, name);
             w.append("}");
         }

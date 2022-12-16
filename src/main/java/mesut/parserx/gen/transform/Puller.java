@@ -28,14 +28,12 @@ public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
     public PullInfo visitName(Name name, Name sym) {
         var info = new PullInfo();
         if (name.isToken) {
-            var res = name.copy();
-            res.astInfo.isFactored = true;
-            info.one = res;
+            info.one = new Factored(name.copy(), sym.name);
             return info;
         }
         else {
             Name zeroName = tree.getFactorZero(name, sym);
-            Name oneName = tree.getFactorOne(name, sym);
+            Name oneName = tree.getFactorOne(name, new Parameter(tree.getType(sym), "arg"));
             info.one = oneName;
 
             //check if already pulled before
@@ -69,16 +67,16 @@ public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
             Name symArg = sym.copy();
 
             Name oneRef = oneName.copy();
-            oneRef.args.clear();
-            for (Node arg : decl.ref.args) {
-                oneRef.args.add(arg.copy());
+            oneRef.args2.clear();
+            for (var arg : decl.ref.args2) {
+                oneRef.args2.add(arg.copy());
             }
-            oneRef.args.add(symArg);
+            oneRef.args2.add(new Parameter(tree.getType(symArg), "arg"));
 
             Name zeroRef = zeroName.copy();
-            zeroRef.args.clear();
-            for (Node arg : decl.ref.args) {
-                zeroRef.args.add(arg.copy());
+            zeroRef.args2.clear();
+            for (var arg : decl.ref.args2) {
+                zeroRef.args2.add(arg.copy());
             }
 
             var tmp = decl.rhs.copy().accept(this, symArg);
@@ -159,7 +157,7 @@ public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
             //Node s3 = pb.zero == null ? null : (a1.eps.isEpsilon() ? pb.zero : new Sequence(a1.eps, pb.zero));
             var s3 = pb.zero == null ? null : Sequence.make(a1.eps, pb.zero);
 
-            if (s2.astInfo.which == -1) {
+            if (s2.astInfo.which.isEmpty()) {
                 s2.astInfo = seq.astInfo.copy();
             }
 
@@ -172,7 +170,7 @@ public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
                     info.zero = s1;
                 }
                 else {
-                    if (s3.astInfo.which == -1) {
+                    if (s3.astInfo.which.isEmpty()) {
                         s3.astInfo = seq.astInfo.copy();
                     }
                     info.zero = Or.make(s1, s3);

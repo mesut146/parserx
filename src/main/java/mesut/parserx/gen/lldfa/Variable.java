@@ -32,7 +32,7 @@ public class Variable {
         this.type = type;
         this.name = name;
         this.children = children;
-        this.children.sort(Comparator.comparingInt(it -> it.rule.which));
+        this.children.sort(Comparator.comparingInt(it -> it.rule.which.orElse(0)));
     }
 
     @Override

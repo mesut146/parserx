@@ -35,9 +35,6 @@ public class Regex extends Node {
 
     @Override
     public String toString() {
-        if (astInfo.isFactored) {
-            return node + type.toString() + "()";
-        }
         return node + type.toString();
     }
 

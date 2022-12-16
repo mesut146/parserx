@@ -27,7 +27,8 @@ public class Copier extends Transformer {
     }
 
     public static RuleDecl copyRule(RuleDecl decl) {
-        var res = new RuleDecl(decl.ref.<Name>copy(), decl.rhs.copy());
+        var res = new RuleDecl(decl.ref.copy(), decl.rhs.copy());
+        res.parameterList = new ArrayList<>(decl.parameterList);
         res.retType = decl.retType;
         return res;
     }
@@ -40,7 +41,6 @@ public class Copier extends Transformer {
     @Override
     public Node visitName(Name name, Void arg) {
         var res = new Name(name.name, name.isToken);
-        res.args = new ArrayList<>(name.args);
         res.args2 = new ArrayList<>(name.args2);
         return withAst(res, name);
     }

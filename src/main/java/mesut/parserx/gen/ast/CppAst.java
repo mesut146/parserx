@@ -9,6 +9,7 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 public class CppAst {
     public Tree tree;
@@ -249,7 +250,7 @@ public class CppAst {
                 String v = outerCls.name.toLowerCase() + num;
 
                 //in case of factorization pre-write some code
-                ch.astInfo.which = num;
+                ch.astInfo.which = Optional.of(num);
                 //sequence
                 //complex choice point inits holder
                 ch.astInfo.nodeType = clsName;

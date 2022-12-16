@@ -5,10 +5,7 @@ import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
 //split alts into separate decl
 public class TreeInfo {
@@ -36,7 +33,9 @@ public class TreeInfo {
                 var rd = new RuleDecl(name, rhs);
                 var original = tree.getRule(name);
                 rd.transformInfo = original.transformInfo;
-                rd.which = id++;
+                if (id != 0) {
+                    rd.which = Optional.of(id++);
+                }
                 rd.index = index++;
                 rd.retType = original.retType;
                 rules.add(rd);

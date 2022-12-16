@@ -121,7 +121,7 @@ public class NormalWriter extends BaseVisitor<Void, Void> {
         w.append("%s %s = new %s();", seq.astInfo.nodeType, seq.astInfo.varName, seq.astInfo.nodeType);
         w.append("%s.holder = res;", seq.astInfo.varName);
         w.append("res.%s = %s;", seq.astInfo.varName, seq.astInfo.varName);
-        w.append("res.which = %s;", seq.astInfo.which);
+        w.append("res.which = %s;", seq.astInfo.which.get());
     }
 
     @Override

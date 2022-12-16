@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import static mesut.parserx.gen.ParserUtils.dollar;
+import static mesut.parserx.gen.lexer.LexerGenerator.makeOctal;
+import static mesut.parserx.gen.lldfa.CcGenJava.ruleHeader;
 
 public class CcStateGenJava {
     Tree tree;
@@ -34,6 +36,7 @@ public class CcStateGenJava {
     }
 
     public void gen() throws IOException {
+        new RecursionHandler(tree).handleAll();
         LLDfaBuilder.cc = true;
         ItemSet.forceClosure = true;
         builder = new LLDfaBuilder(tree);
@@ -43,12 +46,13 @@ public class CcStateGenJava {
         idMap = LexerGenerator.gen(tree, Lang.JAVA).idMap;
 
         header();
+        writeUnpack();
         writeDecider();
         for (var entry : builder.rules.entrySet()) {
             var rule = entry.getKey();
 
             var decl = tree.getRule(rule);
-            w.append("public %s %s() throws IOException{", decl.retType, rule.name);
+            w.append("public %s %s throws IOException{", decl.retType, ruleHeader(decl));
             w.append("%s res = new %s();", decl.retType, decl.retType);
 
             var rhs = decl.rhs.asOr();
@@ -85,7 +89,9 @@ public class CcStateGenJava {
         w.append("public class %s{", options.parserClass);
 
         w.append("TokenStream ts;", options.lexerClass);
-        w.append("static int[][][] trans = %s;", genTrans());
+        w.append("static String trans_packed = %s;", getPacked());
+        //w.append("static int[][][] trans = %s;", genTrans());
+        w.append("static int[][][] trans;");
         w.append("");
 
         w.append("public %s(%s lexer) throws IOException{", options.parserClass, options.lexerClass);
@@ -93,9 +99,100 @@ public class CcStateGenJava {
         w.append("");
     }
 
+    void writeUnpack() {
+        w.append("static{");
+        w.append("int pos = 0;");
+        w.append("int ruleCount = trans_packed.charAt(pos++);");
+        w.append("int tokenCount = trans_packed.charAt(pos++);");
+        w.append("trans = new int[ruleCount][][];");
+
+        w.append("for(int rule = 0;rule < ruleCount;rule++){");
+        w.append("int maxState = trans_packed.charAt(pos++);");
+        w.append("int[][] arr = new int[maxState + 1][tokenCount];");
+        w.append("trans[rule] = arr;");
+        w.append("for(int state = 1;state <= maxState;state++){");
+        w.append("int trCount = trans_packed.charAt(pos++);");
+        w.append("for(int tr = 0;tr < trCount;tr++){");
+        w.append("int token = trans_packed.charAt(pos++);");
+        w.append("int action = trans_packed.charAt(pos++);");
+        w.append("arr[state][token] = action;");
+        w.append("}");//tr
+        w.append("}");//state
+        w.append("}");//rule
+        w.append("}");
+    }
+
+    void writeDecider() {
+        //last 6 bit is alt number max: 2^6-1=63
+        //first 25 bit is target state max: 67million
+        w.append("public int decide(int ruleIndex) throws IOException{");
+        w.append("int[][] map = trans[ruleIndex];");
+        w.append("int alt = 0;");
+        w.append("int state = 1;");
+        w.append("while(true){");
+        w.append("int act = map[state][ts.la.type];");
+        w.append("if(act == 0){");
+        w.append("ts.pop();");
+        w.append("break;");
+        w.append("}");
+        w.append("int tmpAlt = act & ((1 << 6) - 1);");
+        w.append("alt = tmpAlt == 0 ? alt : tmpAlt;");
+        w.append("state = act >>> 6;");
+        w.append("ts.pop();");
+        w.append("}");
+        w.append("if(alt == 0) throw new RuntimeException(\"parse error: no alt\");");
+        w.append("ts.unmark();");
+        w.append("return alt;");
+        w.all("}\n");
+    }
+
+    String getPacked() {
+        var sb = new StringBuilder();
+        sb.append("\"");
+        sb.append(makeOctal(builder.rules.size()));
+
+        //token count
+        sb.append(makeOctal(idMap.lastTokenId + 1));
+
+        int index = 0;
+        for (var e : builder.rules.entrySet()) {
+            indexMap.put(e.getKey(), index);
+            //shrink state ids to have less space
+            //old id -> new id
+            var stateIdMap = new HashMap<Integer, Integer>();
+            int id = 0;
+            for (var state : e.getValue()) {
+                stateIdMap.put(state.stateId, ++id);
+            }
+
+            sb.append(makeOctal(id));//max state
+
+            var sorted = e.getValue().stream()
+                    .sorted(Comparator.comparingInt(s -> stateIdMap.get(s.stateId)))
+                    .collect(Collectors.toList());
+
+            for (var state : sorted) {
+                sb.append(makeOctal(state.transitions.size()));
+                for (var tr : state.transitions) {
+                    var sym = idMap.getId(tr.symbol.asName());
+                    sb.append(makeOctal(sym));
+                    //acc with EOF to ?
+                    var targetSet = tr.target;
+                    int target = stateIdMap.get(targetSet.stateId);
+                    //int alt = builder.findWhich(targetSet, e.getKey());
+                    int alt = targetSet.which.get();
+                    sb.append(makeOctal(alt | (target << 6)));
+                }
+            }
+            index++;
+        }
+        sb.append("\"");
+        return sb.toString();
+    }
+
     String genTrans() {
         int index = 0;
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append("{");
         boolean firstRule = true;
         boolean firstState;
@@ -105,6 +202,7 @@ public class CcStateGenJava {
                 sb.append(",");
             }
             firstRule = false;
+            sb.append("\n");
             sb.append("{");//rule index
             indexMap.put(e.getKey(), index);
             //shrink state ids to have less space
@@ -117,6 +215,7 @@ public class CcStateGenJava {
             firstState = true;
             var sorted = e.getValue().stream().sorted(Comparator.comparingInt(s -> stateIdMap.get(s.stateId)));
             for (var state : sorted.collect(Collectors.toList())) {
+                sb.append("\n");
                 if (!firstState) {
                     sb.append(",");
                 }
@@ -124,6 +223,7 @@ public class CcStateGenJava {
                 sb.append("{");//state
                 //la row
                 firstLa = true;
+                int col = 0;
                 for (int tok = 0; tok <= idMap.lastTokenId; tok++) {
                     ItemSet targetSet = null;
                     for (var tr : state.transitions) {
@@ -132,13 +232,15 @@ public class CcStateGenJava {
                             break;
                         }
                     }
-                    if (!firstLa)
+                    if (!firstLa) {
                         sb.append(",");
+                    }
                     firstLa = false;
                     //acc with EOF to ?
                     if (targetSet != null) {
                         int target = stateIdMap.get(targetSet.stateId);
-                        int alt = findWhich(targetSet, e.getKey());
+                        //int alt = builder.findWhich(targetSet, e.getKey());
+                        int alt = targetSet.which.get();
                         sb.append(alt | (target << 6));
                     }
                     else {
@@ -149,6 +251,11 @@ public class CcStateGenJava {
                         else {
                             sb.append("-1");
                         }
+                    }
+                    col++;
+                    if (col == 200) {
+                        sb.append("\n");
+                        col = 0;
                     }
                 }
                 sb.append("}");
@@ -172,36 +279,5 @@ public class CcStateGenJava {
         return false;
     }
 
-    int findWhich(ItemSet target, Name curRule) {
-        var res = target.all.stream().filter(set -> isFinal(set, curRule)).findFirst();
-        if (res.isPresent()) return res.get().rule.which;
-        return 0;
-    }
 
-    boolean isFinal(Item item, Name curRule) {
-        return item.isReduce(tree) && item.rule.ref.equals(curRule) && item.lookAhead.contains(dollar);
-    }
-
-    void writeDecider() {
-        //last 6 bit is alt number max: 2^6-1=63
-        //first 25 bit is target state max: 67million
-        w.append("public int decide(int ruleIndex) throws IOException{");
-        w.append("int[][] map = trans[ruleIndex];");
-        w.append("int alt = 0;");
-        w.append("int state = 0;");
-        w.append("while(true){");
-        w.append("int tmp = map[state][ts.la.type];");
-        w.append("if(tmp == -1) throw new RuntimeException(\"parse error: \" + ts.la);");
-        w.append("else if(tmp == -2){");
-        w.append("ts.pop();");
-        w.append("break;");
-        w.append("}");
-        w.append("alt = tmp & ((1 << 6) - 1);");
-        w.append("state = tmp >>> 6;");
-        w.append("ts.pop();");
-        w.append("}");
-        w.append("if(alt == 0) throw new RuntimeException(\"parse error: no alt\");");
-        w.append("return alt;");
-        w.all("}\n");
-    }
 }

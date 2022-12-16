@@ -9,7 +9,6 @@ public class Name extends Node implements Comparable<Name> {
     public static boolean debug = false;
     public String name;
     public boolean isToken;
-    public ArrayList<Node> args = new ArrayList<>();
     public ArrayList<Parameter> args2 = new ArrayList<>();
 
     public Name(String name) {
@@ -30,18 +29,15 @@ public class Name extends Node implements Comparable<Name> {
         var sb = new StringBuilder();
         //sb.append(varString());
         sb.append(name);
-        if (astInfo.isFactored) {
-            sb.append("()");
-        }
-        else if (!args.isEmpty()) {
-            sb.append("(").append(NodeList.join(args, ", ")).append(")");
+        if (!args2.isEmpty()){
+            sb.append("(").append(NodeList.join(args2, ", ")).append(")");
         }
 
         if (action != null) {
             sb.append(" @").append(action);
         }
-        if (debug && astInfo.which != -1) {
-            sb.append(" #").append(astInfo.which);
+        if (debug && astInfo.which.isPresent()) {
+            sb.append(" #").append(astInfo.which.get());
         }
         return sb.toString();
     }
@@ -60,7 +56,7 @@ public class Name extends Node implements Comparable<Name> {
         if (o == null || getClass() != o.getClass()) return false;
         var name = (Name) o;
         return isToken == name.isToken &&
-                Objects.equals(this.name, name.name) && args.equals(name.args);
+                Objects.equals(this.name, name.name) && args2.equals(name.args2);
     }
 
     @Override

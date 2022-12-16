@@ -164,7 +164,7 @@ public class LrItem {
     }
 
     public boolean isSameNoDot(LrItem other) {
-        return Objects.equals(rule, other.rule) && rule.which == other.rule.which;
+        return Objects.equals(rule, other.rule) && rule.which.equals( other.rule.which);
     }
 
     @Override

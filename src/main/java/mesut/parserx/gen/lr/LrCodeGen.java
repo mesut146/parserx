@@ -112,11 +112,11 @@ public class LrCodeGen {
             if (i > 0) {
                 sb.append(", ");
             }
-            if (!rd.isAlt() || (rd.transformInfo != null && (rd.transformInfo.isOpt || rd.transformInfo.isStar || rd.transformInfo.isPlus))) {
+            if (!rd.which.isPresent() || (rd.transformInfo != null && (rd.transformInfo.isOpt || rd.transformInfo.isStar || rd.transformInfo.isPlus))) {
                 sb.append(0);
             }
             else {
-                sb.append(rd.which);
+                sb.append(rd.which.get());
             }
             i++;
         }

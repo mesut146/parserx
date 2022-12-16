@@ -1,5 +1,6 @@
 package mesut.parserx.parser;
 
+import mesut.parserx.gen.lldfa.Type;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.UnicodeUtils;
 
@@ -116,12 +117,13 @@ public class AstVisitor {
 
     public RuleDecl visitRuledecl(Ast.ruleDecl node) {
         var ref = new Name(node.name.IDENT.value);
-        if (node.args != null) {
-            ref.args.add(new Name(node.args.name.IDENT.value));
-            for (var g1 : node.args.rest) {
-                ref.args.add(new Name(g1.name.IDENT.value));
-            }
-        }
+        //todo params
+//        if (node.args != null) {
+//            ref.args.add(new Name(node.args.name.IDENT.value));
+//            for (var g1 : node.args.rest) {
+//                ref.args.add(new Name(g1.name.IDENT.value));
+//            }
+//        }
         var rhs = visitRhs(node.rhs);
         return new RuleDecl(ref, rhs);
     }
@@ -244,10 +246,9 @@ public class AstVisitor {
         else if (node.call != null) {
             var s = node.call.call.CALL_BEGIN.value;
             var res = new Name(s.substring(0, s.length() - 1));
-            res.args.add(new Name(node.call.call.IDENT.value));
+            res.args2.add(new Parameter(node.call.call.IDENT.value));
             for (var arg : node.call.call.g1) {
-                res.args.add(new Name(arg.IDENT.value));
-                res.args2.add(new Parameter(null, arg.IDENT.value));
+                res.args2.add(new Parameter((Type) null, arg.IDENT.value));
             }
             return res;
         }

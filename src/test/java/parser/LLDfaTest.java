@@ -12,53 +12,11 @@ import org.junit.Test;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 
 public class LLDfaTest {
 
-    void dot(LLDfaBuilder b) throws IOException {
-        var file = Env.dotFile(Utils.newName(b.tree.file.getName(), ".dot"));
-        b.dot(new PrintWriter(new FileWriter(file)));
-        try {
-            Runtime.getRuntime().exec("dot -Tpng -O " + file).waitFor();
-            //Thread.sleep(100);
-            file.delete();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    void single(String path) throws IOException {
-        System.out.println("------------------------------------");
-        var tree = Env.tree(path);
-        var builder = new LLDfaBuilder(tree);
-        builder.factor();
-        dot(builder);
-        dump(builder);
-    }
-
-    @Test
-    public void allDot() throws IOException {
-        single("rec/cyc.g");
-//        File dir = new File("./src/test/resources/lldfa");
-//        for (String s : dir.list()) {
-//            if (s.startsWith("greedy")) continue;
-//            single("lldfa/" + s);
-//        }
-    }
-
-    void dump(LLDfaBuilder b) throws IOException {
-        var file = Env.dotFile(Utils.newName(b.tree.file.getName(), ".dump"));
-        var file2 = Env.dotFile(Utils.newName(b.tree.file.getName(), ".dump2"));
-        try (var os = new FileOutputStream(file)) {
-            b.dumpItems(os);
-        }
-        try (var os = new FileOutputStream(file2)) {
-            b.dump(os);
-        }
-    }
 
     @Test
     public void math() throws Exception {
@@ -70,7 +28,6 @@ public class LLDfaTest {
                 check();
         var builder = new LLDfaBuilder(tree);
         //builder.factor();
-        dump(builder);
     }
 
     @Test
@@ -80,20 +37,6 @@ public class LLDfaTest {
         var ac = new ArrayList<>(LaFinder.computeLa(new Name("B"), tree));
         Collections.sort(ac);
         Assert.assertEquals(ex, ac.toString());
-    }
-
-    @Test
-    public void emitter() throws IOException {
-        var tree = Env.tree("rec/cyc.g");
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        LLDfaBuilder builder = new LLDfaBuilder(tree);
-        builder.factor();
-
-        var emitter = new GrammarEmitter(builder);
-        emitter.emitFor(new Name("A"));
-        tree.file = new File(tree.file.getParent(), Utils.newName(tree.file.getName(), "-emit.g"));
-        builder.tree = tree;
-        //dot(builder);
     }
 
     @Test
@@ -126,11 +69,12 @@ public class LLDfaTest {
 
     @Test
     public void groovy() throws Exception {
+        //Log.curLevel = Level.FINE;
         var builder = Builder.tree("groovy/groovy.g").rule("Unit");
         builder.dump();
         try (var files = Files.walk(Path.of("C:\\Users\\Mesut\\StudioProjects\\ide"))) {
             files
-                    .filter(path ->  Files.isRegularFile(path) && path.toString().endsWith(".gradle"))
+                    .filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".gradle"))
                     .forEach(path -> builder.file(path.toAbsolutePath().toString()));
         }
         builder
@@ -169,13 +113,13 @@ public class LLDfaTest {
 
     @Test
     public void leftRec() throws Exception {
-//        Builder.tree("lldfa/left-indirect3.g")
-//                .rule("A")
-//                .input("x", "A#5{'x'}")
-//                .input("xa", "A#1{A#5{'x'}, 'a'}")
-//                .input("xadb", "A#3{B#1{A#1{A#5{'x'}, 'a'}, 'd'}, 'b'}")
-//                .input("yhfbp", "A#2{A#3{B#3{C#2{B#4{'y'}, 'h'}, 'f'}, 'b'}, 'p'}")
-//                .checkCC();
+        Builder.tree("lldfa/left-indirect3.g")
+                .rule("A")
+                .input("x", "A#5{'x'}")
+                .input("xa", "A#1{A#5{'x'}, 'a'}")
+                .input("xadb", "A#3{B#1{A#1{A#5{'x'}, 'a'}, 'd'}, 'b'}")
+                .input("yhfbp", "A#2{A#3{B#3{C#2{B#4{'y'}, 'h'}, 'f'}, 'b'}, 'p'}")
+                .checkCC();
         Builder.tree("lldfa/left.g")
                 .rule("A")
                 .input("c", "A#3{'c'}")
@@ -184,6 +128,7 @@ public class LLDfaTest {
                 .input("caa", "A#1{A#1{A#3{'c'}, 'a'}, 'a'}")
                 .input("cab", "A#2{A#1{A#3{'c'}, 'a'}, 'b'}")
                 .rule("B")
+                .input("caa", "B#1{B#1{B#2{'c'}, 'a'}, 'a'}")
                 .input("bbbcaa", "B#1{B#1{B#2{['b', 'b', 'b'], 'c'}, 'a'}, 'a'}")
                 .input("bbbdaa", "B#1{B#1{B#3{['b', 'b', 'b'], 'd'}, 'a'}, 'a'}")
                 .rule("C")
@@ -191,16 +136,19 @@ public class LLDfaTest {
                 .input("xaaab", "C#1{C#3{'x'}, ['a', 'a', 'a'], 'b'}")
                 .input("xaaac", "C#2{C#3{'x'}, ['a', 'a', 'a'], 'c'}")
                 .checkCC();
-//        Builder.tree("lldfa/left-indirect.g").rule("A")
-//                .input("b", "A#2{'b'}")
-//                .input("da", "A#1{B#2{'d'}, 'a'}")
-//                //.input("bca","")
-//                //.input("daca","")
-//                //.input("bcaca","")
-//                .check();
-//        Builder.tree("lldfa/left-indirect2.g").rule("A")
-//                .input("xdbdb", "")
-//                .check();
+        Builder.tree("lldfa/left-indirect-long.g")
+                .rule("A")
+                .input("ya", "A#1{B#2{'y'}, 'a'}")
+                .input("zca", "A#1{B#1{C#2{'z'}, 'c'}, 'a'}")
+                .input("tdca", "A#1{B#1{C#1{D#2{'t'}, 'd'}, 'c'}, 'a'}")
+                .input("xedca", "A#1{B#1{C#1{D#1{A#2{'x'}, 'e'}, 'd'}, 'c'}, 'a'}")
+                .check();
+        Builder.tree("lldfa/left-indirect2.g")
+                .rule("A")
+                .input("xdbdb", "A#2{B#1{A#2{B#1{A#3{'x'}, 'd'}, 'b'}, 'd'}, 'b'}")
+                .rule("B")
+                .input("ybad", "B#1{A#1{A#2{B#2{'y'}, 'b'}, 'a'}, 'd'}")
+                .check();
     }
 
     @Test
@@ -256,7 +204,6 @@ public class LLDfaTest {
                 input("cyaebda", "").
                 check();
 
-        single("lldfa/greedy-opt2.g");
     }
 
     @Test
