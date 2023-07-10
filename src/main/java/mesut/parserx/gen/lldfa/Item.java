@@ -16,12 +16,10 @@ public class Item {
     public List<Item> parents = new ArrayList<>();//the ones created us
     public Set<Item> prev = new LinkedHashSet<>();//prev item
     public List<Item> reduceParent = new ArrayList<>();
-    public List<Item> siblings = new ArrayList<>();
-    public boolean advanced = false;//dot star but advanced
     public ItemSet itemSet;
     public HashSet<Item> firstParents = new HashSet<>();
     public boolean first = false;
-    public static boolean printLa = true;
+    public static boolean printLa = false;
     public static int lastId = 0;
 
     public Item(RuleDecl rule, int dotPos) {
@@ -41,14 +39,9 @@ public class Item {
         this.lookAhead.addAll(item.lookAhead);
         this.gotoSet = item.gotoSet;
         this.ids = new HashSet<>(item.ids);
-        //this.senders.add(item);
         this.prev.add(item);
         this.first = item.first;
         this.firstParents = item.firstParents;
-        this.siblings = item.siblings;
-        if (item.getNode(item.dotPos).isStar()) {
-            advanced = true;
-        }
         lastId--;
     }
 
@@ -73,18 +66,11 @@ public class Item {
         return first && isReduce(tree);
     }
 
-    boolean isLr0() {
-        return lookAhead.isEmpty();
-    }
-
-
     @Override
     public String toString() {
         var sb = new StringBuilder();
         sb.append(rule.ref);
-        if (rule.which.isPresent()) {
-            sb.append("#").append(rule.which.get());
-        }
+        rule.which.ifPresent(integer -> sb.append("#").append(integer));
         sb.append(": ");
         Sequence rhs = rule.rhs.asSequence();
         for (int i = 0; i < rhs.size(); i++) {
@@ -99,63 +85,13 @@ public class Item {
         if (rhs.size() == dotPos) {
             sb.append(".");
         }
-        if (!isLr0() && printLa) {
+        if (!lookAhead.isEmpty() && printLa) {
             sb.append(" , ");
             sb.append(NodeList.join(new ArrayList<>(lookAhead), "/"));
         }
         sb.append(" ").append(ids);
         return sb.toString();
     }
-
-    public String toString2(Tree tree) {
-        var sb = new StringBuilder();
-        sb.append(rule.ref);
-        sb.append(" -> ");
-        var rhs = rule.rhs.asSequence();
-        for (int i = 0; i < rhs.size(); i++) {
-            if (i == dotPos) {
-                sb.append(". ");
-            }
-            sb.append(rhs.get(i));
-            if (i < rhs.size() - 1) {
-                sb.append(" ");
-            }
-        }
-        if (rhs.size() == dotPos) {
-            sb.append(".");
-        }
-        if (!isLr0() && printLa) {
-            sb.append(" , ");
-            for (var it = lookAhead.iterator(); it.hasNext(); ) {
-                var la = it.next();
-                if (la.name.equals("$")) {
-                    sb.append(la);
-                }
-                else {
-                    sb.append(printLa(la, tree));
-                }
-                if (it.hasNext()) sb.append("/");
-            }
-        }
-        sb.append(" ").append(ids);
-        return sb.toString();
-    }
-
-    //return shortest repr
-    String printLa(Name la, Tree tree) {
-        if (la.isRule()) return la.name;
-        var token = tree.getToken(la.name);
-        var rhs = token.rhs.isSequence() ? token.rhs.asSequence().get(0) : token.rhs;
-        if (!rhs.isString()) return la.name;
-        var str = rhs.asString().value;
-        if (str.length() < la.name.length()) {
-            return str;
-        }
-        else {
-            return la.name;
-        }
-    }
-
 
     public Node getNode(int pos) {
         var s = rule.rhs.asSequence();

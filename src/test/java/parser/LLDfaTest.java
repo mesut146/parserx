@@ -1,22 +1,32 @@
 package parser;
 
 import common.Env;
+import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Lang;
-import mesut.parserx.gen.lldfa.*;
+import mesut.parserx.gen.lldfa.LaFinder;
+import mesut.parserx.gen.lldfa.ParserGen;
+import mesut.parserx.gen.lldfa.Splitter;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
-import mesut.parserx.utils.Utils;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
 public class LLDfaTest {
 
+    @Test
+    public void firstSet() throws IOException {
+        Tree tree = Env.tree("firstSet.g");
+        FirstSet firstSet = new FirstSet(tree);
+        firstSet.firstSet(new Name("E"), false, new ArrayList<>());
+        var set = firstSet.firstSet(new Name("A"), false, new ArrayList<>());
+        System.out.println(set);
+        //System.out.println(firstSet.cache);
+    }
 
     @Test
     public void math() throws Exception {
@@ -26,8 +36,6 @@ public class LLDfaTest {
         Builder.tree(tree).rule("line").
                 input("a+b*c", "").
                 check();
-        var builder = new LLDfaBuilder(tree);
-        //builder.factor();
     }
 
     @Test
@@ -72,11 +80,15 @@ public class LLDfaTest {
         //Log.curLevel = Level.FINE;
         var builder = Builder.tree("groovy/groovy.g").rule("Unit");
         builder.dump();
-        try (var files = Files.walk(Path.of("C:\\Users\\Mesut\\StudioProjects\\ide"))) {
-            files
-                    .filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".gradle"))
-                    .forEach(path -> builder.file(path.toAbsolutePath().toString()));
-        }
+//        try (var files = Files.walk(Path.of("C:\\Users\\Mesut\\StudioProjects\\ide"))) {
+//            files
+//                    .filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".gradle"))
+//                    .forEach(path -> builder.file(path.toAbsolutePath().toString()));
+//        }
+        //builder.input("a b: 'c'", "");
+        //builder.input("a{\nb = 5\n}", "");
+        //builder.input("a b(c: ['*.jar'], d: 'libs')", "");
+        builder.input("a b()", "");
         builder
                 //.tokenize()
                 .checkTokens()

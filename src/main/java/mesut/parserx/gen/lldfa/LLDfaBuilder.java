@@ -2,10 +2,8 @@ package mesut.parserx.gen.lldfa;
 
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.ParserUtils;
-import mesut.parserx.gen.lr.LrType;
 import mesut.parserx.gen.lr.TreeInfo;
 import mesut.parserx.gen.transform.FactorHelper;
-import mesut.parserx.gen.transform.GreedyNormalizer;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Debug;
 import mesut.parserx.utils.Log;
@@ -27,8 +25,6 @@ public class LLDfaBuilder {
     Map<Name, Set<ItemSet>> rules = new LinkedHashMap<>();
     Set<ItemSet> all;
     Queue<ItemSet> queue = new LinkedList<>();
-    LrType type = LrType.LR1;
-    public static boolean cc = true;
 
     public LLDfaBuilder(Tree tree) {
         this.tree = tree;
@@ -102,12 +98,12 @@ public class LLDfaBuilder {
             for (int i = 0; i < seq.size(); i++) {
                 if (i == seq.size() - 1) break;
 
-                var a = seq.get(i).copy();
-                var b = seq.get(i + 1).copy();
-                var info = GreedyNormalizer.hasGreedyTail(a, FirstSet.firstSet(b, tree), tree);
-                if (info != null) {
-                    //throw new RuntimeException(String.format("%s has greediness, %s follows %s, list: %s, sym: %s", curRule.getName(), a, b, info.list, info.sym));
-                }
+//                var a = seq.get(i).copy();
+//                var b = seq.get(i + 1).copy();
+//                var info = GreedyNormalizer.hasGreedyTail(a, FirstSet.firstSet(b, tree), tree);
+//                if (info != null) {
+//                    throw new RuntimeException(String.format("%s has greediness, %s follows %s, list: %s, sym: %s", curRule.getName(), a, b, info.list, info.sym));
+//                }
             }
             return false;
         }
@@ -130,9 +126,6 @@ public class LLDfaBuilder {
         }
         else {
             la = LaFinder.computeLa(rule, tree);
-//            if (tree.start == null) {
-//                la.add(ParserUtils.dollar);
-//            }
             la.add(ParserUtils.dollar);
         }
         for (var firstDecl : treeInfo.ruleMap.get(rule)) {
@@ -141,9 +134,6 @@ public class LLDfaBuilder {
             firstItem.gotoSet.add(firstSet);
             firstItem.lookAhead.addAll(la);
             firstSet.addItem(firstItem);
-        }
-        for (var item : firstSet.all) {
-            item.siblings.addAll(firstSet.all);
         }
 
         all.add(firstSet);
@@ -169,35 +159,14 @@ public class LLDfaBuilder {
                     var sym = (Node) ItemSet.sym(node.copy());
                     int newPos = node.isStar() ? i : i + 1;
                     Item target;
-                    if (curSet.isFactor(item, i, true, false)) {
-                        sym.astInfo.isFactor = true;
+                    if (curSet.isFactor(item, i, true)) {
+                        //sym.astInfo.isFactor = true;
                     }
-                    if (cc) {
-                        if (!sym.astInfo.isFactor) {
-                            //direct transition to alt final state
-                            target = new Item(item, item.rhs.size());
-                            if (i < item.rhs.size() - 1) {
-                                target.lookAhead = item.follow(tree, i);
-                            }
-                            makeAlt(target, sym.asName(), curSet);
-                            continue;
-                        }
-                        else {
-                            target = new Item(item, newPos);
-                        }
-                    }
-                    else if (node.isOptional() && sym.asName().isToken && !curSet.isFactor(item, i, true, true)) {
-                        //.a? b c | b d -> a b c
-                        var rhs = new ArrayList<>(item.rhs.list.subList(i, item.rhs.size()));
-                        rhs.set(0, sym);
-                        sym = Sequence.make(rhs);
-                        target = new Item(item, item.rhs.size());
-                    }
-                    else if (canShrink(curSet, item, i) && item.rhs.size() - i > 1) {
-                        //if sym is not factor shrink transition
-                        var rhs = new ArrayList<>(item.rhs.list.subList(i, item.rhs.size()));
-                        sym = Sequence.make(rhs);
-                        target = new Item(item, item.rhs.size());
+                    //if not factor dont add to queue
+                    if (!sym.astInfo.isFactor) {
+                        //direct transition to alt final state
+                        makeAlt(item, sym.asName(), curSet);
+                        continue;
                     }
                     else {
                         target = new Item(item, newPos);
@@ -211,10 +180,34 @@ public class LLDfaBuilder {
         rules.put(rule, all);
     }
 
+    void makeAlt(Item item, Name sym, ItemSet curSet) {
+        var targetSet = new ItemSet(treeInfo);
+        targetSet.noClosure = true;
+        targetSet.alreadyGenReduces = true;
+        targetSet.which = Optional.of(findAltEarly(item));
+//        if (item.first) {
+//            var target = new Item(item, item.rhs.size());
+//            targetSet.addItem(target);
+//        }
+//        else {
+//            if (item.firstParents.size() == 1) {
+//                var p = item.firstParents.iterator().next();
+//                var target = new Item(p, p.rhs.size());
+//                targetSet.addItem(target);
+//            }
+//            else {
+//                //throw new RuntimeException();
+//            }
+//        }
+
+        all.add(targetSet);
+        curSet.addTransition(new LLTransition(curSet, targetSet, sym));
+    }
+
     int findAltEarly(Item item) {
         var cur = item;
         while (true) {
-            if (cur.rule.which.isPresent()) {
+            if (cur.first && cur.rule.which.isPresent()) {
                 return cur.rule.which.get();
             }
             if (cur.prev.isEmpty()) {
@@ -245,37 +238,7 @@ public class LLDfaBuilder {
     }
 
     boolean isFinal(Item item, Name curRule) {
-        return item.isReduce(tree) && item.rule.ref.equals(curRule) && item.lookAhead.contains(dollar);
-    }
-
-    void makeAlt(Item target, Name sym, ItemSet curSet) {
-        var targetSet = new ItemSet(treeInfo);
-        targetSet.noClosure = true;
-        targetSet.alreadyGenReduces = true;
-        targetSet.addItem(target);
-        all.add(targetSet);
-        var tr = new LLTransition(curSet, targetSet, sym);
-        curSet.addTransition(tr);
-        targetSet.which = Optional.of(findAltEarly(target));
-    }
-
-    boolean canShrink(ItemSet set, Item item, int i) {
-        var node = item.getNode(i);
-        var sym = node.isName() ? node.asName() : node.asRegex().node.asName();
-        var isFactor = set.isFactor(item, i, true, true);
-        if (isFactor) return false;
-        if (node.isName() && sym.isToken) return true;
-        if (!FirstSet.canBeEmpty(node, tree)) return true;//not closured
-        return !isFollowHasFactor(set, item, i);
-    }
-
-    boolean isFollowHasFactor(ItemSet set, Item item, int pos) {
-        for (int i = pos + 1; i < item.rhs.size(); i++) {
-            //if(i > item.dotPos && !FirstSet.canBeEmpty(item.getNode(i - 1), tree)) break;
-            if (set.isFactor(item, i, true, true)) return true;
-            if (!FirstSet.canBeEmpty(item.getNode(i), tree)) break;
-        }
-        return false;
+        return item.isReduce(tree) && item.rule.ref.equals(curRule) && item.lookAhead.contains(dollar) && item.first;
     }
 
     void addMap(Map<Node, LLTransition> map, Node sym, LLTransition.ItemPair pair, ItemSet from) {
@@ -289,7 +252,6 @@ public class LLDfaBuilder {
 
     void makeTrans(ItemSet curSet, Map<Node, LLTransition> map) {
         for (var e : map.entrySet()) {
-            var sym = e.getKey();
             var tr = e.getValue();
             var targetSet = new ItemSet(treeInfo);
             targetSet.addAll(tr.pairs.stream().map(pair -> pair.target).collect(Collectors.toList()));
@@ -301,7 +263,7 @@ public class LLDfaBuilder {
                 ItemSet.lastId--;
                 //merge lookaheads
                 for (var it : targetSet.all) {
-                    sim.update(it, true, true);
+                    sim.update(it);
                 }
                 targetSet = sim;
             }

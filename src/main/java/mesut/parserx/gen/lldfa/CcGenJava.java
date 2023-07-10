@@ -36,8 +36,7 @@ public class CcGenJava {
     public void gen() throws IOException {
         LexerGenerator.gen(tree, Lang.JAVA);
         new RecursionHandler(tree).handleAll();
-        LLDfaBuilder.cc = true;
-        ItemSet.forceClosure = true;
+        ItemSet.forceClosure = false;
         builder = new LLDfaBuilder(tree);
         builder.factor();
         ParserUtils.genTokenType(tree);

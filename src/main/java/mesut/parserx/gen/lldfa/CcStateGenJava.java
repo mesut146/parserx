@@ -37,8 +37,7 @@ public class CcStateGenJava {
 
     public void gen() throws IOException {
         new RecursionHandler(tree).handleAll();
-        LLDfaBuilder.cc = true;
-        ItemSet.forceClosure = true;
+        ItemSet.forceClosure = false;
         builder = new LLDfaBuilder(tree);
         builder.factor();
         ParserUtils.genTokenType(tree);
@@ -180,7 +179,7 @@ public class CcStateGenJava {
                     var targetSet = tr.target;
                     int target = stateIdMap.get(targetSet.stateId);
                     //int alt = builder.findWhich(targetSet, e.getKey());
-                    int alt = targetSet.which.get();
+                    int alt = targetSet.which.orElse(0);
                     sb.append(makeOctal(alt | (target << 6)));
                 }
             }

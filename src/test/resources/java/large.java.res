@@ -6,7 +6,6 @@ import mesut.parserx.dfa.Validator;
 import mesut.parserx.gen.LexerGenerator;
 import mesut.parserx.gen.ll.RecDescent;
 import mesut.parserx.gen.lr.CodeGen;
-import mesut.parserx.gen.transform.LeftRecursive;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Tree;

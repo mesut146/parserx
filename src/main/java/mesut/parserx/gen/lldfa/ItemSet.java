@@ -22,6 +22,7 @@ public class ItemSet {
     public List<LLTransition> incoming = new ArrayList<>();
     boolean alreadyGenReduces = false;
     boolean noClosure = false;
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public Optional<Integer> which = Optional.empty();
     public static boolean forceClosure = false;
 
@@ -102,7 +103,7 @@ public class ItemSet {
     public String toString() {
         var sb = new StringBuilder();
         for (int i = 0; i < all.size(); i++) {
-            sb.append(all.get(i).toString2(tree));
+            sb.append(all.get(i).toString());
             if (i < all.size() - 1) sb.append("\n");
         }
         return sb.toString();
@@ -137,7 +138,7 @@ public class ItemSet {
         return node.isName() ? node.asName() : node.asRegex().node.asName();
     }
 
-    boolean isFactor(Item item, int i, boolean checkConsecutive, boolean exact) {
+    boolean isFactor(Item item, int i, boolean checkConsecutive) {
         var node = item.getNode(i);
         if (node instanceof Factored) return false;
         var sym = sym(node);
@@ -147,32 +148,22 @@ public class ItemSet {
                 if (i == j) continue;
                 if (j > item.dotPos && !FirstSet.canBeEmpty(item.getNode(j - 1), tree)) break;
                 var next = item.getNode(j);
+                if (next instanceof Factored) continue;
                 if (common(sym, sym(next))) {
                     return true;
                 }
             }
         }
-        if (exact) {
-            //check dot sym and any other sym have common
-            for (var it : all) {
-                if (it == item) continue;
-                for (var s : it.getSyms(tree)) {
-                    if (s.getKey() instanceof Factored) continue;
-                    //todo if closured item is factor, child item incorrectly becomes non-factor
-                    if (sym(s.getKey()).equals(sym)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        else {
-            //check dot sym and any other sym have common
-            for (var s2 : symbols()) {
-                if (s2 == sym) continue;
-                if (common(sym, s2)) {
+        //check dot sym and any other sym have common
+        for (var it : all) {
+            if (it == item) continue;
+            for (var s : it.getSyms(tree)) {
+                if (s.getKey() instanceof Factored) continue;
+                //todo if closured item is factor, child item incorrectly becomes non-factor
+                if (sym(s.getKey()).equals(sym)) {
                     return true;
                 }
-            }//for
+            }
         }
         return false;
     }
@@ -239,7 +230,6 @@ public class ItemSet {
 
     private void closure(Name sym, int pos, Item sender) {
         var laList = sender.follow(tree, pos);
-        var set = new HashSet<Item>();
         for (var decl : treeInfo.ruleMap.get(sym)) {
             var newItem = new Item(decl, 0);
             if (sender.firstParents.isEmpty()) {
@@ -251,49 +241,30 @@ public class ItemSet {
             newItem.lookAhead.addAll(laList);
             newItem.parents.add(sender);
             addOrUpdate(newItem);
-            set.add(newItem);
-        }
-        for (var item : set) {
-            item.siblings.addAll(set);
         }
     }
 
     void addOrUpdate(Item item) {
-        if (!update(item, true, false)) {
+        if (!update(item)) {
             all.add(item);
             item.itemSet = this;
             closure(item);
         }
     }
 
-    public boolean update(Item item, boolean updateIds, boolean updateGoto) {
+    public boolean update(Item item) {
         for (var prev : all) {
             if (!prev.isSame(item)) continue;
-            //merge la
             prev.lookAhead.addAll(item.lookAhead);
             prev.firstParents.addAll(item.firstParents);
-            if (updateIds) {
-                prev.ids.addAll(item.ids);
-//                if (prev.dotPos){
-//                    for (Item sender : prev.senders) {
-//                        sender.ids.addAll(item.ids);
-//                    }
-//                }
-            }
+            prev.ids.addAll(item.ids);
             prev.parents.addAll(item.parents);
             prev.prev.addAll(item.prev);
             prev.gotoSet.addAll(item.gotoSet);
-            updateChildren(prev);
+            prev.getSyms(tree).forEach(e -> e.getKey().astInfo.isFactor = true);
             return true;
         }
         return false;
-    }
-
-    private void updateChildren(Item prev) {
-        /*for (Item ch : all) {
-            if (!ch.senders.contains(prev)) continue;
-            ch.lookAhead.add()
-        }*/
     }
 
 

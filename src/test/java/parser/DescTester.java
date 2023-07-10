@@ -98,19 +98,13 @@ public class DescTester {
         return list;
     }
 
-    public static void check(Builder builder, boolean cc) throws Exception {
+    public static void check(Builder builder) throws Exception {
         var tester = new File(Env.dotDir(), "DescTester.java");
         Utils.copy(Env.getResFile("DescTester.java.2"), tester);
         var outDir = Env.dotDir().getAbsolutePath();
         var tree = builder.tree;
         tree.options.outDir = outDir;
-        if (cc) {
-            ParserGen.genCC(tree, Lang.JAVA, false);
-        }
-        else {
-            ParserGen.gen(tree, Lang.JAVA);
-        }
-
+        ParserGen.genCC(tree, Lang.JAVA, false);
         File classDir = new File(outDir, "out");
         classDir.mkdirs();
         Env.deleteInside(classDir);

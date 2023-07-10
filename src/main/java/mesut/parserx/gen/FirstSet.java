@@ -8,10 +8,9 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     Tree tree;
     LinkedHashSet<Name> res = new LinkedHashSet<>();
     Set<Name> rules = new HashSet<>();
-    Map<Name, LinkedHashSet<Name>> cache = new HashMap<>();
+    //public Map<Name, LinkedHashSet<Name>> cache = new HashMap<>();
+    //Stack<Name> ruleStack = new Stack<>();
     List<RuleDecl> extraRules = new ArrayList<>();
-    boolean recurse = true;
-    boolean allowEpsilon = true;
     boolean lrEpsilon = false;
 
     public FirstSet(Tree tree) {
@@ -32,19 +31,25 @@ public class FirstSet extends BaseVisitor<Void, Void> {
 
     public static Set<Name> firstSet(Node node, Tree tree, boolean lrEpsilon, List<RuleDecl> extraRules) {
         var firstSet = new FirstSet(tree);
-        firstSet.recurse = true;
-        firstSet.lrEpsilon = lrEpsilon;
-        firstSet.extraRules = extraRules;
-        node.accept(firstSet, null);
-        return firstSet.res;
+        return firstSet.firstSet(node, lrEpsilon, extraRules);
     }
 
-    public static Set<Name> firstSetNoRec(Node node, Tree tree) {
-        var firstSet = new FirstSet(tree);
-        firstSet.recurse = false;
-        node.accept(firstSet, null);
-        return firstSet.res;
+    public Set<Name> firstSet(Node node, boolean lrEpsilon, List<RuleDecl> extraRules) {
+        this.lrEpsilon = lrEpsilon;
+        this.extraRules = extraRules;
+        if (node.isName() && node.asName().isRule()) {
+            //except itself
+            //ruleStack.push(node.asName());
+            //cache.put(node.asName(), new LinkedHashSet<>());
+            tree.getRule(node.asName()).rhs.accept(this, null);
+            //ruleStack.pop();
+        }
+        else {
+            node.accept(this, null);
+        }
+        return res;
     }
+
 
     public static Set<Name> tokens(Node node, Tree tree) {
         return tokens(node, tree, new ArrayList<>());
@@ -52,7 +57,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
 
     public static Set<Name> tokens(Node node, Tree tree, List<RuleDecl> extraRules) {
         var res = new TreeSet<Name>();
-        for (Name name : firstSet(node, tree, false, extraRules)) {
+        for (var name : firstSet(node, tree, false, extraRules)) {
             if (name.isToken) {
                 res.add(name);
             }
@@ -99,30 +104,23 @@ public class FirstSet extends BaseVisitor<Void, Void> {
 
     @Override
     public Void visitName(Name name, Void arg) {
-        if (!allowEpsilon && name.isRule() && isEmpty(name, tree)) {
+        res.add(name);
+        if (name.isToken) {
             return null;
         }
-        //cache algorithm is difficult since we need to track cur rule
-//        if (cache.containsKey(name)) {
-//            res.addAll(cache.get(name));
-//            return null;
-//        }
-        res.add(name);
-        if (!(rules.add(name) && name.isRule() && recurse)) return null;
-        var list = tree.getRules(name);
-        if (list.isEmpty()) {
-            var extra = extraRules.stream().filter(e -> e.ref.equals(name)).findFirst();
-            if (extra.isPresent()) {
-                extra.get().rhs.accept(this, arg);
-            }
-            else {
-                throw new RuntimeException("rule not found: " + name);
-            }
+
+        if (!(rules.add(name))) return null;
+        var decl = tree.getRule(name);
+        if (decl != null) {
+            decl.rhs.accept(this, arg);
+            return null;
+        }
+        var extra = extraRules.stream().filter(e -> e.ref.equals(name)).findFirst();
+        if (extra.isPresent()) {
+            extra.get().rhs.accept(this, arg);
         }
         else {
-            for (var decl : list) {
-                decl.rhs.accept(this, arg);
-            }
+            throw new RuntimeException("rule not found: " + name);
         }
         return null;
     }
@@ -192,11 +190,10 @@ public class FirstSet extends BaseVisitor<Void, Void> {
                 return cache.get(name);
             }
             if (rules.add(name)) {//prevents recursion
-                for (var decl : tree.getRules(name)) {
-                    if (decl.rhs.accept(this, arg)) {
-                        cache.put(name, true);
-                        return true;
-                    }
+                var decl = tree.getRule(name);
+                if (decl.rhs.accept(this, arg)) {
+                    cache.put(name, true);
+                    return true;
                 }
             }
             cache.put(name, false);

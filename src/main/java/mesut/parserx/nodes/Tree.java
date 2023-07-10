@@ -90,7 +90,7 @@ public class Tree {
                 }
             }
         }
-        for (RuleDecl decl : other.rules) {
+        for (var decl : other.rules) {
             addRule(decl);
         }
     }
@@ -100,10 +100,10 @@ public class Tree {
     }
 
     public void resolveIncludes() throws FileNotFoundException {
-        for (String path : includes) {
-            File abs = new File(path);
+        for (var path : includes) {
+            var abs = new File(path);
             if (abs.exists()) {
-                Tree other = makeTree(abs);
+                var other = makeTree(abs);
                 mergeWith(other);
                 return;
             }
@@ -305,16 +305,12 @@ public class Tree {
         return rules.stream().filter(rd -> rd.ref.equals(name)).findFirst().orElse(null);
     }
 
-    public List<RuleDecl> getRules(Name name) {
-        return rules.stream().filter(rd -> rd.ref.equals(name)).collect(Collectors.toList());
-    }
-
     public Tree revert() {
         Helper.revert(this);
         return this;
     }
 
-    //todo debug
+    //for debugging
     public void printRules() {
         System.out.println("---------------------");
         System.out.println(NodeList.join(rules, "\n"));

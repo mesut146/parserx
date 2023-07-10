@@ -10,8 +10,12 @@ public class Debug {
 
     public static void dot(Tree tree, LLDfaBuilder builder) {
         try {
-            builder.dumpItems(new FileOutputStream(new File(tree.options.outDir, Utils.newName(tree.file.getName(), ".dump"))));
-            builder.dump(new FileOutputStream(new File(tree.options.outDir, Utils.newName(tree.file.getName(), ".dump2"))));
+            var f1 = new File(tree.options.outDir, Utils.trimExt(tree.file.getName()) + "-items");
+            var f2 = new File(tree.options.outDir, Utils.trimExt(tree.file.getName()) + "-trans");
+            builder.dumpItems(new FileOutputStream(f1));
+            builder.dump(new FileOutputStream(f2));
+            System.out.println("dump " + f1);
+            System.out.println("dump " + f2);
 //            for (var dot : builder.dotAll(new File(tree.options.outDir))) {
 //                Runtime.getRuntime().exec(("dot -Tpng -O " + dot).split(" "));
 //                //Thread.sleep(100);

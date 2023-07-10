@@ -35,9 +35,9 @@ tmp: sep (blockStatement tmp?)?;
 
 blockStatement: /*localVariableDeclaration |*/ statement;
 
-argument: namedArg | expression;
-
 statement: expression | methodCall_no_lp | SEMI;
+
+argument: namedArg | expression;
 
 expression: methodCall | qname | assign | literal | list | closure;
 

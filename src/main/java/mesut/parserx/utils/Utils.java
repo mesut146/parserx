@@ -81,6 +81,14 @@ public class Utils {
         return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
     }
 
+    public static String trimExt(String name){
+        int i = name.lastIndexOf('.');
+        if (i != -1) {
+            return name.substring(0, i);
+        }
+        return name;
+    }
+
     public static String newName(String name, String suffix) {
         int i = name.lastIndexOf('.');
         if (i != -1) {

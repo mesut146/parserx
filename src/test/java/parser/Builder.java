@@ -66,12 +66,12 @@ public class Builder {
 
     public void check() throws Exception {
         System.out.println("testing " + tree.file.getName());
-        DescTester.check(this, true);
+        DescTester.check(this);
     }
 
     public void checkCC() throws Exception {
         System.out.println("testing " + tree.file.getName());
-        DescTester.check(this, true);
+        DescTester.check(this);
     }
 
     public void lr() throws Exception {

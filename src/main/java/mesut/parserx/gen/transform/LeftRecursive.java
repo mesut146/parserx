@@ -337,7 +337,7 @@ public class LeftRecursive {
     }
 
     boolean start(Node node, Name name) {
-        return FirstSet.firstSetNoRec(node, tree).contains(name);
+        return FirstSet.start(node, name, tree);
     }
 
     boolean startr(Node node, Name name) {

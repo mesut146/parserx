@@ -273,12 +273,7 @@ public class Main {
                 if (astClass != null) {
                     tree.options.astClass = astClass;
                 }
-                if (cmd.contains("-cc")) {
-                    ParserGen.genCC(tree, lang, false);
-                }
-                else {
-                    ParserGen.gen(tree, lang);
-                }
+                ParserGen.genCC(tree, lang, false);
             }
             else if (cmd.contains("-lalr1") || cmd.contains("-lr1")) {
                 Tree tree = Tree.makeTree(input);

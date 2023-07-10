@@ -4,6 +4,7 @@ import common.Env;
 import mesut.parserx.gen.Helper;
 import mesut.parserx.gen.transform.EbnfToBnf;
 import mesut.parserx.gen.transform.LeftRecursive;
+import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.RuleDecl;
 import mesut.parserx.nodes.Tree;
@@ -25,9 +26,9 @@ public class LeftRecursionTest {
     @Test
     public void split() throws Exception {
         Tree tree = Env.tree("rec/leftRec.g");
-        RuleDecl rule = tree.getRule("A");
-        LeftRecursive left = new LeftRecursive(tree);
-        LeftRecursive.SplitInfo info = left.split(rule.rhs, rule.ref);
+        var rule = tree.getRule(new Name("A"));
+        var left = new LeftRecursive(tree);
+        var info = left.split(rule.rhs, rule.ref);
         System.out.println("zero = " + info.zero);
         System.out.println("one = " + info.one);
     }
