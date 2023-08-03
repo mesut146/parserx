@@ -35,8 +35,7 @@ public class TokenDecl {
             sb.append(" -> ");
             if (isSkip) {
                 sb.append("skip");
-            }
-            else if (isMore) {
+            } else if (isMore) {
                 sb.append("more");
             }
             if (mode != null) {

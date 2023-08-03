@@ -71,8 +71,7 @@ public class RegexBuilder {
         Range range = node.asRange();
         if (range.isSingle()) {
             return new StringNode(UnicodeUtils.printChar(range.start));
-        }
-        else {
+        } else {
             Bracket bracket = new Bracket();
             bracket.add((char) range.start);
             bracket.add((char) range.end);
@@ -96,8 +95,7 @@ public class RegexBuilder {
                 Node node = path(in, out);
                 if (node.isEpsilon()) {
                     in.from.addEpsilon(out.target);
-                }
-                else {
+                } else {
                     nfa.addTransition(in.from, out.target, alphabet.addRegex(node));
                 }
             }
@@ -138,8 +136,7 @@ public class RegexBuilder {
             Node o = idToNode(out);
             if (o.isOr()) {
                 path.add(new Group(o));
-            }
-            else {
+            } else {
                 path.add(o);
             }
         }
@@ -175,8 +172,7 @@ public class RegexBuilder {
             }
             if (node.isEpsilon()) {
                 trList.add(new Transition(state, target));
-            }
-            else {
+            } else {
                 trList.add(new Transition(state, target, alphabet.addRegex(node)));
             }
         }
@@ -208,8 +204,7 @@ public class RegexBuilder {
             if (state.accepting || nfa.initialState.id == state.id) continue;
             if (getLooping(state) != null) {
                 looping.add(state);
-            }
-            else {
+            } else {
                 stateOrder.add(state);
             }
         }

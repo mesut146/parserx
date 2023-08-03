@@ -40,8 +40,7 @@ public class FactorHelper {
                     res = name;
                     max = cur;
                 }
-            }
-            else if (res == null) {
+            } else if (res == null) {
                 res = name;
             }
         }
@@ -66,12 +65,10 @@ public class FactorHelper {
             done.add(name);
             if (name.isToken) {
                 return !name.equals(sym);
-            }
-            else {
+            } else {
                 if (name.equals(sym)) {
                     return false;
-                }
-                else {
+                } else {
                     return tree.getRule(name).rhs.accept(this, arg);
                 }
             }
@@ -93,12 +90,10 @@ public class FactorHelper {
             if (FirstSet.start(a, sym, tree)) {
                 if (a.accept(this, arg)) return true;
                 return FirstSet.canBeEmpty(a, tree) && b.accept(this, arg);
-            }
-            else {
+            } else {
                 if (FirstSet.canBeEmpty(a, tree)) {
                     return b.accept(this, arg);
-                }
-                else {
+                } else {
                     return true;
                 }
             }

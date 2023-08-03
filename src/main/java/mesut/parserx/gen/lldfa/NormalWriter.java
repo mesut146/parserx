@@ -40,8 +40,7 @@ public class NormalWriter extends BaseVisitor<Void, Void> {
         var outer = factored.astInfo.outerVar;
         if (factored.astInfo.isInLoop) {
             w.append("%s.%s.add(%s);", outer, factored.astInfo.varName, factored.name);
-        }
-        else {
+        } else {
             w.append("%s.%s = %s;", outer, factored.astInfo.varName, factored.name);
         }
         return null;
@@ -55,13 +54,11 @@ public class NormalWriter extends BaseVisitor<Void, Void> {
             w.append("if(%s){", la);
             ch.accept(this, null);
             w.append("}");
-        }
-        else if (regex.isStar()) {
+        } else if (regex.isStar()) {
             w.append("while(%s){", la);
             ch.accept(this, null);
             w.append("}");
-        }
-        else {
+        } else {
             w.append("do{");
             ch.accept(this, null);
             w.down();
@@ -79,17 +76,21 @@ public class NormalWriter extends BaseVisitor<Void, Void> {
         String rhs;
         if (name.isToken) {
             rhs = String.format("ts.consume(%s.%s, \"%s\")", ParserUtils.tokens, name.name, name.name);
-        }
-        else {
+        } else {
             rhs = name.name + "()";
         }
         if (name.astInfo.isInLoop) {
             w.append("%s.%s.add(%s);", outer, name.astInfo.varName, rhs);
-        }
-        else {
+        } else {
             w.append("%s.%s = %s;", outer, name.astInfo.varName, rhs);
         }
+        if (name.action != null) {
+            w.append(trimAction(name.action));
+        }
+    }
 
+    String trimAction(String act) {
+        return act.substring(2, act.length() - 2);
     }
 
     private void recConsumer(Name name) {
@@ -100,17 +101,14 @@ public class NormalWriter extends BaseVisitor<Void, Void> {
             }
             if (name.astInfo.isPrimary) {
                 w.append("res = %s(%s);", name.name, arg);
-            }
-            else {
+            } else {
                 var type = tree.getRule(name).retType;
                 w.append("%s tmp = %s(%s);", type, name.name, arg);
             }
-        }
-        else {
+        } else {
             if (prev.astInfo.isPrimary) {
                 w.append("res = %s(res);", name.name);
-            }
-            else {
+            } else {
                 w.append("res = %s(tmp);", name.name);
             }
         }

@@ -85,16 +85,15 @@ public class Ast {
             StringBuilder sb = new StringBuilder("trLineg1#" + which + "{");
             if (which == 1) {
                 sb.append(trArrow);
-            }
-            else if (which == 2) {
+            } else if (which == 2) {
                 sb.append(trSimple);
             }
             return sb.append("}").toString();
         }
 
         public static class Trlineg11 {
-            trLineg1 holder;
             public trArrow trArrow;
+            trLineg1 holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -105,8 +104,8 @@ public class Ast {
         }
 
         public static class Trlineg12 {
-            trLineg1 holder;
             public trSimple trSimple;
+            trLineg1 holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -328,22 +327,19 @@ public class Ast {
             StringBuilder sb = new StringBuilder("INPUT#" + which + "{");
             if (which == 1) {
                 sb.append(BRACKET);
-            }
-            else if (which == 2) {
+            } else if (which == 2) {
                 sb.append(IDENT);
-            }
-            else if (which == 3) {
+            } else if (which == 3) {
                 sb.append(ANY);
-            }
-            else if (which == 4) {
+            } else if (which == 4) {
                 sb.append(NUM);
             }
             return sb.append("}").toString();
         }
 
         public static class Input1 {
-            INPUT holder;
             public Token BRACKET;
+            INPUT holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -354,8 +350,8 @@ public class Ast {
         }
 
         public static class Input2 {
-            INPUT holder;
             public Token IDENT;
+            INPUT holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -366,8 +362,8 @@ public class Ast {
         }
 
         public static class Input3 {
-            INPUT holder;
             public Token ANY;
+            INPUT holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -378,8 +374,8 @@ public class Ast {
         }
 
         public static class Input4 {
-            INPUT holder;
             public Token NUM;
+            INPUT holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();

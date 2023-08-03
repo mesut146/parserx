@@ -6,6 +6,8 @@ import mesut.parserx.nodes.*;
 import java.util.*;
 
 public class Item {
+    public static boolean printLa = false;
+    public static int lastId = 0;
     public RuleDecl rule;
     public Sequence rhs;
     public int dotPos;
@@ -19,8 +21,6 @@ public class Item {
     public ItemSet itemSet;
     public HashSet<Item> firstParents = new HashSet<>();
     public boolean first = false;
-    public static boolean printLa = false;
-    public static int lastId = 0;
 
     public Item(RuleDecl rule, int dotPos) {
         this.rule = rule;
@@ -127,8 +127,7 @@ public class Item {
             if (FirstSet.canBeEmpty(node, tree)) {
                 i++;
                 //look next node
-            }
-            else {
+            } else {
                 allEmpty = false;
                 break;
             }

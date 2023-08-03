@@ -12,8 +12,7 @@ public class CountingMap<K> {
             i++;
             map.put(key, i);
             return i;
-        }
-        else {
+        } else {
             map.put(key, 1);
             return 1;
         }

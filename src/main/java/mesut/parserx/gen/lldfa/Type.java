@@ -1,7 +1,5 @@
 package mesut.parserx.gen.lldfa;
 
-import mesut.parserx.nodes.Name;
-
 //qualified ast type;
 public class Type {
     public String name;

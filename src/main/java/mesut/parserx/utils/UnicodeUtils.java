@@ -66,8 +66,7 @@ public class UnicodeUtils {
     public static String trimQuotes(String str) {
         if (str.startsWith("\"") && str.endsWith("\"")) {
             return str.substring(1, str.length() - 1);
-        }
-        else if (str.startsWith("'") && str.endsWith("'")) {
+        } else if (str.startsWith("'") && str.endsWith("'")) {
             return str.substring(1, str.length() - 1);
         }
         return str;
@@ -83,8 +82,7 @@ public class UnicodeUtils {
                 char next = str.charAt(i + 1);
                 sb.append(get(next));
                 i++;
-            }
-            else {
+            } else {
                 sb.append(chr);
             }
         }
@@ -96,8 +94,7 @@ public class UnicodeUtils {
         for (char c : str.toCharArray()) {
             if (isSpecial(c)) {
                 sb.append(escape(c));
-            }
-            else {
+            } else {
                 sb.append(c);
             }
         }

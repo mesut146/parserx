@@ -3,13 +3,12 @@ package mesut.parserx.gen;
 import mesut.parserx.nodes.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class FirstSet extends BaseVisitor<Void, Void> {
     Tree tree;
     LinkedHashSet<Name> res = new LinkedHashSet<>();
     Set<Name> rules = new HashSet<>();
-    //public Map<Name, LinkedHashSet<Name>> cache = new HashMap<>();
-    //Stack<Name> ruleStack = new Stack<>();
     List<RuleDecl> extraRules = new ArrayList<>();
     boolean lrEpsilon = false;
 
@@ -34,23 +33,6 @@ public class FirstSet extends BaseVisitor<Void, Void> {
         return firstSet.firstSet(node, lrEpsilon, extraRules);
     }
 
-    public Set<Name> firstSet(Node node, boolean lrEpsilon, List<RuleDecl> extraRules) {
-        this.lrEpsilon = lrEpsilon;
-        this.extraRules = extraRules;
-        if (node.isName() && node.asName().isRule()) {
-            //except itself
-            //ruleStack.push(node.asName());
-            //cache.put(node.asName(), new LinkedHashSet<>());
-            tree.getRule(node.asName()).rhs.accept(this, null);
-            //ruleStack.pop();
-        }
-        else {
-            node.accept(this, null);
-        }
-        return res;
-    }
-
-
     public static Set<Name> tokens(Node node, Tree tree) {
         return tokens(node, tree, new ArrayList<>());
     }
@@ -73,17 +55,28 @@ public class FirstSet extends BaseVisitor<Void, Void> {
         return EmptyChecker.canBeEmpty(node, tree);
     }
 
-    @Override
-    public Void visitGroup(Group group, Void arg) {
-        return group.node.accept(this, arg);
+    public List<Name> firstSetSorted(Node node, boolean lrEpsilon) {
+        return firstSet(node, lrEpsilon, new ArrayList<>())
+                .stream()
+                .sorted()
+                .collect(Collectors.toList());
     }
 
-    @Override
-    public Void visitOr(Or or, Void arg) {
-        for (var ch : or) {
-            ch.accept(this, arg);
+    public Set<Name> firstSet(Node node, boolean lrEpsilon, List<RuleDecl> extraRules) {
+        this.res.clear();
+        this.lrEpsilon = lrEpsilon;
+        this.extraRules = extraRules;
+        this.rules.clear();
+        if (node.isName() && node.asName().isRule()) {
+            //except itself
+            //ruleStack.push(node.asName());
+            //cache.put(node.asName(), new LinkedHashSet<>());
+            tree.getRule(node.asName()).rhs.accept(this, null);
+            //ruleStack.pop();
+        } else {
+            node.accept(this, null);
         }
-        return null;
+        return res;
     }
 
     @Override
@@ -98,18 +91,13 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     }
 
     @Override
-    public Void visitRegex(Regex regex, Void arg) {
-        return regex.node.accept(this, arg);
-    }
-
-    @Override
     public Void visitName(Name name, Void arg) {
         res.add(name);
         if (name.isToken) {
             return null;
         }
 
-        if (!(rules.add(name))) return null;
+        if (!rules.add(name)) return null;
         var decl = tree.getRule(name);
         if (decl != null) {
             decl.rhs.accept(this, arg);
@@ -118,8 +106,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
         var extra = extraRules.stream().filter(e -> e.ref.equals(name)).findFirst();
         if (extra.isPresent()) {
             extra.get().rhs.accept(this, arg);
-        }
-        else {
+        } else {
             throw new RuntimeException("rule not found: " + name);
         }
         return null;
@@ -147,8 +134,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
         public Boolean visitRegex(Regex regex, Void arg) {
             if (regex.isPlus()) {
                 return regex.node.accept(this, arg);
-            }
-            else {
+            } else {
                 return true;
             }
         }
@@ -170,11 +156,6 @@ public class FirstSet extends BaseVisitor<Void, Void> {
                 }
             }
             return true;
-        }
-
-        @Override
-        public Boolean visitGroup(Group group, Void arg) {
-            return group.node.accept(this, arg);
         }
 
         @Override

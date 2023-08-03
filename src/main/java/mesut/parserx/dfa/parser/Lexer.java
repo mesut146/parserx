@@ -6,6 +6,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Lexer {
+    static final int DEFAULT = 0;
+    static final int EOF = 0;
+    public static int bufSize = 100;
     static String cMapPacked = "\76\76\7\50\50\3\164\164\4\40\40\6\12\12\53\162\162\11\54\54\12\56\56\24\156\156\14\154\154\17\146\146\23\142\142\33\136\136\26\134\134\50\140\140\31\52\53\41\144\145\42\152\153\43\72\74\21\0\10\2" +
             "\60\71\0\16\37\35\133\133\13\11\11\1\15\15\52\163\163\10\51\51\15\155\155\16\57\57\20\75\75\22\55\55\25\137\137\27\135\135\51\151\151\30\143\143\34\141\141\32\77\100\36\13\14\37\147\150\44\157\161\45" +
             "\173\uffff\47\165\172\46\41\47\5\101\132\40";
@@ -13,27 +16,12 @@ public class Lexer {
     static int[] cMap = unpackCMap(cMapPacked);
     //input id -> regex string for error reporting
     static String[] cMapRegex = {"0-9", "\\t", "\\u0000-\\b", "(", "t", "!-'", "\\u0020", ">", "s", "r", ",", "[", "n", ")", "m", "l", "/", ":-<", "=", "f", ".", "-", "^", "_", "i", "`", "a", "b", "c", "\\u000e-\\u001f", "?-@", "\\u000b-\\f", "A-Z", "*-+", "d-e", "j-k", "g-h", "o-q", "u-z", "\\u007b-\\uffff", "\\\\", "]", "\\r", "\\n"};
-    int[] skip = {24576};
-    int[] accepting = {-1076887554, 2047};
-    //acc state -> new mode_state
-    int[] mode_map = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     //id -> token name
     static String[] names = {"EOF", "NUM", "LP", "RP", "EQ", "ARROW", "COMMA", "BRACKET", "START", "FINAL", "IDENT", "nls", "ANY", "ws", "comment"};
     //state->token id
     static int[] ids = {0, 1, 13, 12, 2, 10, 10, 6, 12, 3, 12, 4, 10, 12, 10, 10, 11, 1, 10, 10, 0,
             0, 7, 14, 10, 5, 10, 10, 11, 10, 0, 14, 10, 10, 9, 10, 10, 10, 8, 9, 10,
             10, 8};
-    static final int DEFAULT = 0;
-
-    static final int EOF = 0;
-    Reader reader;
-    int yypos = 0;//pos in file
-    int yyline = 1;
-    int yychar;
-    public static int bufSize = 100;
-    int bufPos = 0;//pos in buffer
-    int bufStart = bufPos;
-    char[] yybuf = new char[bufSize];
     static String trans_packed = "\54" +
             "\54\0\1\1\2\2\3\3\4\4\5\5\3\6\2\7\3\10\6\11\5\12\7\13\10\14\5\15\11\16\5\17\5\20\12\21\3\22\13\23\14\24\3\25\15\26\3\27\5\30\16\31\3\32\17\33\5\34\5\35\3\36\3\37\3\40\5\41\3\42\5\43\5\44\5\45\5\46\5\47\3\50\3\51\3\52\20\53\20" +
             "\1\0\21" +
@@ -79,6 +67,17 @@ public class Lexer {
             "\23\40\22\0\22\42\22\43\22\44\22\4\22\45\22\46\22\10\22\11\22\14\22\16\22\17\52\23\22\27\22\30\22\32\22\33\22\34\22" +
             "\23\40\22\0\22\42\22\43\22\44\22\4\22\45\22\46\22\10\22\11\22\14\22\16\22\17\22\23\22\27\22\30\22\32\22\33\22\34\22";
     static int[][] trans = unpackTrans(trans_packed);
+    int[] skip = {24576};
+    int[] accepting = {-1076887554, 2047};
+    //acc state -> new mode_state
+    int[] mode_map = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    Reader reader;
+    int yypos = 0;//pos in file
+    int yyline = 1;
+    int yychar;
+    int bufPos = 0;//pos in buffer
+    int bufStart = bufPos;
+    char[] yybuf = new char[bufSize];
     int curMode = DEFAULT;
     Token lastToken;
 
@@ -184,8 +183,7 @@ public class Lexer {
             yychar = yybuf[bufPos];
             if (yychar == EOF) {
                 curState = -1;
-            }
-            else {
+            } else {
                 backupState = curState;
                 if (cMap[yychar] == -1) {
                     throw new IOException(String.format("unknown input=%c(%d) pos=%s line=%d", yychar, yychar, yypos, yyline));
@@ -203,20 +201,17 @@ public class Lexer {
                     lastToken = token;
                     callAction(token, lastState);
                     return token;
-                }
-                else {
+                } else {
                     throw new IOException(String.format("invalid input=%c(%d) pos=%s line=%d mode=%s buf='%s' expecting=%s", yychar, yychar, yypos, yyline, printMode(), getText(), findExpected(backupState)));
                 }
-            }
-            else {
+            } else {
                 if (getBit(accepting, curState)) lastState = curState;
                 if (yychar == '\n') {
                     yyline++;
                     if (bufPos > 0 && yybuf[bufPos - 1] == '\r') {
                         yyline--;
                     }
-                }
-                else if (yychar == '\r') {
+                } else if (yychar == '\r') {
                     yyline++;
                 }
                 bufPos++;

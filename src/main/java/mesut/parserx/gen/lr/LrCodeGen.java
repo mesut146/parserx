@@ -71,8 +71,7 @@ public class LrCodeGen {
             sb.append('"');
             if (rd.transformInfo != null) {
                 sb.append(rd.transformInfo.orgName);
-            }
-            else {
+            } else {
                 sb.append(rd.getName());
             }
             sb.append('"');
@@ -91,8 +90,7 @@ public class LrCodeGen {
             ruleIds.append(idMap.getId(decl.ref));
             if (LrItem.isEpsilon(decl)) {
                 sizes.append(0);
-            }
-            else {
+            } else {
                 sizes.append(decl.rhs.asSequence().size());
             }
             if (i < ruleSet.size() - 1) {
@@ -114,8 +112,7 @@ public class LrCodeGen {
             }
             if (!rd.which.isPresent() || (rd.transformInfo != null && (rd.transformInfo.isOpt || rd.transformInfo.isStar || rd.transformInfo.isPlus))) {
                 sb.append(0);
-            }
-            else {
+            } else {
                 sb.append(rd.which.get());
             }
             i++;
@@ -133,8 +130,7 @@ public class LrCodeGen {
             }
             if (rd.transformInfo != null && rd.transformInfo.isPlus && rd.rhs.isSequence() && rd.rhs.asSequence().size() == 2) {
                 sb.append("true");
-            }
-            else {
+            } else {
                 sb.append("false");
             }
             i++;
@@ -151,8 +147,7 @@ public class LrCodeGen {
             }
             if (rd.transformInfo != null && rd.transformInfo.isStar && rd.rhs.asSequence().get(0).isName()) {
                 sb.append("true");
-            }
-            else {
+            } else {
                 sb.append("false");
             }
             i++;

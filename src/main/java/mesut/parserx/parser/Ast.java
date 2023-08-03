@@ -199,16 +199,15 @@ public class Ast {
             StringBuilder sb = new StringBuilder("optiong1#" + which + "{");
             if (which == 1) {
                 sb.append(NUMBER);
-            }
-            else if (which == 2) {
+            } else if (which == 2) {
                 sb.append(BOOLEAN);
             }
             return sb.append("}").toString();
         }
 
         public static class Alt1 {
-            optiong1 holder;
             public Token NUMBER;
+            optiong1 holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -219,8 +218,8 @@ public class Ast {
         }
 
         public static class Alt2 {
-            optiong1 holder;
             public Token BOOLEAN;
+            optiong1 holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -302,16 +301,15 @@ public class Ast {
             StringBuilder sb = new StringBuilder("tokenBlockg1#" + which + "{");
             if (which == 1) {
                 sb.append(tokenDecl);
-            }
-            else if (which == 2) {
+            } else if (which == 2) {
                 sb.append(modeBlock);
             }
             return sb.append("}").toString();
         }
 
         public static class Alt1 {
-            tokenBlockg1 holder;
             public tokenDecl tokenDecl;
+            tokenBlockg1 holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -322,8 +320,8 @@ public class Ast {
         }
 
         public static class Alt2 {
-            tokenBlockg1 holder;
             public modeBlock modeBlock;
+            tokenBlockg1 holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -656,16 +654,15 @@ public class Ast {
             StringBuilder sb = new StringBuilder("sequenceg1#" + which + "{");
             if (which == 1) {
                 sb.append(LEFT);
-            }
-            else if (which == 2) {
+            } else if (which == 2) {
                 sb.append(RIGHT);
             }
             return sb.append("}").toString();
         }
 
         public static class Alt1 {
-            sequenceg1 holder;
             public Token LEFT;
+            sequenceg1 holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -676,8 +673,8 @@ public class Ast {
         }
 
         public static class Alt2 {
-            sequenceg1 holder;
             public Token RIGHT;
+            sequenceg1 holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -734,20 +731,19 @@ public class Ast {
             StringBuilder sb = new StringBuilder("regex#" + which + "{");
             if (which == 1) {
                 sb.append(alt1);
-            }
-            else if (which == 2) {
+            } else if (which == 2) {
                 sb.append(alt2);
             }
             return sb.append("}").toString();
         }
 
         public static class Alt1 {
-            regex holder;
             public name name;
             public Token EQ;
             public simple simple;
             public regexType type;
             public Token ACTION;
+            regex holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -781,10 +777,10 @@ public class Ast {
         }
 
         public static class Alt2 {
-            regex holder;
             public simple simple;
             public regexType type;
             public Token ACTION;
+            regex holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -820,19 +816,17 @@ public class Ast {
             StringBuilder sb = new StringBuilder("regexType#" + which + "{");
             if (which == 1) {
                 sb.append(STAR);
-            }
-            else if (which == 2) {
+            } else if (which == 2) {
                 sb.append(PLUS);
-            }
-            else if (which == 3) {
+            } else if (which == 3) {
                 sb.append(QUES);
             }
             return sb.append("}").toString();
         }
 
         public static class Alt1 {
-            regexType holder;
             public Token STAR;
+            regexType holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -843,8 +837,8 @@ public class Ast {
         }
 
         public static class Alt2 {
-            regexType holder;
             public Token PLUS;
+            regexType holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -855,8 +849,8 @@ public class Ast {
         }
 
         public static class Alt3 {
-            regexType holder;
             public Token QUES;
+            regexType holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -883,37 +877,29 @@ public class Ast {
             StringBuilder sb = new StringBuilder("simple#" + which + "{");
             if (which == 1) {
                 sb.append(group);
-            }
-            else if (which == 2) {
+            } else if (which == 2) {
                 sb.append(name);
-            }
-            else if (which == 3) {
+            } else if (which == 3) {
                 sb.append(stringNode);
-            }
-            else if (which == 4) {
+            } else if (which == 4) {
                 sb.append(bracketNode);
-            }
-            else if (which == 5) {
+            } else if (which == 5) {
                 sb.append(untilNode);
-            }
-            else if (which == 6) {
+            } else if (which == 6) {
                 sb.append(dotNode);
-            }
-            else if (which == 7) {
+            } else if (which == 7) {
                 sb.append(EPSILON);
-            }
-            else if (which == 8) {
+            } else if (which == 8) {
                 sb.append(SHORTCUT);
-            }
-            else if (which == 9) {
+            } else if (which == 9) {
                 sb.append(call);
             }
             return sb.append("}").toString();
         }
 
         public static class Alt1 {
-            simple holder;
             public group group;
+            simple holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -924,8 +910,8 @@ public class Ast {
         }
 
         public static class Alt2 {
-            simple holder;
             public name name;
+            simple holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -936,8 +922,8 @@ public class Ast {
         }
 
         public static class Alt3 {
-            simple holder;
             public stringNode stringNode;
+            simple holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -948,8 +934,8 @@ public class Ast {
         }
 
         public static class Alt4 {
-            simple holder;
             public bracketNode bracketNode;
+            simple holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -960,8 +946,8 @@ public class Ast {
         }
 
         public static class Alt5 {
-            simple holder;
             public untilNode untilNode;
+            simple holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -972,8 +958,8 @@ public class Ast {
         }
 
         public static class Alt6 {
-            simple holder;
             public dotNode dotNode;
+            simple holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -984,8 +970,8 @@ public class Ast {
         }
 
         public static class Alt7 {
-            simple holder;
             public Token EPSILON;
+            simple holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -996,8 +982,8 @@ public class Ast {
         }
 
         public static class Alt8 {
-            simple holder;
             public Token SHORTCUT;
+            simple holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -1008,8 +994,8 @@ public class Ast {
         }
 
         public static class Alt9 {
-            simple holder;
             public call call;
+            simple holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -1051,16 +1037,15 @@ public class Ast {
             StringBuilder sb = new StringBuilder("stringNode#" + which + "{");
             if (which == 1) {
                 sb.append(STRING);
-            }
-            else if (which == 2) {
+            } else if (which == 2) {
                 sb.append(CHAR);
             }
             return sb.append("}").toString();
         }
 
         public static class Alt1 {
-            stringNode holder;
             public Token STRING;
+            stringNode holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();
@@ -1071,8 +1056,8 @@ public class Ast {
         }
 
         public static class Alt2 {
-            stringNode holder;
             public Token CHAR;
+            stringNode holder;
 
             public String toString() {
                 StringBuilder sb = new StringBuilder();

@@ -4,6 +4,8 @@ import mesut.parserx.gen.FirstSet;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.CountingMap;
 
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.*;
 
 public class RecursionHandler {
@@ -19,11 +21,36 @@ public class RecursionHandler {
         this.tree = tree;
     }
 
-    public static class Info {
-        boolean isRec;
-        boolean isState;
-        boolean isTail;
-        boolean isPrim;
+    //remove all rec info and return plain non-recursive grammar
+    public static void clearArgs(Tree tree) {
+        for (var rule : tree.rules) {
+            rule.parameterList.clear();
+        }
+        var argRemover = new Transformer() {
+            @Override
+            public Node visitName(Name name, Void arg) {
+                name.args2.clear();
+                return name;
+            }
+        };
+        argRemover.tree = tree;
+        argRemover.transformRules();
+    }
+
+    public static void dot(Tree tree, Writer writer) {
+        PrintWriter w = new PrintWriter(writer);
+        w.println("digraph G{");
+        w.println("rankdir = TB;");
+        for (RuleDecl decl : tree.rules) {
+            Set<Name> set = FirstSet.firstSet(decl.rhs, tree);
+            for (Name sym : set) {
+                if (FirstSet.start(sym, decl.ref, tree)) {
+                    w.printf("%s -> %s\n", decl.baseName(), sym.name);
+                }
+            }
+        }
+        w.println("}");
+        w.flush();
     }
 
     void prepare() {
@@ -146,8 +173,7 @@ public class RecursionHandler {
                 var tail = transformTail(ch, start);
                 if (tail != null) list.add(tail);
             }
-        }
-        else {
+        } else {
             var tail = transformTail(decl.rhs, start);
             if (tail != null) list.add(tail);
         }
@@ -192,8 +218,7 @@ public class RecursionHandler {
                     list.add(ch);
                 }
             }
-        }
-        else {
+        } else {
             if (!FirstSet.start(decl.rhs, start, tree)) {
                 list.add(decl.ref);
             }
@@ -204,6 +229,13 @@ public class RecursionHandler {
         newRule.retType = decl.retType;
         toAdd.add(newRule);
         return res;
+    }
+
+    public static class Info {
+        boolean isRec;
+        boolean isState;
+        boolean isTail;
+        boolean isPrim;
     }
 
 }

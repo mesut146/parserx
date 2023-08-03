@@ -39,18 +39,14 @@ public class Parser {
             if (ts.la.type == Tokens.LBRACE) {
                 ts.pop();
                 which = 2;
-            }
-            else if (ts.la.type == Tokens.SEPARATOR) {
+            } else if (ts.la.type == Tokens.SEPARATOR) {
                 ts.pop();
                 which = 1;
-            }
-            else throw new RuntimeException("unexpected token: " + ts.la);
-        }
-        else if (ts.la.type == Tokens.HASH) {
+            } else throw new RuntimeException("unexpected token: " + ts.la);
+        } else if (ts.la.type == Tokens.HASH) {
             ts.pop();
             which = 1;
-        }
-        else throw new RuntimeException("unexpected token: " + ts.la);
+        } else throw new RuntimeException("unexpected token: " + ts.la);
         ts.unmark();
         return which;
     }
@@ -101,63 +97,48 @@ public class Parser {
                 if (ts.la.type == Tokens.ACTION) {
                     ts.pop();
                     which = 2;
-                }
-                else if (ts.la.type == Tokens.QUES) {
+                } else if (ts.la.type == Tokens.QUES) {
                     ts.pop();
                     which = 2;
-                }
-                else if (ts.la.type == Tokens.EQ) {
+                } else if (ts.la.type == Tokens.EQ) {
                     ts.pop();
                     which = 1;
-                }
-                else if (ts.la.type == Tokens.STAR) {
+                } else if (ts.la.type == Tokens.STAR) {
                     ts.pop();
                     which = 2;
-                }
-                else if (ts.la.type == Tokens.PLUS) {
+                } else if (ts.la.type == Tokens.PLUS) {
                     ts.pop();
                     which = 2;
-                }
-                else throw new RuntimeException("unexpected token: " + ts.la);
+                } else throw new RuntimeException("unexpected token: " + ts.la);
             }
-        }
-        else if (ts.la.type == Tokens.CALL_BEGIN) {
+        } else if (ts.la.type == Tokens.CALL_BEGIN) {
             ts.pop();
             which = 2;
-        }
-        else if (ts.la.type == Tokens.BRACKET) {
+        } else if (ts.la.type == Tokens.BRACKET) {
             ts.pop();
             which = 2;
-        }
-        else if (ts.la.type == Tokens.TILDE) {
+        } else if (ts.la.type == Tokens.TILDE) {
             ts.pop();
             which = 2;
-        }
-        else if (ts.la.type == Tokens.DOT) {
+        } else if (ts.la.type == Tokens.DOT) {
             ts.pop();
             which = 2;
-        }
-        else if (ts.la.type == Tokens.SHORTCUT) {
+        } else if (ts.la.type == Tokens.SHORTCUT) {
             ts.pop();
             which = 2;
-        }
-        else if (ts.la.type == Tokens.EPSILON) {
+        } else if (ts.la.type == Tokens.EPSILON) {
             ts.pop();
             which = 2;
-        }
-        else if (ts.la.type == Tokens.CHAR) {
+        } else if (ts.la.type == Tokens.CHAR) {
             ts.pop();
             which = 2;
-        }
-        else if (ts.la.type == Tokens.LP) {
+        } else if (ts.la.type == Tokens.LP) {
             ts.pop();
             which = 2;
-        }
-        else if (ts.la.type == Tokens.STRING) {
+        } else if (ts.la.type == Tokens.STRING) {
             ts.pop();
             which = 2;
-        }
-        else throw new RuntimeException("unexpected token: " + ts.la);
+        } else throw new RuntimeException("unexpected token: " + ts.la);
         ts.unmark();
         return which;
     }
@@ -233,15 +214,13 @@ public class Parser {
             res.NUMBER = NUMBER;
             res.which = 1;
             NUMBER.NUMBER = ts.consume(Tokens.NUMBER, "NUMBER");
-        }
-        else if (ts.la.type == Tokens.BOOLEAN) {
+        } else if (ts.la.type == Tokens.BOOLEAN) {
             Ast.optiong1.Alt2 BOOLEAN = new Ast.optiong1.Alt2();
             BOOLEAN.holder = res;
             res.BOOLEAN = BOOLEAN;
             res.which = 2;
             BOOLEAN.BOOLEAN = ts.consume(Tokens.BOOLEAN, "BOOLEAN");
-        }
-        else throw new RuntimeException("expecting one of [BOOLEAN, NUMBER] got: " + ts.la);
+        } else throw new RuntimeException("expecting one of [BOOLEAN, NUMBER] got: " + ts.la);
         return res;
     }
 
@@ -390,15 +369,13 @@ public class Parser {
             res.LEFT = LEFT;
             res.which = 1;
             LEFT.LEFT = ts.consume(Tokens.LEFT, "LEFT");
-        }
-        else if (ts.la.type == Tokens.RIGHT) {
+        } else if (ts.la.type == Tokens.RIGHT) {
             Ast.sequenceg1.Alt2 RIGHT = new Ast.sequenceg1.Alt2();
             RIGHT.holder = res;
             res.RIGHT = RIGHT;
             res.which = 2;
             RIGHT.RIGHT = ts.consume(Tokens.RIGHT, "RIGHT");
-        }
-        else throw new RuntimeException("expecting one of [LEFT, RIGHT] got: " + ts.la);
+        } else throw new RuntimeException("expecting one of [LEFT, RIGHT] got: " + ts.la);
         return res;
     }
 
@@ -426,22 +403,19 @@ public class Parser {
             res.STAR = STAR;
             res.which = 1;
             STAR.STAR = ts.consume(Tokens.STAR, "STAR");
-        }
-        else if (ts.la.type == Tokens.PLUS) {
+        } else if (ts.la.type == Tokens.PLUS) {
             Ast.regexType.Alt2 PLUS = new Ast.regexType.Alt2();
             PLUS.holder = res;
             res.PLUS = PLUS;
             res.which = 2;
             PLUS.PLUS = ts.consume(Tokens.PLUS, "PLUS");
-        }
-        else if (ts.la.type == Tokens.QUES) {
+        } else if (ts.la.type == Tokens.QUES) {
             Ast.regexType.Alt3 QUES = new Ast.regexType.Alt3();
             QUES.holder = res;
             res.QUES = QUES;
             res.which = 3;
             QUES.QUES = ts.consume(Tokens.QUES, "QUES");
-        }
-        else throw new RuntimeException("expecting one of [PLUS, QUES, STAR] got: " + ts.la);
+        } else throw new RuntimeException("expecting one of [PLUS, QUES, STAR] got: " + ts.la);
         return res;
     }
 
@@ -453,64 +427,55 @@ public class Parser {
             res.group = group;
             res.which = 1;
             group.group = group();
-        }
-        else if (ts.la.type == Tokens.IDENT) {
+        } else if (ts.la.type == Tokens.IDENT) {
             Ast.simple.Alt2 name = new Ast.simple.Alt2();
             name.holder = res;
             res.name = name;
             res.which = 2;
             name.name = name();
-        }
-        else if (ts.la.type == Tokens.CHAR || ts.la.type == Tokens.STRING) {
+        } else if (ts.la.type == Tokens.CHAR || ts.la.type == Tokens.STRING) {
             Ast.simple.Alt3 stringNode = new Ast.simple.Alt3();
             stringNode.holder = res;
             res.stringNode = stringNode;
             res.which = 3;
             stringNode.stringNode = stringNode();
-        }
-        else if (ts.la.type == Tokens.BRACKET) {
+        } else if (ts.la.type == Tokens.BRACKET) {
             Ast.simple.Alt4 bracketNode = new Ast.simple.Alt4();
             bracketNode.holder = res;
             res.bracketNode = bracketNode;
             res.which = 4;
             bracketNode.bracketNode = bracketNode();
-        }
-        else if (ts.la.type == Tokens.TILDE) {
+        } else if (ts.la.type == Tokens.TILDE) {
             Ast.simple.Alt5 untilNode = new Ast.simple.Alt5();
             untilNode.holder = res;
             res.untilNode = untilNode;
             res.which = 5;
             untilNode.untilNode = untilNode();
-        }
-        else if (ts.la.type == Tokens.DOT) {
+        } else if (ts.la.type == Tokens.DOT) {
             Ast.simple.Alt6 dotNode = new Ast.simple.Alt6();
             dotNode.holder = res;
             res.dotNode = dotNode;
             res.which = 6;
             dotNode.dotNode = dotNode();
-        }
-        else if (ts.la.type == Tokens.EPSILON) {
+        } else if (ts.la.type == Tokens.EPSILON) {
             Ast.simple.Alt7 EPSILON = new Ast.simple.Alt7();
             EPSILON.holder = res;
             res.EPSILON = EPSILON;
             res.which = 7;
             EPSILON.EPSILON = ts.consume(Tokens.EPSILON, "EPSILON");
-        }
-        else if (ts.la.type == Tokens.SHORTCUT) {
+        } else if (ts.la.type == Tokens.SHORTCUT) {
             Ast.simple.Alt8 SHORTCUT = new Ast.simple.Alt8();
             SHORTCUT.holder = res;
             res.SHORTCUT = SHORTCUT;
             res.which = 8;
             SHORTCUT.SHORTCUT = ts.consume(Tokens.SHORTCUT, "SHORTCUT");
-        }
-        else if (ts.la.type == Tokens.CALL_BEGIN) {
+        } else if (ts.la.type == Tokens.CALL_BEGIN) {
             Ast.simple.Alt9 call = new Ast.simple.Alt9();
             call.holder = res;
             res.call = call;
             res.which = 9;
             call.call = call();
-        }
-        else
+        } else
             throw new RuntimeException("expecting one of [BRACKET, CALL_BEGIN, CHAR, DOT, EPSILON, IDENT, LP, SHORTCUT, STRING, TILDE] got: " + ts.la);
         return res;
     }
@@ -531,15 +496,13 @@ public class Parser {
             res.STRING = STRING;
             res.which = 1;
             STRING.STRING = ts.consume(Tokens.STRING, "STRING");
-        }
-        else if (ts.la.type == Tokens.CHAR) {
+        } else if (ts.la.type == Tokens.CHAR) {
             Ast.stringNode.Alt2 CHAR = new Ast.stringNode.Alt2();
             CHAR.holder = res;
             res.CHAR = CHAR;
             res.which = 2;
             CHAR.CHAR = ts.consume(Tokens.CHAR, "CHAR");
-        }
-        else throw new RuntimeException("expecting one of [CHAR, STRING] got: " + ts.la);
+        } else throw new RuntimeException("expecting one of [CHAR, STRING] got: " + ts.la);
         return res;
     }
 

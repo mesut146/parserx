@@ -35,29 +35,25 @@ public class Substitute {
                                 or2.add(new Sequence(left, ch, right));
                             }
                             return Or.make(or2);
-                        }
-                        else {
+                        } else {
                             //(A B1 | A B2) C
                             for (Node ch : or) {
                                 or2.add(new Sequence(left, ch));
                             }
                             return new Sequence(new Group(Or.make(or2)), right);
                         }
-                    }
-                    else {
+                    } else {
                         if (mergeRight) {
                             //A (B1 C | B2 C)
                             for (Node ch : or) {
                                 or2.add(new Sequence(ch, right));
                             }
                             return new Sequence(left, new Group(Or.make(or2)));
-                        }
-                        else {
+                        } else {
                             return new Sequence(left, new Group(or), right);
                         }
                     }
-                }
-                else {
+                } else {
                     res.list.add(i, decl.rhs);
                 }
                 return res;

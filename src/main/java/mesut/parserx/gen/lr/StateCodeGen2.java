@@ -104,8 +104,7 @@ public class StateCodeGen2 {
             for (LrTransition tr : set.transitions) {
                 if (tr.symbol.isToken) {
                     list.add(tr);
-                }
-                else {
+                } else {
                     //goto
                 }
             }
@@ -113,8 +112,7 @@ public class StateCodeGen2 {
                 writer.append("if(la.id == %s){", writeCase(list.get(0).symbol));
                 writeShift(list.get(0));
                 writer.append("}");
-            }
-            else if (list.size() > 1) {
+            } else if (list.size() > 1) {
                 writer.append("switch(la.id){");
                 for (LrTransition tr : list) {
                     writer.append("case %s:{", writeCase(tr.symbol));
@@ -136,16 +134,14 @@ public class StateCodeGen2 {
                     //accept
                     writer.append("System.out.println(\"accept\");");
                     writer.append("return stack.peek();");
-                }
-                else {
+                } else {
                     writer.append("Symbol tmp = new Symbol(%d);", idMap.getId(item.rule.ref));
                     writer.append("tmp.name = \"%s\";", item.rule.baseName());
                     writer.append("tmp.index = %s;", item.rule.index);
                     if (item.dotPos == 1) {
                         writer.append("tmp.children.add(stack.pop());");
                         writer.append("states.pop();");
-                    }
-                    else {
+                    } else {
                         writer.append("Symbol[] children = new Symbol[%d];", item.dotPos);
                         writer.append("for(int i = 0;i < %d;i++){", item.dotPos);
                         writer.append("children[%d - i] = stack.pop();", item.dotPos - 1);

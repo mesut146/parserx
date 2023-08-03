@@ -4,10 +4,14 @@ import mesut.parserx.gen.lldfa.RecursionHandler;
 import mesut.parserx.gen.lldfa.Type;
 import mesut.parserx.gen.lr.TreeInfo;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 public class RuleDecl {
 
+    public static boolean printIndex = false;
     public Name ref;
     public Node rhs;
     public int index;
@@ -16,7 +20,6 @@ public class RuleDecl {
     public TreeInfo.TransformInfo transformInfo;
     public RecursionHandler.Info recInfo;
     public List<Parameter> parameterList = new ArrayList<>();
-    public static boolean printIndex = false;
 
     public RuleDecl(String name, Node rhs) {
         this(new Name(name), rhs);
@@ -50,8 +53,7 @@ public class RuleDecl {
         }
         if (false && rhs.isOr()) {
             s += ":\n" + rhs.asOr().withNewline() + ";";
-        }
-        else {
+        } else {
             s += ": " + rhs + ";";
         }
 
@@ -66,7 +68,7 @@ public class RuleDecl {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         var other = (RuleDecl) o;
-        return Objects.equals(ref, other.ref) && which.equals( other.which);
+        return Objects.equals(ref, other.ref) && which.equals(other.which);
     }
 
     @Override

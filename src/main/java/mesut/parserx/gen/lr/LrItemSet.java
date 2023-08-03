@@ -11,13 +11,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class LrItemSet {
+    private final List<LrTransition> incoming = new ArrayList<>();
     public Set<LrItem> kernel = new HashSet<>();
     public List<LrItem> all = new ArrayList<>();
     public int stateId;
     public LrType type;
-    TreeInfo treeInfo;
     public List<LrTransition> transitions = new ArrayList<>();
-    private final List<LrTransition> incoming = new ArrayList<>();
+    TreeInfo treeInfo;
 
     public LrItemSet(TreeInfo tree, LrType type) {
         this.treeInfo = tree;

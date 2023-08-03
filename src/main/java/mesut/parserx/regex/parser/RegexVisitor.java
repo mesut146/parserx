@@ -24,8 +24,7 @@ public class RegexVisitor {
         }
         if (list.size() == 1) {
             return list.get(0);
-        }
-        else {
+        } else {
             return new Or(list);
         }
     }
@@ -37,8 +36,7 @@ public class RegexVisitor {
         }
         if (list.size() == 1) {
             return list.get(0);
-        }
-        else {
+        } else {
             return new Sequence(list);
         }
     }
@@ -48,25 +46,20 @@ public class RegexVisitor {
         if (regex.simple.normalChar != null) {
             if (regex.simple.normalChar.CHAR != null) {
                 node = new StringNode(regex.simple.normalChar.CHAR.value);
-            }
-            else if (regex.simple.normalChar.DOT != null) {
+            } else if (regex.simple.normalChar.DOT != null) {
                 node = new Dot();
-            }
-            else if (regex.simple.normalChar.ESCAPED != null) {
+            } else if (regex.simple.normalChar.ESCAPED != null) {
                 char ch = regex.simple.normalChar.ESCAPED.value.charAt(1);
                 if (UnicodeUtils.escapeMap.containsKey(ch)) {
                     ch = UnicodeUtils.get(ch);
-                }
-                else {
+                } else {
                     //escaped meta char
                 }
                 node = new StringNode("" + ch);
-            }
-            else {
+            } else {
                 node = new StringNode("-");
             }
-        }
-        else if (regex.simple.bracket != null) {
+        } else if (regex.simple.bracket != null) {
             Bracket bracket = new Bracket();
             node = bracket;
             if (regex.simple.bracket.XOR != null) {
@@ -76,24 +69,20 @@ public class RegexVisitor {
                 if (range.g1 != null) {
                     //range
                     bracket.add(new Range(visitRangeChar(range.rangeChar), visitRangeChar(range.g1.rangeChar)));
-                }
-                else {
+                } else {
                     //simple
                     bracket.add(new Range(visitRangeChar(range.rangeChar)));
                 }
             }
-        }
-        else {
+        } else {
             node = new Group(visitRhs(regex.simple.simple3.rhs));
         }
         if (regex.g1 != null) {
             if (regex.g1.PLUS != null) {
                 return new Regex(node, RegexType.PLUS);
-            }
-            else if (regex.g1.STAR != null) {
+            } else if (regex.g1.STAR != null) {
                 return new Regex(node, RegexType.STAR);
-            }
-            else {
+            } else {
                 return new Regex(node, RegexType.OPTIONAL);
             }
         }
@@ -103,41 +92,29 @@ public class RegexVisitor {
     int visitRangeChar(Ast.rangeChar rangeChar) {
         if (rangeChar.CHAR != null) {
             return rangeChar.CHAR.value.charAt(0);
-        }
-        else if (rangeChar.ESCAPED != null) {
+        } else if (rangeChar.ESCAPED != null) {
             return UnicodeUtils.get(rangeChar.ESCAPED.value.charAt(1));
-        }
-        else if (rangeChar.STAR != null) {
+        } else if (rangeChar.STAR != null) {
             return '*';
-        }
-        else if (rangeChar.PLUS != null) {
+        } else if (rangeChar.PLUS != null) {
             return '+';
-        }
-        else if (rangeChar.QUES != null) {
+        } else if (rangeChar.QUES != null) {
             return '?';
-        }
-        else if (rangeChar.BAR != null) {
+        } else if (rangeChar.BAR != null) {
             return '|';
-        }
-        else if (rangeChar.DOT != null) {
+        } else if (rangeChar.DOT != null) {
             return '.';
-        }
-        else if (rangeChar.LPAREN != null) {
+        } else if (rangeChar.LPAREN != null) {
             return '(';
-        }
-        else if (rangeChar.RPAREN != null) {
+        } else if (rangeChar.RPAREN != null) {
             return ')';
-        }
-        else if (rangeChar.XOR != null) {
+        } else if (rangeChar.XOR != null) {
             return '^';
-        }
-        else if (rangeChar.MINUS != null) {
+        } else if (rangeChar.MINUS != null) {
             return '-';
-        }
-        else if (rangeChar.BOPEN != null) {
+        } else if (rangeChar.BOPEN != null) {
             return '[';
-        }
-        else {
+        } else {
             throw new RuntimeException("invalid regex char");
         }
     }

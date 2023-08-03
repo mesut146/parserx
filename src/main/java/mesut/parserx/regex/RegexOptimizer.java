@@ -31,11 +31,9 @@ public class RegexOptimizer extends Transformer {
             ch = transformNode(ch, parent);
             if (ch.isString() && ch.asString().value.length() == 1) {
                 bracket.add(ch.asString().value.charAt(0));
-            }
-            else if (ch.isRange()) {
+            } else if (ch.isRange()) {
                 bracket.add(ch.asRange());
-            }
-            else {
+            } else {
                 res.add(ch);
             }
         }
@@ -43,8 +41,7 @@ public class RegexOptimizer extends Transformer {
             bracket.normalize().optimize();
             if (bracket.list.size() == 1 && bracket.list.get(0).isSingle()) {
                 res.add(new StringNode("" + (char) bracket.list.get(0).start));
-            }
-            else {
+            } else {
                 res.add(bracket);
             }
         }

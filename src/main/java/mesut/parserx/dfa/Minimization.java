@@ -25,8 +25,7 @@ public class Minimization {
                     var nodes = map.computeIfAbsent(tr.target, k -> new ArrayList<>());
                     if (tr.epsilon) {
                         nodes.add(new Epsilon());
-                    }
-                    else {
+                    } else {
                         nodes.add(dfa.getAlphabet().getRegex(tr.input));
                     }
                 }
@@ -37,8 +36,7 @@ public class Minimization {
                     for (var node : nodes) {
                         if (node.isRange()) {
                             bracket.add(node.asRange());
-                        }
-                        else {
+                        } else {
                             or.add(node);
                         }
                     }
@@ -49,8 +47,7 @@ public class Minimization {
                     int id2;
                     if (resAlphabet.map.containsKey(node)) {
                         id2 = resAlphabet.getId(node);
-                    }
-                    else {
+                    } else {
                         id2 = resAlphabet.addRegex(node);
                     }
                     res.addTransition(state, target, id2);
@@ -139,8 +136,7 @@ public class Minimization {
             var map = whichMap.computeIfAbsent(state.name, k -> new HashMap<>());
             if (map.containsKey(state.which)) {
                 map.get(state.which).addState(state);
-            }
-            else {
+            } else {
                 var set = new StateSet();
                 list.add(set);
                 set.addState(state);
@@ -249,19 +245,13 @@ public class Minimization {
 
             if (targetState.name == null) {
                 targetState.name = state.name;
-            }
-            else {
+            } else {
                 if (!names2.equals(state.name)) {
                     targetState.name = state.name;
                 }
             }
         }
         return res;
-    }
-
-    //minimize lastState by removing dead states and shifting others to new places
-    void shrink(NFA dfa) {
-        //todo
     }
 
     //is distinguishable
@@ -304,12 +294,10 @@ public class Minimization {
                             W.remove(Y);
                             W.add(inter);
                             W.add(sub);
-                        }
-                        else {
+                        } else {
                             if (inter.states.size() <= sub.states.size()) {
                                 W.add(inter);
-                            }
-                            else {
+                            } else {
                                 W.add(inter);
                             }
                         }
@@ -373,5 +361,10 @@ public class Minimization {
             out(dfa, s, set);
         }
         return set;
+    }
+
+    //minimize lastState by removing dead states and shifting others to new places
+    void shrink(NFA dfa) {
+        //todo
     }
 }

@@ -13,13 +13,6 @@ public class TreeInfo {
     public Tree tree;
     public HashMap<Name, List<RuleDecl>> ruleMap = new HashMap<>();
 
-    public static class TransformInfo {
-        public boolean isPlus;
-        public boolean isStar;
-        public boolean isOpt;
-        public String orgName;
-    }
-
     public static TreeInfo make(Tree tree) {
         var res = new TreeInfo();
         res.tree = tree;
@@ -52,11 +45,17 @@ public class TreeInfo {
             var or = map.computeIfAbsent(decl.ref, k -> new ArrayList<>());
             if (decl.rhs.isOr()) {
                 or.addAll(decl.rhs.asOr().list);
-            }
-            else {
+            } else {
                 or.add(decl.rhs);
             }
         }
         return map;
+    }
+
+    public static class TransformInfo {
+        public boolean isPlus;
+        public boolean isStar;
+        public boolean isOpt;
+        public String orgName;
     }
 }

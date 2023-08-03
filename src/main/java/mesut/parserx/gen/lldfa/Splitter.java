@@ -29,48 +29,6 @@ public class Splitter extends BaseVisitor<Splitter.SplitHolder, Void> {
         return res;
     }
 
-    public static class SplitHolder {
-        Node prefix;
-        Node suffix;
-        Node primary;
-        Name rule;
-        RegexType type;
-
-        public boolean isLeft(Tree tree) {
-            if (prefix != null) {
-                return FirstSet.canBeEmpty(prefix, tree);
-            }
-            return false;
-        }
-
-        public boolean isRight(Tree tree) {
-            if (prefix != null) {
-                return FirstSet.canBeEmpty(suffix, tree);
-            }
-            return false;
-        }
-
-        public boolean isMid() {
-            return prefix != null;
-        }
-
-        @Override
-        public String toString() {
-            if (prefix != null) {
-                if (primary != null) {
-                    return String.format("prefix: %s suffix: %s primary: %s", prefix, suffix, primary);
-                }
-                else {
-                    return String.format("prefix: %s suffix: %s", prefix, suffix);
-                }
-            }
-            else {
-                return String.format("primary: %s", primary);
-            }
-        }
-    }
-
-
     @Override
     public SplitHolder visitGroup(Group group, Void arg) {
         return group.node.accept(this, arg);
@@ -113,16 +71,13 @@ public class Splitter extends BaseVisitor<Splitter.SplitHolder, Void> {
             //P X S | PRIM | %eps
             if (sp.primary == null) {
                 sp.primary = new Epsilon();
-            }
-            else {
+            } else {
                 sp.primary = new Regex(sp.primary, RegexType.OPTIONAL);
             }
-        }
-        else if (regex.isStar()) {
+        } else if (regex.isStar()) {
             //A*=(P X S | PRIM)*
             sp.type = regex.type;
-        }
-        else {
+        } else {
             //A+=(P X S | PRIM)+
             sp.type = regex.type;
         }
@@ -149,8 +104,7 @@ public class Splitter extends BaseVisitor<Splitter.SplitHolder, Void> {
                 if (sp1.primary != null && sp2.primary != null) {
                     res.primary = new Or(sp1.primary, sp2.primary);
                 }
-            }
-            else {
+            } else {
                 //(PA X SA | PRA) B
                 res.prefix = sp1.prefix;
                 res.suffix = new Sequence(sp1.suffix, B);
@@ -158,8 +112,7 @@ public class Splitter extends BaseVisitor<Splitter.SplitHolder, Void> {
                     res.primary = Sequence.make(sp1.primary, B);
                 }
             }
-        }
-        else {
+        } else {
             if (sp2.prefix != null) {
                 //A (PB X SB | PRB)
                 res.prefix = new Sequence(A, sp2.prefix);
@@ -167,8 +120,7 @@ public class Splitter extends BaseVisitor<Splitter.SplitHolder, Void> {
                 if (sp2.primary != null) {
                     res.primary = Sequence.make(A, sp2.primary);
                 }
-            }
-            else {
+            } else {
                 res.primary = new Sequence(A, B);
             }
         }
@@ -182,22 +134,58 @@ public class Splitter extends BaseVisitor<Splitter.SplitHolder, Void> {
         cache.put(name, res);
         if (name.isToken) {
             res.primary = name;
-        }
-        else if (name.equals(rule)) {
+        } else if (name.equals(rule)) {
             res.prefix = new Epsilon();
             res.suffix = new Epsilon();
-        }
-        else {
+        } else {
             var tmp = tree.getRule(name).rhs.accept(this, arg);
             if (tmp.prefix != null) {
                 cache.put(name, tmp);
                 return tmp;
-            }
-            else {
+            } else {
                 res.primary = name;
             }
         }
         return res;
+    }
+
+    public static class SplitHolder {
+        Node prefix;
+        Node suffix;
+        Node primary;
+        Name rule;
+        RegexType type;
+
+        public boolean isLeft(Tree tree) {
+            if (prefix != null) {
+                return FirstSet.canBeEmpty(prefix, tree);
+            }
+            return false;
+        }
+
+        public boolean isRight(Tree tree) {
+            if (prefix != null) {
+                return FirstSet.canBeEmpty(suffix, tree);
+            }
+            return false;
+        }
+
+        public boolean isMid() {
+            return prefix != null;
+        }
+
+        @Override
+        public String toString() {
+            if (prefix != null) {
+                if (primary != null) {
+                    return String.format("prefix: %s suffix: %s primary: %s", prefix, suffix, primary);
+                } else {
+                    return String.format("prefix: %s suffix: %s", prefix, suffix);
+                }
+            } else {
+                return String.format("primary: %s", primary);
+            }
+        }
     }
 
 

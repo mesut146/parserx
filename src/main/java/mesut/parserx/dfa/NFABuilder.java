@@ -94,15 +94,13 @@ public class NFABuilder extends BaseVisitor<State, State> {
             newStart.addEpsilon(end);//zero times
             end.addEpsilon(newStart);//repeat
             return end;
-        }
-        else if (regex.isPlus()) {
+        } else if (regex.isPlus()) {
             var newStart = nfa.newState();
             var end = regex.node.accept(this, newStart);
             start.addEpsilon(newStart);//bind
             end.addEpsilon(newStart);//repeat
             return end;
-        }
-        else {
+        } else {
             var end = regex.node.accept(this, start);
             start.addEpsilon(end);//zero times
             return end;

@@ -21,6 +21,14 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
         return new Epsilons(tree).trim(node);
     }
 
+    //copy decl args with names
+    public static Name inherit(Name name, RuleDecl decl) {
+        Name ref = name.copy();
+        ref.args2.clear();
+        ref.args2.addAll(decl.ref.args2);
+        return ref;
+    }
+
     //trim major epsilon so that result is at least one token long
     //E: ... -> E1: ...,     E: E1 | €
     public Info trim(Node node) {
@@ -59,14 +67,12 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
                 var tmp = trim(regex.node);
                 res.eps = tmp.eps;
                 res.noEps = tmp.noEps;
-            }
-            else {
+            } else {
                 res.eps = new Epsilon();
                 res.noEps = regex.node;
             }
             return res;
-        }
-        else if (regex.isStar()) {
+        } else if (regex.isStar()) {
             if (empty) {
                 //A* = A+ | € = A A* | €
                 //(A_eps | A_noe) A* | €
@@ -76,16 +82,14 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
                 no.astInfo.isInLoop = true;
                 res.noEps = new Sequence(no, regex.copy());
                 res.eps = tmp.eps;
-            }
-            else {
+            } else {
                 //A+ | €
                 res.noEps = new Regex(regex.node, RegexType.PLUS);
                 res.noEps.astInfo = regex.astInfo.copy();
                 res.eps = new Epsilon();
             }
             return res;
-        }
-        else {
+        } else {
             //node must be empty
             //A+ = A A* = (A_noe | A_eps) A*
             //A_noe A* | A_eps A*
@@ -111,19 +115,16 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
                 var b1 = trim(b);
                 res.noEps = Or.make(a1.noEps, b1.noEps);
                 res.eps = orEps(a1.eps, b1.eps);
-            }
-            else {
+            } else {
                 //A | B = A1 | € | B
                 if (a1.noEps == null) {
                     res.noEps = b;
-                }
-                else {
+                } else {
                     res.noEps = Or.make(a1.noEps, b);
                 }
                 res.eps = a1.eps;
             }
-        }
-        else {
+        } else {
             //b must be empty
             // A | B = A | B1 | €
             var tmp = trim(b);
@@ -194,8 +195,7 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
             noDecl.retType = decl.retType;
             tree.addRuleBelow(noDecl, decl);
             res.noEps = noName;
-        }
-        else {
+        } else {
             res.noEps = noName;
         }
         if (tree.getRule(epsName) == null) {
@@ -209,19 +209,10 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
                 tree.addRuleBelow(epsDecl, decl);
                 res.eps = epsName;
             }
-        }
-        else {
+        } else {
             res.eps = epsName;
         }
         return res;
-    }
-
-    //copy decl args with names
-    public static Name inherit(Name name, RuleDecl decl) {
-        Name ref = name.copy();
-        ref.args2.clear();
-        ref.args2.addAll(decl.ref.args2);
-        return ref;
     }
 
     private Node orEps(Node e1, Node e2) {

@@ -118,7 +118,7 @@ $members$
 
     public $token_class$ $next_token$() throws IOException {
         $token_class$ tok = $next_token$_normal();
-        if(getBit(skip, lastState)){
+        if(lastState !=- 1 && getBit(skip, lastState)){
           return $next_token$();
         }
         return tok;

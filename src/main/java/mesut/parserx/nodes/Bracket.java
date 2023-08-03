@@ -25,6 +25,48 @@ public class Bracket extends Node {
 
     }
 
+    static void sort(List<Range> ranges) {
+        ranges.sort((r1, r2) -> {
+            if (r1.start < r2.start) {
+                return -1;
+            }
+            if (r1.start == r2.start) {
+                return Integer.compare(r1.end, r2.end);
+            }
+            return 1;
+        });
+    }
+
+    //merge neighbour ranges
+    public static ArrayList<Range> merge(List<Range> list) {
+        sort(list);
+        var res = new ArrayList<Range>();
+        int pos = 0;
+        while (pos < list.size()) {
+            Range cur = list.get(pos++);
+            if (pos == list.size()) {
+                res.add(cur);
+                break;
+            }
+            var next = list.get(pos);
+            //end of cur + 1 is start of next, then merge
+            if (cur.end + 1 == next.start) {
+                while (cur.end + 1 == next.start) {
+                    cur = new Range(cur.start, cur.end);
+                    cur.end = next.end;
+                    pos++;
+                    if (pos < list.size()) {
+                        next = list.get(pos);
+                    }
+                }
+                res.add(cur);
+            } else {
+                res.add(cur);
+            }
+        }
+        return res;
+    }
+
     public void add(char chr) {
         list.add(Range.of(chr, chr));
     }
@@ -63,8 +105,7 @@ public class Bracket extends Node {
                     throw new RuntimeException(String.format("invalid range %s-%s in: %s", c, end, str));
                 }
                 list.add(new Range(c, end));
-            }
-            else {
+            } else {
                 add(c);
             }
         }
@@ -83,8 +124,7 @@ public class Bracket extends Node {
                     fromHex(c3) << 4 |
                     fromHex(c4);
             c = (char) hex;
-        }
-        else {
+        } else {
             c = UnicodeUtils.get(c);
         }
         return c;
@@ -99,18 +139,6 @@ public class Bracket extends Node {
         }
         //upper
         return c - 'A' + 10;
-    }
-
-    static void sort(List<Range> ranges) {
-        ranges.sort((r1, r2) -> {
-            if (r1.start < r2.start) {
-                return -1;
-            }
-            if (r1.start == r2.start) {
-                return Integer.compare(r1.end, r2.end);
-            }
-            return 1;
-        });
     }
 
     void checkIntersecting() {
@@ -149,37 +177,6 @@ public class Bracket extends Node {
             ranges.add(new Range(last, Alphabet.max));
         }
         return this;
-    }
-
-    //merge neighbour ranges
-    public static ArrayList<Range> merge(List<Range> list) {
-        sort(list);
-        var res = new ArrayList<Range>();
-        int pos = 0;
-        while (pos < list.size()) {
-            Range cur = list.get(pos++);
-            if (pos == list.size()) {
-                res.add(cur);
-                break;
-            }
-            var next = list.get(pos);
-            //end of cur + 1 is start of next, then merge
-            if (cur.end + 1 == next.start) {
-                while (cur.end + 1 == next.start) {
-                    cur = new Range(cur.start, cur.end);
-                    cur.end = next.end;
-                    pos++;
-                    if (pos < list.size()) {
-                        next = list.get(pos);
-                    }
-                }
-                res.add(cur);
-            }
-            else {
-                res.add(cur);
-            }
-        }
-        return res;
     }
 
     public Bracket optimize() {

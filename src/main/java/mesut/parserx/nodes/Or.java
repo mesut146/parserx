@@ -82,8 +82,7 @@ public class Or extends NodeList {
         for (Node ch : this) {
             if (ch.isOr()) {
                 s.addAll(ch.asOr().list);
-            }
-            else {
+            } else {
                 s.add(ch);
             }
         }

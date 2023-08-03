@@ -17,18 +17,18 @@ import java.util.*;
 
 //lr table generator
 public class LrDFAGen {
+    public static boolean debug = false;
+    public static String startName = "%start";
     public Tree tree;
     public RuleDecl start;
     public TreeInfo treeInfo;
     public LrType type;
-    LrItem first;
     public LrItemSet acc;
-    ConflictResolver conflictResolver;
-    Queue<LrItemSet> queue = new LinkedList<>();//itemsets
     public int lastId = -1;
     public List<LrItemSet> itemSets = new ArrayList<>();
-    public static boolean debug = false;
-    public static String startName = "%start";
+    LrItem first;
+    ConflictResolver conflictResolver;
+    Queue<LrItemSet> queue = new LinkedList<>();//itemsets
 
     public LrDFAGen(Tree tree, LrType type) {
         this.tree = tree;
@@ -151,8 +151,7 @@ public class LrDFAGen {
                     sim.update(it);
                 }
                 targetSet = sim;
-            }
-            else {
+            } else {
                 targetSet = new LrItemSet(treeInfo, type);
                 targetSet.addAll(list);
                 addSet(targetSet);
@@ -203,8 +202,7 @@ public class LrDFAGen {
                 la.retainAll(item.lookAhead);
                 if (la.size() == item.lookAhead.size()) {
                     //no need to
-                }
-                else {
+                } else {
                     old.lookAhead.addAll(item.lookAhead);
                     set.all.clear();
                     set.closure();
@@ -256,8 +254,7 @@ public class LrDFAGen {
                             //set goto
                             next.gotoSet.add(set);
                             if (debug) System.out.println("set goto");
-                        }
-                        else {
+                        } else {
                             curItem = next;
                             any = true;
                         }

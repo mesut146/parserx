@@ -8,9 +8,9 @@ import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.lldfa.LLDfaBuilder;
 import mesut.parserx.gen.lldfa.Normalizer;
 import mesut.parserx.gen.lldfa.ParserGen;
+import mesut.parserx.gen.lldfa.RecursionHandler;
 import mesut.parserx.gen.lr.LrCodeGen;
 import mesut.parserx.gen.lr.LrType;
-import mesut.parserx.gen.transform.LeftRecursive;
 import mesut.parserx.nodes.Node;
 import mesut.parserx.nodes.NodeList;
 import mesut.parserx.nodes.Tree;
@@ -72,46 +72,35 @@ public class Main {
             if (s.equals("-input") || s.equals("-in")) {
                 input = new File(args[i + 1]);
                 i++;
-            }
-            else if (s.equals("-output") || s.equals("-out")) {
+            } else if (s.equals("-output") || s.equals("-out")) {
                 output = new File(args[i + 1]);
                 i++;
-            }
-            else if (s.equals("-dot")) {
+            } else if (s.equals("-dot")) {
                 hasDot = true;
-            }
-            else if (s.equals("-package") || s.equals("-pkg")) {
+            } else if (s.equals("-package") || s.equals("-pkg")) {
                 pkg = args[i + 1];
                 i++;
-            }
-            else if (s.equals("-lexerClass")) {
+            } else if (s.equals("-lexerClass")) {
                 lexerClass = args[i + 1];
                 i++;
-            }
-            else if (s.equals("-lexerFunc")) {
+            } else if (s.equals("-lexerFunc")) {
                 lexerFunc = args[i + 1];
                 i++;
-            }
-            else if (s.equals("-tokenClass")) {
+            } else if (s.equals("-tokenClass")) {
                 tokenClass = args[i + 1];
                 i++;
-            }
-            else if (s.equals("-parserClass")) {
+            } else if (s.equals("-parserClass")) {
                 parserClass = args[i + 1];
                 i++;
-            }
-            else if (s.equals("-astClass")) {
+            } else if (s.equals("-astClass")) {
                 astClass = args[i + 1];
                 i++;
-            }
-            else if (s.equals("-lang")) {
+            } else if (s.equals("-lang")) {
                 lang = Lang.from(args[i + 1]);
                 i++;
-            }
-            else if (cmds.contains(s)) {
+            } else if (cmds.contains(s)) {
                 cmd.add(s);
-            }
-            else if (i == args.length - 1) {
+            } else if (i == args.length - 1) {
                 //last arg might be input
                 if (input == null) {
                     input = new File(s);
@@ -130,13 +119,13 @@ public class Main {
         try {
             if (cmd.contains("-left")) {
                 Tree tree = Tree.makeTree(input);
-                tree = LeftRecursive.transform(tree);
+                new RecursionHandler(tree).handleAll();
+                RecursionHandler.clearArgs(tree);
                 if (output == null) {
                     output = new File(input.getParent(), Utils.newName(input.getName(), "-out.g"));
                 }
                 Utils.write(tree.toString(), output);
-            }
-            else if (cmd.contains("-factor")) {
+            } else if (cmd.contains("-factor")) {
                 Tree tree = Tree.makeTree(input);
                 new Normalizer(tree).normalize();
                 new LLDfaBuilder(tree).factor();
@@ -148,8 +137,7 @@ public class Main {
                     output = new File(input.getParent(), Utils.newName(input.getName(), "-out.g"));
                 }
                 Utils.write(tree.toString(), output);
-            }
-            else if (cmd.contains("-nfa")) {
+            } else if (cmd.contains("-nfa")) {
                 Tree tree = Tree.makeTree(input);
                 NFA nfa = tree.makeNFA();
                 if (output == null) {
@@ -163,8 +151,7 @@ public class Main {
 
                 nfa.dump(new PrintWriter(new FileWriter(output)));
                 logwrite(output);
-            }
-            else if (cmd.contains("-dfa")) {
+            } else if (cmd.contains("-dfa")) {
                 //grammar -> dfa
                 Tree tree = Tree.makeTree(input);
                 NFA dfa = tree.makeNFA().dfa();
@@ -184,8 +171,7 @@ public class Main {
 
                 dfa.dump(new PrintWriter(new FileWriter(output)));
                 logwrite(output);
-            }
-            else if (cmd.contains("-regex")) {
+            } else if (cmd.contains("-regex")) {
                 //nfa2regex
                 NFA nfa = NFA.read(input);
                 if (!Validator.isDFA(nfa)) {
@@ -195,12 +181,10 @@ public class Main {
                 Node node = RegexBuilder.from(nfa);
                 if (output == null) {
                     System.out.println(node);
-                }
-                else {
+                } else {
                     Utils.write(node.toString(), output);
                 }
-            }
-            else if (cmd.contains("-nfa2dfa")) {
+            } else if (cmd.contains("-nfa2dfa")) {
                 NFA nfa = NFA.read(input);
                 NFA dfa = nfa.dfa();
                 if (cmd.contains("-optimize")) {
@@ -221,13 +205,11 @@ public class Main {
                 }
                 dfa.dump(new PrintWriter(new FileWriter(output)));
                 logwrite(output);
-            }
-            else if (cmd.contains("-lexer")) {
+            } else if (cmd.contains("-lexer")) {
                 Tree tree = Tree.makeTree(input);
                 if (output == null) {
                     tree.options.outDir = input.getParent();
-                }
-                else {
+                } else {
                     tree.options.outDir = output.getAbsolutePath();
                 }
                 if (pkg != null) {
@@ -246,13 +228,11 @@ public class Main {
                 if (hasDot) {
                     generator.dfa.dot(new FileWriter(new File(tree.options.outDir, Utils.newName(input.getName(), "dot"))));
                 }
-            }
-            else if (cmd.contains("-lldfa") || cmd.contains("-cc")) {
+            } else if (cmd.contains("-lldfa") || cmd.contains("-cc")) {
                 var tree = Tree.makeTree(input);
                 if (output == null) {
                     tree.options.outDir = input.getParent();
-                }
-                else {
+                } else {
                     tree.options.outDir = output.getAbsolutePath();
                 }
                 if (pkg != null) {
@@ -273,14 +253,12 @@ public class Main {
                 if (astClass != null) {
                     tree.options.astClass = astClass;
                 }
-                ParserGen.genCC(tree, lang, false);
-            }
-            else if (cmd.contains("-lalr1") || cmd.contains("-lr1")) {
+                ParserGen.genCC(tree, lang);
+            } else if (cmd.contains("-lalr1") || cmd.contains("-lr1")) {
                 Tree tree = Tree.makeTree(input);
                 if (output == null) {
                     tree.options.outDir = input.getParent();
-                }
-                else {
+                } else {
                     tree.options.outDir = output.getAbsolutePath();
                 }
                 if (pkg != null) {
@@ -304,8 +282,7 @@ public class Main {
                 LrType type;
                 if (cmd.contains("-lr1")) {
                     type = LrType.LR1;
-                }
-                else {
+                } else {
                     type = LrType.LALR1;
                 }
                 LrCodeGen gen = new LrCodeGen(tree, type);
@@ -316,8 +293,7 @@ public class Main {
                     File table = new File(tree.options.outDir, Utils.newName(input.getName(), "-table.dot"));
                     gen.gen.writeTableDot(new PrintWriter(table));
                 }
-            }
-            else {
+            } else {
                 throw new Exception("unknown commands: " + cmd);
             }
         } catch (Exception e) {

@@ -29,8 +29,7 @@ public class LrUtils {
                     rd.transformInfo.orgName = sym.name + "?";
                     rulesOpt.put(rd, curRule);
                     return ref;
-                }
-                else if (regex.isStar()) {
+                } else if (regex.isStar()) {
                     //a*: a+ | %eps
                     if (doneStar.contains(sym)) return regex;
                     doneStar.add(sym);
@@ -76,8 +75,7 @@ public class LrUtils {
                 if (left) {
                     //a+: a+ a | a;
                     rd = new RuleDecl(ref, new Or(new Sequence(ref, sym), new Sequence(sym)));
-                }
-                else {
+                } else {
                     //a+: a a+ | a;
                     rd = new RuleDecl(ref, new Or(new Sequence(sym, ref), new Sequence(sym)));
                 }

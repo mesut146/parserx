@@ -42,8 +42,7 @@ public class Parser {
             la = lexer.next();
             S1(v1, v2, v3, v4);
             return v0;
-        }
-        else throw new RuntimeException("expecting one of [NUM] got: " + la);
+        } else throw new RuntimeException("expecting one of [NUM] got: " + la);
     }
 
     public void S1(Ast.trLineg1.Trlineg11 p0, Ast.trLineg1.Trlineg12 p1, Ast.trArrow p2, Ast.trSimple p3) throws IOException {
@@ -56,8 +55,7 @@ public class Parser {
                 p1.holder.which = 2;
                 p1.holder.trSimple = p1;
             }
-        }
-        else if (la.type == Tokens.ARROW) {
+        } else if (la.type == Tokens.ARROW) {
             p2.ARROW = consume(Tokens.ARROW, "ARROW");
             p2.NUM2 = consume(Tokens.NUM, "NUM");
             if (la.type == Tokens.COMMA) {
@@ -180,29 +178,25 @@ public class Parser {
             res.BRACKET = BRACKET;
             res.which = 1;
             BRACKET.BRACKET = consume(Tokens.BRACKET, "BRACKET");
-        }
-        else if (la.type == Tokens.IDENT) {
+        } else if (la.type == Tokens.IDENT) {
             Ast.INPUT.Input2 IDENT = new Ast.INPUT.Input2();
             IDENT.holder = res;
             res.IDENT = IDENT;
             res.which = 2;
             IDENT.IDENT = consume(Tokens.IDENT, "IDENT");
-        }
-        else if (la.type == Tokens.ANY) {
+        } else if (la.type == Tokens.ANY) {
             Ast.INPUT.Input3 ANY = new Ast.INPUT.Input3();
             ANY.holder = res;
             res.ANY = ANY;
             res.which = 3;
             ANY.ANY = consume(Tokens.ANY, "ANY");
-        }
-        else if (la.type == Tokens.NUM) {
+        } else if (la.type == Tokens.NUM) {
             Ast.INPUT.Input4 NUM = new Ast.INPUT.Input4();
             NUM.holder = res;
             res.NUM = NUM;
             res.which = 4;
             NUM.NUM = consume(Tokens.NUM, "NUM");
-        }
-        else throw new RuntimeException("expecting one of [ANY, BRACKET, IDENT, NUM] got: " + la);
+        } else throw new RuntimeException("expecting one of [ANY, BRACKET, IDENT, NUM] got: " + la);
         return res;
     }
 }

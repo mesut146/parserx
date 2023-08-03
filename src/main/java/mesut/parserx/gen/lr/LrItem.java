@@ -6,6 +6,7 @@ import mesut.parserx.nodes.*;
 import java.util.*;
 
 public class LrItem {
+    public static int lastId = 0;
     public Set<Name> lookAhead = new HashSet<>();
     public RuleDecl rule;
     public Sequence rhs;
@@ -16,7 +17,6 @@ public class LrItem {
     public List<LrItem> next = new ArrayList<>();
     public Set<Integer> ids = new HashSet<>();
     int hash = -1;
-    public static int lastId = 0;
 
     public LrItem(RuleDecl rule, int dotPos) {
         this.rule = rule;
@@ -79,28 +79,23 @@ public class LrItem {
         sb.append(" , ");
         if (tree == null) {
             sb.append(NodeList.join(new ArrayList<>(lookAhead), "/"));
-        }
-        else {
+        } else {
             for (var it = lookAhead.iterator(); it.hasNext(); ) {
                 var la = it.next();
                 if (la.name.equals("$")) {
                     sb.append(la);
-                }
-                else {
+                } else {
                     var decl = tree.getToken(la.name);
                     if (decl.rhs.isString()) {
                         sb.append(decl.rhs.asString().value);
-                    }
-                    else if (decl.rhs.isSequence()) {
+                    } else if (decl.rhs.isSequence()) {
                         var seq = decl.rhs.asSequence();
                         if (seq.size() == 1 && seq.get(0).isString()) {
                             sb.append(seq.get(0).asString().value);
-                        }
-                        else {
+                        } else {
                             sb.append(la);
                         }
-                    }
-                    else {
+                    } else {
                         sb.append(la);
                     }
                 }
@@ -164,7 +159,7 @@ public class LrItem {
     }
 
     public boolean isSameNoDot(LrItem other) {
-        return Objects.equals(rule, other.rule) && rule.which.equals( other.rule.which);
+        return Objects.equals(rule, other.rule) && rule.which.equals(other.rule.which);
     }
 
     @Override

@@ -29,8 +29,7 @@ public class NfaVisitor {
             if (state.accepting) {
                 if (declMap.containsKey(state.name)) {
                     state.decl = declMap.get(state.name);
-                }
-                else {
+                } else {
                     var decl = new TokenDecl(state.name, null);
                     state.decl = decl;
                     declMap.put(state.name, decl);
@@ -58,8 +57,7 @@ public class NfaVisitor {
                 if (trLine.g1.trSimple.trSimple.INPUT != null) {
                     input = input(trLine.g1.trSimple.trSimple.INPUT, alphabet);
                 }
-            }
-            else {
+            } else {
                 state = trLine.g1.trArrow.trArrow.NUM.value;
                 target = trLine.g1.trArrow.trArrow.NUM2.value;
                 if (trLine.g1.trArrow.trArrow.g1 != null) {
@@ -69,8 +67,7 @@ public class NfaVisitor {
             var st = res.getState(Integer.parseInt(state));
             if (input == -1) {
                 st.addEpsilon(res.getState(Integer.parseInt(target)));
-            }
-            else {
+            } else {
                 res.addTransition(st, res.getState(Integer.parseInt(target)), input);
             }
         }
@@ -80,17 +77,14 @@ public class NfaVisitor {
     static int input(Ast.INPUT input, Alphabet alphabet) {
         if (input.IDENT != null) {
             return alphabet.addRegex(new StringNode(input.IDENT.IDENT.value));
-        }
-        else if (input.BRACKET != null) {
+        } else if (input.BRACKET != null) {
             var br = new Bracket(input.BRACKET.BRACKET.value).normalize();
             br.list.clear();
             br.list.addAll(br.ranges);
             return alphabet.addRegex(br);
-        }
-        else if (input.ANY != null) {
+        } else if (input.ANY != null) {
             return alphabet.addRegex(new StringNode(input.ANY.ANY.value));
-        }
-        else {
+        } else {
             //num
             return alphabet.addRegex(new StringNode(input.NUM.NUM.value));
         }
@@ -101,8 +95,7 @@ public class NfaVisitor {
         res.setAccepting(st, true);
         if (ns.g1 != null) {
             res.getState(st).name = ns.g1.IDENT.value;
-        }
-        else {
+        } else {
             //res.getState(st).name = "S" + st;
             res.getState(st).name = "S";
         }

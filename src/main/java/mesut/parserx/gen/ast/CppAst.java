@@ -110,8 +110,7 @@ public class CppAst {
             c.append("std::stringstream sb;");
             getPrint(rhs, c);
             c.append("return sb.str();");
-        }
-        else {
+        } else {
             c.append("std::string %s::%s::toString(){", options.astClass, rule);
             c.append("std::stringstream sb;");
             c.append("sb << \"%s{\";", rule);
@@ -127,30 +126,25 @@ public class CppAst {
             Name name = node.asName();
             if (name.isToken) {
                 c.append("sb << \"'\" << %s->value << \"'\";", node.astInfo.varName);
-            }
-            else {
+            } else {
                 c.append("sb << %s->toString();", node.astInfo.varName);
             }
-        }
-        else if (node.isSequence()) {
+        } else if (node.isSequence()) {
             Sequence s = node.asSequence();
             for (int i = 0; i < s.size(); i++) {
                 if (i > 0) {
                     Node prev = s.get(i - 1);
                     if (prev.isOptional()) {
                         c.append("if(%s != null) sb << \"%s\";", prev.astInfo.varName, options.sequenceDelimiter);
-                    }
-                    else if (prev.isStar()) {
+                    } else if (prev.isStar()) {
                         c.append("if(!%s.empty()) sb << \"%s\";", prev.asRegex().node.astInfo.varName, options.sequenceDelimiter);
-                    }
-                    else {
+                    } else {
                         c.append("sb << \"%s\";", options.sequenceDelimiter);
                     }
                 }
                 getPrint(s.get(i), c);
             }
-        }
-        else if (node.isRegex()) {
+        } else if (node.isRegex()) {
             Regex regex = node.asRegex();
             String v = regex.node.astInfo.varName;
             if (regex.isStar() || regex.isPlus()) {
@@ -159,47 +153,39 @@ public class CppAst {
                 c.append("for(int i = 0;i < %s.size();i++){", v);
                 if (regex.node.asName().isToken) {
                     c.append("sb << \"'\" << %s.at(i)->value << \"'\";", v);
-                }
-                else {
+                } else {
                     c.append("sb << %s.at(i)->toString();", v);
                 }
                 c.append("if(i < %s.size() - 1) sb << \",\";", v);
                 c.append("}");
                 c.append("sb << ']';");
                 c.append("}");
-            }
-            else {
+            } else {
                 if (regex.node.asName().isToken) {
                     c.append("if(%s != nullptr) sb << %s->value;", v, v);
-                }
-                else {
+                } else {
                     c.append("if(%s != nullptr) sb << %s.toString();", v, v);
                 }
             }
-        }
-        else if (node.isGroup()) {
+        } else if (node.isGroup()) {
             getPrint(node.asGroup().node, c);
-        }
-        else if (node.isOr()) {
+        } else if (node.isOr()) {
             Or or = node.asOr();
             for (int i = 0; i < or.size(); i++) {
                 if (i == 0) {
                     c.append("if(which == 1){");
-                }
-                else {
+                } else {
                     c.append("else if(which == %d){", i + 1);
                 }
                 Node ch = or.get(i);
                 if (ch.isName()) {
                     getPrint(ch, c);
-                }
-                else {
+                } else {
                     c.append("sb << %s->toString();", ch.astInfo.varName);
                 }
                 c.append("}");//if
             }
-        }
-        else {
+        } else {
             throw new RuntimeException("invalid child");
         }
     }
@@ -209,8 +195,7 @@ public class CppAst {
             for (Node ch : node.asSequence()) {
                 model(ch, outerCls, outerVar, parent);
             }
-        }
-        else if (node.isName()) {
+        } else if (node.isName()) {
             node.astInfo.outerVar = outerVar;
             Name name = node.asName();
             //check if user supplied var name
@@ -220,15 +205,13 @@ public class CppAst {
                 name.astInfo.varName = varName;
             }
             parent.append("%s* %s;", name.isToken ? options.tokenClass : name.name, varName);
-        }
-        else if (node.isRegex()) {
+        } else if (node.isRegex()) {
             node.astInfo.outerVar = outerVar;
             Regex regex = node.asRegex();
             Node ch = regex.node;
             if (regex.isOptional()) {
                 model(ch, outerCls, outerVar, parent);
-            }
-            else {
+            } else {
                 Name name = ch.asName();
                 String vname = ch.astInfo.varName;
                 if (vname == null) {
@@ -240,8 +223,7 @@ public class CppAst {
                 String type = name.isToken ? options.tokenClass : name.name;
                 parent.append("std::vector<%s*> %s;", type, vname);
             }
-        }
-        else if (node.isOr()) {
+        } else if (node.isOr()) {
             parent.append("int which;");
             int num = 1;
             for (Node ch : node.asOr()) {
@@ -268,8 +250,7 @@ public class CppAst {
 
                 num++;
             }
-        }
-        else if (!node.isEpsilon()) {
+        } else if (!node.isEpsilon()) {
             throw new RuntimeException("invalid node: " + node.getClass());
         }
     }

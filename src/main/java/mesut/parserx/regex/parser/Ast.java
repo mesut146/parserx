@@ -77,11 +77,9 @@ public class Ast {
             StringBuilder sb = new StringBuilder("regexg1#" + which + "{");
             if (which == 1) {
                 sb.append("'" + QUES.value + "'");
-            }
-            else if (which == 2) {
+            } else if (which == 2) {
                 sb.append("'" + STAR.value + "'");
-            }
-            else if (which == 3) {
+            } else if (which == 3) {
                 sb.append("'" + PLUS.value + "'");
             }
             return sb.append("}").toString();
@@ -93,6 +91,18 @@ public class Ast {
         public normalChar normalChar;
         public bracket bracket;
         Simple3 simple3;
+
+        public String toString() {
+            StringBuilder sb = new StringBuilder("simple#" + which + "{");
+            if (which == 1) {
+                sb.append(normalChar.toString());
+            } else if (which == 2) {
+                sb.append(bracket.toString());
+            } else if (which == 3) {
+                sb.append(simple3);
+            }
+            return sb.append("}").toString();
+        }
 
         public static class Simple3 {
             public Token LPAREN;
@@ -108,20 +118,6 @@ public class Ast {
                 sb.append("'" + RPAREN.value + "'");
                 return sb.toString();
             }
-        }
-
-        public String toString() {
-            StringBuilder sb = new StringBuilder("simple#" + which + "{");
-            if (which == 1) {
-                sb.append(normalChar.toString());
-            }
-            else if (which == 2) {
-                sb.append(bracket.toString());
-            }
-            else if (which == 3) {
-                sb.append(simple3);
-            }
-            return sb.append("}").toString();
         }
     }
 
@@ -188,14 +184,11 @@ public class Ast {
             StringBuilder sb = new StringBuilder("normalChar#" + which + "{");
             if (which == 1) {
                 sb.append("'" + CHAR.value + "'");
-            }
-            else if (which == 2) {
+            } else if (which == 2) {
                 sb.append("'" + ESCAPED.value + "'");
-            }
-            else if (which == 3) {
+            } else if (which == 3) {
                 sb.append("'" + MINUS.value + "'");
-            }
-            else if (which == 4) {
+            } else if (which == 4) {
                 sb.append("'" + DOT.value + "'");
             }
             return sb.append("}").toString();
@@ -221,38 +214,27 @@ public class Ast {
             StringBuilder sb = new StringBuilder("rangeChar#" + which + "{");
             if (which == 1) {
                 sb.append("'" + CHAR.value + "'");
-            }
-            else if (which == 2) {
+            } else if (which == 2) {
                 sb.append("'" + ESCAPED.value + "'");
-            }
-            else if (which == 3) {
+            } else if (which == 3) {
                 sb.append("'" + STAR.value + "'");
-            }
-            else if (which == 4) {
+            } else if (which == 4) {
                 sb.append("'" + PLUS.value + "'");
-            }
-            else if (which == 5) {
+            } else if (which == 5) {
                 sb.append("'" + QUES.value + "'");
-            }
-            else if (which == 6) {
+            } else if (which == 6) {
                 sb.append("'" + BAR.value + "'");
-            }
-            else if (which == 7) {
+            } else if (which == 7) {
                 sb.append("'" + DOT.value + "'");
-            }
-            else if (which == 8) {
+            } else if (which == 8) {
                 sb.append("'" + LPAREN.value + "'");
-            }
-            else if (which == 9) {
+            } else if (which == 9) {
                 sb.append("'" + RPAREN.value + "'");
-            }
-            else if (which == 10) {
+            } else if (which == 10) {
                 sb.append("'" + XOR.value + "'");
-            }
-            else if (which == 11) {
+            } else if (which == 11) {
                 sb.append("'" + MINUS.value + "'");
-            }
-            else if (which == 12) {
+            } else if (which == 12) {
                 sb.append("'" + BOPEN.value + "'");
             }
             return sb.append("}").toString();

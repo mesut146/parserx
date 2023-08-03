@@ -2,8 +2,6 @@ package mesut.parserx.gen.lldfa;
 
 
 import mesut.parserx.gen.AstInfo;
-import mesut.parserx.gen.FirstSet;
-import mesut.parserx.gen.Helper;
 import mesut.parserx.nodes.*;
 import mesut.parserx.utils.Log;
 
@@ -26,6 +24,39 @@ public class La1RegexBuilder {
     public La1RegexBuilder(LLDfaBuilder builder) {
         this.builder = builder;
         this.tree = builder.tree;
+    }
+
+    private static void combine(ItemSet set) {
+        //target -> ors
+        var map = new HashMap<ItemSet, List<Node>>();
+        var epsilons = new HashSet<ItemSet>();
+        for (var tr : set.transitions) {
+            tr.target.incoming.remove(tr);
+            var list = map.computeIfAbsent(tr.target, k -> new ArrayList<>());
+            if (tr.symbol.isEpsilon()) {
+                epsilons.add(tr.target);
+            } else {
+                var regex = tr.symbol;
+                if (regex.isOr()) {
+                    list.addAll(regex.asOr().list);
+                } else {
+                    list.add(regex);
+                }
+            }
+        }
+        set.transitions.clear();
+        for (var trg : map.keySet()) {
+            var list = map.get(trg);
+            if (list.isEmpty()) {
+                set.addTransition(new Epsilon(), trg);
+            } else {
+                var sym = Or.make(list);
+                if (epsilons.contains(trg)) {
+                    sym = Regex.wrap(sym, RegexType.OPTIONAL);
+                }
+                set.addTransition(new LLTransition(set, trg, sym));
+            }
+        }
     }
 
     public void build(Name rule) {
@@ -61,8 +92,7 @@ public class La1RegexBuilder {
             for (var tr : set.transitions) {
                 if (tr.target.transitions.isEmpty() || isSingleAlt(tr.target)) {
                     list.add(tr.symbol);
-                }
-                else {
+                } else {
                     var mapped = tr.target;
                     for (var e : groups.entrySet()) {
                         if (e.getKey().contains(tr.target)) {
@@ -72,8 +102,7 @@ public class La1RegexBuilder {
                     }
                     if (isFinal(tr.target)) {
                         list.add(new Sequence(tr.symbol, new Regex(makeRef(mapped), RegexType.OPTIONAL)));
-                    }
-                    else {
+                    } else {
                         list.add(new Sequence(tr.symbol, makeRef(mapped)));
                     }
                 }
@@ -133,8 +162,7 @@ public class La1RegexBuilder {
             for (var ch : node.asOr()) {
                 res |= replace(ch, ref, with);
             }
-        }
-        else if (node.isSequence()) {
+        } else if (node.isSequence()) {
             var seq = node.asSequence();
             for (int i = 0; i < seq.size(); i++) {
                 var ch = seq.get(i);
@@ -143,24 +171,20 @@ public class La1RegexBuilder {
                     var list = new ArrayList<>(seq.list.subList(0, i));
                     if (with.isSequence()) {
                         list.addAll(with.asSequence().list);
-                    }
-                    else {
+                    } else {
                         list.add(with);
                     }
                     list.addAll(seq.list.subList(i + 1, seq.list.size()));
                     seq.list = list;
                     return true;
-                }
-                else {
+                } else {
                     res |= replace(ch, ref, with);
                 }
             }
-        }
-        else if (node.isGroup()) {
+        } else if (node.isGroup()) {
             var group = node.asGroup();
             res = replace(group.node, ref, with);
-        }
-        else if (node.isRegex()) {
+        } else if (node.isRegex()) {
             var regex = node.asRegex();
             if (regex.node.equals(ref)) {
                 if (with.isSequence()) {
@@ -168,8 +192,7 @@ public class La1RegexBuilder {
                 }
                 regex.node = with;
                 return true;
-            }
-            else {
+            } else {
                 res = replace(node.asRegex().node, ref, with);
             }
         }
@@ -191,8 +214,7 @@ public class La1RegexBuilder {
             if (seq.last().equals(decl.ref)) {
                 seq.list.remove(seq.size() - 1);
                 prefix.add(seq.unwrap());
-            }
-            else {
+            } else {
                 rest.add(ch);
             }
         }
@@ -259,8 +281,7 @@ public class La1RegexBuilder {
                     if (acc.size() == 1) {
                         deads.add(tr.target);
                     }
-                }
-                else {
+                } else {
                     if (acc.size() == 1) {
                         tr.symbol.astInfo.which = Optional.of(acc.iterator().next());
                         deads.add(tr.target);
@@ -302,7 +323,6 @@ public class La1RegexBuilder {
         return null;
     }
 
-
     //remove non-factor symbols to speed up
     Optional<Integer> findWhich(ItemSet target) {
         var res = target.all.stream().filter(this::isFinal).findFirst();
@@ -325,7 +345,7 @@ public class La1RegexBuilder {
 
     Node withAst(Node node, AstInfo info) {
         node = node.copy();
-        if (info.which .isPresent()) {
+        if (info.which.isPresent()) {
             node.astInfo.which = info.which;
         }
         return node;
@@ -334,43 +354,6 @@ public class La1RegexBuilder {
     Node extract(Node node) {
         if (node.isRegex()) return node.asRegex().node;
         return node;
-    }
-
-
-    private static void combine(ItemSet set) {
-        //target -> ors
-        var map = new HashMap<ItemSet, List<Node>>();
-        var epsilons = new HashSet<ItemSet>();
-        for (var tr : set.transitions) {
-            tr.target.incoming.remove(tr);
-            var list = map.computeIfAbsent(tr.target, k -> new ArrayList<>());
-            if (tr.symbol.isEpsilon()) {
-                epsilons.add(tr.target);
-            }
-            else {
-                var regex = tr.symbol;
-                if (regex.isOr()) {
-                    list.addAll(regex.asOr().list);
-                }
-                else {
-                    list.add(regex);
-                }
-            }
-        }
-        set.transitions.clear();
-        for (var trg : map.keySet()) {
-            var list = map.get(trg);
-            if (list.isEmpty()) {
-                set.addTransition(new Epsilon(), trg);
-            }
-            else {
-                var sym = Or.make(list);
-                if (epsilons.contains(trg)) {
-                    sym = Regex.wrap(sym, RegexType.OPTIONAL);
-                }
-                set.addTransition(new LLTransition(set, trg, sym));
-            }
-        }
     }
 
 }

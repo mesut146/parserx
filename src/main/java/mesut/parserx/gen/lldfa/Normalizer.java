@@ -31,8 +31,7 @@ public class Normalizer extends Transformer {
         ref.astInfo = node.astInfo.copy();
         if (node.astInfo.varName != null) {
             ref.astInfo.varName = node.astInfo.varName;
-        }
-        else {
+        } else {
             ref.astInfo.varName = "g" + groupCount;
         }
         groupCount++;

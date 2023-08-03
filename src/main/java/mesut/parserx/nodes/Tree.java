@@ -14,7 +14,6 @@ import mesut.parserx.utils.CountingMap;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 //the grammar file for both lexer and parser
 public class Tree {
@@ -27,10 +26,10 @@ public class Tree {
     public Name start;
     public File file;
     public Alphabet alphabet = new Alphabet();
-    CountingMap<String> newNameCnt = new CountingMap<>();
-    Map<String, String> senderMap = new HashMap<>();
     public HashSet<Name> originalRules = new HashSet<>();
     public FirstSet.EmptyChecker emptyChecker = new FirstSet.EmptyChecker(this);
+    CountingMap<String> newNameCnt = new CountingMap<>();
+    Map<String, String> senderMap = new HashMap<>();
 
     public Tree() {
     }
@@ -106,8 +105,7 @@ public class Tree {
                 var other = makeTree(abs);
                 mergeWith(other);
                 return;
-            }
-            else if (file != null) {
+            } else if (file != null) {
                 //relative
                 File refFile = new File(file.getParent(), path);
                 if (refFile.exists()) {
@@ -163,7 +161,7 @@ public class Tree {
         }
     }
 
-    public Type getType(Name name){
+    public Type getType(Name name) {
         return getRule(name).retType;
     }
 

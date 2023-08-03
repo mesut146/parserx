@@ -1,6 +1,5 @@
 package mesut.parserx.gen.transform;
 
-import mesut.parserx.gen.AstInfo;
 import mesut.parserx.nodes.*;
 
 import java.util.ArrayList;
@@ -60,19 +59,16 @@ public class PrecedenceHandler {
                 Node rhs;
                 if (info == LevelInfo.binary) {
                     rhs = makeBinary(decl, holder, curRef, higher);
-                }
-                else if (info == LevelInfo.unary) {
+                } else if (info == LevelInfo.unary) {
                     rhs = makeUnary(holder, curRef, higher);
-                }
-                else {
+                } else {
                     rhs = makePostfix(decl, holder, higher);
                 }
 
                 if (i == 1) {
                     //no need to create
                     decl.rhs = rhs;
-                }
-                else {
+                } else {
                     RuleDecl newDecl = new RuleDecl(name, rhs);
                     newDecl.retType = decl.retType;
                     tree.addRule(newDecl);
@@ -122,8 +118,7 @@ public class PrecedenceHandler {
             seq.astInfo.outerVar = "tmp";
 
             return new Sequence(higher, new Regex(group, RegexType.STAR));
-        }
-        else {
+        } else {
             //right assoc
             //E: E2 op E | E2
             Sequence seq = holder.node.copy();
@@ -170,15 +165,12 @@ public class PrecedenceHandler {
             if (seq.get(0).equals(decl.ref)) {
                 if (seq.last().equals(decl.ref)) {
                     addLevel(LevelInfo.binary, seq);
-                }
-                else {
+                } else {
                     addLevel(LevelInfo.postfix, seq);
                 }
-            }
-            else if (seq.last().equals(decl.ref)) {
+            } else if (seq.last().equals(decl.ref)) {
                 addLevel(LevelInfo.unary, seq);
-            }
-            else {
+            } else {
                 primList.add(ch);
             }
         }

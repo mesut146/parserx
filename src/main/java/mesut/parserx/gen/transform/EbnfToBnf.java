@@ -89,8 +89,7 @@ public class EbnfToBnf extends Transformer {
                 transformRhs(newDecl);
             }
             return null;
-        }
-        else {
+        } else {
             List<Node> list = new ArrayList<>();
             for (Node ch : or) {
                 list.add(ch.accept(this, null));
@@ -124,25 +123,21 @@ public class EbnfToBnf extends Transformer {
                 node = group.node;
                 if (regex.isPlus()) {
                     or.add(node);
-                }
-                else {
+                } else {
                     or.add(new Epsilon());
                 }
                 if (node.isOr()) {
                     for (Node ch : node.asOr()) {
                         addCh(or, ref, ch);
                     }
-                }
-                else {
+                } else {
                     addCh(or, ref, node);
                 }
-            }
-            else {
+            } else {
                 //name
                 if (regex.isPlus()) {
                     or.add(regex.node);
-                }
-                else {
+                } else {
                     or.add(new Epsilon());
                 }
                 addCh(or, ref, regex.node);
@@ -151,8 +146,7 @@ public class EbnfToBnf extends Transformer {
             r.rhs = r.rhs.accept(this, null);
             addRule(r);
             return ref;
-        }
-        else {
+        } else {
             //r? = € | a;
             Node newNode = new Or(new Epsilon(), regex.node);
             RuleDecl r = new RuleDecl(ref, newNode.accept(this, null));
@@ -164,8 +158,7 @@ public class EbnfToBnf extends Transformer {
     void addCh(List<Node> or, Node ref, Node other) {
         if (leftRecursive) {
             or.add(new Sequence(ref, other));
-        }
-        else {
+        } else {
             or.add(new Sequence(other, ref));
         }
     }

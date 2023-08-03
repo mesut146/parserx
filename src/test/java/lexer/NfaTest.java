@@ -10,11 +10,13 @@ import mesut.parserx.parser.AstVisitor;
 import mesut.parserx.parser.Lexer;
 import mesut.parserx.parser.Parser;
 import mesut.parserx.regex.RegexBuilder;
+import mesut.parserx.utils.Log;
 import org.junit.Assert;
 import org.junit.Test;
 import parser.Builder;
 
 import java.io.*;
+import java.util.logging.Level;
 
 public class NfaTest {
 
@@ -49,17 +51,6 @@ public class NfaTest {
         check(nfa, 1, "b", 2);
     }
 
-    @Test
-    public void readerBootstrap() throws Exception {
-        Tree tree = Tree.makeTree(new File("./src/main/grammar/nfaReader.g"));
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        //tree.options.packageName="mesut.parserx.dfa.parser";
-        //ParserGen.gen(tree, Lang.JAVA);
-        Builder.tree(tree).rule("nfa")
-                .file(Env.getResFile("fsm/a.nfa").getAbsolutePath())
-                .file(Env.getResFile("fsm/dfa-min.dfa").getAbsolutePath())
-                .check();
-    }
 
     @Test
     public void lineComment() throws IOException {
@@ -78,16 +69,6 @@ public class NfaTest {
         Env.dot(dot);
     }
 
-    @Test
-    public void mode() throws IOException {
-        //Tree tree = Env.tree("lexer/mode.g");
-        var tree = Tree.makeTree(new File("doc/xml.g"));
-        var nfa = tree.makeNFA();
-        //nfa.dump();
-        System.out.println("----------------");
-        var dfa = nfa.dfa();
-        dfa.dump();
-    }
 
     @Test
     public void hopcroft() throws Exception {
@@ -114,12 +95,5 @@ public class NfaTest {
         dfa = Minimization.optimize(dfa);
         dfa.dot(new FileWriter(Env.dotFile("dfa1")));
         dfa.dump();
-    }
-
-    @Test
-    public void difference() throws IOException {
-        var tree = Env.tree("lexer/sub.g");
-        var nfa = tree.makeNFA();
-        nfa.dump();
     }
 }

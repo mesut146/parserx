@@ -38,7 +38,7 @@ token{
 }
 
 token{
-  LINE_COMMENT: "//" [^r\n]* -> skip;
+  LINE_COMMENT: "//" [^\r\n]* -> skip;
   BLOCK_COMMENT: "/*" ([^*] | "*" [^/])* "*/" -> skip;
   WS: [ \n\r\t]+ -> skip;
 }
@@ -96,7 +96,8 @@ simple: group
 
 group: "(" rhs ")";
 stringNode: STRING | CHAR;
-bracketNode: BRACKET;//easier to handle as token
+//easier to handle as token
+bracketNode: BRACKET;
 untilNode: "~" regex;
 dotNode: ".";
 name: IDENT;

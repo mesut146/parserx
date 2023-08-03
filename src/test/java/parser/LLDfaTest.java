@@ -3,18 +3,19 @@ package parser;
 import common.Env;
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.gen.Lang;
-import mesut.parserx.gen.lldfa.LaFinder;
-import mesut.parserx.gen.lldfa.ParserGen;
-import mesut.parserx.gen.lldfa.Splitter;
+import mesut.parserx.gen.ast.AstGen;
+import mesut.parserx.gen.lldfa.*;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Tree;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 public class LLDfaTest {
 
@@ -22,50 +23,25 @@ public class LLDfaTest {
     public void firstSet() throws IOException {
         Tree tree = Env.tree("firstSet.g");
         FirstSet firstSet = new FirstSet(tree);
-        firstSet.firstSet(new Name("E"), false, new ArrayList<>());
-        var set = firstSet.firstSet(new Name("A"), false, new ArrayList<>());
-        System.out.println(set);
-        //System.out.println(firstSet.cache);
-    }
 
-    @Test
-    public void math() throws Exception {
-        var tree = Tree.makeTree(new File("/media/mesut/SSD-DATA/IdeaProjects/math/grammar/math.g"));
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        var setE =firstSet.firstSetSorted(new Name("E"), false);
+        Assert.assertEquals("[a, y, E]",setE.toString());
 
-        Builder.tree(tree).rule("line").
-                input("a+b*c", "").
-                check();
+        var setA = firstSet.firstSetSorted(new Name("A"), false);
+        Assert.assertEquals("[a, b, c, d, e, y, A, B, E]",setA.toString());
+
+        var setB = firstSet.firstSetSorted(new Name("B"), false);
+        Assert.assertEquals("[a, e, y, E]",setB.toString());
     }
 
     @Test
     public void computeLa() throws IOException {
         var tree = Env.tree("lldfa/la_test.g");
-        var ex = "[a, b, c, d, y]";
-        var ac = new ArrayList<>(LaFinder.computeLa(new Name("B"), tree));
-        Collections.sort(ac);
-        Assert.assertEquals(ex, ac.toString());
+        var actual = new ArrayList<>(LaFinder.computeLa(new Name("B"), tree));
+        Collections.sort(actual);
+        Assert.assertEquals("[a, b, c, d, y]", actual.toString());
     }
 
-    @Test
-    public void genItself() throws IOException {
-        Tree tree = Tree.makeTree(new File("./src/main/grammar/parserx.g"));
-        tree.options.outDir = Env.dotDir().getAbsolutePath();
-        tree.options.packageName = "mesut.parserx.parser";
-        ParserGen.genCC(tree, Lang.JAVA, true);
-    }
-
-    @Test
-    public void itself() throws Exception {
-        //Item.printLa = false;
-        File grammar = new File("./src/main/grammar/parserx.g");
-        Builder.tree(Tree.makeTree(grammar)).rule("tree")
-                .file(grammar.getAbsolutePath())
-                .file(Env.getResFile("lexer/action.g").getAbsolutePath())
-                .file(Env.getResFile("lexer/member.g").getAbsolutePath())
-                .file(Env.getResFile("lexer/xml-mode.g").getAbsolutePath())
-                .checkTokens();
-    }
 
     @Test
     public void java() throws Exception {
@@ -97,19 +73,12 @@ public class LLDfaTest {
     }
 
     @Test
-    public void prefix() throws IOException {
+    public void splitter() throws IOException {
         Tree tree = Env.tree("prefix.g");
         var split = Splitter.split(new Name("B"), tree);
         System.out.printf("left: %s, right: %s, mid: %s", split.isLeft(tree), split.isRight(tree), split.isMid());
     }
 
-    @Test
-    public void preReduce() throws Exception {
-        Builder.tree("lldfa/pre-reduce.g").rule("E").
-                input("ax", "E#1{'a', 'x'}").
-                input("azy", "E#2{A{'a', 'z'}, 'y'}")
-                .check();
-    }
 
     @Test
     public void token_stream() throws Exception {
@@ -124,14 +93,16 @@ public class LLDfaTest {
     }
 
     @Test
+    public void left_dump() throws IOException {
+        Tree tree=Env.tree("lldfa/left-indirect3.g");
+        AstGen.gen(tree, Lang.JAVA);
+        new RecursionHandler(tree).handleAll();
+        RecursionHandler.clearArgs(tree);
+        tree.printRules();
+    }
+
+    @Test
     public void leftRec() throws Exception {
-        Builder.tree("lldfa/left-indirect3.g")
-                .rule("A")
-                .input("x", "A#5{'x'}")
-                .input("xa", "A#1{A#5{'x'}, 'a'}")
-                .input("xadb", "A#3{B#1{A#1{A#5{'x'}, 'a'}, 'd'}, 'b'}")
-                .input("yhfbp", "A#2{A#3{B#3{C#2{B#4{'y'}, 'h'}, 'f'}, 'b'}, 'p'}")
-                .checkCC();
         Builder.tree("lldfa/left.g")
                 .rule("A")
                 .input("c", "A#3{'c'}")
@@ -147,6 +118,13 @@ public class LLDfaTest {
                 .input("xb", "C#1{C#3{'x'}, 'b'}")
                 .input("xaaab", "C#1{C#3{'x'}, ['a', 'a', 'a'], 'b'}")
                 .input("xaaac", "C#2{C#3{'x'}, ['a', 'a', 'a'], 'c'}")
+                .checkCC();
+        Builder.tree("lldfa/left-indirect3.g")
+                .rule("A")
+                .input("x", "A#5{'x'}")
+                .input("xa", "A#1{A#5{'x'}, 'a'}")
+                .input("xadb", "A#3{B#1{A#1{A#5{'x'}, 'a'}, 'd'}, 'b'}")
+                .input("yhfbp", "A#2{A#3{B#3{C#2{B#4{'y'}, 'h'}, 'f'}, 'b'}, 'p'}")
                 .checkCC();
         Builder.tree("lldfa/left-indirect-long.g")
                 .rule("A")
@@ -165,14 +143,14 @@ public class LLDfaTest {
 
     @Test
     public void rightRec() throws Exception {
-//        Builder.tree("lldfa/right_factor_alt.g")
-//                .dump()
-//                .rule("E")
-//                .input("y", "E#3{'y'}")
-//                .input("ax", "E#2{'a', 'x'}")
-//                .input("ay", "E#1{'a', E#3{'y'}}")
-//                .input("aax", "E#1{'a', E#2{'a', 'x'}}")
-//                .check();
+        Builder.tree("lldfa/right_factor_alt.g")
+                .rule("E")
+                .input("y", "E#3{'y'}")
+                .input("ax", "E#2{'a', 'x'}")
+                .input("ay", "E#1{'a', E#3{'y'}}")
+                .input("aax", "E#1{'a', E#2{'a', 'x'}}")
+                .input("aay", "E#1{'a', E#1{'a', E#3{'y'}}}")
+                .check();
         Builder.tree("lldfa/right_as_factor.g")
                 .rule("A")
                 .input("aax", "A#1{['a', 'a'], 'x'}")
@@ -207,19 +185,25 @@ public class LLDfaTest {
 
 
     @Test
+    @Ignore
     public void greedy() throws Exception {
-//        DescTester.check2(Builder.tree("lldfa/greedy-opt.g").rule("E").
-//                input("ax", "").
-//                input("aax", ""));
-        Builder.tree("lldfa/greedy-opt2.g").rule("E").
-                input("cya", "").
-                input("cyaebda", "").
-                check();
+//        DescTester.check2(Builder.tree("lldfa/greedy-opt.g").rule("E")
+//                .input("ax", "")
+//                .input("aax", ""));
+        Builder.tree("lldfa/greedy-opt2.g").rule("E")
+                        .dump()
+                .input("cya", "")
+        .input("cyaebda", "")
+                .check();
 
     }
 
     @Test
     public void all() throws Exception {
+        Builder.tree("lldfa/pre-reduce.g").rule("E")
+        .input("ax", "E#1{'a', 'x'}")
+        . input("azy", "E#2{A{'a', 'z'}, 'y'}")
+                .check();
         Builder.tree("lldfa/cc-complex.g").rule("E")
                 .input("ab", "E#1{'a', S1#1{'b'}}")
                 .input("acd", "E#1{'a', S1#2{'c', S3#2{'d'}}}")
@@ -244,7 +228,7 @@ public class LLDfaTest {
         Builder.tree("lldfa/action.g")
                 .rule("E")
                 .dump()
-                .input("ab", "")
+                .input("ab", "E{'a', 'b'}")
                 .check();
     }
 

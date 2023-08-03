@@ -26,8 +26,7 @@ public class Template {
             if (pos != -1) {
                 parts.add(new part(var, pos));
                 pos = pos + var.length();
-            }
-            else {
+            } else {
                 break;
             }
         }

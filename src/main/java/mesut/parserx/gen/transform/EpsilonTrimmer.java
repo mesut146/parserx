@@ -39,8 +39,7 @@ public class EpsilonTrimmer extends Transformer {
             var res = new RuleDecl(rule.ref.name + "_noe", rhs);
             if (rhs.isEpsilon()) {
                 //res.hidden = true;
-            }
-            else {
+            } else {
                 res.rhs = Simplify.simplifyNode(rhs);
                 out.addRule(res);
             }
@@ -120,8 +119,7 @@ public class EpsilonTrimmer extends Transformer {
                     return transformNode(res, arg);
                 }
                 return res;
-            }
-            else if (hasEpsilon(ch)) {
+            } else if (hasEpsilon(ch)) {
                 seq.set(i, transformNode(ch, arg));
             }
         }
@@ -143,12 +141,10 @@ public class EpsilonTrimmer extends Transformer {
             //a?=a|€
             modified = true;
             return ch;
-        }
-        else if (regex.isStar()) {
+        } else if (regex.isStar()) {
             modified = true;
             return new Regex(ch, RegexType.PLUS);
-        }
-        else {
+        } else {
             return new Regex(ch, RegexType.PLUS);
         }
     }

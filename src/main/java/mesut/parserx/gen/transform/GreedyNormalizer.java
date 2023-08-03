@@ -23,6 +23,16 @@ public class GreedyNormalizer extends Transformer {
         this.puller = new Puller(tree);
     }
 
+    public static TailInfo hasGreedyTail(Node node, final Set<Name> first, Tree tree) {
+        if (node.isName() && node.asName().isToken) {
+            return null;
+        }
+        if (node instanceof Factored) return null;
+        if (node.isName() && first.contains(node.asName())) return null;
+        var visitor = new GreedyVisitor(first, tree, node);
+        return node.accept(visitor, null);
+    }
+
     public void normalize() {
         for (int i = 0; i < tree.rules.size(); i++) {
             var decl = tree.rules.get(i);
@@ -71,8 +81,7 @@ public class GreedyNormalizer extends Transformer {
                     f.astInfo.varName = factorName(f.asRegex().node.asName());
                     //info = factor2.pull(cur.copy(), f.asRegex());
                     throw new RuntimeException("greedy loop");
-                }
-                else {
+                } else {
                     f.astInfo.varName = factorName(f.asName());
                     info = cur.copy().accept(puller, f.asName());
                 }
@@ -99,8 +108,7 @@ public class GreedyNormalizer extends Transformer {
                         s2.add(b.copy());
                         ors.add(new Sequence(s2));
                         break;
-                    }
-                    else {
+                    } else {
                         s.add(info.zero);
                         s.add(b.copy());
                         ors.add(new Sequence(s));
@@ -115,17 +123,6 @@ public class GreedyNormalizer extends Transformer {
             return Sequence.make(res);
         }
         return seq;
-    }
-
-
-    public static TailInfo hasGreedyTail(Node node, final Set<Name> first, Tree tree) {
-        if (node.isName() && node.asName().isToken) {
-            return null;
-        }
-        if (node instanceof Factored) return null;
-        if (node.isName() && first.contains(node.asName())) return null;
-        var visitor = new GreedyVisitor(first, tree, node);
-        return node.accept(visitor, null);
     }
 
     public static class TailInfo {
@@ -177,8 +174,7 @@ public class GreedyNormalizer extends Transformer {
             if (FirstSet.canBeEmpty(b, tree)) {
                 //Epsilons.trimInfo(b,tree);
                 return a.accept(this, arg);
-            }
-            else {
+            } else {
                 return null;
             }
         }

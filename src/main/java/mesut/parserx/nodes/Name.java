@@ -31,7 +31,7 @@ public class Name extends Node implements Comparable<Name> {
         var sb = new StringBuilder();
         //sb.append(varString());
         sb.append(name);
-        if (!args2.isEmpty()){
+        if (!args2.isEmpty()) {
             sb.append("(").append(NodeList.join(args2, ", ")).append(")");
         }
 

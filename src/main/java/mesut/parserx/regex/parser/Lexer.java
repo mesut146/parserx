@@ -7,29 +7,14 @@ import java.util.List;
 
 public class Lexer {
 
+    static final int INITIAL = 0;
+    static final int EOF = 0;
+    public static int bufSize = 100;
     static String cMapPacked = "\56\56\0\50\50\1\174\174\2\52\52\4\136\136\5\134\134\11\54\54\12\12\12\23\0\11\17\100\132\15\51\51\3\53\53\7\135\135\10\55\55\13\133\133\14\77\77\16\175\uffff\6\57\76\21\137\173\20\13\47\22";
     //input -> input id
     static int[] cMap = unpackCMap(cMapPacked);
     //input id -> regex string for error reporting
     static String[] cMapRegex = {".", "(", "|", ")", "*", "^", "\\u007d-\\uffff", "+", "]", "\\\\", ",", "-", "[", "@-Z", "?", "\\u0000-\\t", "_-{", "/->", "\\u000b-\\u0027", "\\n"};
-    int[] skip = {0};
-    int[] accepting = {31742};
-    //boolean[] after = {$after_list$};
-    //id -> token name
-    String[] names = {"EOF", "DOT", "BAR", "BOPEN", "BCLOSE", "LPAREN", "RPAREN", "QUES", "STAR", "PLUS", "XOR", "MINUS", "ESCAPED", "CHAR"};
-    //state->token id
-    int[] ids = {0, 1, 5, 2, 6, 8, 10, 13, 9, 4, 0, 11, 3, 7, 12};
-    static final int INITIAL = 0;
-    static final int EOF = 0;
-    Reader reader;
-    int yypos = 0;//pos in file
-    int yyline = 1;
-    int yychar;
-    public static int bufSize = 100;
-    int bufPos = 0;//pos in buffer
-    int bufStart = bufPos;
-    int bufEnd;
-    char[] yybuf = new char[bufSize];
     static String trans_packed = "\24" +
             "\24\0\1\1\2\2\3\3\4\4\5\5\6\6\7\7\10\10\11\11\12\12\7\13\13\14\14\15\7\16\15\17\7\20\7\21\7\22\7\23\7" +
             "\0" +
@@ -47,6 +32,21 @@ public class Lexer {
             "\0" +
             "\0";
     static int[][] trans = unpackTrans(trans_packed);
+    int[] skip = {0};
+    int[] accepting = {31742};
+    //boolean[] after = {$after_list$};
+    //id -> token name
+    String[] names = {"EOF", "DOT", "BAR", "BOPEN", "BCLOSE", "LPAREN", "RPAREN", "QUES", "STAR", "PLUS", "XOR", "MINUS", "ESCAPED", "CHAR"};
+    //state->token id
+    int[] ids = {0, 1, 5, 2, 6, 8, 10, 13, 9, 4, 0, 11, 3, 7, 12};
+    Reader reader;
+    int yypos = 0;//pos in file
+    int yyline = 1;
+    int yychar;
+    int bufPos = 0;//pos in buffer
+    int bufStart = bufPos;
+    int bufEnd;
+    char[] yybuf = new char[bufSize];
 
     public Lexer(Reader reader) throws IOException {
         this.reader = reader;
@@ -148,8 +148,7 @@ public class Lexer {
             yychar = yybuf[bufPos];
             if (yychar == EOF) {
                 curState = -1;
-            }
-            else {
+            } else {
                 backupState = curState;
                 if (cMap[yychar] == -1) {
                     throw new IOException(String.format("unknown input=%c(%d) pos=%s line=%d", yychar, yychar, yypos, yyline));
@@ -167,20 +166,17 @@ public class Lexer {
                       curState = INITIAL;
                     }*/
                     return token;
-                }
-                else {
+                } else {
                     throw new IOException(String.format("invalid input=%c(%d) pos=%s line=%d buf='%s' expecting=%s", yychar, yychar, yypos, yyline, getText(), findExpected(backupState)));
                 }
-            }
-            else {
+            } else {
                 if (getBit(accepting, curState)) lastState = curState;
                 if (yychar == '\n') {
                     yyline++;
                     if (bufPos > 0 && yybuf[bufPos - 1] == '\r') {
                         yyline--;
                     }
-                }
-                else if (yychar == '\r') {
+                } else if (yychar == '\r') {
                     yyline++;
                 }
                 bufPos++;

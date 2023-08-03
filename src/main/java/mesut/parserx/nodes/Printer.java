@@ -10,7 +10,7 @@ public class Printer extends BaseVisitor<String, Void> {
         this.tree = tree;
     }
 
-    public String print(){
+    public String print() {
         return tree.toString();
     }
 
@@ -24,8 +24,7 @@ public class Printer extends BaseVisitor<String, Void> {
             }
             sb.append(decl.rhs.accept(this, null));
             sb.append("\n").append(indent).append(";");
-        }
-        else {
+        } else {
             sb.append(": ").append(decl.rhs.accept(this, null)).append(";");
         }
         return sb.toString();

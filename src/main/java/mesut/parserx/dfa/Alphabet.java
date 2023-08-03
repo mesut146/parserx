@@ -11,9 +11,9 @@ import java.util.Map;
 public class Alphabet {
     public static int min = Character.MIN_VALUE;//0x0000
     public static int max = Character.MAX_VALUE;//0xFFFF
+    private final Map<Integer, Node> reverseMap = new HashMap<>();
     public Map<Node, Integer> map = new HashMap<>();
     public int lastId = 0;
-    private final Map<Integer, Node> reverseMap = new HashMap<>();
 
     public int size() {
         return map.size();

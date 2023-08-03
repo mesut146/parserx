@@ -12,7 +12,6 @@ import mesut.parserx.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -35,8 +34,7 @@ public class JavaLexer {
         template = new Template("lexer.java.template");
         if (options.packageName == null) {
             template.set("package", "");
-        }
-        else {
+        } else {
             template.set("package", "package " + options.packageName + ";\n");
         }
         template.set("lexer_class", options.lexerClass);
@@ -52,8 +50,7 @@ public class JavaLexer {
                 sb.append("    ").append(member).append("\n");
             }
             template.set("members", sb.toString());
-        }
-        else {
+        } else {
             template.set("members", "");
         }
 
@@ -72,8 +69,7 @@ public class JavaLexer {
     private void writeActions() {
         if (gen.actions == null) {
             template.set("actionCases", "");
-        }
-        else {
+        } else {
             var sb = new StringBuilder();
             for (var state : dfa.it()) {
                 if (!state.accepting) continue;
@@ -167,8 +163,7 @@ public class JavaLexer {
             transWriter.append("\"");
             if (list == null || list.isEmpty()) {
                 transWriter.append(makeOctal(0));
-            }
-            else {
+            } else {
                 transWriter.append(makeOctal(list.size()));
                 for (Transition tr : list) {
                     transWriter.append(makeOctal(tr.input));
@@ -218,8 +213,7 @@ public class JavaLexer {
         var template = new Template("token.java.template");
         if (options.packageName == null) {
             template.set("package", "");
-        }
-        else {
+        } else {
             template.set("package", "package " + options.packageName + ";\n");
         }
         template.set("token_class", options.tokenClass);

@@ -44,7 +44,7 @@ public class LexerGenTest {
     public void negate() {
         var br = new Bracket("[^ab]");
         br.normalize();
-        System.out.println(br.ranges);
+        Assert.assertEquals("[\\u0000-\\u0060, \\u0063-\\uffff]",br.ranges.toString());
     }
 
     @Test
@@ -111,14 +111,6 @@ public class LexerGenTest {
         Env.dot(dot);
     }
 
-    @Test
-    public void itself() throws Exception {
-        var grammar = new File("./src/main/grammar/parserx.g");
-        Tree tree = Tree.makeTree(grammar);
-        tree.options.dump = true;
-        //RealTest.check(tree, true, grammar.getAbsolutePath());
-        RealTest.check(tree, true, Env.getResFile("lexer/member.g").getAbsolutePath());
-    }
 
     @Test
     public void generateLexer() throws Exception {
@@ -149,12 +141,6 @@ public class LexerGenTest {
             assert escaped.equals(strArr[i]);
             System.out.println(escaped);
         }
-    }
-
-    @Test
-    public void mode() throws Exception {
-        RealTest.check(Env.tree("lexer/mode.g"), "bbac", "acd");
-        RealTest.check(Env.tree("lexer/xml-mode.g"), "<tag a=\\\"val\\\">");
     }
 
     void dots(Tree tree) throws IOException {

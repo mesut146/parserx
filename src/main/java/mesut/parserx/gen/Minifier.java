@@ -35,8 +35,7 @@ public class Minifier extends Transformer {
             Name res;
             if (map.containsKey(name)) {
                 res = map.get(name);
-            }
-            else {
+            } else {
                 res = new Name(prefix + count);
                 map.put(name, res);
             }

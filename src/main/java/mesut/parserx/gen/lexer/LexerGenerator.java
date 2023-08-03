@@ -38,6 +38,29 @@ public class LexerGenerator {
         return gen;
     }
 
+    //compress boolean bits to integers
+    public static int[] makeIntArr(boolean[] arr) {
+        int[] res = new int[arr.length / 32 + 1];
+        int pos = 0;
+        int cur;
+        for (int start = 0; start < arr.length; start += 32) {
+            cur = 0;
+            for (int j = 0; j < 32 && start + j < arr.length; j++) {
+                int bit = arr[start + j] ? 1 : 0;
+                cur |= bit << j;
+            }
+            res[pos++] = cur;
+        }
+        return res;
+    }
+
+    public static String makeOctal(int val) {
+        if (val <= 255) {
+            return "\\" + Integer.toOctalString(val);
+        }
+        return UnicodeUtils.escapeUnicode(val);
+    }
+
     public void generate() throws IOException {
         dfa = tree.makeNFA().dfa();
         //dfa = Minimization.optimize(this.dfa);
@@ -48,8 +71,7 @@ public class LexerGenerator {
         more();
         if (target == Lang.JAVA) {
             new JavaLexer(this).gen();
-        }
-        else if (target == Lang.CPP) {
+        } else if (target == Lang.CPP) {
             new CppLexer().gen(this);
         }
     }
@@ -95,15 +117,13 @@ public class LexerGenerator {
             if (!state.accepting) continue;
             if (state.decl.mode != null) {
                 mode_arr[state.id] = dfa.modes.get(state.decl.mode).id;
-            }
-            else {
+            } else {
                 //preserve mode
                 var mb = getModeBlock(state.decl);
                 if (mb == null) {
                     //global token -> DEFAULT
                     mode_arr[state.id] = dfa.initialState.id;
-                }
-                else {
+                } else {
                     //mode token -> same mode
                     mode_arr[state.id] = dfa.modes.get(mb.name).id;
                 }
@@ -118,29 +138,6 @@ public class LexerGenerator {
             }
         }
         return null;
-    }
-
-    //compress boolean bits to integers
-    public static int[] makeIntArr(boolean[] arr) {
-        int[] res = new int[arr.length / 32 + 1];
-        int pos = 0;
-        int cur;
-        for (int start = 0; start < arr.length; start += 32) {
-            cur = 0;
-            for (int j = 0; j < 32 && start + j < arr.length; j++) {
-                int bit = arr[start + j] ? 1 : 0;
-                cur |= bit << j;
-            }
-            res[pos++] = cur;
-        }
-        return res;
-    }
-
-    public static String makeOctal(int val) {
-        if (val <= 255) {
-            return "\\" + Integer.toOctalString(val);
-        }
-        return UnicodeUtils.escapeUnicode(val);
     }
 
     public int[] skipList() {

@@ -31,6 +31,68 @@ public class LLDfaBuilder {
         ItemSet.lastId = Item.lastId = 0;
     }
 
+    static boolean isSame(ItemSet set, ItemSet set2) {
+        //if (isFinal(set) || isFinal(set2)) return false;//why not finals?
+        if (set.transitions.size() != set2.transitions.size()) return false;
+        var map = new HashMap<Node, ItemSet>();
+        for (var tr : set.transitions) {
+            map.put(tr.symbol, tr.target);
+        }
+        for (var tr : set2.transitions) {
+            if (!map.containsKey(tr.symbol)) return false;
+            if (!map.get(tr.symbol).equals(tr.target)) return false;
+        }
+        return true;
+    }
+
+    public static void dot(PrintWriter w, Set<ItemSet> all) {
+        Item.printLa = false;
+        w.println("digraph G{");
+        w.println("rankdir = TD");
+        w.println("ratio=\"fill\";");
+        for (var set : all) {
+            var sb = new StringBuilder();
+            var id = String.valueOf(set.stateId);
+            //items
+            sb.append("<");
+//                for (var it : set.all) {
+//                    var line = it.toString2(tree);
+//                    line = line.replace(">", "&gt;");
+//                    if (it.isReduce(tree)) {
+//                        sb.append("<FONT color=\"blue\">");
+//                        sb.append(line);
+//                        sb.append("</FONT>");
+//                    }
+//                    else if (it.dotPos == 0) {
+//                        sb.append("<FONT color=\"red\">");
+//                        sb.append(line);
+//                        sb.append("</FONT>");
+//                    }
+//                    else {
+//                        sb.append(line);
+//                    }
+//                    sb.append("<BR ALIGN=\"LEFT\"/>");
+//                }
+            sb.append(">");
+            w.printf("%s [shape=box xlabel=\"%s\" label=%s];\n", id, id, sb);
+            if (set.hasFinal()) {
+                w.printf("%s [style=filled fillcolor=gray];\n", id);
+            }
+            for (var tr : set.transitions) {
+                var labelBuf = new StringBuilder();
+//                if (tr.symbol.astInfo.isFactor) {
+//                    labelBuf.append("<<FONT color=\"green\">");
+//                    labelBuf.append(tr.symbol);
+//                    labelBuf.append("</FONT>>");
+//                }
+                labelBuf.append("\"").append(tr.symbol).append("\"");
+                w.printf("%s -> %s [label=%s];\n", id, tr.target.stateId, labelBuf);
+            }
+        }
+        w.println("\n}");
+        w.flush();
+    }
+
     void prepare() {
         //expand plus
         new Transformer(tree) {
@@ -48,8 +110,7 @@ public class LLDfaBuilder {
                         var star = new Regex(regex.node.copy(), RegexType.STAR);
                         star.astInfo = regex.astInfo.copy();
                         list.add(star);
-                    }
-                    else {
+                    } else {
                         list.add(ch);
                     }
                 }
@@ -76,39 +137,6 @@ public class LLDfaBuilder {
         }
     }
 
-    static class FactorVisitor extends BaseVisitor<Boolean, Void> {
-        Tree tree;
-
-        @Override
-        public Boolean visitOr(Or or, Void arg) {
-            for (int i = 0; i < or.size(); i++) {
-                //try seq
-                or.get(i).accept(this, null);
-                for (int j = i + 1; j < or.size(); j++) {
-                    if (FactorHelper.hasCommon(or.get(i), or.get(j), tree)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        @Override
-        public Boolean visitSequence(Sequence seq, Void arg) {
-            for (int i = 0; i < seq.size(); i++) {
-                if (i == seq.size() - 1) break;
-
-//                var a = seq.get(i).copy();
-//                var b = seq.get(i + 1).copy();
-//                var info = GreedyNormalizer.hasGreedyTail(a, FirstSet.firstSet(b, tree), tree);
-//                if (info != null) {
-//                    throw new RuntimeException(String.format("%s has greediness, %s follows %s, list: %s, sym: %s", curRule.getName(), a, b, info.list, info.sym));
-//                }
-            }
-            return false;
-        }
-    }
-
     public void build(RuleDecl rd) {
         var rule = rd.ref;
         queue.clear();
@@ -123,8 +151,7 @@ public class LLDfaBuilder {
         if (rule.equals(tree.start)) {
             la = new HashSet<>();
             la.add(ParserUtils.dollar);
-        }
-        else {
+        } else {
             la = LaFinder.computeLa(rule, tree);
             la.add(ParserUtils.dollar);
         }
@@ -158,20 +185,17 @@ public class LLDfaBuilder {
                     if (node instanceof Factored) continue;
                     var sym = (Node) ItemSet.sym(node.copy());
                     int newPos = node.isStar() ? i : i + 1;
-                    Item target;
                     if (curSet.isFactor(item, i, true)) {
-                        //sym.astInfo.isFactor = true;
+                        sym.astInfo.isFactor = true;
                     }
                     //if not factor dont add to queue
                     if (!sym.astInfo.isFactor) {
                         //direct transition to alt final state
                         makeAlt(item, sym.asName(), curSet);
-                        continue;
+                    } else {
+                        var target = new Item(item, newPos);
+                        addMap(map, sym, new LLTransition.ItemPair(item, target), curSet);
                     }
-                    else {
-                        target = new Item(item, newPos);
-                    }
-                    addMap(map, sym, new LLTransition.ItemPair(item, target), curSet);
                 }
             }
             makeTrans(curSet, map);
@@ -212,8 +236,7 @@ public class LLDfaBuilder {
             }
             if (cur.prev.isEmpty()) {
                 cur = cur.parents.get(0);
-            }
-            else {
+            } else {
                 cur = cur.prev.iterator().next();
             }
         }
@@ -266,14 +289,13 @@ public class LLDfaBuilder {
                     sim.update(it);
                 }
                 targetSet = sim;
-            }
-            else {
+            } else {
                 all.add(targetSet);
                 queue.add(targetSet);
             }
             tr.target = targetSet;
             curSet.addTransition(tr);
-            //Log.log(Level.FINE, String.format("trans %d -> %d with %s", curSet.stateId, targetSet.stateId, sym));
+            Log.log(Level.FINE, String.format("trans %d -> %d with %s", curSet.stateId, targetSet.stateId, tr.symbol));
         }
     }
 
@@ -344,21 +366,6 @@ public class LLDfaBuilder {
         }
     }
 
-
-    static boolean isSame(ItemSet set, ItemSet set2) {
-        //if (isFinal(set) || isFinal(set2)) return false;//why not finals?
-        if (set.transitions.size() != set2.transitions.size()) return false;
-        var map = new HashMap<Node, ItemSet>();
-        for (var tr : set.transitions) {
-            map.put(tr.symbol, tr.target);
-        }
-        for (var tr : set2.transitions) {
-            if (!map.containsKey(tr.symbol)) return false;
-            if (!map.get(tr.symbol).equals(tr.target)) return false;
-        }
-        return true;
-    }
-
     //dump only transitions
     public void dump(OutputStream os) {
         PrintWriter w = new PrintWriter(os);
@@ -374,8 +381,7 @@ public class LLDfaBuilder {
                     }
                     if (tr.target.which.isPresent()) {
                         w.printf("%s#%s S%d?", tr.symbol.toString(), tr.target.which.get(), tr.target.stateId);
-                    }
-                    else {
+                    } else {
                         w.printf("%s S%d", tr.symbol.toString(), tr.target.stateId);
                     }
                     i++;
@@ -418,51 +424,36 @@ public class LLDfaBuilder {
         return list;
     }
 
-    public static void dot(PrintWriter w, Set<ItemSet> all) {
-        Item.printLa = false;
-        w.println("digraph G{");
-        w.println("rankdir = TD");
-        w.println("ratio=\"fill\";");
-        for (var set : all) {
-            var sb = new StringBuilder();
-            var id = String.valueOf(set.stateId);
-            //items
-            sb.append("<");
-//                for (var it : set.all) {
-//                    var line = it.toString2(tree);
-//                    line = line.replace(">", "&gt;");
-//                    if (it.isReduce(tree)) {
-//                        sb.append("<FONT color=\"blue\">");
-//                        sb.append(line);
-//                        sb.append("</FONT>");
-//                    }
-//                    else if (it.dotPos == 0) {
-//                        sb.append("<FONT color=\"red\">");
-//                        sb.append(line);
-//                        sb.append("</FONT>");
-//                    }
-//                    else {
-//                        sb.append(line);
-//                    }
-//                    sb.append("<BR ALIGN=\"LEFT\"/>");
-//                }
-            sb.append(">");
-            w.printf("%s [shape=box xlabel=\"%s\" label=%s];\n", id, id, sb);
-            if (set.hasFinal()) {
-                w.printf("%s [style=filled fillcolor=gray];\n", id);
+    static class FactorVisitor extends BaseVisitor<Boolean, Void> {
+        Tree tree;
+
+        @Override
+        public Boolean visitOr(Or or, Void arg) {
+            for (int i = 0; i < or.size(); i++) {
+                //try seq
+                or.get(i).accept(this, null);
+                for (int j = i + 1; j < or.size(); j++) {
+                    if (FactorHelper.hasCommon(or.get(i), or.get(j), tree)) {
+                        return true;
+                    }
+                }
             }
-            for (var tr : set.transitions) {
-                var labelBuf = new StringBuilder();
-//                if (tr.symbol.astInfo.isFactor) {
-//                    labelBuf.append("<<FONT color=\"green\">");
-//                    labelBuf.append(tr.symbol);
-//                    labelBuf.append("</FONT>>");
-//                }
-                labelBuf.append("\"").append(tr.symbol).append("\"");
-                w.printf("%s -> %s [label=%s];\n", id, tr.target.stateId, labelBuf);
-            }
+            return false;
         }
-        w.println("\n}");
-        w.flush();
+
+        @Override
+        public Boolean visitSequence(Sequence seq, Void arg) {
+            for (int i = 0; i < seq.size(); i++) {
+                if (i == seq.size() - 1) break;
+
+//                var a = seq.get(i).copy();
+//                var b = seq.get(i + 1).copy();
+//                var info = GreedyNormalizer.hasGreedyTail(a, FirstSet.firstSet(b, tree), tree);
+//                if (info != null) {
+//                    throw new RuntimeException(String.format("%s has greediness, %s follows %s, list: %s, sym: %s", curRule.getName(), a, b, info.list, info.sym));
+//                }
+            }
+            return false;
+        }
     }
 }

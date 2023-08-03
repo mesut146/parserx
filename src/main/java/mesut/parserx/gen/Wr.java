@@ -6,10 +6,10 @@ import java.io.IOException;
 import java.io.Writer;
 
 public class Wr {
+    static int space_count = 4;
     Writer writer;
     int level = 0;
     String indent;
-    static int space_count = 4;
 
     public Wr(File file) throws IOException {
         this.writer = new FileWriter(file);

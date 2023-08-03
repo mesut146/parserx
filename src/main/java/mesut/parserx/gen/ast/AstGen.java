@@ -25,8 +25,7 @@ public class AstGen extends BaseVisitor<Void, Void> {
         new AstGen(tree).gen();
         if (target == Lang.JAVA) {
             new JavaAst(tree).genAst();
-        }
-        else if (target == Lang.CPP) {
+        } else if (target == Lang.CPP) {
             new CppAst(tree).genAst();
         }
     }
@@ -87,11 +86,9 @@ public class AstGen extends BaseVisitor<Void, Void> {
     String altVar(Node ch) {
         if (ch.isName()) {
             return ch.asName().name;
-        }
-        else if (ch.isSequence() && ch.asSequence().size() == 1) {
+        } else if (ch.isSequence() && ch.asSequence().size() == 1) {
             return ItemSet.sym(ch.asSequence().get(0)).name;
-        }
-        else {
+        } else {
             return ch.astInfo.nodeType.name.toLowerCase();
         }
     }

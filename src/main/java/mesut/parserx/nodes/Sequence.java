@@ -42,8 +42,7 @@ public class Sequence extends NodeList {
         var res = NodeList.join(list, " ");
         if (assocLeft) {
             res = res + " %left";
-        }
-        else if (assocRight) {
+        } else if (assocRight) {
             res = res + " %right";
         }
         return res;
@@ -68,8 +67,7 @@ public class Sequence extends NodeList {
         for (Node ch : this) {
             if (ch.isSequence()) {
                 arr.addAll(ch.asSequence().list);
-            }
-            else {
+            } else {
                 arr.add(ch);
             }
         }

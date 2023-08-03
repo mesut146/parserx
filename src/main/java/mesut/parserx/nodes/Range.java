@@ -42,8 +42,7 @@ public class Range extends Node implements Comparable<Range> {
         if (start == end) {
             if (start == '\"' || start == '\'') {
                 return "\\" + (char) start;
-            }
-            else if (UnicodeUtils.isSpecial(start)) {
+            } else if (UnicodeUtils.isSpecial(start)) {
                 return UnicodeUtils.escapeUnicode(start);
             }
             return UnicodeUtils.printChar(start);
@@ -66,8 +65,7 @@ public class Range extends Node implements Comparable<Range> {
     public int compareTo(Range other) {
         if (start < other.start) {
             return -1;
-        }
-        else if (start > other.start) {
+        } else if (start > other.start) {
             return 1;
         }
         return Integer.compare(end, other.end);

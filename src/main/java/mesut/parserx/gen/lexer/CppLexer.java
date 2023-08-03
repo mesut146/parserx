@@ -75,8 +75,7 @@ public class CppLexer {
             if (list == null || list.isEmpty()) {
                 transWriter.append(makeOctal(0));
                 len++;
-            }
-            else {
+            } else {
                 transWriter.append(makeOctal(list.size()));
                 len++;
                 for (Transition tr : list) {

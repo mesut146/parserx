@@ -6,8 +6,7 @@ public enum Lang {
     public static Lang from(String lang) {
         if (lang.equals("java")) {
             return JAVA;
-        }
-        else if (lang.equals("cpp") || lang.equals("c++")) {
+        } else if (lang.equals("cpp") || lang.equals("c++")) {
             return CPP;
         }
         throw new RuntimeException("invalid lang: " + lang);

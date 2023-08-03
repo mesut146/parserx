@@ -33,8 +33,7 @@ public class DotWriter {
             var decl = generator.tree.getToken(token.name);
             if (decl != null && decl.rhs.isString()) {
                 writer.print("<TD>" + decl.rhs + "</TD>");
-            }
-            else {
+            } else {
                 writer.print("<TD>" + token.name + "</TD>");
             }
         }
@@ -75,21 +74,18 @@ public class DotWriter {
                         //lr0
                         if (name.equals(start)) {
                             writer.print("accept");
-                        }
-                        else {
+                        } else {
                             writer.print("R");
                             writer.print(name);
                             //index is needed
                             writer.print(item.rule.index);
                         }
-                    }
-                    else {
+                    } else {
                         //lr1
                         if (item.lookAhead.contains(token)) {
                             if (item.lookAhead.contains(ParserUtils.dollar) && name.equals(start)) {
                                 writer.print("accept");
-                            }
-                            else {
+                            } else {
                                 writer.print("R");
                                 writer.print(name);
                                 //index is needed

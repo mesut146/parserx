@@ -25,7 +25,7 @@ public class DescTester {
         var tree = builder.tree;
         tree.options.outDir = outDir;
         JavaAst.printTokenQuote = true;
-        ParserGen.genCC(tree, Lang.JAVA, false);
+        ParserGen.genCC(tree, Lang.JAVA);
 
         File classDir = new File(outDir, "out");
         Env.deleteInside(classDir);
@@ -104,7 +104,7 @@ public class DescTester {
         var outDir = Env.dotDir().getAbsolutePath();
         var tree = builder.tree;
         tree.options.outDir = outDir;
-        ParserGen.genCC(tree, Lang.JAVA, false);
+        ParserGen.genCC(tree, Lang.JAVA);
         File classDir = new File(outDir, "out");
         classDir.mkdirs();
         Env.deleteInside(classDir);

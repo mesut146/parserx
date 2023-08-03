@@ -12,8 +12,10 @@ public class TokenStream{
         this.lexer = lexer;
         this.la = lexer.$lexer_function$();
         tokens.add(this.la);
+        //System.out.println("la = " + this.la);
     }
 
+    //without consume
     void pop() throws IOException{
         pos++;
         if(pos < tokens.size()){
@@ -21,6 +23,7 @@ public class TokenStream{
         }else{
             la = lexer.$lexer_function$();
             tokens.add(la);
+            //System.out.println("la = " + this.la);
         }
     }
 
@@ -35,14 +38,17 @@ public class TokenStream{
         if(la.type != type){
             throw new RuntimeException("unexpected token: " + la + " expecting: " + name);
         }
+        $token_class$ res = la;
         if(!tokens.isEmpty()){
             tokens.removeFirst();//cur la
+        }else{
+            throw new RuntimeException("bug");
         }
-        $token_class$ res = la;
         //set new la
         if(tokens.isEmpty()){
             la = lexer.$lexer_function$();
             tokens.add(this.la);
+            //System.out.println("la = " + this.la);
         }else{
             la = tokens.getFirst();
         }

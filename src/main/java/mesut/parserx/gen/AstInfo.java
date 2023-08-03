@@ -30,8 +30,7 @@ public class AstInfo {
         StringBuilder sb = new StringBuilder("{");
         if (isFactor) {
             sb.append("factor ").append(varName);
-        }
-        else {
+        } else {
             sb.append(String.format("%s.%s", outerVar, varName));
         }
         if (which.isPresent()) {

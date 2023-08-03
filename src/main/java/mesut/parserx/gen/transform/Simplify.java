@@ -47,17 +47,14 @@ public class Simplify extends Transformer {
             ch = transformNode(ch, parent);
             if (ch.isSequence()) {
                 list.addAll(ch.asSequence().list);
-            }
-            else if (ch.isGroup() && ch.asGroup().node.isSequence()) {
+            } else if (ch.isGroup() && ch.asGroup().node.isSequence()) {
                 if (ch.astInfo.varName != null) {
                     //don't over simplify
                     list.add(ch);
-                }
-                else {
+                } else {
                     list.addAll(ch.asGroup().node.asSequence().list);
                 }
-            }
-            else if (!ch.isEpsilon()) {
+            } else if (!ch.isEpsilon()) {
                 list.add(ch);
             }
         }
@@ -78,17 +75,14 @@ public class Simplify extends Transformer {
             ch = transformNode(ch, parent);
             if (ch.isOr()) {
                 list.addAll(ch.asOr().list);
-            }
-            else if (ch.isGroup() && ch.asGroup().node.isOr()) {
+            } else if (ch.isGroup() && ch.asGroup().node.isOr()) {
                 if (ch.astInfo.varName != null) {
                     //don't over simplify
                     list.add(ch);
-                }
-                else {
+                } else {
                     list.addAll(ch.asGroup().node.asOr().list);
                 }
-            }
-            else {
+            } else {
                 list.add(ch);
             }
         }
@@ -116,20 +110,17 @@ public class Simplify extends Transformer {
         if (regex.isOptional()) {
             if (ch.isPlus()) {
                 res = new Regex(ch.asRegex().node, RegexType.STAR);
-            }
-            else if (ch.isStar() || ch.isOptional()) {
+            } else if (ch.isStar() || ch.isOptional()) {
                 res = ch;
             }
-        }
-        else if (regex.isStar()) {
+        } else if (regex.isStar()) {
             if (ch.isStar() || ch.isPlus()) {
                 res = ch;
             }
             if (ch.isOptional()) {
                 ch = new Regex(ch.asRegex().node, RegexType.STAR);
             }
-        }
-        else {
+        } else {
             if (ch.isOptional() || ch.isStar()) {
                 res = new Regex(ch.asRegex().node, RegexType.STAR);
             }

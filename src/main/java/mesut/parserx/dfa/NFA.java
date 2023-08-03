@@ -29,6 +29,22 @@ public class NFA {
         this(capacity, new Tree());
     }
 
+    public static NFA read(File file) throws IOException {
+        return NfaVisitor.make(file);
+    }
+
+    public static NFA read(String str) throws IOException {
+        return NfaVisitor.make(str);
+    }
+
+    public static NFA makeDFA(File path) {
+        return Tree.makeTree(path).makeNFA().dfa();
+    }
+
+    public static NFA makeNFA(File path) {
+        return Tree.makeTree(path).makeNFA();
+    }
+
     public void init(int initial) {
         initialState = getState(initial);
         modes.put("DEFAULT", initialState);
@@ -46,22 +62,6 @@ public class NFA {
         }
         lastState = Math.max(lastState, id);
         return res;
-    }
-
-    public static NFA read(File file) throws IOException {
-        return NfaVisitor.make(file);
-    }
-
-    public static NFA read(String str) throws IOException {
-        return NfaVisitor.make(str);
-    }
-
-    public static NFA makeDFA(File path) {
-        return Tree.makeTree(path).makeNFA().dfa();
-    }
-
-    public static NFA makeNFA(File path) {
-        return Tree.makeTree(path).makeNFA();
     }
 
     public NFA dfa() {
@@ -200,6 +200,13 @@ public class NFA {
         return "(" + state.name + ")";
     }
 
+    @Override
+    public String toString() {
+        StringWriter writer = new StringWriter();
+        dump(writer);
+        return writer.toString();
+    }
+
     public void dump(Writer writer) {
         var w = new PrintWriter(writer);
         for (var e : modes.entrySet().stream().sorted(Comparator.comparingInt(e -> e.getValue().id)).collect(Collectors.toList())) {
@@ -223,12 +230,10 @@ public class NFA {
                     var input = getAlphabet().getRegex(tr.input);
                     if (input.isString()) {
                         w.print(input.asString().printNormal());
-                    }
-                    else if (input.isRange()) {
+                    } else if (input.isRange()) {
                         Range range = input.asRange();
                         w.print(range);
-                    }
-                    else {
+                    } else {
                         w.print(input);
                     }
                 }
@@ -249,6 +254,7 @@ public class NFA {
         });
     }
 
+
     public void dot(File path) throws IOException {
         dot(new FileWriter(path));
     }
@@ -267,11 +273,9 @@ public class NFA {
             if (state.accepting) {
                 //todo write label inside
                 w.printf("%d [shape = doublecircle color=%s xlabel=\"%s\"]\n", state.id, finalColor, name);
-            }
-            else if (state.isSkip) {
+            } else if (state.isSkip) {
                 w.printf("%d [color=%s xlabel=\"%s\"]\n", state.id, skipColor, name);
-            }
-            else {
+            } else {
                 w.printf("%d [xlabel=\"%s\"]\n", state.id, name);
             }
         }
@@ -281,8 +285,7 @@ public class NFA {
                 String label;
                 if (tr.epsilon) {
                     label = Epsilon.str();
-                }
-                else {
+                } else {
                     label = UnicodeUtils.escapeString(getAlphabet().getRegex(tr.input).toString());
                 }
                 w.printf("%s -> %s [label=\"%s\"]\n", state, tr.target, label);

@@ -13,35 +13,15 @@ import java.util.stream.Collectors;
 
 public class ConflictResolver {
 
+    public List<ConflictInfo> conflicts = new ArrayList<>();
     LrDFAGen gen;
     Tree tree;
-    public List<ConflictInfo> conflicts = new ArrayList<>();
     boolean isResolved;//is conflicts checked
-
-    public static class ConflictInfo {
-        public boolean rr;
-        public LrItem shift;
-        public LrItem reduce;
-        public LrItem reduce2;
-        public Name sym;
-        int state;
-
-        @Override
-        public String toString() {
-            if (rr) {
-                return String.format("reduce/reduce conflict in %s sym=%s\nitem1=%s\nitem1=%s\n", state, sym, shift, reduce);
-            }
-            else {
-                return String.format("shift/reduce conflict in %s sym=%s\nitem1=%s\nitem2=%s\n", state, sym, shift, reduce);
-            }
-        }
-    }
 
     public ConflictResolver(LrDFAGen gen) {
         this.gen = gen;
         tree = gen.tree;
     }
-
 
     public void checkAndReport() {
         checkAll();
@@ -83,12 +63,10 @@ public class ConflictResolver {
                         info.reduce2 = i2;
                         conflicts.add(info);
                     }
-                }
-                else {
+                } else {
                     if (i2.isReduce(tree)) {
                         any = checkSR(i1, i2, set);
-                    }
-                    else if (i1.isReduce(tree)) {
+                    } else if (i1.isReduce(tree)) {
                         any = checkSR(i2, i1, set);
                     }
                     if (any) {
@@ -118,8 +96,7 @@ public class ConflictResolver {
         var removed = false;
         if (reduce.lookAhead.contains(sym)) {
             removed = handleSR(shift, sym, reduce, set);
-        }
-        else if (sym.isRule()) {
+        } else if (sym.isRule()) {
             //expansion may conflict
             var firstSet = FirstSet.firstSet(sym, tree, true);
             if (hasCommon(firstSet, reduce.lookAhead)) {
@@ -140,8 +117,7 @@ public class ConflictResolver {
         //if same rule,check assoc
         if (shift.rule.equals(reduce.rule)) {
             removed = tryAssoc(shift, reduce, sym, set);
-        }
-        else {
+        } else {
             removed = tryPrec(shift, reduce, sym, set);
         }
         if (!removed) {
@@ -173,8 +149,7 @@ public class ConflictResolver {
                 }
             }
             removed = true;
-        }
-        else if (shift.rule.rhs.asSequence().assocRight) {
+        } else if (shift.rule.rhs.asSequence().assocRight) {
             //keep shift,remove reduce
             reduce.lookAhead.remove(sym);
             if (reduce.lookAhead.isEmpty()) {
@@ -212,24 +187,19 @@ public class ConflictResolver {
                 }
             }
             prefer1 = 2;
-        }
-        else {
+        } else {
             //prefer shift
             //removeItem(set, reduce);
             if (sym.isRule()) {
                 for (var la : FirstSet.tokens(sym, tree)) {
                     reduce.lookAhead.remove(la);
                 }
-                if (reduce.lookAhead.isEmpty()) {
-                    removeItem(set, reduce);
-                }
-            }
-            else {
+            } else {
                 //removeItem(set, reduce);
                 reduce.lookAhead.remove(sym);
-                if (reduce.lookAhead.isEmpty()) {
-                    removeItem(set, reduce);
-                }
+            }
+            if (reduce.lookAhead.isEmpty()) {
+                removeItem(set, reduce);
             }
             prefer1 = 1;
         }
@@ -240,7 +210,6 @@ public class ConflictResolver {
         this.isResolved = true;
         return true;
     }
-
 
     void removeItem(LrItemSet set, LrItem item) {
         //remove outgoing transitions
@@ -272,5 +241,23 @@ public class ConflictResolver {
 //            }
 //        }
         set.all.remove(item);
+    }
+
+    public static class ConflictInfo {
+        public boolean rr;
+        public LrItem shift;
+        public LrItem reduce;
+        public LrItem reduce2;
+        public Name sym;
+        int state;
+
+        @Override
+        public String toString() {
+            if (rr) {
+                return String.format("reduce/reduce conflict in %s sym=%s\nitem1=%s\nitem1=%s\n", state, sym, shift, reduce);
+            } else {
+                return String.format("shift/reduce conflict in %s sym=%s\nitem1=%s\nitem2=%s\n", state, sym, shift, reduce);
+            }
+        }
     }
 }

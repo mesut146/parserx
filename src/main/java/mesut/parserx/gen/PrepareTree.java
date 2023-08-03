@@ -60,8 +60,7 @@ public class PrepareTree extends Transformer {
             if (all.size() > 1) {
                 throw new RuntimeException("ambiguous token reference " + name + " in " + curToken);
             }
-        }
-        else {
+        } else {
             if (tree.getRule(name) == null) {
                 name.isToken = true;
                 var all = tree.getTokens(name.name);

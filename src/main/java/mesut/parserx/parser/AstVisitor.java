@@ -50,8 +50,7 @@ public class AstVisitor {
             for (var decl : tb.g1) {
                 if (decl.tokenDecl != null) {
                     tree.addToken(visitTokendecl(decl.tokenDecl.tokenDecl), block);
-                }
-                else {
+                } else {
                     tree.addModeBlock(visitModeBlock(decl.modeBlock.modeBlock), block);
                 }
             }
@@ -83,11 +82,9 @@ public class AstVisitor {
             var firstMode = visitName(node.mode.modes.name);
             if (firstMode.equals("skip")) {
                 decl.isSkip = true;
-            }
-            else if (firstMode.equals("more")) {
+            } else if (firstMode.equals("more")) {
                 decl.isMore = true;
-            }
-            else {
+            } else {
                 decl.mode = firstMode;
             }
             if (node.mode.modes.g1 != null) {
@@ -97,11 +94,9 @@ public class AstVisitor {
                 }
                 if (secondMode.equals("skip")) {
                     decl.isSkip = true;
-                }
-                else if (secondMode.equals("more")) {
+                } else if (secondMode.equals("more")) {
                     decl.isMore = true;
-                }
-                else {
+                } else {
                     if (!firstMode.equals("skip") && !firstMode.equals("more")) {
                         throw new RuntimeException("more than one mode specified in " + name);
                     }
@@ -153,8 +148,7 @@ public class AstVisitor {
             }
             if (node.assoc.LEFT != null) {
                 seq.assocLeft = true;
-            }
-            else {
+            } else {
                 seq.assocRight = true;
             }
         }
@@ -190,8 +184,7 @@ public class AstVisitor {
                 res.action = node.alt1.ACTION.value;
             }
             return res;
-        }
-        else {
+        } else {
             var res = visitSimple(node.alt2.simple);
             if (node.alt2.type != null) {
                 var type = visitRegexType(node.alt2.type);
@@ -220,30 +213,22 @@ public class AstVisitor {
     public Node visitSimple(Ast.simple node) {
         if (node.group != null) {
             return new Group(visitRhs(node.group.group.rhs));
-        }
-        else if (node.dotNode != null) {
+        } else if (node.dotNode != null) {
             return new Dot();
-        }
-        else if (node.bracketNode != null) {
+        } else if (node.bracketNode != null) {
             return new Bracket(node.bracketNode.bracketNode.BRACKET.value);
-        }
-        else if (node.name != null) {
+        } else if (node.name != null) {
             return new Name(node.name.name.IDENT.value);
-        }
-        else if (node.stringNode != null) {
+        } else if (node.stringNode != null) {
             return visitString(node.stringNode.stringNode);
-        }
-        else if (node.EPSILON != null) {
+        } else if (node.EPSILON != null) {
             return new Epsilon();
-        }
-        else if (node.untilNode != null) {
+        } else if (node.untilNode != null) {
             return new Until(visitRegex(node.untilNode.untilNode.regex));
-        }
-        else if (node.SHORTCUT != null) {
+        } else if (node.SHORTCUT != null) {
             var s = node.SHORTCUT.SHORTCUT.value;
             return new Group(Shortcut.from(s.substring(2, s.length() - 2)));
-        }
-        else if (node.call != null) {
+        } else if (node.call != null) {
             var s = node.call.call.CALL_BEGIN.value;
             var res = new Name(s.substring(0, s.length() - 1));
             res.args2.add(new Parameter(node.call.call.IDENT.value));
@@ -251,8 +236,7 @@ public class AstVisitor {
                 res.args2.add(new Parameter((Type) null, arg.IDENT.value));
             }
             return res;
-        }
-        else {
+        } else {
             throw new RuntimeException("unexpected");
         }
     }

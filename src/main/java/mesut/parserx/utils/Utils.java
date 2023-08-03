@@ -8,7 +8,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.*;
 
 public class Utils {
 
@@ -63,8 +62,7 @@ public class Utils {
                 if (decl == null) {
                     if (fromRegex) {
                         return node;
-                    }
-                    else {
+                    } else {
                         decl = new TokenDecl("T" + count++, node);
                         newTokens.put(decl.name, decl);
                     }
@@ -81,7 +79,7 @@ public class Utils {
         return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
     }
 
-    public static String trimExt(String name){
+    public static String trimExt(String name) {
         int i = name.lastIndexOf('.');
         if (i != -1) {
             return name.substring(0, i);
@@ -93,8 +91,7 @@ public class Utils {
         int i = name.lastIndexOf('.');
         if (i != -1) {
             name = name.substring(0, i);
-        }
-        else {
+        } else {
             name = name + ".";
         }
         name = name + suffix;
@@ -122,21 +119,6 @@ public class Utils {
         FileWriter wr = new FileWriter(file);
         wr.write(data);
         wr.close();
-    }
-
-    public static Logger getLogger() {
-        Logger logger = Logger.getGlobal();
-        logger.setLevel(Level.OFF);
-        var handler = new ConsoleHandler();
-        handler.setLevel(Level.ALL);
-        handler.setFormatter(new Formatter() {
-            @Override
-            public String format(LogRecord record) {
-                return formatMessage(record) + "\n";
-            }
-        });
-        logger.addHandler(handler);
-        return logger;
     }
 
 }

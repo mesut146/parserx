@@ -1,9 +1,6 @@
 package mesut.parserx.gen.lldfa;
 
-import mesut.parserx.gen.CodeWriter;
-import mesut.parserx.gen.Lang;
-import mesut.parserx.gen.Options;
-import mesut.parserx.gen.ParserUtils;
+import mesut.parserx.gen.*;
 import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.gen.lr.IdMap;
 import mesut.parserx.nodes.Name;
@@ -14,13 +11,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static mesut.parserx.gen.ParserUtils.dollar;
 import static mesut.parserx.gen.lexer.LexerGenerator.makeOctal;
-import static mesut.parserx.gen.lldfa.CcGenJava.ruleHeader;
 
 public class CcStateGenJava {
+    static final int INVALID_STATE = -1;
     Tree tree;
     Options options;
     CodeWriter w = new CodeWriter(true);
@@ -28,7 +27,6 @@ public class CcStateGenJava {
     //rule name -> index
     HashMap<Name, Integer> indexMap = new HashMap<>();
     IdMap idMap;
-    static final int INVALID_STATE = -1;
 
     public CcStateGenJava(Tree tree) {
         this.tree = tree;
@@ -41,7 +39,7 @@ public class CcStateGenJava {
         builder = new LLDfaBuilder(tree);
         builder.factor();
         ParserUtils.genTokenType(tree);
-        CcGenJava.writeTS(options);
+        ParserGen.writeTS(options);
         idMap = LexerGenerator.gen(tree, Lang.JAVA).idMap;
 
         header();
@@ -51,7 +49,7 @@ public class CcStateGenJava {
             var rule = entry.getKey();
 
             var decl = tree.getRule(rule);
-            w.append("public %s %s throws IOException{", decl.retType, ruleHeader(decl));
+            w.append("public %s %s throws IOException{", decl.retType, ParserGen.ruleHeader(decl));
             w.append("%s res = new %s();", decl.retType, decl.retType);
 
             var rhs = decl.rhs.asOr();
@@ -69,7 +67,7 @@ public class CcStateGenJava {
             w.append("return res;");
             w.append("}");
         }
-        CcGenJava.writeRest(tree, builder, w);
+        ParserGen.writeRest(tree, builder, w);
 
         w.append("}");
         var file = new File(options.outDir, options.parserClass + ".java");
@@ -149,7 +147,6 @@ public class CcStateGenJava {
         var sb = new StringBuilder();
         sb.append("\"");
         sb.append(makeOctal(builder.rules.size()));
-
         //token count
         sb.append(makeOctal(idMap.lastTokenId + 1));
 
@@ -171,22 +168,45 @@ public class CcStateGenJava {
                     .collect(Collectors.toList());
 
             for (var state : sorted) {
-                sb.append(makeOctal(state.transitions.size()));
+                sb.append(makeOctal(getTrCount(state)));
                 for (var tr : state.transitions) {
-                    var sym = idMap.getId(tr.symbol.asName());
-                    sb.append(makeOctal(sym));
-                    //acc with EOF to ?
-                    var targetSet = tr.target;
-                    int target = stateIdMap.get(targetSet.stateId);
-                    //int alt = builder.findWhich(targetSet, e.getKey());
-                    int alt = targetSet.which.orElse(0);
-                    sb.append(makeOctal(alt | (target << 6)));
+                    Set<Name> firstSet;
+                    if (!tr.symbol.asName().isToken) {
+                        //throw new RuntimeException("internal error; non-token transition");
+                        firstSet = FirstSet.tokens(tr.symbol, tree);
+                    } else {
+                        firstSet = new HashSet<>();
+                        firstSet.add(tr.symbol.asName());
+                    }
+                    for (var token : firstSet) {
+                        var tokenId = idMap.getId(token);
+                        sb.append(makeOctal(tokenId));
+                        //acc with EOF to ?
+                        var targetSet = tr.target;
+                        int target = stateIdMap.get(targetSet.stateId);
+                        //int alt = builder.findWhich(targetSet, e.getKey());
+                        int alt = targetSet.which.orElse(0);
+                        sb.append(makeOctal(alt | (target << 6)));
+                    }
                 }
             }
             index++;
         }
         sb.append("\"");
         return sb.toString();
+    }
+
+    int getTrCount(ItemSet set) {
+        var cnt = 0;
+        for (var tr : set.transitions) {
+            if (tr.symbol.asName().isToken) {
+                cnt++;
+            } else {
+                var firstSet = FirstSet.tokens(tr.symbol, tree);
+                cnt += firstSet.size();
+            }
+        }
+        return cnt;
     }
 
     String genTrans() {
@@ -241,13 +261,11 @@ public class CcStateGenJava {
                         //int alt = builder.findWhich(targetSet, e.getKey());
                         int alt = targetSet.which.get();
                         sb.append(alt | (target << 6));
-                    }
-                    else {
+                    } else {
                         //exit?
                         if (isExit(state, idMap.getName(tok))) {
                             sb.append("-2");
-                        }
-                        else {
+                        } else {
                             sb.append("-1");
                         }
                     }

@@ -11,17 +11,12 @@ import java.util.List;
 
 //pull sym from node
 public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
+    public HashSet<RuleDecl> declSet = new HashSet<>();//new rules produced by this class
     Tree tree;
     HashMap<String, PullInfo> cache = new HashMap<>();
-    public HashSet<RuleDecl> declSet = new HashSet<>();//new rules produced by this class
 
     public Puller(Tree tree) {
         this.tree = tree;
-    }
-
-    public static class PullInfo {
-        public Node one;
-        public Node zero;
     }
 
     @Override
@@ -30,8 +25,7 @@ public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
         if (name.isToken) {
             info.one = new Factored(name.copy(), sym.name);
             return info;
-        }
-        else {
+        } else {
             Name zeroName = tree.getFactorZero(name, sym);
             Name oneName = tree.getFactorOne(name, new Parameter(tree.getType(sym), "arg"));
             info.one = oneName;
@@ -59,8 +53,7 @@ public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
                     info.zero.astInfo = name.astInfo.copy();
                 }
                 return info;
-            }
-            else {
+            } else {
                 cache.put(key, info);
             }
 
@@ -107,8 +100,7 @@ public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
                 if (pi.zero != null) {
                     zero.add(pi.zero);
                 }
-            }
-            else {
+            } else {
                 zero.add(ch);
             }
         }
@@ -144,8 +136,7 @@ public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
             info.one.astInfo = seq.astInfo.copy();
             return info;
 
-        }
-        else {
+        } else {
             //A empty,B starts
             //A B=A_noe B | A_eps B
             //A_noe B | a A_eps B(a) | A_eps B_no_a
@@ -163,13 +154,11 @@ public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
 
             if (s1 == null) {
                 info.zero = s3;
-            }
-            else {
+            } else {
                 s1.astInfo = seq.astInfo.copy();
                 if (s3 == null) {
                     info.zero = s1;
-                }
-                else {
+                } else {
                     if (s3.astInfo.which.isEmpty()) {
                         s3.astInfo = seq.astInfo.copy();
                     }
@@ -188,21 +177,23 @@ public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
             var tmp = regex.node.accept(this, sym);
             if (tmp.zero == null) {
                 tmp.zero = new Epsilon();
-            }
-            else {
+            } else {
                 tmp.zero = new Regex(tmp.zero, RegexType.OPTIONAL);
             }
             return tmp;
-        }
-        else if (regex.isStar()) {
+        } else if (regex.isStar()) {
             //A*: A A* | €
             Node star = new Regex(regex.node.copy(), RegexType.STAR);
             return new Sequence(regex.node.copy(), star).accept(this, sym);
-        }
-        else {
+        } else {
             //A+: A A*
             var node = new Sequence(regex.node.copy(), new Regex(regex.node.copy(), RegexType.STAR));
             return node.accept(this, sym);
         }
+    }
+
+    public static class PullInfo {
+        public Node one;
+        public Node zero;
     }
 }

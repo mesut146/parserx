@@ -15,9 +15,9 @@ import java.util.Set;
 //make la set for non start rules
 public class LaFinder extends BaseVisitor<Void, Void> {
 
+    static Map<Name, Set<Name>> done = new HashMap<>();
     public Tree tree;
     Set<Name> set = new HashSet<>();
-    static Map<Name, Set<Name>> done = new HashMap<>();
     Name ref;
 
     public LaFinder(Tree tree) {
@@ -54,8 +54,7 @@ public class LaFinder extends BaseVisitor<Void, Void> {
                     }
                 }
                 match = true;
-            }
-            else if (ch.isRegex() && ch.asRegex().node.equals(ref)) {
+            } else if (ch.isRegex() && ch.asRegex().node.equals(ref)) {
                 match = true;
                 var regex = ch.asRegex();
                 if (!regex.isOptional()) {

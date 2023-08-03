@@ -9,12 +9,12 @@ import java.io.File;
 import java.io.IOException;
 
 public class JavaAst extends BaseVisitor<Void, Void> {
+    public static boolean printTokenQuote = true;
     public Tree tree;
     CodeWriter w = new CodeWriter(true);
     Options options;
     String curRule;
     Printer p;
-    public static boolean printTokenQuote = true;
 
     public JavaAst(Tree tree) {
         this.tree = tree;
@@ -75,8 +75,7 @@ public class JavaAst extends BaseVisitor<Void, Void> {
     public Void visitRegex(Regex regex, Void arg) {
         if (regex.isOptional()) {
             regex.node.accept(this, arg);
-        }
-        else {
+        } else {
             Node ch = regex.node;
             w.append("public List<%s> %s = new ArrayList<>();", ch.astInfo.nodeType, ch.astInfo.varName);
         }
@@ -115,12 +114,10 @@ public class JavaAst extends BaseVisitor<Void, Void> {
                 w.append("StringBuilder sb = new StringBuilder();");
                 rhs.accept(this, null);
                 w.append("return sb.toString();");
-            }
-            else {
+            } else {
                 if (rhs.isOr()) {
                     w.append("StringBuilder sb = new StringBuilder(\"%s#\" + which + \"{\");", JavaAst.this.curRule);
-                }
-                else {
+                } else {
                     w.append("StringBuilder sb = new StringBuilder(\"%s{\");", JavaAst.this.curRule);
                 }
                 rhs.accept(this, null);
@@ -134,12 +131,10 @@ public class JavaAst extends BaseVisitor<Void, Void> {
             if (isToken) {
                 if (printTokenQuote) {
                     res = String.format("printToken(%s, sb);", expr);
-                }
-                else {
+                } else {
                     res = String.format("sb.append(%s.value);", expr);
                 }
-            }
-            else {
+            } else {
                 res = String.format("sb.append(%s.toString());", expr);
             }
             w.append("%s", res);
@@ -186,8 +181,7 @@ public class JavaAst extends BaseVisitor<Void, Void> {
                 name.accept(this, null);
                 w.append("first = false;");
                 w.append("}");
-            }
-            else {
+            } else {
                 w.append("if(!%s.isEmpty()){", v);
                 if (cur > 0) {
                     w.append("if(!first){");
@@ -211,15 +205,13 @@ public class JavaAst extends BaseVisitor<Void, Void> {
             for (int i = 0; i < or.size(); i++) {
                 if (i == 0) {
                     w.append("if(which == 1){");
-                }
-                else {
+                } else {
                     w.append("else if(which == %d){", i + 1);
                 }
                 Node ch = or.get(i);
                 if (ch.isName()) {
                     ch.accept(this, null);
-                }
-                else {
+                } else {
                     w.append("sb.append(%s);", ch.astInfo.varName);
                 }
                 w.append("}");//if

@@ -11,25 +11,29 @@ import mesut.parserx.nodes.Tree;
 import java.util.*;
 
 public class ItemSet {
+    public static int lastId = 0;
+    public static boolean forceClosure = false;
     public Set<Item> kernel = new HashSet<>();
     public List<Item> all = new ArrayList<>();
     public boolean isStart = false;
     public int stateId;
-    public static int lastId = 0;
-    Tree tree;
-    TreeInfo treeInfo;
     public List<LLTransition> transitions = new ArrayList<>();
     public List<LLTransition> incoming = new ArrayList<>();
-    boolean alreadyGenReduces = false;
-    boolean noClosure = false;
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public Optional<Integer> which = Optional.empty();
-    public static boolean forceClosure = false;
+    Tree tree;
+    TreeInfo treeInfo;
+    boolean alreadyGenReduces = false;
+    boolean noClosure = false;
 
     public ItemSet(TreeInfo treeInfo) {
         this.treeInfo = treeInfo;
         this.tree = treeInfo.tree;
         stateId = lastId++;
+    }
+
+    public static Name sym(Node node) {
+        return node.isName() ? node.asName() : node.asRegex().node.asName();
     }
 
     public void addItem(Item item) {
@@ -134,10 +138,6 @@ public class ItemSet {
         return FactorHelper.hasCommon(s1, s2, tree);
     }
 
-    public static Name sym(Node node) {
-        return node.isName() ? node.asName() : node.asRegex().node.asName();
-    }
-
     boolean isFactor(Item item, int i, boolean checkConsecutive) {
         var node = item.getNode(i);
         if (node instanceof Factored) return false;
@@ -192,8 +192,7 @@ public class ItemSet {
                 item.closured[i] = true;
                 closure(sym, i, item);
             }
-        }
-        else {
+        } else {
             //if dot sym have common factor ,closure is forced to reveal factor
             var syms = symbols();
             for (int i = item.dotPos; i < item.rhs.size(); i++) {
@@ -234,8 +233,7 @@ public class ItemSet {
             var newItem = new Item(decl, 0);
             if (sender.firstParents.isEmpty()) {
                 newItem.firstParents.add(sender);
-            }
-            else {
+            } else {
                 newItem.firstParents = sender.firstParents;
             }
             newItem.lookAhead.addAll(laList);
