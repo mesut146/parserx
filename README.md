@@ -133,13 +133,15 @@ in LR parsing you have to specify start rule with `%start`<br>
 e.g `%start: expr;`
 
 #### assoc directives
-`%left <TOKEN_LIST>`
-<br>`%right <TOKEN_LIST>`
+use `%left` or `%right` to specify associativity
+```
+E: E "*" E %left | E "+" E %right | NUM;
+```
 
 #### precedence
-precedence handled by picking the production declared previously
+precedence handled by picking the alternation declared before
 e.g `E: E "*" E | E "+" E | NUM;`
-<br>multiplication takes precedence over addition in the example aabove
+<br>multiplication takes precedence over addition in the example
 
 
 ### modes
@@ -165,13 +167,12 @@ token{
  }
 }
 ```
-
+*note:* default mode is used to exit from modes
 #### skip mode
 tokens marked with skip mode will be ignored by the parser so you can use it for comments and whitespaces
 ```
 token{
   comment: "//" [^\n]* -> skip;
+  ws: [ \r\n\t]+;
 }
 ```
-
-__default mode is used to exit from modes__
