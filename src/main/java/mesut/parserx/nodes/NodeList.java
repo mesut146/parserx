@@ -7,7 +7,7 @@ public class NodeList extends Node implements Iterable<Node> {
     public List<Node> list = new ArrayList<>();
 
     public NodeList(List<Node> list) {
-        if (list.size() == 0) {
+        if (list.isEmpty()) {
             throw new RuntimeException("empty list");
         }
         for (Node ch : list) {

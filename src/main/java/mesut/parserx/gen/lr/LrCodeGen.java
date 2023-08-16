@@ -11,7 +11,9 @@ import mesut.parserx.utils.UnicodeUtils;
 import mesut.parserx.utils.Utils;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.TreeSet;
@@ -110,7 +112,7 @@ public class LrCodeGen {
             if (i > 0) {
                 sb.append(", ");
             }
-            if (!rd.which.isPresent() || (rd.transformInfo != null && (rd.transformInfo.isOpt || rd.transformInfo.isStar || rd.transformInfo.isPlus))) {
+            if (rd.which.isEmpty() || (rd.transformInfo != null && (rd.transformInfo.isOpt || rd.transformInfo.isStar || rd.transformInfo.isPlus))) {
                 sb.append(0);
             } else {
                 sb.append(rd.which.get());

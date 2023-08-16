@@ -1,9 +1,4 @@
-trans[rowMap[curState] + cMap[input]] = nextState
-
-trans[state][input] = nextState
-trans[state] = {}
-
-
+trans[curState][cMap[input]] = nextState
 cmap: maps input ids to range ids
 trans: maps current state & range id to target state
 

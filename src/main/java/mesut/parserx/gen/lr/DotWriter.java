@@ -1,19 +1,45 @@
 package mesut.parserx.gen.lr;
 
 import mesut.parserx.gen.ParserUtils;
+import mesut.parserx.nodes.BaseVisitor;
 import mesut.parserx.nodes.Name;
+import mesut.parserx.nodes.TokenDecl;
+import mesut.parserx.nodes.Tree;
 
 import java.io.PrintWriter;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DotWriter {
 
+    static Set<Name> getUsedTokens(Tree tree) {
+        var res = new HashSet<Name>();
+        var visitor = new BaseVisitor<>() {
+            @Override
+            public Object visitName(Name name, Object arg) {
+                if (name.isToken) {
+                    res.add(name);
+                }
+                return super.visitName(name, arg);
+            }
+        };
+        tree.rules.forEach(rd -> rd.rhs.accept(visitor, null));
+        return res;
+    }
+
     public static void table(PrintWriter writer, LrDFAGen generator, boolean writeRules) {
         var tokens = new LinkedHashSet<Name>();
+        var used=getUsedTokens(generator.tree);
         generator.tree.tokenBlocks.forEach(tb -> {
-            tb.tokens.forEach(decl -> tokens.add(decl.ref()));
-            tb.modeBlocks.forEach(mb -> mb.tokens.forEach(decl -> tokens.add(decl.ref())));
+            tb.tokens.stream()
+                    .filter(decl->used.contains(decl.ref()))
+                    .forEach(decl->tokens.add(decl.ref()));
+            tb.modeBlocks.forEach(mb -> mb.tokens
+                    .stream()
+                    .filter(decl->used.contains(decl.ref()))
+                    .forEach(decl -> tokens.add(decl.ref())));
         });
         tokens.add(ParserUtils.dollar);
 
@@ -78,7 +104,7 @@ public class DotWriter {
                             writer.print("R");
                             writer.print(name);
                             //index is needed
-                            writer.print(item.rule.index);
+                            writer.print(item.rule.index + 1);
                         }
                     } else {
                         //lr1
@@ -89,7 +115,7 @@ public class DotWriter {
                                 writer.print("R");
                                 writer.print(name);
                                 //index is needed
-                                writer.print(item.rule.index);
+                                writer.print(item.rule.index + 1);
                             }
                         }
                     }
@@ -147,5 +173,20 @@ public class DotWriter {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void dump(LrDFAGen gen, PrintWriter w) {
+        for (var set : gen.itemSets) {
+            w.println("----------------------------");
+            w.printf("S%d\n", set.stateId);
+            w.print(set);
+            w.println();
+            for (var tr : set.transitions) {
+                w.printf("%s -> %s, %s\n", set.stateId, tr.target.stateId, tr.symbol.name);
+            }
+            w.println("\n");
+        }
+        w.flush();
+        w.close();
     }
 }

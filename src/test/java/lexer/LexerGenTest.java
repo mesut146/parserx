@@ -11,7 +11,9 @@ import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.UnicodeUtils;
 import mesut.parserx.utils.Utils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
+import parser.Builder;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -49,15 +51,19 @@ public class LexerGenTest {
 
     @Test
     public void until() throws Exception {
-        var tree = Env.tree("lexer/until.g");
-        RealTest.check(tree, "/*asd***/", "'''a'b''c'''", "aababc");
+        Builder.tree("lexer/until.g")
+                .input("aababc","")
+                .input("/*asd*a/**/","")
+                .input("'''a'b''c'''","")
+                .input("\"\"\"asd\"\"a\"\"\"","")
+                .tokenize();
     }
 
     @Test
     public void cppTarget() throws IOException {
         Tree tree = Env.tree("lexer/skip.g");
         tree.options.outDir = Env.dotDir().getAbsolutePath() + "/cpp";
-        LexerGenerator.gen(tree, Lang.CPP).dfa.dot(Env.dotFile(tree.file.getName() + ".dot"));
+        LexerGenerator.gen(tree, Lang.CPP);
         Runtime.getRuntime().exec("g++ -shared -fPIC -o l.so Lexer.cpp Token.cpp", null, new File(tree.options.outDir));
     }
 
@@ -96,9 +102,9 @@ public class LexerGenTest {
     }
 
     @Test
-    public void large() throws Exception {
-        Tree tree = Env.tree("java/lexer-jls.g");
-        RealTest.check(tree, Env.getResFile("java/a.java.res").getAbsolutePath());
+    public void javaLexer() throws Exception {
+        Tree tree = Env.tree("java/JavaLexer.g");
+        RealTest.check(tree, true, Env.getResFile("java/a.java.res").getAbsolutePath());
     }
 
     @Test
@@ -106,9 +112,9 @@ public class LexerGenTest {
         //Tree tree = Env.tree("str.g");
         //Tree tree = Env.tree("lexer/after.g");
         Tree tree = Env.tree("lexer/regex.g");
-        File dot = Env.dotFile(Utils.newName(tree.file.getName(), ".dot"));
-        tree.makeNFA().dfa().dot(new FileWriter(dot));
-        Env.dot(dot);
+        File dot = Utils.noext(tree,".dot");
+        tree.makeNFA().dfa().dot(dot);
+        Utils.runDot(dot);
     }
 
 
@@ -123,11 +129,12 @@ public class LexerGenTest {
 
     @Test
     public void template() throws IOException {
-        Template template = new Template("token.java.template");
-        template.set("package", "pkg");
-        template.set("token_class", "cls");
-        template.set("asd", "dummy");
-        System.out.println(template);
+        Template template = new Template("test.template");
+        template.set("name", "mesut");
+        template.set("msg", "hello");
+        Assert.assertEquals("abc mesut def\n" +
+                "hello\n" +
+                "world",template.toString());
     }
 
     @Test
@@ -143,25 +150,6 @@ public class LexerGenTest {
         }
     }
 
-    void dots(Tree tree) throws IOException {
-        var nfa = tree.makeNFA();
-        Env.dot(tree.file.getName() + "nfa", file -> {
-            try {
-                nfa.dot(file);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            return null;
-        });
-        Env.dot(tree.file.getName() + "dfa", file -> {
-            try {
-                nfa.dfa().dot(file);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            return null;
-        });
-    }
 
     @Test
     public void action() throws Exception {
@@ -176,15 +164,17 @@ public class LexerGenTest {
     @Test
     public void members() throws Exception {
         var tree = Env.tree("lexer/member.g");
-        System.out.println(tree);
         RealTest.check(tree, "a");
     }
 
     @Test
     public void act() throws Exception {
         var tree = Env.tree("lexer/action.g");
-        //LexerGenerator.gen(tree,Lang.JAVA);
-        //System.out.println(tree);
         RealTest.check(tree, "abac");
+    }
+
+    @Test
+    public void unicode() throws Exception {
+        RealTest.check(Env.tree("lexer/reg.g"), "[^a-Za-zA-Z0-9]", "[_\n[\\]^-]", "[\\u0000\\u0011-\\u0022]", "[ç]");
     }
 }

@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class LrItemSet {
-    private final List<LrTransition> incoming = new ArrayList<>();
     public Set<LrItem> kernel = new HashSet<>();
     public List<LrItem> all = new ArrayList<>();
     public int stateId;
@@ -48,7 +47,6 @@ public class LrItemSet {
 
         var tr = new LrTransition(this, target, sym);
         transitions.add(tr);
-        target.incoming.add(tr);
     }
 
     public boolean hasReduce() {
@@ -93,13 +91,10 @@ public class LrItemSet {
     }
 
     private void closure(Name node, int pos, LrItem sender) {
-        if (node.isToken) {
-            throw new RuntimeException("closure error on node: " + node + ", was expecting rule");
-        }
         Set<Name> laList = sender.follow(treeInfo.tree, pos);
         for (var rd : treeInfo.ruleMap.get(node)) {
-            LrItem newItem = new LrItem(rd, 0);
-            newItem.lookAhead = new HashSet<>(laList);
+            var newItem = new LrItem(rd, 0);
+            newItem.lookAhead.addAll(laList);
             newItem.parent = sender;
             addOrUpdate(newItem);
         }
@@ -120,37 +115,23 @@ public class LrItemSet {
         }
         //merge la
         var prevItem = prev.get();
-        //todo next items
-        //update closure items too
-        var la = prevItem.lookAhead;
-        la.addAll(item.lookAhead);
-        updateLa(prevItem, la, new HashSet<>());
+        //todo update closure items of prevItem
+        prevItem.lookAhead.addAll(item.lookAhead);
+        updateChildren(prevItem);
         return true;
     }
 
-    LrItem findChild(LrItem item) {
+    void updateChildren(LrItem parent) {
+        Set<Name> newLa = null;
         for (var ch : all) {
-            if (ch.parent == item) {
-                return ch;
+            if (ch.parent != parent) continue;
+            if (newLa == null) {
+                newLa = parent.follow(treeInfo.tree, parent.dotPos);
             }
+            ch.lookAhead.addAll(newLa);
         }
-        return null;
+        //todo next items
     }
 
-    void updateLa(LrItem item, Set<Name> la, Set<LrItem> done) {
-        if (done.contains(item)) return;
-        done.add(item);
-        item.lookAhead = la;
-        if (item.parent != null) {
-            //updateLa(item.parent, la, done);
-        }
-        var ch = findChild(item);
-        if (ch != null) {
-            updateLa(ch, la, done);
-        }
-        for (var next : item.next) {
-            updateLa(next, la, done);
-        }
-        //todo transitions
-    }
+
 }

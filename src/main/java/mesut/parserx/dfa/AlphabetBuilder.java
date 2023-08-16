@@ -93,13 +93,13 @@ public class AlphabetBuilder extends Transformer {
         //negated sets
         char firstCh = ch.value.charAt(0);
         for (int i = 0; i < ch.value.length(); i++) {
-            char c = ch.value.charAt(i);
             var bracket = new Bracket();
+            bracket.negate = true;
+            char c = ch.value.charAt(i);
             bracket.add(new Range(c, c));
-            if (i > 0) {
+            if (i > 0 && c != firstCh) {
                 bracket.add(new Range(firstCh, firstCh));
             }
-            bracket.negate = true;
             node.brackets.add(bracket);
             transformNode(bracket, parent);
         }

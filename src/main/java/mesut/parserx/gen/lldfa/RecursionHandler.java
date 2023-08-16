@@ -32,6 +32,19 @@ public class RecursionHandler {
                 name.args2.clear();
                 return name;
             }
+
+            @Override
+            public Node visitSequence(Sequence seq, Void arg) {
+                for (int i = 0; i < seq.size(); i++) {
+                    if (seq.get(i) instanceof Factored) {
+                        seq.list.remove(i);
+                        --i;
+                    } else {
+                        seq.list.set(i, seq.get(i).accept(this, arg));
+                    }
+                }
+                return seq;
+            }
         };
         argRemover.tree = tree;
         argRemover.transformRules();

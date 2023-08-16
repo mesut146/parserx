@@ -5,6 +5,5 @@ token{
   d: "d";
 }
 
-/* rules */
 A: B b | c;
 B: A a | d;

@@ -158,7 +158,8 @@ public class NFA {
 
     public Iterable<State> it() {
         return () -> new Iterator<>() {
-            int cur = initialState.id;
+            //int cur = initialState.id;
+            int cur = 0;
 
             @Override
             public boolean hasNext() {

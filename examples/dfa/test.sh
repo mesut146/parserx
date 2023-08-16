@@ -1,2 +1,2 @@
-sh ../run.sh -dfa -optimize -dot out.dot -in in.g -out out.dfa
-dot -Tpng -O out.dot
+sh ../run.sh -nfa -in in.g -out out.nfa
+sh ../run.sh -dfa -in in.g -out out.dfa

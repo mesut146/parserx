@@ -9,7 +9,7 @@ token{
  NUM: [0-9]+;
 }
 
-%start = E;
+%start: E;
 //precedence goes from higher to lower
 E: E "^" E
  | "-" E

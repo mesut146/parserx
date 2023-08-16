@@ -11,7 +11,12 @@ public class RegexPrinter extends BaseVisitor<String, Void> {
 
     @Override
     public String visitString(StringNode node, Void arg) {
-        return node.value;
+        return node.value
+                //.replace("[","\\[")
+                .replace("*","\\*")
+                .replace("+","\\+")
+                .replace("?","\\?")
+                .replace("(","\\(");
     }
 
     @Override

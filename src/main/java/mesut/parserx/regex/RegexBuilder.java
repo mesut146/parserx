@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 //build regex from dfa
 public class RegexBuilder {
@@ -46,33 +47,44 @@ public class RegexBuilder {
         }
 
         for (var state : stateOrder) {
-            if (!state.accepting && nfa.initialState.id != state.id) {
-                //mergeAll(state);
-                eliminate(state);
-            }
+            if (state.accepting || nfa.initialState.id == state.id) continue;
+            eliminate(state);
         }
 
-        List<Node> or = new ArrayList<>();
-        for (Transition transition : nfa.initialState.transitions) {
+        var or = new ArrayList<Node>();
+        for (var transition : nfa.initialState.transitions) {
             or.add(alphabet.getRegex(transition.input));
         }
         return Or.make(or);
     }
 
+    //simple states(non-looping,non-start,non-final) gets eliminated first to get prettier regex
+    public void autoOrder() {
+        var looping = new ArrayList<State>();
+        for (var state : nfa.it()) {
+            if (state.accepting || nfa.initialState.id == state.id) continue;
+            if (getLooping(state) != null) {
+                looping.add(state);
+            } else {
+                stateOrder.add(state);
+            }
+        }
+        stateOrder.addAll(looping);
+    }
 
     Node idToNode(Transition transition) {
         if (transition.epsilon) {
             return new Epsilon();
         }
-        Node node = alphabet.getRegex(transition.input);
+        var node = alphabet.getRegex(transition.input);
         if (!node.isRange()) {
             return node;
         }
-        Range range = node.asRange();
+        var range = node.asRange();
         if (range.isSingle()) {
             return new StringNode(UnicodeUtils.printChar(range.start));
         } else {
-            Bracket bracket = new Bracket();
+            var bracket = new Bracket();
             bracket.add((char) range.start);
             bracket.add((char) range.end);
             return bracket;
@@ -87,12 +99,12 @@ public class RegexBuilder {
         List<Transition> incoming = nfa.findIncoming(state);
         List<Transition> list = state.transitions;
 
-        for (Transition in : incoming) {
-            for (Transition out : list) {
+        for (var in : incoming) {
+            for (var out : list) {
                 if (out.target.id == state.id || in.from.id == state.id) {//looping
                     continue;
                 }
-                Node node = path(in, out);
+                var node = path(in, out);
                 if (node.isEpsilon()) {
                     in.from.addEpsilon(out.target);
                 } else {
@@ -100,7 +112,7 @@ public class RegexBuilder {
                 }
             }
         }
-        for (Transition in : incoming) {
+        for (var in : incoming) {
             in.from.transitions.remove(in);
         }
         list.clear();
@@ -152,16 +164,16 @@ public class RegexBuilder {
         if (state.transitions.isEmpty()) return;
         List<Transition> trList = state.transitions;
         Map<State, List<Node>> map = new HashMap<>();//target -> regex
-        for (Transition tr : trList) {
+        for (var tr : trList) {
             List<Node> arr = map.computeIfAbsent(tr.target, k -> new ArrayList<>());
             arr.add(idToNode(tr));
         }
         trList.clear();
         for (var target : map.keySet()) {
-            Node node = Or.make(map.get(target));
+            var node = Or.make(map.get(target));
             if (node.isOr()) {
                 //trim epsilon
-                for (Node ch : node.asOr()) {
+                for (var ch : node.asOr()) {
                     if (ch.isEpsilon()) {
                         List<Node> list = node.asOr().list;
                         list.remove(ch);
@@ -197,17 +209,4 @@ public class RegexBuilder {
         }
     }
 
-    //simple states(non-looping,non-start,non-final) gets eliminated first to get prettier regex
-    public void autoOrder() {
-        List<State> looping = new ArrayList<>();
-        for (var state : nfa.it()) {
-            if (state.accepting || nfa.initialState.id == state.id) continue;
-            if (getLooping(state) != null) {
-                looping.add(state);
-            } else {
-                stateOrder.add(state);
-            }
-        }
-        stateOrder.addAll(looping);
-    }
 }

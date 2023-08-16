@@ -5,7 +5,7 @@ token{
   N: [0-9]+;
 }
 
-%start = E;
+%start: E;
 
 E: N
  | "-" E

@@ -8,8 +8,31 @@ import java.io.*;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class Utils {
+
+    public static void runDot(File path) {
+        try {
+            System.out.println("writing " + path);
+            Runtime.getRuntime().exec(("dot -Tpng -O " + path).split(" "));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void compile(File source, File out) throws Exception {
+        ProcessBuilder builder = new ProcessBuilder("javac", "-d", out.getAbsolutePath(), source.getAbsolutePath());
+        builder.directory(source.getParentFile());
+        builder.redirectErrorStream(true);
+        Process p = builder.start();
+
+        System.out.println(Utils.read(p.getInputStream()));
+        if (p.waitFor() != 0) {
+            System.out.println(Utils.read(p.getInputStream()));
+            throw new RuntimeException("cant compile " + source);
+        }
+    }
 
     public static Tree fromRegex(String regex) throws IOException {
         Node rhs = RegexVisitor.make(regex);
@@ -87,15 +110,30 @@ public class Utils {
         return name;
     }
 
+    public static String noext(String name, String suffix) {
+        return trimExt(name) + suffix;
+    }
+    public static File noext(Tree tree, String suffix) {
+        return new File(tree.options.outDir, Utils.noext(tree.file.getName(), suffix));
+    }
+
     public static String newName(String name, String suffix) {
         int i = name.lastIndexOf('.');
         if (i != -1) {
-            name = name.substring(0, i);
+            name = name.substring(0, i + 1);
         } else {
             name = name + ".";
         }
         name = name + suffix;
         return name;
+    }
+
+    public static void copyRes(String name, ClassLoader cl, File path) throws Exception {
+        FileOutputStream os = new FileOutputStream(path);
+        try (var st = cl.getResourceAsStream(name)) {
+            Objects.requireNonNull(st).transferTo(os);
+            System.out.println("writing " + path);
+        }
     }
 
     public static String read(InputStream in) throws IOException {
@@ -114,6 +152,7 @@ public class Utils {
     }
 
     public static void write(String data, File file) throws IOException {
+        file = file.getAbsoluteFile();
         System.out.println("writing " + file);
         file.getParentFile().mkdirs();
         FileWriter wr = new FileWriter(file);

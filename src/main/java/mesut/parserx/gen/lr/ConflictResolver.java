@@ -48,12 +48,13 @@ public class ConflictResolver {
 
     //check if two items has conflict
     void check(LrItemSet set) {
-        boolean any = false;
         for (int i = 0; i < set.all.size(); i++) {
             var i1 = set.all.get(i);
             for (int j = i + 1; j < set.all.size(); j++) {
                 var i2 = set.all.get(j);
-                if (i1.isReduce(tree) && i2.isReduce(tree)) {
+                var i1r = i1.isReduce(tree);
+                var i2r = i2.isReduce(tree);
+                if (i1r && i2r) {
                     //if any lookahead conflict
                     if (hasCommon(i1.lookAhead, i2.lookAhead)) {
                         var info = new ConflictInfo();
@@ -64,9 +65,10 @@ public class ConflictResolver {
                         conflicts.add(info);
                     }
                 } else {
-                    if (i2.isReduce(tree)) {
+                    boolean any = false;
+                    if (i2r) {
                         any = checkSR(i1, i2, set);
-                    } else if (i1.isReduce(tree)) {
+                    } else if (i1r) {
                         any = checkSR(i2, i1, set);
                     }
                     if (any) {
@@ -151,7 +153,7 @@ public class ConflictResolver {
             removed = true;
         } else if (shift.rule.rhs.asSequence().assocRight) {
             //keep shift,remove reduce
-            reduce.lookAhead.remove(sym);
+            FirstSet.firstSet(sym,tree,true).forEach(tok->reduce.lookAhead.remove(tok));
             if (reduce.lookAhead.isEmpty()) {
                 removeItem(set, reduce);
             }

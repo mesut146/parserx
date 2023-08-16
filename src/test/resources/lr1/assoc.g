@@ -1,17 +1,20 @@
 token
 {
-  PLUS = "+";
-  MINUS = "-";
-  STAR = "*";
-  DIV = "/";
-  POW = "^";
-  LP = "(";
-  RP = ")";
+  PLUS: "+";
+  MINUS: "-";
+  STAR: "*";
+  DIV: "/";
+  POW: "^";
+  LP: "(";
+  RP: ")";
   N: [0-9]+;
 }
 
 %start: E;
-E: E "+" E %left | N;
+E: N
+ | E "+" E %left
+ | E "*" E %right;
+
 
 
 

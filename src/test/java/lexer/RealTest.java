@@ -1,6 +1,7 @@
 package lexer;
 
 import common.Env;
+import mesut.parserx.Main;
 import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.lexer.LexerGenerator;
 import mesut.parserx.nodes.Tree;
@@ -8,7 +9,6 @@ import mesut.parserx.utils.Utils;
 
 import java.io.*;
 import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 
 public class RealTest {
 
@@ -18,7 +18,7 @@ public class RealTest {
 
     public static void check(Tree tree, boolean file, String... in) throws Exception {
         File tester = new File(Env.dotDir(), "LexerTester.java");
-        Utils.write(Files.readString(Env.getResFile("LexerTester.java.1").toPath()), tester);
+        Utils.write(Files.readString(Main.getResFile("LexerTester.java.template").toPath()), tester);
 
         String outDir = Env.dotDir().getAbsolutePath();
         tree.options.outDir = outDir;

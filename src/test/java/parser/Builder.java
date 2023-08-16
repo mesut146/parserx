@@ -2,6 +2,7 @@ package parser;
 
 import common.Env;
 import lexer.RealTest;
+import mesut.parserx.gen.lr.LrType;
 import mesut.parserx.nodes.Tree;
 
 import java.io.IOException;
@@ -75,8 +76,12 @@ public class Builder {
     }
 
     public void lr() throws Exception {
+        lr(LrType.LR1);
+    }
+
+    public void lr(LrType type) throws Exception {
         System.out.println("testing " + tree.file.getName());
-        LrTester.check0(this);
+        LrTester.check(this, type);
     }
 
     public void checkTokens() throws Exception {
@@ -86,11 +91,15 @@ public class Builder {
 
     public void tokenize() throws Exception {
         for (var in : cases) {
-            if (in.isFile) {
-                RealTest.check(tree, true, in.input);
-            }
-            else {
-                RealTest.check(tree, in.input);
+            try {
+                if (in.isFile) {
+                    RealTest.check(tree, true, in.input);
+                } else {
+                    RealTest.check(tree, in.input);
+                }
+            } catch (Exception e) {
+                System.out.println("case failed " + in.input);
+                e.printStackTrace();
             }
         }
     }

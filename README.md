@@ -4,22 +4,21 @@
 lexer &amp; parser generator and grammar toolkit written in java
 
 ## Features
-
 - accepts regex like grammar(EBNF)
-- epsilon removal
-- left recursion removal(direct and indirect)
-- left factoring
-- ebnf to bnf
-- LR(1),LALR(1) parser generator
-- LL(1) recursive descent parser generator
-- Table based parser & State->Method based parser
 - lexer generator
-- Outputs CST
-- dot graph of NFA, DFA, LR(0), LR(1), LALR(1)
+- Recursive descent parser generator that supports left recursion
+- LR(1),LALR(1) parser generator
 - DFA minimization
-- precedence tool(removes any precedence conflict)
+- Outputs CST
+- dot graph of NFA, DFA, LR(1), LALR(1)
 
-Examples are in examples folder
+## Transformations 
+- left recursion remover(direct and indirect)
+- precedence remover
+- ebnf to bnf
+- epsilon remover
+
+***Examples are in examples folder***
 
 
 ## Grammar Format
@@ -52,31 +51,31 @@ options{
 
 ```
 token{
-
-  <TOKEN_NAME> <seperator> <regex> <SEMICOLON>
-  //where seperator is one of ':' , '=' , '::=' , ':=' , '->'
+  <TOKEN_NAME> : <regex> ;
 }
 ```
 e.g
 ```
 token{
-  NUMBER: [0-9]+;
-  IDENT: [a-zA-Z_] [a-zA-Z0-9_]*;
+  #LETTER: [a-zA-Z]
+  #DIGIT: [0-9];
+  NUMBER: DIGIT+;
+  IDENT: (LETTER | '_') (LETTER | DIGIT | '_')*;
 }
 ```
 
-__prefixing token name with '#' makes that token fragment.So that it can be used as reference but no actual dfa generated for it__
+__prefixing token name with '#' makes that token fragment so that it can be used as only reference__
 
 ### rule definitions
 
 ```
-<RULE_NAME> <seperator> <regex> <SEMICOLON>
+<RULE_NAME> : <regex> ;
 ```
 e.g
 ```
 assign: left "=" right;
-left: ident;
-right: ident | literal;
+left: IDENT;
+right: IDENT | LITERAL;
 ```
 
 ### regex types
@@ -113,8 +112,10 @@ negation e.g `lc: "//" [^\n]*;`
 
 #### strings
 
-use double quotes for your strings<br>
+use single or double quotes for your strings<br>
 e.g `stmt: "if" "(" expr ")" stmt;`
+
+e.g `stmt: 'if' '(' expr ')' stmt;`
 
 strings in rules will be replaced with token references that are declared in `token` block<br>
 so in the example above the strings would need to be declared like;<br>
@@ -141,12 +142,36 @@ e.g `E: E "*" E | E "+" E | NUM;`
 <br>multiplication takes precedence over addition in the example aabove
 
 
-### skip block
-
-skip tokens will be ignored by the parser so you can use it for comments and whitespaces 
+### modes
+you can use modes to create more complex lexer
 
 ```
-skip{
-  comment: "//" [^\n]*;
+token{
+ LT: "<" -> attr;
+ attr{
+   TAG_NAME: [:ident:] -> attr;
+ }
+ attr{
+   WS: [\r\n\t ] -> skip;
+   GT: ">" -> DEFAULT;
+   SLASH_GT: "/>" -> DEFAULT;
+   ATTR_NAME: [:ident:] -> eq;
+ }
+ attr_eq{
+   EQ: "=" -> attr_val;
+ }
+ attr_val{
+   VAL: [:string:] -> attr;
+ }
 }
 ```
+
+#### skip mode
+tokens marked with skip mode will be ignored by the parser so you can use it for comments and whitespaces
+```
+token{
+  comment: "//" [^\n]* -> skip;
+}
+```
+
+__default mode is used to exit from modes__

@@ -1,9 +1,6 @@
 package mesut.parserx.gen.lr;
 
-import mesut.parserx.nodes.Name;
-import mesut.parserx.nodes.Node;
-import mesut.parserx.nodes.RuleDecl;
-import mesut.parserx.nodes.Tree;
+import mesut.parserx.nodes.*;
 
 import java.util.*;
 
@@ -23,6 +20,7 @@ public class TreeInfo {
             int id = entry.getValue().size() == 1 ? 0 : 1;
             var rules = new ArrayList<RuleDecl>();
             for (var rhs : entry.getValue()) {
+                if (!rhs.isSequence()) rhs = new Sequence(rhs);
                 var rd = new RuleDecl(name, rhs);
                 var original = tree.getRule(name);
                 rd.transformInfo = original.transformInfo;

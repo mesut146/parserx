@@ -54,34 +54,26 @@ token{
 %start: E;
 
 E:
-   E "^" E %left
- | "-" E
- | E ("*" | "/") E %left
- | E ("+" | "-") E %left
- | E "?" E ":" E %right
- | "(" E ")"
- | NUM;
-
-/*
-E:
-  E ("." IDENT ("(" ")")? | "[" E "]")
+  E "." call
+| E "." IDENT
+| E "[" E "]"
 | E ("++" | "--") #post
-| ("+" | "-" | "++" | "--" | "!" | "~" | "(" IDENT ")") E #unary
+| ("+" | "-" | "++" | "--" | "!" | "~") E #unary
 | E ("*" | "/" | "%") E %left
 | E ("+" | "-") E %left
 | E ("<<" | ">>" | ">>>") E %left
 | E ("<" | ">" | "<=" | ">=" | "instanceof") E %left
-| E ("==" | "!=") E
+| E ("==" | "!=") E %left
 | E "&" E %left
 | E "^" E %left
 | E "|" E %left
 | E "&&" E %left
 | E "||" E %left
 | E "?" E ":" E %right
-| E ("=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "^=" | "|=" | "<<=" | ">>=" | ">>>=") E %right
-| NUM
-| "(" E ")"
-| methodCall
+| E assign_op E %right
+| prim
 ;
-methodCall: IDENT "(" ")";
-*/
+call: IDENT "(" ")";
+prim: NUM | IDENT | "(" E ")" | call;
+
+assign_op: "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "^=" | "|=" | "<<=" | ">>=" | ">>>=";

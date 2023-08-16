@@ -86,6 +86,7 @@ public class DFABuilder {
             try {
                 dfa.dump(new FileWriter(file));
             } catch (IOException e) {
+                System.err.println("can't dump");
                 e.printStackTrace();
             }
         }

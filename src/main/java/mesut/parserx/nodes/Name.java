@@ -1,7 +1,5 @@
 package mesut.parserx.nodes;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -15,6 +13,7 @@ public class Name extends Node implements Comparable<Name> {
 
     public Name(String name) {
         this.name = name;
+        this.isToken = false;
     }
 
     public Name(String name, boolean isToken) {
@@ -72,7 +71,7 @@ public class Name extends Node implements Comparable<Name> {
     }
 
     @Override
-    public int compareTo(@NotNull Name o) {
+    public int compareTo(Name o) {
         if (isToken && !o.isToken) return -1;
         if (!isToken && o.isToken) return 1;
         return name.compareTo(o.name);

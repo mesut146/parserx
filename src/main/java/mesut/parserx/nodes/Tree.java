@@ -162,6 +162,7 @@ public class Tree {
     }
 
     public Type getType(Name name) {
+        if (name.isToken) return new Type(options.tokenClass);
         return getRule(name).retType;
     }
 

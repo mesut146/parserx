@@ -1,4 +1,5 @@
 import common.Env;
+import mesut.parserx.gen.ast.AstGen;
 import mesut.parserx.gen.transform.*;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Or;
@@ -27,6 +28,7 @@ public class TransformTest {
     @Test
     public void factor() throws IOException {
         var tree = Env.tree("factor/single.g");
+        new AstGen(tree).gen();
         var puller = new Puller(tree);
         var res = new Name("A").accept(puller, new Name("a", true));
         System.out.println("zero: " + res.zero + "\none: " + res.one);
@@ -52,7 +54,7 @@ public class TransformTest {
 
     @Test
     public void pred() throws IOException {
-        var tree = Env.tree("java/JavaParser.orig.g");
+        var tree = Env.tree("lr1/calc.g");
         PrecedenceHandler.handle(tree);
         tree.printRules();
     }

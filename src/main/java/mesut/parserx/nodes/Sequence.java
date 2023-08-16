@@ -37,6 +37,12 @@ public class Sequence extends NodeList {
         return new Sequence(list);
     }
 
+    public Sequence remove(int i) {
+        var res = new ArrayList<>(list);
+        res.remove(i);
+        return new Sequence(res);
+    }
+
     @Override
     public String toString() {
         var res = NodeList.join(list, " ");
@@ -56,6 +62,7 @@ public class Sequence extends NodeList {
         }
         return this;
     }
+
 
     @Override
     public Node normal() {

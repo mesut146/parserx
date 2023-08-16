@@ -67,6 +67,7 @@ public class $parser_class${
         while(true){
           int action = table[state][symbol.id];
           if(action == 0){
+            System.out.println("stack = " + stack);
             throw new RuntimeException("error in "+state+" sym="+symbol);
           }
           if((action & 3) == 1){

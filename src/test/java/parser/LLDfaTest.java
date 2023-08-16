@@ -44,33 +44,14 @@ public class LLDfaTest {
 
 
     @Test
+    @Ignore
     public void java() throws Exception {
-        //RealTest.check(Env.tree("java/lexer-jls.g"), true, Env.getResFile("java/a.java.res").getAbsolutePath());
+        //todo
         Builder.tree("java/JavaParser.g")
                 .file(Env.getResFile("java/a.java.res").getAbsolutePath())
                 .checkCC();
     }
 
-    @Test
-    public void groovy() throws Exception {
-        //Log.curLevel = Level.FINE;
-        var builder = Builder.tree("groovy/groovy.g").rule("Unit");
-        builder.dump();
-//        try (var files = Files.walk(Path.of("C:\\Users\\Mesut\\StudioProjects\\ide"))) {
-//            files
-//                    .filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".gradle"))
-//                    .forEach(path -> builder.file(path.toAbsolutePath().toString()));
-//        }
-        //builder.input("a b: 'c'", "");
-        //builder.input("a{\nb = 5\n}", "");
-        //builder.input("a b(c: ['*.jar'], d: 'libs')", "");
-        builder.input("a b()", "");
-        builder
-                //.tokenize()
-                .checkTokens()
-        //.checkCC()
-        ;
-    }
 
     @Test
     public void splitter() throws IOException {

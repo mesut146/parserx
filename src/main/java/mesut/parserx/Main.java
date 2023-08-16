@@ -4,9 +4,8 @@ import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
 import mesut.parserx.dfa.Validator;
 import mesut.parserx.gen.Lang;
+import mesut.parserx.gen.ast.AstGen;
 import mesut.parserx.gen.lexer.LexerGenerator;
-import mesut.parserx.gen.lldfa.LLDfaBuilder;
-import mesut.parserx.gen.lldfa.Normalizer;
 import mesut.parserx.gen.lldfa.ParserGen;
 import mesut.parserx.gen.lldfa.RecursionHandler;
 import mesut.parserx.gen.lr.LrCodeGen;
@@ -17,43 +16,41 @@ import mesut.parserx.nodes.Tree;
 import mesut.parserx.regex.RegexBuilder;
 import mesut.parserx.utils.Utils;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class Main {
 
-    static List<String> cmds = Arrays.asList("-left", "-factor", "-epsilon",
-            "-optimize", "-dfa", "-nfa", "-nfa2dfa", "-regex", "-lldfa", "-lexer", "-lalr1", "-lr1", "-cc");
+    static List<String> cmds = Arrays.asList("-left", "-epsilon",
+            "-optimize", "-dfa", "-nfa", "-nfa2dfa", "-regex", "-lldfa", "-lexer", "-lalr1", "-lr1");
 
     static String usageStr = "usage:\n" +
             "java -jar <jarfile> <command>\n" +
             "commands are;\n" +
             "-left                             left recursion removal\n" +
-            "-factor                           left factoring\n" +
             "-epsilon                          epsilon removal\n" +
             "-optimize                         dfa optimization (input & output are in fsm format)\n" +
             "-dfa [-optimize] [-dot]           dfa from grammar\n" +
             "-nfa [-dot]                       nfa from grammar\n" +
             "-nfa2dfa [-optimize]              nfa to dfa\n" +
             "-regex                            nfa to regex\n" +
-            "-lexer [-out <path>] [-package <pkg>] [-lexerClass <cls>] [-lexerFunc <func>] [-tokenClass <cls>]  generates just lexer\n" +
-            "-lldfa [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates LL(1) recursive descent parser\n" +
+            "-lexer [-test] [-dump] [-out <path>] [-package <pkg>] [-lexerClass <cls>] [-lexerFunc <func>] [-tokenClass <cls>] generates just lexer\n" +
+            "-lldfa [-test] [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates LL(1) recursive descent parser\n" +
             "-lalr1 [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lalr(1) parser" +
             "-lr1 [-out <path>] [-package <pkg>] [-parserClass <cls>] [-astClass <cls>] [..lexer options] generates lr(1) parser" +
             "\ninput is given by '-in <path>' or as last argument" +
             "\noutput language is given by '-lang [java,cpp]'";
 
-    static void usage() {
+    static void printUsage() {
         System.err.println(usageStr);
     }
 
     public static void main(String[] args) {
         if (args.length == 0) {
-            usage();
+            printUsage();
             return;
         }
         File input = null;
@@ -67,6 +64,8 @@ public class Main {
         List<String> cmd = new ArrayList<>();
         Lang lang = Lang.JAVA;
         boolean hasDot = false;
+        boolean isTest = false;
+        boolean dump = false;
         for (int i = 0; i < args.length; i++) {
             String s = args[i];
             if (s.equals("-input") || s.equals("-in")) {
@@ -75,8 +74,12 @@ public class Main {
             } else if (s.equals("-output") || s.equals("-out")) {
                 output = new File(args[i + 1]);
                 i++;
+            } else if (s.equals("-test")) {
+                isTest = true;
             } else if (s.equals("-dot")) {
                 hasDot = true;
+            } else if (s.equals("-dump")) {
+                dump = true;
             } else if (s.equals("-package") || s.equals("-pkg")) {
                 pkg = args[i + 1];
                 i++;
@@ -109,7 +112,7 @@ public class Main {
         }
         if (cmd.isEmpty()) {
             System.err.println("provide a valid command");
-            System.err.println("valid commands are= " + cmds);
+            printUsage();
             return;
         }
         if (input == null) {
@@ -119,33 +122,22 @@ public class Main {
         try {
             if (cmd.contains("-left")) {
                 Tree tree = Tree.makeTree(input);
+                new AstGen(tree).gen();
                 new RecursionHandler(tree).handleAll();
                 RecursionHandler.clearArgs(tree);
                 if (output == null) {
-                    output = new File(input.getParent(), Utils.newName(input.getName(), "-out.g"));
-                }
-                Utils.write(tree.toString(), output);
-            } else if (cmd.contains("-factor")) {
-                Tree tree = Tree.makeTree(input);
-                new Normalizer(tree).normalize();
-                new LLDfaBuilder(tree).factor();
-                if (true) {
-                    throw new RuntimeException("TODO");
-                }
-
-                if (output == null) {
-                    output = new File(input.getParent(), Utils.newName(input.getName(), "-out.g"));
+                    output = new File(input.getAbsoluteFile().getParent(), Utils.newName(input.getName(), "-out.g"));
                 }
                 Utils.write(tree.toString(), output);
             } else if (cmd.contains("-nfa")) {
                 Tree tree = Tree.makeTree(input);
                 NFA nfa = tree.makeNFA();
                 if (output == null) {
-                    output = new File(input.getParent(), Utils.newName(input.getName(), "nfa"));
+                    output = new File(input.getParent(), Utils.noext(input.getName(), ".nfa"));
                 }
                 if (hasDot) {
-                    File dotFile = new File(output.getParent(), Utils.newName(input.getName(), "dot"));
-                    nfa.dot(new FileWriter(dotFile));
+                    File dotFile = new File(output.getParent(), Utils.noext(input.getName(), ".dot"));
+                    nfa.dot(dotFile);
                     logwrite(dotFile);
                 }
 
@@ -165,7 +157,7 @@ public class Main {
                 }
                 if (hasDot) {
                     File dotFile = new File(output.getParent(), Utils.newName(input.getName(), "dot"));
-                    dfa.dot(new FileWriter(dotFile));
+                    dfa.dot(dotFile);
                     logwrite(dotFile);
                 }
 
@@ -174,10 +166,10 @@ public class Main {
             } else if (cmd.contains("-regex")) {
                 //nfa2regex
                 NFA nfa = NFA.read(input);
-                if (!Validator.isDFA(nfa)) {
-                    System.out.println("input is nfa converting to dfa first");
-                    nfa = nfa.dfa();
-                }
+//                if (!Validator.isDFA(nfa)) {
+//                    System.out.println("input is nfa converting to dfa first");
+//                    nfa = nfa.dfa();
+//                }
                 Node node = RegexBuilder.from(nfa);
                 if (output == null) {
                     System.out.println(node);
@@ -194,13 +186,14 @@ public class Main {
                 if (output == null) {
                     output = new File(input.getParent(), Utils.newName(input.getName(), "dfa"));
                 }
+                output = output.getAbsoluteFile();
                 if (hasDot) {
-                    File nfaDot = new File(output.getParent(), Utils.newName(input.getName(), "-nfa.dot"));
-                    nfa.dot(new PrintWriter(new FileWriter(nfaDot)));
+                    File nfaDot = new File(output.getParent(), Utils.trimExt(input.getName()) + "-nfa.dot");
+                    nfa.dot(nfaDot);
                     logwrite(nfaDot);
 
-                    File dfaDot = new File(output.getParent(), Utils.newName(input.getName(), "-dfa.dot"));
-                    dfa.dot(new PrintWriter(new FileWriter(dfaDot)));
+                    File dfaDot = new File(output.getParent(), Utils.trimExt(input.getName()) + "-dfa.dot");
+                    dfa.dot(dfaDot);
                     logwrite(dfaDot);
                 }
                 dfa.dump(new PrintWriter(new FileWriter(output)));
@@ -208,7 +201,7 @@ public class Main {
             } else if (cmd.contains("-lexer")) {
                 Tree tree = Tree.makeTree(input);
                 if (output == null) {
-                    tree.options.outDir = input.getParent();
+                    tree.options.outDir = input.getAbsoluteFile().getParent();
                 } else {
                     tree.options.outDir = output.getAbsolutePath();
                 }
@@ -226,12 +219,20 @@ public class Main {
                 }
                 var generator = LexerGenerator.gen(tree, lang);
                 if (hasDot) {
-                    generator.dfa.dot(new FileWriter(new File(tree.options.outDir, Utils.newName(input.getName(), "dot"))));
+                    generator.dfa.dot(Utils.noext(tree,".dot"));
                 }
-            } else if (cmd.contains("-lldfa") || cmd.contains("-cc")) {
+                if (dump) {
+                    generator.dfa.dump(new FileWriter(Utils.noext(tree,".dfa")));
+                }
+                if (isTest) {
+                    File tester = new File(tree.options.outDir, "LexerTester.java");
+                    Utils.copyRes("LexerTester.java.template", Main.class.getClassLoader(), tester);
+                    Utils.compile(tester, new File(tree.options.outDir, "out"));
+                }
+            } else if (cmd.contains("-lldfa")) {
                 var tree = Tree.makeTree(input);
                 if (output == null) {
-                    tree.options.outDir = input.getParent();
+                    tree.options.outDir = input.getAbsoluteFile().getParent();
                 } else {
                     tree.options.outDir = output.getAbsolutePath();
                 }
@@ -254,6 +255,11 @@ public class Main {
                     tree.options.astClass = astClass;
                 }
                 ParserGen.genCC(tree, lang);
+                if (isTest) {
+                    File tester = new File(output, "ParserTester.java");
+                    Utils.copyRes("ParserTester.java.template", Main.class.getClassLoader(), tester);
+                    Utils.compile(tester, new File(tree.options.outDir, "out"));
+                }
             } else if (cmd.contains("-lalr1") || cmd.contains("-lr1")) {
                 Tree tree = Tree.makeTree(input);
                 if (output == null) {
@@ -305,5 +311,21 @@ public class Main {
         System.out.println("writing " + file);
     }
 
+    public static URL getResStream(String name) throws IOException {
+        if (!name.startsWith("/")) {
+            name = "/" + name;
+        }
+        return Main.class.getResource(name);
+    }
 
+    public static File getResFile(String name) throws IOException {
+        if (!name.startsWith("/")) {
+            name = "/" + name;
+        }
+        URL url = Main.class.getResource(name);
+        if (url == null) {
+            throw new FileNotFoundException(name + " not found");
+        }
+        return new File(url.getPath());
+    }
 }

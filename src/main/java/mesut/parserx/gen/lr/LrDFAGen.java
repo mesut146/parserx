@@ -11,6 +11,7 @@ import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
@@ -59,7 +60,8 @@ public class LrDFAGen {
     void prepare() {
         tree.prepare();
         new Normalizer(tree).normalize();
-        LrUtils.epsilon(tree);
+        //LrUtils.epsilon(tree);
+        LrUtils.epsilon_duplicate(tree);
         LrUtils.plus(tree, true);
 
         makeStart();
@@ -71,7 +73,7 @@ public class LrDFAGen {
 
     public void writeGrammar() {
         String out = tree.options.outDir == null ? tree.file.getParent() : tree.options.outDir;
-        writeGrammar(new File(out, Utils.newName(tree.file.getName(), "-final.g")));
+        writeGrammar(new File(out, Utils.noext(tree.file.getName(), "-final.g")));
     }
 
     public void writeGrammar(File file) {
@@ -127,6 +129,22 @@ public class LrDFAGen {
             makeTrans(curSet, map);
         }
         acc = getTargetSet(firstSet, tree.start);
+        if (tree.options.dump) {
+            try {
+                File table = Utils.noext(tree, "-table.dot");
+                writeTableDot(new PrintWriter(new FileWriter(table)));
+                Utils.runDot(table);
+
+                File dot2 = Utils.noext(tree, ".dot");
+                writeDot(new PrintWriter(new FileWriter(dot2)));
+                Utils.runDot(dot2);
+
+                File dumpFile = Utils.noext(tree, ".dump");
+                DotWriter.dump(this, new PrintWriter(new FileWriter(dumpFile)));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public LrItemSet getTargetSet(LrItemSet from, Name symbol) {

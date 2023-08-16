@@ -1,0 +1,19 @@
+import java.io.*;
+import java.lang.reflect.*;
+
+public class ParserTester{
+
+    public static void main(String... args) throws Exception {
+        Lexer lexer;
+        if(args[0].equals("-file")){
+            lexer = new Lexer(new File(args[2]));
+        }else{
+            lexer = new Lexer(new StringReader(args[1]));
+        }
+        Parser parser = new Parser(lexer);
+        Method m = Parser.class.getDeclaredMethod(args[0]);
+        Object res = m.invoke(parser);
+        System.out.println(res.toString());
+    }
+
+}

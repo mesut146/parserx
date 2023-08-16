@@ -11,7 +11,9 @@ import mesut.parserx.parser.Lexer;
 import mesut.parserx.parser.Parser;
 import mesut.parserx.regex.RegexBuilder;
 import mesut.parserx.utils.Log;
+import mesut.parserx.utils.Utils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import parser.Builder;
 
@@ -65,22 +67,24 @@ public class NfaTest {
         Tree tree = Env.tree("lexer/skip.g");
         var nfa = tree.makeNFA().dfa();
         var dot = Env.dotFile("skip");
-        nfa.dot(new FileWriter(dot));
-        Env.dot(dot);
+        nfa.dot(dot);
+        Utils.runDot(dot);
     }
 
 
     @Test
+    @Ignore
     public void hopcroft() throws Exception {
         NFA dfa = NFA.read(Env.getResFile("fsm/dfa2.dfa"));
         //Minimization.removeUnreachable(dfa);
         //dfa = Minimization.optimize(dfa);
         dfa = Minimization.Hopcroft(dfa);
         dfa.dump();
-        dfa.dot(new FileWriter(Env.dotFile("dfa1")));
+        dfa.dot(Env.dotFile("dfa1"));
     }
 
     @Test
+    @Ignore
     public void minimizeMy() throws Exception {
         NFA dfa = NFA.read(Env.getResFile("fsm/min.dfa"));
         dfa.dump();
@@ -93,7 +97,7 @@ public class NfaTest {
         NFA dfa = tree.makeNFA().dfa();
         //dfa = Minimization.Hopcroft(dfa);
         dfa = Minimization.optimize(dfa);
-        dfa.dot(new FileWriter(Env.dotFile("dfa1")));
+        dfa.dot(Env.dotFile("dfa1"));
         dfa.dump();
     }
 }

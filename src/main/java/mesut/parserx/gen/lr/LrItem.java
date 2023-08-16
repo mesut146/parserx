@@ -61,6 +61,7 @@ public class LrItem {
 
     public String toString2(Tree tree) {
         var sb = new StringBuilder();
+        sb.append(ids);
         sb.append(rule.ref);
         sb.append(": ");
         Sequence rhs = rule.rhs.asSequence();

@@ -1,5 +1,5 @@
 token{
-  STRING: "\"";
+  STRING: [:string:];
   NUMBER: [0-9]+;
   BOOLEAN: "true" | "false";
   LBRACKET: "[";
@@ -8,12 +8,12 @@ token{
   RBRACE: "}";
   COMMA: ",";
   COLON: ":";
+  WS: [ \r\n\t]+ -> skip;
 }
-@start = obj;
+%start: val;
 
-obj: "{" (entry ",")* entry? "}";
-array: "[" (val ",")* val? "]";
+obj: "{" (entry ("," entry)*)? "}";
+array: "[" (val ("," val)*)? "]";
 
-entry: key ":" val;
-key: STRING;
-val: STRING | NUMBER | BOOLEAN | obj;
+entry: STRING ":" val;
+val: array | STRING | NUMBER | BOOLEAN | obj;

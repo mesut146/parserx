@@ -37,7 +37,7 @@ public class RegexOptimizer extends Transformer {
                 res.add(ch);
             }
         }
-        if (bracket.list.size() != 0) {
+        if (!bracket.list.isEmpty()) {
             bracket.normalize().optimize();
             if (bracket.list.size() == 1 && bracket.list.get(0).isSingle()) {
                 res.add(new StringNode("" + (char) bracket.list.get(0).start));

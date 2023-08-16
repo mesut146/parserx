@@ -1,1 +1,0 @@
-sh ../run.sh -factor -in 1.g -out 1-out.g
