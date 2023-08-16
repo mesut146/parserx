@@ -82,7 +82,7 @@ public class DFABuilder {
             }
         }
         if (nfa.tree.options.dump) {
-            var file = new File(nfa.tree.options.outDir, Utils.newName(nfa.tree.file.getName(), "-dfa.dump"));
+            var file = Utils.noext(nfa.tree, ".dfa");
             try {
                 dfa.dump(new FileWriter(file));
             } catch (IOException e) {

@@ -48,7 +48,7 @@ public class NFABuilder extends BaseVisitor<State, State> {
             }
         }
         if (nfa.tree.options.dump) {
-            var file = new File(nfa.tree.options.outDir, Utils.newName(nfa.tree.file.getName(), "-nfa.dump"));
+            var file = Utils.noext(nfa.tree, ".nfa");
             try {
                 nfa.dump(new FileWriter(file));
             } catch (IOException e) {

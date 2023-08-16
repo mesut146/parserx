@@ -117,17 +117,6 @@ public class Utils {
         return new File(tree.options.outDir, Utils.noext(tree.file.getName(), suffix));
     }
 
-    public static String newName(String name, String suffix) {
-        int i = name.lastIndexOf('.');
-        if (i != -1) {
-            name = name.substring(0, i + 1);
-        } else {
-            name = name + ".";
-        }
-        name = name + suffix;
-        return name;
-    }
-
     public static void copyRes(String name, ClassLoader cl, File path) throws Exception {
         FileOutputStream os = new FileOutputStream(path);
         try (var st = cl.getResourceAsStream(name)) {

@@ -2,7 +2,6 @@ package mesut.parserx;
 
 import mesut.parserx.dfa.Minimization;
 import mesut.parserx.dfa.NFA;
-import mesut.parserx.dfa.Validator;
 import mesut.parserx.gen.Lang;
 import mesut.parserx.gen.ast.AstGen;
 import mesut.parserx.gen.lexer.LexerGenerator;
@@ -126,7 +125,7 @@ public class Main {
                 new RecursionHandler(tree).handleAll();
                 RecursionHandler.clearArgs(tree);
                 if (output == null) {
-                    output = new File(input.getAbsoluteFile().getParent(), Utils.newName(input.getName(), "-out.g"));
+                    output = new File(input.getAbsoluteFile().getParent(), Utils.noext(input.getName(), "-out.g"));
                 }
                 Utils.write(tree.toString(), output);
             } else if (cmd.contains("-nfa")) {
@@ -153,10 +152,10 @@ public class Main {
                     Minimization.optimize(dfa);
                 }
                 if (output == null) {
-                    output = new File(input.getParent(), Utils.newName(input.getName(), "dfa"));
+                    output = new File(input.getParent(), Utils.noext(input.getName(), ".dfa"));
                 }
                 if (hasDot) {
-                    File dotFile = new File(output.getParent(), Utils.newName(input.getName(), "dot"));
+                    File dotFile = new File(output.getParent(), Utils.noext(input.getName(), ".dot"));
                     dfa.dot(dotFile);
                     logwrite(dotFile);
                 }
@@ -184,15 +183,15 @@ public class Main {
                     //dfa = Minimization.optimize(nfa);
                 }
                 if (output == null) {
-                    output = new File(input.getParent(), Utils.newName(input.getName(), "dfa"));
+                    output = new File(input.getParent(), Utils.noext(input.getName(), ".dfa"));
                 }
                 output = output.getAbsoluteFile();
                 if (hasDot) {
-                    File nfaDot = new File(output.getParent(), Utils.trimExt(input.getName()) + "-nfa.dot");
+                    File nfaDot = new File(output.getParent(), Utils.noext(input.getName(), "-nfa.dot"));
                     nfa.dot(nfaDot);
                     logwrite(nfaDot);
 
-                    File dfaDot = new File(output.getParent(), Utils.trimExt(input.getName()) + "-dfa.dot");
+                    File dfaDot = new File(output.getParent(), Utils.noext(input.getName(), "-dfa.dot"));
                     dfa.dot(dfaDot);
                     logwrite(dfaDot);
                 }
@@ -219,10 +218,10 @@ public class Main {
                 }
                 var generator = LexerGenerator.gen(tree, lang);
                 if (hasDot) {
-                    generator.dfa.dot(Utils.noext(tree,".dot"));
+                    generator.dfa.dot(Utils.noext(tree, ".dot"));
                 }
                 if (dump) {
-                    generator.dfa.dump(new FileWriter(Utils.noext(tree,".dfa")));
+                    generator.dfa.dump(new FileWriter(Utils.noext(tree, ".dfa")));
                 }
                 if (isTest) {
                     File tester = new File(tree.options.outDir, "LexerTester.java");
@@ -294,9 +293,9 @@ public class Main {
                 LrCodeGen gen = new LrCodeGen(tree, type);
                 gen.gen();
                 if (hasDot) {
-                    File dotFile = new File(tree.options.outDir, Utils.newName(input.getName(), "-dfa.dot"));
+                    File dotFile = new File(tree.options.outDir, Utils.noext(input.getName(), "-dfa.dot"));
                     gen.gen.writeDot(new PrintWriter(dotFile));
-                    File table = new File(tree.options.outDir, Utils.newName(input.getName(), "-table.dot"));
+                    File table = new File(tree.options.outDir, Utils.noext(input.getName(), "-table.dot"));
                     gen.gen.writeTableDot(new PrintWriter(table));
                 }
             } else {

@@ -16,11 +16,11 @@ import java.io.PrintWriter;
 public class LrTest {
 
     public static void dots(LrDFAGen gen, String name) throws IOException {
-        File dot = Env.dotFile(Utils.newName(name, ".dot"));
+        File dot = Env.dotFile(Utils.noext(name, ".dot"));
         gen.writeDot(new PrintWriter(dot));
         Utils.runDot(dot);
 
-        File table = Env.dotFile(Utils.newName(name, "-table.dot"));
+        File table = Env.dotFile(Utils.noext(name, "-table.dot"));
         gen.writeTableDot(new PrintWriter(table));
         Utils.runDot(table);
     }
@@ -43,6 +43,7 @@ public class LrTest {
         tree.options.outDir=Env.dotDir().getAbsolutePath();
         Builder.tree(tree)
                 .dump()
+                .input("E: a;","")
                 .file(path.getAbsolutePath())
                 .lr(LrType.LR1);
     }
