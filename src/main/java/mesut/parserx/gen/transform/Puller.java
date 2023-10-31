@@ -25,68 +25,67 @@ public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
         if (name.isToken) {
             info.one = new Factored(name.copy(), sym.name);
             return info;
-        } else {
-            Name zeroName = tree.getFactorZero(name, sym);
-            Name oneName = tree.getFactorOne(name, new Parameter(tree.getType(sym), "arg"));
-            info.one = oneName;
+        }
+        Name zeroName = tree.getFactorZero(name, sym);
+        Name oneName = tree.getFactorOne(name, new Parameter(tree.getType(sym), "arg"));
+        info.one = oneName;
 
-            //check if already pulled before
-            if (tree.getRule(oneName) != null) {
-                if (tree.getRule(zeroName) != null) {
-                    info.zero = zeroName;
-                }
-                return info;
-            }
-
-            var decl = tree.getRule(name);
-            if (FactorHelper.hasZero(decl.rhs, sym, tree)) {
+        //check if already pulled before
+        if (tree.getRule(oneName) != null) {
+            if (tree.getRule(zeroName) != null) {
                 info.zero = zeroName;
-            }
-
-            var key = name.name + "-" + sym;
-            if (cache.containsKey(key)) {
-                info = cache.get(key);
-                info.one = info.one.copy();
-                info.one.astInfo = name.astInfo.copy();
-                if (info.zero != null) {
-                    info.zero = info.zero.copy();
-                    info.zero.astInfo = name.astInfo.copy();
-                }
-                return info;
-            } else {
-                cache.put(key, info);
-            }
-
-            Name symArg = sym.copy();
-
-            Name oneRef = oneName.copy();
-            oneRef.args2.clear();
-            for (var arg : decl.ref.args2) {
-                oneRef.args2.add(arg.copy());
-            }
-            oneRef.args2.add(new Parameter(tree.getType(symArg), "arg"));
-
-            Name zeroRef = zeroName.copy();
-            zeroRef.args2.clear();
-            for (var arg : decl.ref.args2) {
-                zeroRef.args2.add(arg.copy());
-            }
-
-            var tmp = decl.rhs.copy().accept(this, symArg);
-
-            var oneDecl = new RuleDecl(oneRef.copy(), tmp.one);
-            oneDecl.retType = decl.retType;
-            tree.addRuleBelow(oneDecl, decl);
-            declSet.add(oneDecl);
-
-            if (tmp.zero != null) {
-                var zeroDecl = new RuleDecl(zeroRef.copy(), tmp.zero);
-                zeroDecl.retType = decl.retType;
-                tree.addRuleBelow(zeroDecl, decl);
-                declSet.add(zeroDecl);
             }
             return info;
         }
+
+        var decl = tree.getRule(name);
+        if (FactorHelper.hasZero(decl.rhs, sym, tree)) {
+            info.zero = zeroName;
+        }
+
+        var key = name.name + "-" + sym;
+        if (cache.containsKey(key)) {
+            info = cache.get(key);
+            info.one = info.one.copy();
+            info.one.astInfo = name.astInfo.copy();
+            if (info.zero != null) {
+                info.zero = info.zero.copy();
+                info.zero.astInfo = name.astInfo.copy();
+            }
+            return info;
+        } else {
+            cache.put(key, info);
+        }
+
+        Name symArg = sym.copy();
+
+        Name oneRef = oneName.copy();
+        oneRef.args2.clear();
+        for (var arg : decl.ref.args2) {
+            oneRef.args2.add(arg.copy());
+        }
+        oneRef.args2.add(new Parameter(tree.getType(symArg), "arg"));
+
+        Name zeroRef = zeroName.copy();
+        zeroRef.args2.clear();
+        for (var arg : decl.ref.args2) {
+            zeroRef.args2.add(arg.copy());
+        }
+
+        var tmp = decl.rhs.copy().accept(this, symArg);
+
+        var oneDecl = new RuleDecl(oneRef.copy(), tmp.one);
+        oneDecl.retType = decl.retType;
+        tree.addRuleBelow(oneDecl, decl);
+        declSet.add(oneDecl);
+
+        if (tmp.zero != null) {
+            var zeroDecl = new RuleDecl(zeroRef.copy(), tmp.zero);
+            zeroDecl.retType = decl.retType;
+            tree.addRuleBelow(zeroDecl, decl);
+            declSet.add(zeroDecl);
+        }
+        return info;
     }
 
     @Override
@@ -105,7 +104,7 @@ public class Puller extends BaseVisitor<Puller.PullInfo, Name> {
             }
         }
         var info = new PullInfo();
-        if (zero.size() > 0) {
+        if (!zero.isEmpty()) {
             info.zero = Or.make(zero);
         }
         info.one = Or.make(one);

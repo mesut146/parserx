@@ -194,10 +194,8 @@ public class Epsilons extends BaseVisitor<Epsilons.Info, Void> {
             var noDecl = new RuleDecl(noRef, tmp.noEps);
             noDecl.retType = decl.retType;
             tree.addRuleBelow(noDecl, decl);
-            res.noEps = noName;
-        } else {
-            res.noEps = noName;
         }
+        res.noEps = noName;
         if (tree.getRule(epsName) == null) {
             if (tmp == null) {
                 tmp = trim(decl.rhs);

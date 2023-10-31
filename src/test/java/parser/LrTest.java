@@ -4,6 +4,7 @@ import common.Env;
 import mesut.parserx.gen.lr.LrCodeGen;
 import mesut.parserx.gen.lr.LrDFAGen;
 import mesut.parserx.gen.lr.LrType;
+import mesut.parserx.gen.transform.EpsilonTrimmer;
 import mesut.parserx.nodes.Tree;
 import mesut.parserx.utils.Utils;
 import org.junit.Ignore;
@@ -38,14 +39,16 @@ public class LrTest {
     @Test
     @Ignore
     public void itself() throws Exception {
-        var path = new File("./src/main/grammar/parserx.g");
-        Tree tree=Tree.makeTree(path);
-        tree.options.outDir=Env.dotDir().getAbsolutePath();
+        //var path = new File("./src/main/grammar/parserx.g");
+        var path = new File("./src/main/grammar/parserx-lr.g");
+        Tree tree = Tree.makeTree(path);
+        tree.options.outDir = Env.dotDir().getAbsolutePath();
+        EpsilonTrimmer.trim(tree);
         Builder.tree(tree)
                 .dump()
-                .input("E: a;","")
+                //.input("E: a;","")
                 .file(path.getAbsolutePath())
-                .lr(LrType.LR1);
+                .lr(LrType.LALR1);
     }
 
 
@@ -56,7 +59,7 @@ public class LrTest {
                 .input("beb", "S#2{'b', E{'e'}, 'b'}")
                 .input("aeb", "S#3{'a', F{'e'}, 'b'}")
                 .input("bea", "S#4{'b', F{'e'}, 'a'}")
-                .lr();
+                .lr(LrType.LR1);
         Builder.tree("lr1/left.g")
                 .input("x", "E#3{'x'}")
                 .input("xab", "E#1{E#3{'x'}, 'a', 'b'}")
@@ -73,7 +76,6 @@ public class LrTest {
                 .input("1*2*3", "E#3{E#1{'1'}, '*', E#3{E#1{'2'}, '*', E#1{'3'}}}")
                 .lr();
         Builder.tree("lr1/assoc_bug.g")
-                .dump()
                 .input("1*2/3", "E#2{E#2{E#1{'1'}, op2#1{'*'}, E#1{'2'}}, op2#2{'/'}, E#1{'3'}}")
                 .input("1/2*3", "E#2{E#2{E#1{'1'}, op2#2{'/'}, E#1{'2'}}, op2#1{'*'}, E#1{'3'}}")
                 .input("1+2+3", "E#3{E#1{'1'}, op1#1{'+'}, E#3{E#1{'2'}, op1#1{'+'}, E#1{'3'}}}")
@@ -91,7 +93,6 @@ public class LrTest {
                 .input("x1?2:3?4:5x", "E#3{'x', F#2{F#1{'1'}, '?', F#1{'2'}, ':', F#2{F#1{'3'}, '?', F#1{'4'}, ':', F#1{'5'}}}, 'x'}")
                 .lr();
         Builder.tree("lr1/prec.g")
-                .dump()
                 .input("1+2*3", "E#4{E#7{'1'}, Eg2#1{'+'}, E#3{E#7{'2'}, Eg1#1{'*'}, E#7{'3'}}}")
                 .input("2*3+1", "E#4{E#3{E#7{'2'}, Eg1#1{'*'}, E#7{'3'}}, Eg2#1{'+'}, E#7{'1'}}")
                 .input("2^3*5+1", "E#4{E#3{E#1{E#7{'2'}, '^', E#7{'3'}}, Eg1#1{'*'}, E#7{'5'}}, Eg2#1{'+'}, E#7{'1'}}")
@@ -152,12 +153,18 @@ public class LrTest {
 
     @Test
     public void eps() throws Exception {
+        Builder.tree("lr1/regex2.g")
+                .input("x", "E#1{'x', a?{}}")
+                .input("xa", "E#1{'x', a?{'a'}}")
+                .input("yaaa", "E#2{'y', a+{'a', 'a', 'a'}}")
+                .input("z", "E#3{'z', a*{}}")
+                .input("zaaa", "E#3{'z', a*{'a', 'a', 'a'}}")
+                .lr();
         Builder.tree("lr1/regex.g")
-                .dump()
-                .input("ccc", "E#4{c+{'c', 'c', 'c'}}")
-                .input("bbbccc", "E#3{b+{'b', 'b', 'b'}, c+{'c', 'c', 'c'}}")
-                .input("accc", "E#2{'a', c+{'c', 'c', 'c'}}")
-                .input("abbbccc", "E#1{'a', b+{'b', 'b', 'b'}, c+{'c', 'c', 'c'}}")
+                .input("ccc", "E{a?{}, b*{}, c+{'c', 'c', 'c'}}")
+                .input("bbbccc", "E{a?{}, b*{'b', 'b', 'b'}, c+{'c', 'c', 'c'}}")
+                .input("accc", "E{a?{'a'}, b*{}, c+{'c', 'c', 'c'}}")
+                .input("abbbccc", "E{a?{'a'}, b*{'b', 'b', 'b'}, c+{'c', 'c', 'c'}}")
                 .lr();
         Builder.tree("lr1/eps.g")
                 .input("x", "E#1{A#2{}, B#2{}, 'x'}")
@@ -166,11 +173,12 @@ public class LrTest {
                 .input("abx", "E#1{A#1{'a'}, B#1{'b'}, 'x'}")
                 .input("cy", "E#2{'c', C{}, 'y'}")
                 .lr();
-        Builder.tree("lr1/sr.g")
-                .dump()
-                .input("abc","E#1{'a', 'b', 'c'}")
-                .input("bc","E#2{'b', 'c'}")
-                .input("bd","E#3{'b', 'd'}")
+        var tree = Env.tree("lr1/sr.g");
+        EpsilonTrimmer.trim(tree);
+        Builder.tree(tree)
+                .input("abc", "E#1{'a', 'b', 'c'}")
+                .input("bc", "E#2{'b', 'c'}")
+                .input("bd", "E#3{'b', 'd'}")
                 .lr();
     }
 }

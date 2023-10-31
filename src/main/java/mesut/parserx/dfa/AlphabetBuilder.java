@@ -107,13 +107,6 @@ public class AlphabetBuilder extends Transformer {
     }
 
     @Override
-    public Node visitSub(Sub sub, Void arg) {
-        sub.node.accept(this, arg);
-        sub.string.accept(this, arg);
-        return super.visitSub(sub, arg);
-    }
-
-    @Override
     public Node visitDot(Dot node, Void parent) {
         Bracket b = Dot.bracket;
         ranges.addAll(b.ranges);

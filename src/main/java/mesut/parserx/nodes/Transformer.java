@@ -123,10 +123,6 @@ public class Transformer implements Visitor<Node, Void> {
         return until;
     }
 
-    @Override
-    public Node visitSub(Sub sub, Void arg) {
-        return sub;
-    }
 
     @Override
     public Node visitModeBlock(ModeBlock modeBlock, Void arg) {

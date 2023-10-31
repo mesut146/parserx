@@ -11,9 +11,7 @@ import mesut.parserx.utils.UnicodeUtils;
 import mesut.parserx.utils.Utils;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.TreeSet;
@@ -124,37 +122,25 @@ public class LrCodeGen {
 
 
     void isLoop() {
-        var sb = new StringBuilder();
         int i = 0;
+        var arr = new boolean[ruleSet.size()];
         for (var rd : ruleSet) {
-            if (i > 0) {
-                sb.append(", ");
-            }
-            if (rd.transformInfo != null && rd.transformInfo.isPlus && rd.rhs.isSequence() && rd.rhs.asSequence().size() == 2) {
-                sb.append("true");
-            } else {
-                sb.append("false");
-            }
+            arr[i] = rd.transformInfo != null && rd.transformInfo.isPlus && rd.rhs.isSequence() && rd.rhs.asSequence().size() == 2;
             i++;
         }
-        template.set("isPlus", sb.toString());
+        var intArr = LexerGenerator.makeIntArr(arr);
+        template.set("isPlus", LexerGenerator.writeIntArr(intArr));
     }
 
     void isStar() {
-        var sb = new StringBuilder();
+        var arr = new boolean[ruleSet.size()];
         int i = 0;
         for (var rd : ruleSet) {
-            if (i > 0) {
-                sb.append(", ");
-            }
-            if (rd.transformInfo != null && rd.transformInfo.isStar && rd.rhs.asSequence().get(0).isName()) {
-                sb.append("true");
-            } else {
-                sb.append("false");
-            }
+            arr[i] = rd.transformInfo != null && rd.transformInfo.isStar && rd.rhs.asSequence().get(0).isName();
             i++;
         }
-        template.set("isStar", sb.toString());
+        var intArr = LexerGenerator.makeIntArr(arr);
+        template.set("isStar", LexerGenerator.writeIntArr(intArr));
     }
 
     void writeTable() {

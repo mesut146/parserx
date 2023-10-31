@@ -20,6 +20,7 @@ public class Copier extends Transformer {
         res.options = tree.options;
         res.lexerMembers = tree.lexerMembers;
         res.originalRules = tree.originalRules;
+        res.tokenBlocks = tree.tokenBlocks;
         for (var decl : tree.rules) {
             res.addRule(copyRule(decl));
         }

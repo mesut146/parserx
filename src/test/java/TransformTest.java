@@ -1,11 +1,13 @@
 import common.Env;
 import mesut.parserx.gen.ast.AstGen;
+import mesut.parserx.gen.lldfa.Normalizer;
 import mesut.parserx.gen.transform.*;
 import mesut.parserx.nodes.Name;
 import mesut.parserx.nodes.Or;
 import mesut.parserx.nodes.Tree;
 import org.junit.Test;
 import parser.Builder;
+import parser.LrTest;
 
 import java.io.IOException;
 
@@ -19,9 +21,12 @@ public class TransformTest {
     @Test
     public void ebnf() throws Exception {
         Tree tree = Env.tree("ebnf.g");
-        tree = EbnfToBnf.transform(tree);
-        EpsilonTrimmer.preserveNames = true;
-        EpsilonTrimmer.trim(tree).printRules();
+        new Normalizer(tree).normalize();
+        LrUtils.epsilon_ref(tree);
+        LrUtils.plus(tree,true);
+        EpsilonTrimmer.suffix="";
+        //EpsilonTrimmer.trim(tree);
+        tree.printRules();
         //tree.printRules();
     }
 
@@ -36,10 +41,10 @@ public class TransformTest {
     }
 
     @Test
-    public void trim() throws Exception {
+    public void trimEpsilon() throws Exception {
         Or.newLine = false;
         Tree tree = Env.tree("eps.g");
-        tree = EpsilonTrimmer.trim(tree);
+        EpsilonTrimmer.trim(tree);
         tree.printRules();
     }
 

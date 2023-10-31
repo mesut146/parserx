@@ -1,98 +1,89 @@
 package mesut.parserx.gen.transform;
 
-import mesut.parserx.gen.Copier;
 import mesut.parserx.gen.FirstSet;
 import mesut.parserx.nodes.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 //make grammar epsilon free
 public class EpsilonTrimmer extends Transformer {
-    public static boolean preserveNames = false;
+    public static String suffix = "_noe";
+    Set<Name> emptyRules = new HashSet<>();
     boolean modified;
-    Tree out;
+    List<RuleDecl> newRules = new ArrayList<>();
 
     public EpsilonTrimmer(Tree tree) {
         super(tree);
-        out = Copier.copyTree(tree);
     }
 
-    public static Tree trim(Tree input) {
+    public static void trim(Tree input) {
         Simplify.all(input);
         var trimmer = new EpsilonTrimmer(input);
-        return trimmer.trim();
+        trimmer.trim();
     }
 
-    static String trimSuffix(String s) {
-        if (s.endsWith("_noe")) {
-            return s.substring(0, s.length() - 4);
+    public void trim() {
+        for (var rd : tree.rules) {
+            if (FirstSet.canBeEmpty(rd.rhs, tree)) {
+                emptyRules.add(rd.ref);
+            }
         }
-        return s;
-    }
-
-    public Tree trim() {
         for (int i = 0; i < tree.rules.size(); i++) {
             var rule = tree.rules.get(i);
-            var rhs = transformNode(rule.rhs, null);
-            var res = new RuleDecl(rule.ref.name + "_noe", rhs);
-            if (rhs.isEpsilon()) {
-                //res.hidden = true;
-            } else {
-                res.rhs = Simplify.simplifyNode(rhs);
-                out.addRule(res);
-            }
-        }
-        if (preserveNames) {
-            for (RuleDecl decl : out.rules) {
-                decl.ref.name = trimSuffix(decl.ref.name);
-            }
-            new Transformer(out) {
-                @Override
-                public Node visitName(Name name, Void parent) {
-                    if (name.isRule()) {
-                        return new Name(trimSuffix(name.name));
-                    }
-                    return name;
-                }
-            }.transformRules();
-        }
-        return out;
-    }
 
-    boolean canBeEmpty(Node node) {
-        return FirstSet.canBeEmpty(node, tree);
+            var rhs = transformNode(rule.rhs, null);
+            String name = rule.ref.name;
+            if (emptyRules.contains(rule.ref)) {
+                name = name + suffix;
+            }
+            var res = new RuleDecl(name, rhs);
+            if (!rhs.isEpsilon()) {
+                res.rhs = Simplify.simplifyNode(rhs);
+                newRules.add(res);
+            }
+        }
+        tree.rules = newRules;
+        if (tree.start != null && emptyRules.contains(tree.start)) {
+            tree.start = new Name(tree.start.name + suffix);
+        }
     }
 
 
     boolean hasEpsilon(Node node) {
-        final boolean[] has = {false};
-        new Transformer(tree) {
+        var tr = new BaseVisitor<Void, Void>() {
+            boolean has = false;
+
             @Override
-            public Node visitName(Name name, Void parent) {
-                if (FirstSet.canBeEmpty(name, tree)) {
-                    has[0] = true;
+            public Void visitName(Name name, Void parent) {
+                if (emptyRules.contains(new Name(trimSuffix(name.name)))) {
+                    has = false;
+                    return null;
                 }
-                return super.visitName(name, parent);
+                has = FirstSet.canBeEmpty(name, tree);
+                return null;
             }
 
             @Override
-            public Node visitEpsilon(Epsilon node, Void parent) {
-                has[0] = true;
-                return node;
+            public Void visitEpsilon(Epsilon node, Void parent) {
+                has = true;
+                return null;
             }
 
             @Override
-            public Node visitRegex(Regex regex, Void parent) {
+            public Void visitRegex(Regex regex, Void parent) {
                 if (regex.isOptional() || regex.isStar()) {
-                    has[0] = true;
-                    return regex;
+                    has = true;
+                    return null;
                 }
-                return super.visitRegex(regex, parent);
+                return regex.node.accept(this, null);
             }
-        }.transformNode(node, null);
-        return has[0];
+        };
+        node.accept(tr, null);
+        return tr.has;
     }
 
     @Override
@@ -101,25 +92,40 @@ public class EpsilonTrimmer extends Transformer {
         return node;
     }
 
+    String trimSuffix(String str) {
+        if (str.endsWith(suffix)) {
+            return str.substring(0, str.length() - suffix.length());
+        }
+        return str;
+    }
+
+    boolean canBeEmpty(Node node) {
+        if (!node.isName()) return FirstSet.canBeEmpty(node, tree);
+        var name = node.asName();
+        if (name.name.endsWith(suffix) && emptyRules.contains(new Name(trimSuffix(name.name)))) {
+            return false;
+        }
+        return FirstSet.canBeEmpty(node, tree);
+    }
+
     @Override
     public Node visitSequence(Sequence seq, Void arg) {
         for (int i = 0; i < seq.size(); i++) {
             var ch = seq.get(i);
             if (canBeEmpty(ch)) {//!ch.isName()
+                //a b? c=a b c | a c
                 List<Node> l1 = new ArrayList<>(seq.list);
                 l1.remove(i);
+                l1.add(i, transformNode(ch, arg));
+                List<Node> l2 = new ArrayList<>(seq.list);
+                l2.remove(i);
                 if (FirstSet.isEmpty(ch, tree)) {
-                    return Sequence.make(l1);
+                    return Sequence.make(l2);
                 }
-                List<Node> l2 = new ArrayList<>(l1);
-                l2.add(i, transformNode(ch, arg));
                 Or res = new Or(Sequence.make(l1), Sequence.make(l2));
                 //modified = true;
-                if (hasEpsilon(res)) {
-                    return transformNode(res, arg);
-                }
-                return res;
-            } else if (hasEpsilon(ch)) {
+                return res.accept(this, null);
+            } else {
                 seq.set(i, transformNode(ch, arg));
             }
         }
@@ -128,10 +134,10 @@ public class EpsilonTrimmer extends Transformer {
 
     @Override
     public Node visitName(Name name, Void parent) {
-        if (FirstSet.canBeEmpty(name, tree)) {
-            return new Name(name.name + "_noe");
+        if (emptyRules.contains(name)) {
+            return new Name(name.name + suffix);
         }
-        return name;
+        return new Name(name.name, name.isToken);
     }
 
     @Override
@@ -142,6 +148,7 @@ public class EpsilonTrimmer extends Transformer {
             modified = true;
             return ch;
         } else if (regex.isStar()) {
+            //a*=a+|€
             modified = true;
             return new Regex(ch, RegexType.PLUS);
         } else {
@@ -154,14 +161,12 @@ public class EpsilonTrimmer extends Transformer {
         List<Node> list = new ArrayList<>();
         for (var ch : or) {
             if (ch.isEpsilon()) continue;
-            if (hasEpsilon(ch)) {
-                ch = transformNode(ch, arg);
-            }
+            ch = transformNode(ch, arg);
             if (!ch.isEpsilon()) {
                 list.add(ch);
             }
         }
-        if (list.size() == 0) return new Epsilon();
+        if (list.isEmpty()) return new Epsilon();
         return Or.make(list);
     }
 

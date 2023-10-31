@@ -10,7 +10,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     LinkedHashSet<Name> res = new LinkedHashSet<>();
     Set<Name> rules = new HashSet<>();
     List<RuleDecl> extraRules = new ArrayList<>();
-    boolean lrEpsilon = false;
+    boolean skip_epsilon = false;
 
     public FirstSet(Tree tree) {
         this.tree = tree;
@@ -21,16 +21,16 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     }
 
     public static Set<Name> firstSet(Node node, Tree tree) {
-        return firstSet(node, tree, false, new ArrayList<>());
+        return firstSet(node, tree, true, new ArrayList<>());
     }
 
-    public static Set<Name> firstSet(Node node, Tree tree, boolean lrEpsilon) {
-        return firstSet(node, tree, lrEpsilon, new ArrayList<>());
+    public static Set<Name> firstSet(Node node, Tree tree, boolean skip_epsilon) {
+        return firstSet(node, tree, skip_epsilon, new ArrayList<>());
     }
 
-    public static Set<Name> firstSet(Node node, Tree tree, boolean lrEpsilon, List<RuleDecl> extraRules) {
+    public static Set<Name> firstSet(Node node, Tree tree, boolean skip_epsilon, List<RuleDecl> extraRules) {
         var firstSet = new FirstSet(tree);
-        return firstSet.firstSet(node, lrEpsilon, extraRules);
+        return firstSet.firstSet(node, skip_epsilon, extraRules);
     }
 
     public static Set<Name> tokens(Node node, Tree tree) {
@@ -39,7 +39,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
 
     public static Set<Name> tokens(Node node, Tree tree, List<RuleDecl> extraRules) {
         var res = new TreeSet<Name>();
-        for (var name : firstSet(node, tree, false, extraRules)) {
+        for (var name : firstSet(node, tree, true, extraRules)) {
             if (name.isToken) {
                 res.add(name);
             }
@@ -55,16 +55,16 @@ public class FirstSet extends BaseVisitor<Void, Void> {
         return EmptyChecker.canBeEmpty(node, tree);
     }
 
-    public List<Name> firstSetSorted(Node node, boolean lrEpsilon) {
-        return firstSet(node, lrEpsilon, new ArrayList<>())
+    public List<Name> firstSetSorted(Node node, boolean skip_epsilon) {
+        return firstSet(node, skip_epsilon, new ArrayList<>())
                 .stream()
                 .sorted()
                 .collect(Collectors.toList());
     }
 
-    public Set<Name> firstSet(Node node, boolean lrEpsilon, List<RuleDecl> extraRules) {
+    public Set<Name> firstSet(Node node, boolean skip_epsilon, List<RuleDecl> extraRules) {
         this.res.clear();
-        this.lrEpsilon = lrEpsilon;
+        this.skip_epsilon = skip_epsilon;
         this.extraRules = extraRules;
         this.rules.clear();
         if (node.isName() && node.asName().isRule()) {
@@ -83,7 +83,7 @@ public class FirstSet extends BaseVisitor<Void, Void> {
     public Void visitSequence(Sequence seq, Void arg) {
         for (var ch : seq) {
             ch.accept(this, arg);
-            if (lrEpsilon || !canBeEmpty(ch, tree)) {
+            if (!(skip_epsilon && canBeEmpty(ch, tree))) {
                 break;
             }
         }

@@ -34,9 +34,7 @@ public class AstVisitor {
         for (var inc : node.includeStatement) {
             tree.addInclude(UnicodeUtils.trimQuotes(inc.STRING.value));
         }
-        if (node.optionsBlock != null) {
-            //todo
-        }
+        //todo
         if (node.lexerMembers != null) {
             var members = new LexerMembers();
             tree.lexerMembers = members;
@@ -165,8 +163,7 @@ public class AstVisitor {
     public Node visitSub(Ast.sub sub) {
         var regex = visitRegex(sub.regex);
         if (sub.g1 != null) {
-            var string = visitString(sub.g1.stringNode);
-            return new Sub(regex, string);
+            throw new RuntimeException();
         }
         return regex;
     }

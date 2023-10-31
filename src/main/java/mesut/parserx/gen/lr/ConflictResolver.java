@@ -56,12 +56,14 @@ public class ConflictResolver {
                 var i2r = i2.isReduce(tree);
                 if (i1r && i2r) {
                     //if any lookahead conflict
-                    if (hasCommon(i1.lookAhead, i2.lookAhead)) {
+                    var common=hasCommon(i1.lookAhead, i2.lookAhead);
+                    if (!common.isEmpty()) {
                         var info = new ConflictInfo();
                         info.rr = true;
                         info.state = set.stateId;
                         info.reduce = i1;
                         info.reduce2 = i2;
+                        info.sym2=common;
                         conflicts.add(info);
                     }
                 } else {
@@ -100,18 +102,18 @@ public class ConflictResolver {
             removed = handleSR(shift, sym, reduce, set);
         } else if (sym.isRule()) {
             //expansion may conflict
-            var firstSet = FirstSet.firstSet(sym, tree, true);
-            if (hasCommon(firstSet, reduce.lookAhead)) {
+            var firstSet = FirstSet.firstSet(sym, tree, false);
+            if (!hasCommon(firstSet, reduce.lookAhead).isEmpty()) {
                 removed = handleSR(shift, sym, reduce, set);
             }
         }
         return removed;
     }
 
-    boolean hasCommon(Set<Name> s1, Set<Name> s2) {
+    Set<Name> hasCommon(Set<Name> s1, Set<Name> s2) {
         var newSet = new HashSet<>(s1);
         newSet.retainAll(s2);
-        return !newSet.isEmpty();
+        return newSet;
     }
 
     boolean handleSR(LrItem shift, Name sym, LrItem reduce, LrItemSet set) {
@@ -153,7 +155,7 @@ public class ConflictResolver {
             removed = true;
         } else if (shift.rule.rhs.asSequence().assocRight) {
             //keep shift,remove reduce
-            FirstSet.firstSet(sym,tree,true).forEach(tok->reduce.lookAhead.remove(tok));
+            FirstSet.firstSet(sym,tree,false).forEach(tok->reduce.lookAhead.remove(tok));
             if (reduce.lookAhead.isEmpty()) {
                 removeItem(set, reduce);
             }
@@ -251,12 +253,13 @@ public class ConflictResolver {
         public LrItem reduce;
         public LrItem reduce2;
         public Name sym;
+        public Set<Name> sym2;
         int state;
 
         @Override
         public String toString() {
             if (rr) {
-                return String.format("reduce/reduce conflict in %s sym=%s\nitem1=%s\nitem1=%s\n", state, sym, shift, reduce);
+                return String.format("reduce/reduce conflict in %s sym=%s\nitem1=%s\nitem1=%s\n", state, sym2, reduce, reduce2);
             } else {
                 return String.format("shift/reduce conflict in %s sym=%s\nitem1=%s\nitem2=%s\n", state, sym, shift, reduce);
             }

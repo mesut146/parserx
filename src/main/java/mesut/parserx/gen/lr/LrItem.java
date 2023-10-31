@@ -12,11 +12,11 @@ public class LrItem {
     public Sequence rhs;
     public int dotPos;
     public Set<LrItemSet> gotoSet = new HashSet<>();
-    public LrItem parent;
-    public LrItem prev;
     public List<LrItem> next = new ArrayList<>();
-    public Set<Integer> ids = new HashSet<>();
+    public LrItemSet set;
+    public int id = -1;
     int hash = -1;
+    boolean first = false;
 
     public LrItem(RuleDecl rule, int dotPos) {
         this.rule = rule;
@@ -26,20 +26,19 @@ public class LrItem {
             //act as reduce
             this.dotPos = 1;
         }
-        ids.add(lastId++);
+        id = lastId++;
     }
 
     public LrItem(LrItem item, int dotPos) {
         this(item.rule, dotPos);
         this.lookAhead = new HashSet<>(item.lookAhead);
-        this.ids = new HashSet<>(item.ids);
-        this.prev = item;
-        item.next.add(this);
+        this.id = item.id;
         lastId--;
+        item.next.add(this);
     }
 
     public static boolean isEpsilon(RuleDecl decl) {
-        Sequence rhs = decl.rhs.asSequence();
+        var rhs = decl.rhs.asSequence();
         if (rhs.size() == 1) {
             return rhs.get(0).isEpsilon();
         }
@@ -61,7 +60,8 @@ public class LrItem {
 
     public String toString2(Tree tree) {
         var sb = new StringBuilder();
-        sb.append(ids);
+        sb.append(id);
+        sb.append(" ");
         sb.append(rule.ref);
         sb.append(": ");
         Sequence rhs = rule.rhs.asSequence();
@@ -78,31 +78,7 @@ public class LrItem {
             sb.append(".");
         }
         sb.append(" , ");
-        if (tree == null) {
-            sb.append(NodeList.join(new ArrayList<>(lookAhead), "/"));
-        } else {
-            for (var it = lookAhead.iterator(); it.hasNext(); ) {
-                var la = it.next();
-                if (la.name.equals("$")) {
-                    sb.append(la);
-                } else {
-                    var decl = tree.getToken(la.name);
-                    if (decl.rhs.isString()) {
-                        sb.append(decl.rhs.asString().value);
-                    } else if (decl.rhs.isSequence()) {
-                        var seq = decl.rhs.asSequence();
-                        if (seq.size() == 1 && seq.get(0).isString()) {
-                            sb.append(seq.get(0).asString().value);
-                        } else {
-                            sb.append(la);
-                        }
-                    } else {
-                        sb.append(la);
-                    }
-                }
-                if (it.hasNext()) sb.append("/");
-            }
-        }
+        sb.append(NodeList.join(new ArrayList<>(lookAhead), "/"));
         return sb.toString();
     }
 
@@ -134,13 +110,13 @@ public class LrItem {
     //first set of follow of dot node
     public Set<Name> follow(Tree tree, int pos) {
         if (pos + 1 == rhs.size()) {
-            //last pos
+            //last node takes parent la
             return lookAhead;
         }
         var rest = new Sequence(rhs.list.subList(pos + 1, rhs.size()));
         var res = FirstSet.tokens(rest, tree);
         if (FirstSet.canBeEmpty(rest, tree)) {
-            //no end,la is carried
+            //no end, parent la is carried
             res.addAll(lookAhead);
         }
         return res;
@@ -151,7 +127,11 @@ public class LrItem {
         if (this == other) return true;
         if (other == null || getClass() != other.getClass()) return false;
         var item = (LrItem) other;
-        return isSame(item) && lookAhead.equals(item.lookAhead);
+        return sameLa(item);
+    }
+
+    public boolean sameLa(LrItem other) {
+        return isSame(other) && lookAhead.equals(other.lookAhead);
     }
 
     //without lookahead

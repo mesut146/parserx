@@ -7,8 +7,8 @@ token{
  EPSILON: "%epsilon" | "%empty" | "ε";
  LEFT: "%left";
  RIGHT: "%right";
- IDENT: [a-zA-Z_] [a-zA-Z0-9_]*;
  CALL_BEGIN: IDENT "(";
+ IDENT: [a-zA-Z_] [a-zA-Z0-9_]*;
  SHORTCUT: "[:" IDENT ":]";
  BRACKET: "[" ([^\r\n\\\u005d] | "\\" .)* "]";
  STRING: "\"" ([^\r\n\\"] | "\\" .)* "\"";
@@ -55,9 +55,14 @@ token{
 
 %start: tree;
 
-tree: includeStatement* lexerMembers? tokens=tokenBlock* startDecl? rules=ruleDecl*;
+tree: includeStatements lexerMembers_opt tokenBlocks startDecl_opt rules;
+includeStatements: includeStatement+ | %empty;
+lexerMembers_opt: lexer_members | %empty;
+lexer_members: LEXER_MEMBERS_BEGIN LEXER_MEMBER+ MEMBERS_END;
+tokenBlocks: tokenBlock+ | %empty;
+rules: ruleDecl+ | %empty;
+startDecl_opt: startDecl | %empty;
 
-lexerMembers: LEXER_MEMBERS_BEGIN LEXER_MEMBER+ MEMBERS_END;
 
 includeStatement: "include" STRING;
 

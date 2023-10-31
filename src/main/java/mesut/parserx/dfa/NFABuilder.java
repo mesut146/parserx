@@ -107,19 +107,6 @@ public class NFABuilder extends BaseVisitor<State, State> {
         }
     }
 
-    @Override
-    public State visitSub(Sub sub, State arg) {
-        throw new RuntimeException("sub");
-//        var eps = nfa.newState();
-//        arg.addEpsilon(eps);
-//        var last = nfa.lastState;
-//        var end = sub.node.accept(this, eps);
-//        for (int i = last + 1; i <= nfa.lastState; i++) {
-//
-//        }
-//        return end;
-    }
-
     int getRangeId(int left, int right) {
         return nfa.getAlphabet().getId(Range.of(left, right));
     }

@@ -24,13 +24,13 @@ public class LLDfaTest {
         Tree tree = Env.tree("firstSet.g");
         FirstSet firstSet = new FirstSet(tree);
 
-        var setE =firstSet.firstSetSorted(new Name("E"), false);
+        var setE =firstSet.firstSetSorted(new Name("E"), true);
         Assert.assertEquals("[a, y, E]",setE.toString());
 
-        var setA = firstSet.firstSetSorted(new Name("A"), false);
+        var setA = firstSet.firstSetSorted(new Name("A"), true);
         Assert.assertEquals("[a, b, c, d, e, y, A, B, E]",setA.toString());
 
-        var setB = firstSet.firstSetSorted(new Name("B"), false);
+        var setB = firstSet.firstSetSorted(new Name("B"), true);
         Assert.assertEquals("[a, e, y, E]",setB.toString());
     }
 

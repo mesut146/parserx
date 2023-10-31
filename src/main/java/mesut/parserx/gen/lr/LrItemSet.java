@@ -23,16 +23,17 @@ public class LrItemSet {
         this.type = type;
     }
 
-    public void addItem(LrItem item) {
+    public void addCore(LrItem item) {
         if (!all.contains(item)) {
             kernel.add(item);
             all.add(item);
+            item.set = this;
         }
     }
 
-    public void addAll(List<LrItem> list) {
+    public void setCore(List<LrItem> list) {
         for (var it : list) {
-            addItem(it);
+            addCore(it);
         }
     }
 
@@ -68,9 +69,36 @@ public class LrItemSet {
     }
 
     public void closure() {
-        for (LrItem item : kernel) {
+        //System.out.println("closure " + stateId);
+        for (var item : kernel) {
             closure(item);
         }
+        computeLa();
+    }
+
+    //computing la alltogether is better bc all items are present
+    void computeLa() {
+        //rerun loop if any change is made,bc any change could affect child la
+        boolean modified = true;
+        while (modified) {
+            modified = false;
+            for (int i = kernel.size(); i < all.size(); i++) {
+                var item = all.get(i);
+                Set<Name> la = new HashSet<>();
+                //find parent items and get follow sets
+                all.stream()
+                        .filter(pr -> isParent(pr, item))
+                        .forEach(pr -> la.addAll(pr.follow(treeInfo.tree, pr.dotPos)));
+                if (item.lookAhead.size() != la.size()) {
+                    modified = true;
+                }
+                item.lookAhead.addAll(la);
+            }
+        }
+    }
+
+    boolean isParent(LrItem parent, LrItem ch) {
+        return !parent.isReduce(treeInfo.tree) && ItemSet.sym(parent.getNode(parent.dotPos)).equals(ch.rule.ref);
     }
 
     public void closure(LrItem item) {
@@ -92,46 +120,65 @@ public class LrItemSet {
 
     private void closure(Name node, int pos, LrItem sender) {
         Set<Name> laList = sender.follow(treeInfo.tree, pos);
+        List<LrItem> news = new ArrayList<>();
         for (var rd : treeInfo.ruleMap.get(node)) {
             var newItem = new LrItem(rd, 0);
             newItem.lookAhead.addAll(laList);
-            newItem.parent = sender;
-            addOrUpdate(newItem);
+            news.add(newItem);
+            //addOrUpdate(newItem);
         }
+        //filter added
+        var closured = new ArrayList<LrItem>();
+        for (var item : news) {
+            if (!has(item)) {
+                all.add(item);
+                item.set = this;
+                closured.add(item);
+            }
+        }
+        closured.forEach(this::closure);
     }
 
-    void addOrUpdate(LrItem item) {
-        if (!update(item)) {
-            all.add(item);
-            //todo la check
-            closure(item);
-        }
+    boolean has(LrItem item) {
+        return all.stream().anyMatch(prv -> prv.isSame(item));
     }
 
+    //true if has and updated
     boolean update(LrItem item) {
-        var prev = all.stream().filter(prv -> prv.isSame(item)).findFirst();
-        if (prev.isEmpty()) {
+        var old = all.stream().filter(prv -> prv.isSame(item)).findFirst();
+        if (old.isEmpty()) {
             return false;
         }
         //merge la
-        var prevItem = prev.get();
-        //todo update closure items of prevItem
-        prevItem.lookAhead.addAll(item.lookAhead);
-        updateChildren(prevItem);
+        var oldItem = old.get();
+        oldItem.lookAhead.addAll(item.lookAhead);
+        updateChildren(oldItem, new HashSet<>());
         return true;
     }
 
-    void updateChildren(LrItem parent) {
-        Set<Name> newLa = null;
-        for (var ch : all) {
-            if (ch.parent != parent) continue;
-            if (newLa == null) {
-                newLa = parent.follow(treeInfo.tree, parent.dotPos);
+    //update closure items(children)
+    void updateChildren(LrItem parent, Set<Integer> done) {
+        if (done.contains(parent.id)) return;
+        done.add(parent.id);
+        if (!parent.isReduce(treeInfo.tree)) {
+            var chNode = parent.getNode(parent.dotPos);
+            Set<Name> newLa = null;
+            for (var ch : all) {
+                if (ch.isReduce(treeInfo.tree)) continue;
+                if (!chNode.equals(ch.rule.ref)) continue;
+                if (newLa == null) {
+                    newLa = parent.follow(treeInfo.tree, parent.dotPos);
+                }
+                ch.lookAhead.addAll(newLa);
+                //done.remove(ch.id);
+                updateChildren(ch, done);
             }
-            ch.lookAhead.addAll(newLa);
         }
-        //todo next items
+        //update next
+        for (var cur : parent.next) {
+            cur.lookAhead.addAll(parent.lookAhead);
+            cur.set.updateChildren(cur, new HashSet<>());
+        }
     }
-
 
 }

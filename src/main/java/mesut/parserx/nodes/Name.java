@@ -12,11 +12,11 @@ public class Name extends Node implements Comparable<Name> {
     public ArrayList<Parameter> args2 = new ArrayList<>();
 
     public Name(String name) {
-        this.name = name;
-        this.isToken = false;
+        this(name,false);
     }
 
     public Name(String name, boolean isToken) {
+        //this.name = name.strip();
         this.name = name;
         this.isToken = isToken;
     }

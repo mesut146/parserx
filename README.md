@@ -39,14 +39,6 @@ to include another grammar use;<br>
 
 e.g `include "lexer.g"`
 
-### options
-
-```
-options{
-  <option_name> = <value>
-  ...
-}
-```
 ### token definitions
 
 ```

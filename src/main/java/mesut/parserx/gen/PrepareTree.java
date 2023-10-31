@@ -65,7 +65,7 @@ public class PrepareTree extends Transformer {
                 name.isToken = true;
                 var all = tree.getTokens(name.name);
                 if (all.isEmpty()) {
-                    throw new RuntimeException("undefined reference: " + name.name + " in " + curRule);
+                    throw new RuntimeException(String.format("undefined reference: '%s' in %s", name.name, curRule));
                 }
                 var hasNormal = all.stream().anyMatch(td -> !td.isSkip && !td.isMore);
                 if (!hasNormal) {

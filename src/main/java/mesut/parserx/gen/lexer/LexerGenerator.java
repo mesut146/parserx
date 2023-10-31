@@ -25,6 +25,7 @@ public class LexerGenerator {
     public int[] mode_arr;
     //final state -> action
     public String[] actions;
+    boolean hasActions = false;
     Lang target;
 
     public LexerGenerator(Tree tree, Lang target) {
@@ -52,6 +53,17 @@ public class LexerGenerator {
             res[pos++] = cur;
         }
         return res;
+    }
+
+    public static String writeIntArr(int[] arr) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < arr.length; i++) {
+            if (i > 0) {
+                sb.append(",");
+            }
+            sb.append(arr[i]);
+        }
+        return sb.toString();
     }
 
     public static String makeOctal(int val) {
@@ -96,7 +108,7 @@ public class LexerGenerator {
 
     private void actions() {
         actions = new String[dfa.lastState + 1];
-
+        hasActions = false;
         for (var token : tree.getTokens()) {
             if (!token.rhs.isSequence()) continue;
             var seq = token.rhs.asSequence();
@@ -105,6 +117,8 @@ public class LexerGenerator {
             for (var state : dfa.it()) {
                 if (state.decl != null && state.decl == token) {
                     actions[state.id] = last.action;
+                    //todo use this flag in template to reduce code size
+                    hasActions = true;
                     break;
                 }
             }

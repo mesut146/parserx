@@ -140,12 +140,23 @@ public class Tree {
         modeBlock.tokens.add(token);
     }
 
-    public void addRule(RuleDecl rule) {
-        if (rules.stream().anyMatch(rd -> rd.ref.equals(rule.ref))) {
-            throw new RuntimeException("duplicate rule: " + rule);
+    void checkRule(RuleDecl decl){
+        if (rules.stream().anyMatch(rd -> rd.ref.equals(decl.ref))) {
+            throw new RuntimeException("duplicate rule: `" + decl+"`");
         }
+    }
+
+    public void addRule(RuleDecl rule) {
+        checkRule(rule);
         rule.index = rules.size();
         rules.add(rule);
+    }
+
+    public void addRuleBelow(RuleDecl rule, RuleDecl prev) {
+        checkRule(rule);
+        int pos = rules.indexOf(prev);
+        rules.add(pos + 1, rule);
+        rule.index = rules.size();
     }
 
     //is it safe to use name
@@ -202,12 +213,6 @@ public class Tree {
         res.args2 = new ArrayList<>(old.args2);
         senderMap.put(res.name, getSender(old.name));
         return res;
-    }
-
-    public void addRuleBelow(RuleDecl rule, RuleDecl prev) {
-        int pos = rules.indexOf(prev);
-        rules.add(pos + 1, rule);
-        rule.index = rules.size();
     }
 
     boolean isStr(Node node, String str) {
@@ -289,7 +294,7 @@ public class Tree {
         if (!rules.isEmpty()) {
             sb.append("/* rules */\n");
             if (start != null) {
-                sb.append("%start = ").append(start).append(";\n\n");
+                sb.append("%start: ").append(start).append(";\n\n");
             }
             sb.append(NodeList.join(rules, "\n"));
         }

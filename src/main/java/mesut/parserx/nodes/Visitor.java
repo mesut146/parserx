@@ -27,8 +27,6 @@ public interface Visitor<R, A> {
 
     R visitShortcut(Shortcut shortcut, A arg);
 
-    R visitSub(Sub sub, A arg);
-
     R visitModeBlock(ModeBlock modeBlock, A arg);
 
 }

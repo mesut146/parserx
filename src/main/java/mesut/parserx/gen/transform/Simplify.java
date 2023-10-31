@@ -58,6 +58,9 @@ public class Simplify extends Transformer {
                 list.add(ch);
             }
         }
+        if (list.isEmpty()){
+            return new Epsilon();
+        }
         if (list.size() == 1) {
             return list.get(0);
         }

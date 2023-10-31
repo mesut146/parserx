@@ -2,4 +2,4 @@ include "../common.g"
 
 %start: E;
 
-E: a? b* c+;
+E: x a? | y a+ | z a*;

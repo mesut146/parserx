@@ -10,18 +10,23 @@ public class $parser_class${
     static int[] rhs_sizes = {$rhs_sizes$};
     //rule index -> symbol id
     static int[] ruleIds = {$ruleIds$};
-    static String table_packed = $table_packed$;
-    static int[][] table = unpackTable(table_packed);
     //rule index -> rule name
     static String[] names = {$names$};
     //rule index -> alt number
     static int[] alt_map = {$alt_map$};
-    static boolean[] isPlus = {$isPlus$};
-    static boolean[] isStar = {$isStar$};
+    //rule index(bit) -> isPlus/isStar
+    static int[] isPlus = {$isPlus$};
+    static int[] isStar = {$isStar$};
     public static boolean debug = false;
+    static String table_packed = $table_packed$;
+    static int[][] table = unpackTable(table_packed);
 
     public $parser_class$($lexer_class$ lexer){
         this.lexer = lexer;
+    }
+
+    static boolean getBit(int[] arr, int idx) {
+        return ((arr[idx / 32] >> (idx % 32)) & 1) != 0;
     }
 
     static int[][] unpackTable(String s){
@@ -93,16 +98,20 @@ public class $parser_class${
               rhs[size] = ch;
               states.pop();
             }
-            if(isPlus[action]){
+            if(getBit(isPlus, action)){
               //a+: a+ a | a
               tmp = rhs[0];
               tmp.children.add(rhs[1]);
               rhs[1].parent = tmp;
-            }else if(isStar[action]){
+            }else if(getBit(isStar, action)){
               //a*: a+ | %eps
+              //tmp = rhs[0];
+              //tmp.name = names[action];
+              //tmp.id = ruleIds[action];
+              //a*: a* a | %eps
               tmp = rhs[0];
-              tmp.name = names[action];
-              tmp.id = ruleIds[action];
+              tmp.children.add(rhs[1]);
+              rhs[1].parent = tmp;
             }
             else{
               tmp = new Node(ruleIds[action]);

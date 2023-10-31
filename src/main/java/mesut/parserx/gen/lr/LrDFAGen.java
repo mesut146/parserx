@@ -60,8 +60,8 @@ public class LrDFAGen {
     void prepare() {
         tree.prepare();
         new Normalizer(tree).normalize();
-        //LrUtils.epsilon(tree);
-        LrUtils.epsilon_duplicate(tree);
+        LrUtils.epsilon_ref(tree);
+        //LrUtils.epsilon_duplicate(tree);
         LrUtils.plus(tree, true);
 
         makeStart();
@@ -69,6 +69,7 @@ public class LrDFAGen {
 
         first = new LrItem(start, 0);
         first.lookAhead.add(ParserUtils.dollar);
+        first.first = true;
     }
 
     public void writeGrammar() {
@@ -87,7 +88,7 @@ public class LrDFAGen {
 
     public LrItemSet makeSet(LrItem item) {
         LrItemSet set = new LrItemSet(treeInfo, type);
-        set.addItem(item);
+        set.addCore(item);
         addSet(set);
         return set;
     }
@@ -163,19 +164,21 @@ public class LrDFAGen {
             LrItemSet targetSet;
 
             var sim = findSimilar(new ArrayList<>(list));
-            if (sim != null) {
-                //merge lookaheads
-                for (var it : list) {
-                    sim.update(it);
-                }
-                targetSet = sim;
-            } else {
+            if (sim == null) {
                 targetSet = new LrItemSet(treeInfo, type);
-                targetSet.addAll(list);
+                targetSet.setCore(list);
                 addSet(targetSet);
                 if (!queue.contains(targetSet)) {
                     queue.add(targetSet);
                 }
+            } else {
+                if (type == LrType.LALR1) {
+                    //merge lookaheads
+                    for (var it : list) {
+                        sim.update(it);
+                    }
+                }
+                targetSet = sim;
             }
             curSet.addTransition(sym, targetSet);
         }

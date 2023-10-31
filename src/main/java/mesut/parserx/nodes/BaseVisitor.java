@@ -74,12 +74,6 @@ public class BaseVisitor<R, A> implements Visitor<R, A> {
         return null;
     }
 
-    @Override
-    public R visitSub(Sub sub, A arg) {
-        sub.node.accept(this, arg);
-        sub.string.accept(this, arg);
-        return null;
-    }
 
     @Override
     public R visitModeBlock(ModeBlock modeBlock, A arg) {
